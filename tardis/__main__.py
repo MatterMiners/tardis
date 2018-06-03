@@ -1,5 +1,6 @@
 #!/usr/bin/env python3.6
 from .configuration.configuration import Configuration
+from .resources.drone import Drone
 
 import asyncio
 import logging
@@ -17,6 +18,10 @@ def main():
 
     configuration = Configuration('tardis.yml')
     print(configuration.CloudStackAIO)
+
+    loop = asyncio.get_event_loop()
+    drones = [Drone(agents=[]).mount(event_loop=loop) for _ in range(10)]
+    loop.run_forever()
 
 if __name__ == '__main__':
     main()
