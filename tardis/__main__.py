@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.6
+from .agents.batchsystemagent import BatchSystemAgent
+from .agents.siteagent import SiteAgent
+from .adapter.exoscale import ExoscaleAdapter
 from .configuration.configuration import Configuration
 from .resources.drone import Drone
 
@@ -17,11 +20,17 @@ def main():
     logging.getLogger('').addHandler(console)
 
     configuration = Configuration('tardis.yml')
-    print(configuration.CloudStackAIO)
 
     loop = asyncio.get_event_loop()
-    drones = [Drone(agents=[]).mount(event_loop=loop) for _ in range(10)]
-    loop.run_forever()
+    site_agent = SiteAgent(ExoscaleAdapter())
+    batch_system_agent = BatchSystemAgent()
+    drones = [Drone(site_agent=site_agent,
+                    batch_system_agent=batch_system_agent).mount(event_loop=loop) for _ in range(20)]
+    try:
+        loop.run_forever()
+    except KeyboardInterrupt:
+        loop.close()
+
 
 if __name__ == '__main__':
     main()

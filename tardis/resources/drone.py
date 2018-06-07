@@ -1,4 +1,4 @@
-from .dronestates import InitialDroneState
+from .dronestates import RequestedState
 from cobald.interfaces.actor import Actor
 from cobald.interfaces.pool import Pool
 
@@ -7,12 +7,14 @@ import uuid
 
 
 class Drone(Actor, Pool):
-    def __init__(self, agents, id=None, state=InitialDroneState()):
-        self._agents = agents
+    def __init__(self, site_agent, batch_system_agent, observers=None, drone_id=None, state=RequestedState()):
+        self._site_agent = site_agent
+        self._batch_system_agent = batch_system_agent
+        self._observers = observers or []
         self._state = state
-        self.id = id or uuid.uuid4()
+        self.id = drone_id or uuid.uuid4()
+        self.dns_name = '{}-{}.{}'.format('tardis', self.id, self.site_agent.site_name)
         self._allocation = 0.0
-        self._consumption = 0.0
         self._demand = 0.0
         self._supply = 0.0
         self._utilisation = 0.0
@@ -20,10 +22,6 @@ class Drone(Actor, Pool):
     @property
     def allocation(self) -> float:
         return self._allocation
-
-    @property
-    def consumption(self) -> float:
-        return self._consumption
 
     @property
     def demand(self):
@@ -41,16 +39,20 @@ class Drone(Actor, Pool):
     def utilisation(self) -> float:
         return self._utilisation
 
+    @property
+    def site_agent(self):
+        return self._site_agent
+
     async def run(self):
         while True:
             await self.state.run(self)
             await asyncio.sleep(1)
 
-    def register_agents(self, agent):
-        self._agents.append(agent)
+    def register_observers(self, agent):
+        self._observers.append(agent)
 
-    def remove_agents(self, agent):
-        self._agents.remove(agent)
+    def remove_observers(self, agent):
+        self._observers.remove(agent)
 
     @property
     def state(self):
@@ -59,8 +61,8 @@ class Drone(Actor, Pool):
     @state.setter
     def state(self, state):
         self._state = state
-        self.update_agents()
+        self.notify_observers()
 
-    def update_agents(self):
-        for agent in self._agents:
-            agent.update(self)
+    def notify_observers(self):
+        for observer in self._observers:
+            yield from observer.notify(self)

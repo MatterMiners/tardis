@@ -1,33 +1,75 @@
-from abc import ABCMeta, abstractmethod
+from ..interfaces.state import State
 
 import asyncio
 import logging
 
 
-class BaseDroneState(metaclass=ABCMeta):
-    transition = {}
-
-    def __str__(self):
-        return self.__class__.__name__
-
-    def __repr__(self):
-        return self.__class__.__name__
-
-    @staticmethod
-    @abstractmethod
-    async def run(drone):
-        return NotImplemented
-
-
-class InitialDroneState(BaseDroneState):
+class RequestedState(State):
     @staticmethod
     async def run(drone):
-        logging.info("Process {} in InitialDroneState".format(drone))
+        logging.info("Drone {} in RequestedState".format(drone))
+        response = await drone.site_agent.deploy_resource(drone, name=drone.dns_name)
+        logging.info("Exoscale returned {}".format(response))
+        drone.vm_id = response['virtualmachine']['id']
         await asyncio.sleep(0.5)
-        drone.state = DoneDroneState()  # static state transition
+        drone.state = BootingState()  # static state transition
 
 
-class DoneDroneState(BaseDroneState):
+class BootingState(State):
     @staticmethod
     async def run(drone):
-        logging.info("Process {} in DoneMachineState".format(drone))
+        logging.info("Drone {} in BootingState".format(drone))
+        response = await drone.site_agent.resource_status(drone, name=drone.dns_name)
+        logging.info("Exoscale returned {}".format(response))
+        await asyncio.sleep(0.5)
+        drone.state = IntegratingState()  # static state transition
+
+
+class IntegratingState(State):
+    @staticmethod
+    async def run(drone):
+        logging.info("Drone {} in IntegratingState".format(drone))
+        await asyncio.sleep(60)
+        drone.state = IdleState()  # static state transition
+
+
+class IdleState(State):
+    @staticmethod
+    async def run(drone):
+        logging.info("Drone {} in IdleState".format(drone))
+        await asyncio.sleep(0.5)
+        drone.state = BusyState()  # static state transition
+
+
+class BusyState(State):
+    @staticmethod
+    async def run(drone):
+        logging.info("Drone {} in BusyState".format(drone))
+        await asyncio.sleep(0.5)
+        drone.state = DrainingState()  # static state transition
+
+
+class DrainingState(State):
+    @staticmethod
+    async def run(drone):
+        logging.info("Drone {} in DrainingState".format(drone))
+        await asyncio.sleep(0.5)
+        drone.state = ShutDownState()  # static state transition
+
+
+class ShutDownState(State):
+    @staticmethod
+    async def run(drone):
+        logging.info("Drone {} in ShutDownState".format(drone))
+        logging.info('Destroying VM with ID {}'.format(drone.vm_id))
+        response = await drone.site_agent.terminate_resource(drone, id=drone.vm_id)
+        logging.info("Exoscale returned {}".format(response))
+        await asyncio.sleep(0.5)
+        drone.state = DownState()  # static state transition
+
+
+class DownState(State):
+    @staticmethod
+    async def run(drone):
+        logging.info("Drone {} in DownState".format(drone))
+        await asyncio.sleep(10)

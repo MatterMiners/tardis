@@ -1,0 +1,2 @@
+class BatchSystemAgent(object):
+    pass

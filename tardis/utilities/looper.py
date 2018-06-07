@@ -9,4 +9,4 @@ class Looper(Borg):
             self._event_loop = asyncio.get_event_loop()
 
     def get_event_loop(self):
-        return None
+        return self._event_loop
