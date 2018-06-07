@@ -1,23 +1,12 @@
+from ..interfaces.borg import Borg
 import yaml
 
 
-class Configuration(object):
-    _shared_state = {}
-
+class Configuration(Borg):
     def __init__(self, config_file: str=None):
-        if not self._shared_state:
-            self._shared_state = self.__dict__
+        super(Configuration, self).__init__()
         if config_file:
             self.load_config(config_file)
-        self.__dict__ = self._shared_state
-
-    def __getattr__(self, item):
-        """
-        Get attributes of Configuration by returning self.item
-        :param item:
-        :return: item
-        """
-        return getattr(self, item)
 
     def load_config(self, config_file: str) -> None:
         """
