@@ -23,6 +23,8 @@ setup(
         'Intended Audience :: Science/Research',
         'Operating System :: OS Independent',
         'Topic :: System :: Distributed Computing',
+        'Topic :: Scientific/Engineering :: Physics',
+        'Topic :: Utilities',
         'Framework :: AsyncIO',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3.6',
