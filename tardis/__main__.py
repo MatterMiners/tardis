@@ -1,11 +1,11 @@
 #!/usr/bin/env python3.6
 from .agents.batchsystemagent import BatchSystemAgent
 from .agents.siteagent import SiteAgent
-from .adapter.exoscale import ExoscaleAdapter
 from .configuration.configuration import Configuration
 from .resources.drone import Drone
 from .utilities.looper import Looper
 
+from importlib import import_module
 import logging
 
 
@@ -19,13 +19,16 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
-    Configuration('tardis.yml')
+    configuration = Configuration('tardis.yml')
 
     loop = Looper().get_event_loop()
-    site_agent = SiteAgent(ExoscaleAdapter())
+
     batch_system_agent = BatchSystemAgent()
-    [loop.create_task(Drone(site_agent=site_agent,
-                            batch_system_agent=batch_system_agent).run()) for _ in range(10)]
+
+    for site in configuration.Sites:
+        site_adapter = getattr(import_module(name="tardis.adapter.{}".format(site.lower())), '{}Adapter'.format(site))
+        [loop.create_task(Drone(site_agent=SiteAgent(site_adapter()),
+                                batch_system_agent=batch_system_agent).run()) for _ in range(10)]
     try:
         loop.run_forever()
     except KeyboardInterrupt:
