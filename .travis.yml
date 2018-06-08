@@ -1,0 +1,26 @@
+language: python
+
+python:
+  - "3.6"
+  - "3.6-dev" # 3.6 development branch
+  - "nightly" # currently points to 3.7-dev
+
+os:
+  - linux
+#  - osx
+
+matrix:
+  allow_failures:
+  - python: "3.6-dev"
+  - python: "nightly"
+
+install:
+  - pip install codecov
+  - pip install coverage
+
+script:
+  - coverage run setup.py test
+
+after_success:
+  - coverage report
+  - codecov
