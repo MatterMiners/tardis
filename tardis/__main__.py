@@ -4,8 +4,8 @@ from .agents.siteagent import SiteAgent
 from .adapter.exoscale import ExoscaleAdapter
 from .configuration.configuration import Configuration
 from .resources.drone import Drone
+from .utilities.looper import Looper
 
-import asyncio
 import logging
 
 
@@ -19,13 +19,13 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
-    configuration = Configuration('tardis.yml')
+    Configuration('tardis.yml')
 
-    loop = asyncio.get_event_loop()
+    loop = Looper().get_event_loop()
     site_agent = SiteAgent(ExoscaleAdapter())
     batch_system_agent = BatchSystemAgent()
-    drones = [Drone(site_agent=site_agent,
-                    batch_system_agent=batch_system_agent).mount(event_loop=loop) for _ in range(20)]
+    [loop.create_task(Drone(site_agent=site_agent,
+                            batch_system_agent=batch_system_agent).run()) for _ in range(10)]
     try:
         loop.run_forever()
     except KeyboardInterrupt:

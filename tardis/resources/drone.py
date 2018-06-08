@@ -1,12 +1,11 @@
 from .dronestates import RequestedState
-from cobald.interfaces.actor import Actor
 from cobald.interfaces.pool import Pool
 
 import asyncio
 import uuid
 
 
-class Drone(Actor, Pool):
+class Drone(Pool):
     def __init__(self, site_agent, batch_system_agent, observers=None, drone_id=None, state=RequestedState()):
         self._site_agent = site_agent
         self._batch_system_agent = batch_system_agent
