@@ -2,7 +2,7 @@ from abc import ABCMeta
 
 
 class Borg(metaclass=ABCMeta):
-    _shared_state = {}
+    _shared_state = {}  # should be overwritten in all classes inheriting the borg
 
     def __init__(self):
         self.__dict__ = self._shared_state

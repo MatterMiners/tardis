@@ -3,6 +3,8 @@ import asyncio
 
 
 class Looper(Borg):
+    _shared_state = {}
+
     def __init__(self):
         super(Looper, self).__init__()
         if not hasattr(self, '_event_loop'):
