@@ -31,7 +31,7 @@ setup(
     ],
     keywords='asyncio tardis cloud scheduler',
     packages=find_packages(exclude=['tests']),
-    install_requires=['aiohttp', 'CloudStackAIO', 'PyYAML '],
+    install_requires=['aiohttp', 'CloudStackAIO', 'PyYAML', 'AsyncOpenStackClient'],
     test_suite='tests',
     project_urls={
         'Bug Reports': 'https://github.com/giffels/AsyncStateMachine/issues',
