@@ -4,6 +4,7 @@ python:
   - "3.6"
   - "3.6-dev" # 3.6 development branch
   - "nightly" # currently points to 3.7-dev
+  - "pypy3.5"
 
 os:
   - linux
@@ -13,6 +14,7 @@ matrix:
   allow_failures:
   - python: "3.6-dev"
   - python: "nightly"
+  - python: "pypy3.5"
 
 install:
   - pip install codecov
