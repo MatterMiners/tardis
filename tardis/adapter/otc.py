@@ -29,7 +29,7 @@ class OTCAdapter(SiteAdapter):
     async def deploy_resource(self, unique_id, **kwargs):
         kwargs.update(self.configuration.MachineTypeConfiguration[self._machine_type])
         kwargs['name'] = 'tardis-{}-{}.{}'.format(unique_id, self.machine_type, self.site_name)
-        await self.nova.init_api()
+        await self.nova.init_api(timeout=60)
         response = await self.nova.servers.create(server=kwargs)
         logging.debug("OTC servers servers create returned {}".format(response))
         return self.handle_response(response, dns_name=kwargs['name'])
@@ -56,13 +56,13 @@ class OTCAdapter(SiteAdapter):
         return self._site_name
 
     async def resource_status(self, **kwargs):
-        await self.nova.init_api()
+        await self.nova.init_api(timeout=60)
         response = await self.nova.servers.list(**kwargs)
         logging.debug("OTC servers list returned {}".format(response))
         return response
 
     async def terminate_resource(self, **kwargs):
-        await self.nova.init_api()
+        await self.nova.init_api(timeout=60)
         response = await self.nova.servers.force_delete(kwargs['id'])
         logging.debug("OTC servers servers create returned {}".format(response))
         return response
