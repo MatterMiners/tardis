@@ -8,9 +8,9 @@ class RequestedState(State):
     @staticmethod
     async def run(drone):
         logging.info("Drone {} in RequestedState".format(drone))
-        response = await drone.site_agent.deploy_resource(drone, name=drone.dns_name)
-        logging.info("Exoscale returned {}".format(response))
-        drone.vm_id = response['virtualmachine']['id']
+        response = await drone.site_agent.deploy_resource(unique_id=drone.unique_id)
+        drone.vm_id = response['machine_id']
+        drone.dns_name = response['dns_name']
         await asyncio.sleep(0.5)
         drone.state = BootingState()  # static state transition
 
@@ -19,8 +19,7 @@ class BootingState(State):
     @staticmethod
     async def run(drone):
         logging.info("Drone {} in BootingState".format(drone))
-        response = await drone.site_agent.resource_status(drone, name=drone.dns_name)
-        logging.info("Exoscale returned {}".format(response))
+        await drone.site_agent.resource_status(drone, name=drone.dns_name)
         await asyncio.sleep(0.5)
         drone.state = IntegratingState()  # static state transition
 
@@ -63,7 +62,6 @@ class ShutDownState(State):
         logging.info("Drone {} in ShutDownState".format(drone))
         logging.info('Destroying VM with ID {}'.format(drone.vm_id))
         response = await drone.site_agent.terminate_resource(drone, id=drone.vm_id)
-        logging.info("Exoscale returned {}".format(response))
         await asyncio.sleep(0.5)
         drone.state = DownState()  # static state transition
 

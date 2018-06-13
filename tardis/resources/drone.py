@@ -6,13 +6,12 @@ import uuid
 
 
 class Drone(Pool):
-    def __init__(self, site_agent, batch_system_agent, observers=None, drone_id=None, state=RequestedState()):
+    def __init__(self, site_agent, batch_system_agent, observers=None, unique_id=None, state=RequestedState()):
         self._site_agent = site_agent
         self._batch_system_agent = batch_system_agent
         self._observers = observers or []
         self._state = state
-        self.id = drone_id or uuid.uuid4()
-        self.dns_name = '{}-{}.{}'.format('tardis', self.id, self.site_agent.site_name)
+        self.unique_id = unique_id or uuid.uuid4()
         self._allocation = 0.0
         self._demand = 0.0
         self._supply = 0.0

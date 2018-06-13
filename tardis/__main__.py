@@ -27,8 +27,10 @@ def main():
 
     for site in configuration.Sites:
         site_adapter = getattr(import_module(name="tardis.adapter.{}".format(site.lower())), '{}Adapter'.format(site))
-        [loop.create_task(Drone(site_agent=SiteAgent(site_adapter()),
-                                batch_system_agent=batch_system_agent).run()) for _ in range(10)]
+        for machine_type in getattr(configuration, site).MachineTypes:
+            [loop.create_task(Drone(site_agent=SiteAgent(site_adapter(machine_type=machine_type,
+                                                                      site_name=site.lower())),
+                                    batch_system_agent=batch_system_agent).run()) for _ in range(1)]
     try:
         loop.run_forever()
     except KeyboardInterrupt:
