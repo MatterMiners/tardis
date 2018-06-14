@@ -3,7 +3,7 @@ from abc import ABCMeta, abstractmethod
 
 class SiteAdapter(metaclass=ABCMeta):
     @abstractmethod
-    async def deploy_resource(self, unique_id, **kwargs):
+    async def deploy_resource(self, unique_id):
         return NotImplemented
 
     def dns_name(self, unique_id):
@@ -18,7 +18,7 @@ class SiteAdapter(metaclass=ABCMeta):
         return NotImplemented
 
     @abstractmethod
-    async def resource_status(self, **kwargs):
+    async def resource_status(self, resource_attributes):
         return NotImplemented
 
     @property
@@ -26,5 +26,5 @@ class SiteAdapter(metaclass=ABCMeta):
         return NotImplemented
 
     @abstractmethod
-    async def terminate_resource(self, **kwargs):
+    async def terminate_resource(self, resource_attributes):
         return NotImplemented

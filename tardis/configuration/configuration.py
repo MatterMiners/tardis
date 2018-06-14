@@ -1,26 +1,12 @@
 from ..interfaces.borg import Borg
+from ..utilities.attributedict import AttributeDict
+from ..utilities.attributedict import convert_to_attribute_dict
+
 import yaml
 
 
-class AttrDict(dict):
-    def __getattr__(self, item):
-        try:
-            return self[item]
-        except KeyError:
-            raise AttributeError("{} is not a valid attribute".format(item))
-
-    def __setattr__(self, key, value):
-        self[key] = value
-
-    def __delattr__(self, item):
-        try:
-            del self[item]
-        except KeyError:
-            raise AttributeError("{} is not a valid attribute".format(item))
-
-
 class Configuration(Borg):
-    _shared_state = AttrDict()
+    _shared_state = AttributeDict()
 
     def __init__(self, config_file: str=None):
         super(Configuration, self).__init__()
@@ -34,14 +20,4 @@ class Configuration(Borg):
         :type config_file: str
         """
         with open(config_file, 'r') as config_file:
-            self._shared_state.update(self.convert_configuration(yaml.load(config_file)))
-
-    def convert_configuration(self, obj):
-        if isinstance(obj, dict):
-            for key, value in obj.items():
-                obj[key] = self.convert_configuration(value)
-            return AttrDict(obj)
-        elif isinstance(obj, list):
-            return [self.convert_configuration(item) for item in obj]
-        else:
-            return obj
+            self._shared_state.update(convert_to_attribute_dict(yaml.load(config_file)))

@@ -8,20 +8,19 @@ class RequestedState(State):
     @staticmethod
     async def run(drone):
         logging.info("Drone {} in RequestedState".format(drone))
-        response = await drone.site_agent.deploy_resource(unique_id=drone.unique_id)
-        drone.vm_id = response['machine_id']
-        drone.dns_name = response['dns_name']
+        drone.resource_attributes = await drone.site_agent.deploy_resource(unique_id=drone.unique_id)
         await asyncio.sleep(0.5)
         drone.state = BootingState()  # static state transition
 
 
 class BootingState(State):
-    @staticmethod
-    async def run(drone):
+    @classmethod
+    async def run(cls, drone):
         logging.info("Drone {} in BootingState".format(drone))
-        await drone.site_agent.resource_status(drone, name=drone.dns_name)
+        drone.resource_attributes.update(await drone.site_agent.resource_status(drone.resource_attributes))
         await asyncio.sleep(0.5)
         drone.state = IntegratingState()  # static state transition
+        #drone.state = cls.transition(drone.resource_attributes.resource_status)#
 
 
 class IntegratingState(State):
@@ -60,8 +59,8 @@ class ShutDownState(State):
     @staticmethod
     async def run(drone):
         logging.info("Drone {} in ShutDownState".format(drone))
-        logging.info('Destroying VM with ID {}'.format(drone.vm_id))
-        response = await drone.site_agent.terminate_resource(drone, id=drone.vm_id)
+        logging.info('Destroying VM with ID {}'.format(drone.resource_attributes.resource_id))
+        response = await drone.site_agent.terminate_resource(drone.resource_attributes)
         await asyncio.sleep(0.5)
         drone.state = DownState()  # static state transition
 
@@ -70,4 +69,14 @@ class DownState(State):
     @staticmethod
     async def run(drone):
         logging.info("Drone {} in DownState".format(drone))
-        await asyncio.sleep(10)
+        await asyncio.sleep(60)
+        drone.state = RequestedState() # static state transition
+
+# define allowed state transitions
+RequestedState.transition = {'REQUESTED': RequestedState,
+                             'BOOTING': BootingState,
+                             'DOWN': DownState}
+
+BootingState.transition = {'BOOTING': BootingState,
+                           'INTEGRATING': IntegratingState,
+                           'DOWN': DownState}

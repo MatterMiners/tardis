@@ -1,4 +1,5 @@
 from .dronestates import RequestedState
+from ..utilities.attributedict import AttributeDict
 from cobald.interfaces.pool import Pool
 
 import asyncio
@@ -12,6 +13,9 @@ class Drone(Pool):
         self._observers = observers or []
         self._state = state
         self.unique_id = unique_id or uuid.uuid4()
+
+        self.resource_attributes = AttributeDict()
+
         self._allocation = 0.0
         self._demand = 0.0
         self._supply = 0.0
@@ -63,4 +67,4 @@ class Drone(Pool):
 
     def notify_observers(self):
         for observer in self._observers:
-            yield from observer.notify(self)
+            yield from observer.notify(self.resource_attributes)

@@ -1,3 +1,14 @@
+def convert_to_attribute_dict(obj):
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            obj[key] = convert_to_attribute_dict(value)
+        return AttributeDict(obj)
+    elif isinstance(obj, list):
+        return [convert_to_attribute_dict(item) for item in obj]
+    else:
+        return obj
+
+
 class AttributeDict(dict):
     def __getattr__(self, item):
         try:
