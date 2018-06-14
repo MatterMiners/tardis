@@ -38,3 +38,6 @@ class TestAttributeDict(TestCase):
 
         with self.assertRaises(AttributeError):
             self.test_dictionary.another_test
+
+        with self.assertRaises(AttributeError):
+            del self.test_dictionary.another_test
