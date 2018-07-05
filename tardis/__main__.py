@@ -1,4 +1,5 @@
 #!/usr/bin/env python3.6
+from .adapter.htcondor import HTCondorAdapter
 from .agents.batchsystemagent import BatchSystemAgent
 from .agents.siteagent import SiteAgent
 from .configuration.configuration import Configuration
@@ -23,7 +24,7 @@ def main():
 
     loop = Looper().get_event_loop()
 
-    batch_system_agent = BatchSystemAgent()
+    batch_system_agent = BatchSystemAgent(batch_system_adapter=HTCondorAdapter())
 
     for site in configuration.Sites:
         site_adapter = getattr(import_module(name="tardis.adapter.{}".format(site.lower())), '{}Adapter'.format(site))
