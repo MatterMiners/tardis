@@ -1,2 +1,7 @@
 Sites:
   - Exoscale
+
+Exoscale:
+  MachineTypeConfiguration:
+    Micro:
+      user_data: tests/data/exoscale.ini

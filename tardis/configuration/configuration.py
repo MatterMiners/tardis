@@ -11,7 +11,7 @@ def encode_user_data(obj):
     if isinstance(obj, AttributeDict):
         for key, value in obj.items():
             if key == 'user_data':
-                with open(os.path.join(os.getcwd(), 'tardis', 'cloudinit', obj[key]), 'rb') as f:
+                with open(os.path.join(os.getcwd(), obj[key]), 'rb') as f:
                     obj[key] = b64encode(f.read())
             else:
                 obj[key] = encode_user_data(value)
