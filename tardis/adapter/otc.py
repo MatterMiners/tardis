@@ -1,8 +1,10 @@
 from asyncopenstackclient import AuthPassword
 from asyncopenstackclient import NovaClient
+from simple_rest_client.exceptions import AuthError
 from ..configuration.configuration import Configuration
-from ..exceptions.tardisexceptions import TardisTimeout
+from ..exceptions.tardisexceptions import TardisAuthError
 from ..exceptions.tardisexceptions import TardisError
+from ..exceptions.tardisexceptions import TardisTimeout
 from ..interfaces.siteadapter import SiteAdapter
 
 from asyncio import TimeoutError
@@ -18,17 +20,17 @@ class OTCAdapter(SiteAdapter):
         self._site_name = site_name
 
         auth = AuthPassword(auth_url=self.configuration.auth_url,
-                            username = self.configuration.username,
-                            password = self.configuration.password,
-                            project_name = self.configuration.project_name,
-                            user_domain_name = self.configuration.user_domain_name,
-                            project_domain_name = self.configuration.project_domain_name)
+                            username=self.configuration.username,
+                            password=self.configuration.password,
+                            project_name=self.configuration.project_name,
+                            user_domain_name=self.configuration.user_domain_name,
+                            project_domain_name=self.configuration.project_domain_name)
 
         self.nova = NovaClient(session=auth)
 
     async def deploy_resource(self, unique_id):
         specs = self.configuration.MachineTypeConfiguration[self._machine_type]
-        specs['name'] = 'tardis-{}-{}.{}'.format(unique_id, self.machine_type, self.site_name)
+        specs['name'] = self.dns_name(unique_id)
         await self.nova.init_api(timeout=60)
         response = await self.nova.servers.create(server=specs)
         logging.debug("OTC servers servers create returned {}".format(response))
@@ -77,5 +79,7 @@ class OTCAdapter(SiteAdapter):
             yield
         except TimeoutError as te:
             raise TardisTimeout from te
+        except AuthError as ae:
+            raise TardisAuthError from ae
         except:
             raise TardisError

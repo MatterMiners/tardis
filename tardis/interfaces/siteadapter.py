@@ -7,7 +7,7 @@ class SiteAdapter(metaclass=ABCMeta):
         return NotImplemented
 
     def dns_name(self, unique_id):
-        return "tardis-{}-{}.{}".format(unique_id, self.machine_type.lower(), self.site_name.lower())
+        return "{}-{}".format(self.site_name.lower(), unique_id, self.machine_type.lower())
 
     @abstractmethod
     def handle_response(self, response):

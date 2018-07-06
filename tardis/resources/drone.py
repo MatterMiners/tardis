@@ -12,7 +12,7 @@ class Drone(Pool):
         self._batch_system_agent = batch_system_agent
         self._observers = observers or []
         self._state = state
-        self.unique_id = unique_id or uuid.uuid4()
+        self.unique_id = unique_id or uuid.uuid4().hex[:10]
 
         self.resource_attributes = AttributeDict()
 

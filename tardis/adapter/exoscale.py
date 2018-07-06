@@ -35,7 +35,7 @@ class ExoscaleAdapter(SiteAdapter):
                           resource_status='state', updated='created')
 
         translated_response = {}
-
+        logging.debug('Exoscale: {}', response)
         if isinstance(response['virtualmachine'], list):
             response = response['virtualmachine'][0]
         else:
