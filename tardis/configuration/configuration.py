@@ -2,7 +2,24 @@ from ..interfaces.borg import Borg
 from ..utilities.attributedict import AttributeDict
 from ..utilities.attributedict import convert_to_attribute_dict
 
+from base64 import b64encode
+import os
 import yaml
+
+
+def encode_user_data(obj):
+    if isinstance(obj, AttributeDict):
+        for key, value in obj.items():
+            if key == 'user_data':
+                with open(os.path.join(os.getcwd(), 'tardis', 'cloudinit', obj[key]), 'rb') as f:
+                    obj[key] = b64encode(f.read())
+            else:
+                obj[key] = encode_user_data(value)
+        return obj
+    elif isinstance(obj, list):
+        return [encode_user_data(item) for item in obj]
+    else:
+        return obj
 
 
 class Configuration(Borg):
@@ -20,4 +37,4 @@ class Configuration(Borg):
         :type config_file: str
         """
         with open(config_file, 'r') as config_file:
-            self._shared_state.update(convert_to_attribute_dict(yaml.load(config_file)))
+            self._shared_state.update(encode_user_data(convert_to_attribute_dict(yaml.load(config_file))))
