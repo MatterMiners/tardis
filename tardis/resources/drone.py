@@ -1,6 +1,6 @@
 from .dronestates import RequestedState
 from ..utilities.attributedict import AttributeDict
-from cobald.interfaces.pool import Pool
+from cobald.interfaces import Pool
 
 import asyncio
 import uuid
