@@ -26,6 +26,10 @@ class Drone(Pool):
         return self._allocation
 
     @property
+    def batch_system_agent(self):
+        return self._batch_system_agent
+
+    @property
     def demand(self):
         return self._demand
 
