@@ -1,5 +1,6 @@
 from ..exceptions.tardisexceptions import TardisAuthError
 from ..exceptions.tardisexceptions import TardisTimeout
+from ..interfaces.batchsystemadapter import MachineActivities
 from ..interfaces.state import State
 
 import asyncio
@@ -18,6 +19,7 @@ class RequestedState(State):
         else:
             drone.state = BootingState()  # static state transition
         finally:
+            # Can be removed in production code
             await asyncio.sleep(0.5)
 
 
@@ -34,6 +36,7 @@ class BootingState(State):
             drone.state = IntegratingState()  # static state transition
             # drone.state = cls.transition(drone.resource_attributes.resource_status)
         finally:
+            # Can be removed in production code
             await asyncio.sleep(0.5)
 
 
@@ -41,22 +44,15 @@ class IntegratingState(State):
     @staticmethod
     async def run(drone):
         logging.info("Drone {} in IntegratingState".format(drone))
+        await drone.batch_system_agent.integrate_machine(dns_name=drone.resource_attributes['dns_name'])
         await asyncio.sleep(60)
-        drone.state = IdleState()  # static state transition
+        drone.state = AvailableState()  # static state transition
 
 
-class IdleState(State):
+class AvailableState(State):
     @staticmethod
     async def run(drone):
         logging.info("Drone {} in IdleState".format(drone))
-        await asyncio.sleep(0.5)
-        drone.state = BusyState()  # static state transition
-
-
-class BusyState(State):
-    @staticmethod
-    async def run(drone):
-        logging.info("Drone {} in BusyState".format(drone))
         await asyncio.sleep(0.5)
         drone.state = DrainingState()  # static state transition
 
