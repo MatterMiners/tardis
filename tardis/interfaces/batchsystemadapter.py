@@ -15,6 +15,10 @@ class MachineActivities(Enum):
 
 class BatchSystemAdapter(metaclass=ABCMeta):
     @abstractmethod
+    async def drain_machine(self, dns_name):
+        return NotImplemented
+
+    @abstractmethod
     async def integrate_machine(self, dns_name):
         return NotImplemented
 

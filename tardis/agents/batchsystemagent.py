@@ -5,6 +5,9 @@ class BatchSystemAgent(BatchSystemAdapter):
     def __init__(self, batch_system_adapter):
         self._batch_system_adapter = batch_system_adapter
 
+    async def drain_machine(self, dns_name):
+        return await self._batch_system_adapter.drain_machine(dns_name)
+
     async def integrate_machine(self, dns_name):
         return await self._batch_system_adapter.integrate_machine(dns_name)
 

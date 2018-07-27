@@ -28,6 +28,13 @@ class HTCondorAdapter(BatchSystemAdapter):
     def __init__(self):
         self._htcondor_status = AsyncCacheMap(update_coroutine=htcondor_status_updater, max_age=60)
 
+    async def drain_machine(self, dns_name):
+        await self._htcondor_status.update_status()
+        machine = self._htcondor_status[dns_name]['Machine']
+        cmd = 'condor_drain'
+        args = ('-graceful', machine)
+        return await async_run_command(cmd, *args)
+
     async def integrate_machine(self, dns_name):
         """
         HTCondor does not require any specific integration procedure. Other batchsystems probably do.
@@ -51,7 +58,7 @@ class HTCondorAdapter(BatchSystemAdapter):
         return (self.handle_zero_division_error(ratio_function) for ratio_function in ratio_functions)
 
     async def get_allocation(self, dns_name):
-        return max(self.get_resource_ratio(dns_name))
+        return max(await self.get_resource_ratio(dns_name))
 
     async def get_machine_status(self, dns_name=None):
         await self._htcondor_status.update_status()
@@ -63,7 +70,7 @@ class HTCondorAdapter(BatchSystemAdapter):
             return getattr(MachineActivities, activity)
 
     async def get_utilization(self, dns_name):
-        return min(self.get_resource_ratio(dns_name))
+        return min(await self.get_resource_ratio(dns_name))
 
     @staticmethod
     def handle_zero_division_error(ratio_function, default_return_value=0):
