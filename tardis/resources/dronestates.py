@@ -52,7 +52,7 @@ class IntegratingState(State):
 class AvailableState(State):
     @staticmethod
     async def run(drone):
-        logging.info("Drone {} in IdleState".format(drone))
+        logging.info("Drone {} in AvailableState".format(drone))
         await asyncio.sleep(0.5)
         drone.state = DrainingState()  # static state transition
 
