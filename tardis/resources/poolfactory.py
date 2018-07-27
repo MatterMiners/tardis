@@ -12,15 +12,17 @@ from importlib import import_module
 def create_composite_pool():
     configuration = Configuration('tardis.yml')
 
-    drones = []
+    composites = []
 
     batch_system_agent = BatchSystemAgent(batch_system_adapter=HTCondorAdapter())
 
     for site in configuration.Sites:
+        drones = []
         site_adapter = getattr(import_module(name="tardis.adapter.{}".format(site.lower())), '{}Adapter'.format(site))
         for machine_type in getattr(configuration, site).MachineTypes:
             drones.extend([(Drone(site_agent=SiteAgent(site_adapter(machine_type=machine_type,
                                                                     site_name=site.lower())),
                                   batch_system_agent=batch_system_agent)) for _ in range(1)])
+        composites.append(UniformComposite(*drones))
 
-    return UniformComposite(*drones)
+    return UniformComposite(*composites)
