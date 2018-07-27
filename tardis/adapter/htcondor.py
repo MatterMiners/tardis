@@ -26,7 +26,7 @@ async def htcondor_status_updater():
 
 class HTCondorAdapter(BatchSystemAdapter):
     def __init__(self):
-        self._htcondor_status = AsyncCacheMap(update_coroutine=htcondor_status_updater, max_age=60 * 15)
+        self._htcondor_status = AsyncCacheMap(update_coroutine=htcondor_status_updater, max_age=60)
 
     async def integrate_machine(self, dns_name):
         """
@@ -36,7 +36,8 @@ class HTCondorAdapter(BatchSystemAdapter):
         """
         return None
 
-    def get_resource_ratio(self, dns_name):
+    async def get_resource_ratio(self, dns_name):
+        await self._htcondor_status.update_status()
         htcondor_status = self._htcondor_status[dns_name]
 
         ratio_functions = [lambda: (htcondor_status['TotalSlotCpus'] - htcondor_status['Cpus']) / htcondor_status[
@@ -49,10 +50,11 @@ class HTCondorAdapter(BatchSystemAdapter):
 
         return (self.handle_zero_division_error(ratio_function) for ratio_function in ratio_functions)
 
-    def get_allocation(self, dns_name):
+    async def get_allocation(self, dns_name):
         return max(self.get_resource_ratio(dns_name))
 
-    def get_machine_status(self, dns_name=None):
+    async def get_machine_status(self, dns_name=None):
+        await self._htcondor_status.update_status()
         try:
             activity = self._htcondor_status[dns_name]['Activity']
         except KeyError:
@@ -60,7 +62,7 @@ class HTCondorAdapter(BatchSystemAdapter):
         else:
             return getattr(MachineActivities, activity)
 
-    def get_utilization(self, dns_name):
+    async def get_utilization(self, dns_name):
         return min(self.get_resource_ratio(dns_name))
 
     @staticmethod

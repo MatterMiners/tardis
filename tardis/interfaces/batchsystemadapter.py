@@ -19,13 +19,13 @@ class BatchSystemAdapter(metaclass=ABCMeta):
         return NotImplemented
 
     @abstractmethod
-    def get_allocation(self, dns_name):
+    async def get_allocation(self, dns_name):
         return NotImplemented
 
     @abstractmethod
-    def get_machine_status(self, dns_name):
+    async def get_machine_status(self, dns_name):
         return NotImplemented
 
     @abstractmethod
-    def get_utilization(self, dns_name):
+    async def get_utilization(self, dns_name):
         return NotImplemented
