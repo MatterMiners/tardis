@@ -9,8 +9,8 @@ from cobald.composite.uniform import UniformComposite
 from importlib import import_module
 
 
-def create_composite_pool():
-    configuration = Configuration('tardis.yml')
+def create_composite_pool(configuration='tardis.yml'):
+    configuration = Configuration(configuration)
 
     composites = []
 
