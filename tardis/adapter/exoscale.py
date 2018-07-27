@@ -2,13 +2,13 @@ from ..configuration.configuration import Configuration
 from ..exceptions.tardisexceptions import TardisTimeout
 from ..exceptions.tardisexceptions import TardisError
 from ..interfaces.siteadapter import SiteAdapter
-from ..utilities.looper import Looper
 
+from cobald.daemon import runtime
 from CloudStackAIO.CloudStack import CloudStack
 from CloudStackAIO.CloudStack import CloudStackClientException
 
-from asyncio import TimeoutError
 from contextlib import contextmanager
+import asyncio
 import logging
 
 
@@ -18,7 +18,7 @@ class ExoscaleAdapter(SiteAdapter):
         self.cloud_stack_client = CloudStack(end_point=self.configuration.end_point,
                                              api_key=self.configuration.api_key,
                                              api_secret=self.configuration.api_secret,
-                                             event_loop=Looper().get_event_loop()
+                                             event_loop=runtime._meta_runner.runners[asyncio].event_loop
                                              )
         self._machine_type = machine_type
         self._site_name = site_name
@@ -68,7 +68,7 @@ class ExoscaleAdapter(SiteAdapter):
     def handle_exceptions(self):
         try:
             yield
-        except TimeoutError as te:
+        except asyncio.TimeoutError as te:
             raise TardisTimeout from te
         except CloudStackClientException as ce:
             raise TardisError from ce
