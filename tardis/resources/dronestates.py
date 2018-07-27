@@ -79,8 +79,11 @@ class DownState(State):
     @staticmethod
     async def run(drone):
         logging.info("Drone {} in DownState".format(drone))
-        await asyncio.sleep(60)
-        drone.state = RequestedState()  # static state transition
+
+        if drone.demand > 0:
+            drone.state = RequestedState()  # static state transition
+        else:
+            await asyncio.sleep(10)
 
 
 # define allowed state transitions
