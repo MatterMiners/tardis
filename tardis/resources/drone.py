@@ -1,4 +1,4 @@
-from .dronestates import DownState
+from .dronestates import RequestedState
 from ..utilities.attributedict import AttributeDict
 from cobald.interfaces import Pool
 from cobald.daemon import service
@@ -9,7 +9,7 @@ import uuid
 
 @service(flavour=asyncio)
 class Drone(Pool):
-    def __init__(self, site_agent, batch_system_agent, observers=None, unique_id=None, state=DownState()):
+    def __init__(self, site_agent, batch_system_agent, observers=None, unique_id=None, state=RequestedState()):
         self._site_agent = site_agent
         self._batch_system_agent = batch_system_agent
         self._observers = observers or []
@@ -19,7 +19,7 @@ class Drone(Pool):
         self.resource_attributes = AttributeDict()
 
         self._allocation = 0.0
-        self._demand = 0.0
+        self._demand = self.maximum_demand
         self._supply = 0.0
         self._utilisation = 0.0
 
