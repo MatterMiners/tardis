@@ -54,6 +54,10 @@ class OTCAdapter(SiteAdapter):
         return translated_response
 
     @property
+    def machine_meta_data(self):
+        return self.configuration.MachineMetaData[self._machine_type]
+
+    @property
     def machine_type(self):
         return self._machine_type
 

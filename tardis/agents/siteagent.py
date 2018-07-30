@@ -18,6 +18,10 @@ class SiteAgent(SiteAdapter):
         return NotImplemented
 
     @property
+    def machine_meta_data(self):
+        return self._site_adapter.machine_meta_data
+
+    @property
     def machine_type(self):
         return self._site_adapter.machine_type
 

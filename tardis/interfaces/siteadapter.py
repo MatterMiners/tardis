@@ -14,6 +14,10 @@ class SiteAdapter(metaclass=ABCMeta):
         return NotImplemented
 
     @property
+    def machine_meta_data(self):
+        return NotImplemented
+
+    @property
     def machine_type(self):
         return NotImplemented
 

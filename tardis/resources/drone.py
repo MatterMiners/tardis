@@ -40,6 +40,10 @@ class Drone(Pool):
         self._demand = value
 
     @property
+    def maximum_demand(self):
+        return self.site_agent.machine_meta_data['Cores']
+
+    @property
     def supply(self):
         return self._supply
 
