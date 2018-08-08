@@ -28,6 +28,14 @@ class HTCondorAdapter(BatchSystemAdapter):
     def __init__(self):
         self._htcondor_status = AsyncCacheMap(update_coroutine=htcondor_status_updater, max_age=60)
 
+    async def disintegrate_machine(self, dns_name):
+        """
+        HTCondor does not require any specific disintegration procedure. Other batchsystems probably do.
+        :param dns_name: DNS name of the worker node
+        :return: None
+        """
+        return None
+
     async def drain_machine(self, dns_name):
         await self._htcondor_status.update_status()
         machine = self._htcondor_status[dns_name]['Machine']
