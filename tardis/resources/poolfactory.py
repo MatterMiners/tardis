@@ -5,7 +5,9 @@ from ..configuration.configuration import Configuration
 from ..resources.drone import Drone
 
 from cobald.composite.uniform import UniformComposite
+from cobald.composite.factory import FactoryPool
 
+from functools import partial
 from importlib import import_module
 
 
@@ -17,12 +19,15 @@ def create_composite_pool(configuration='tardis.yml'):
     batch_system_agent = BatchSystemAgent(batch_system_adapter=HTCondorAdapter())
 
     for site in configuration.Sites:
-        drones = []
         site_adapter = getattr(import_module(name="tardis.adapter.{}".format(site.lower())), '{}Adapter'.format(site))
         for machine_type in getattr(configuration, site).MachineTypes:
-            drones.extend([(Drone(site_agent=SiteAgent(site_adapter(machine_type=machine_type,
-                                                                    site_name=site.lower())),
-                                  batch_system_agent=batch_system_agent)) for _ in range(1)])
-        composites.append(UniformComposite(*drones))
+            drone_factory = partial(create_drone, site_agent=SiteAgent(site_adapter(machine_type=machine_type,
+                                                                                    site_name=site.lower())),
+                                    batch_system_agent=batch_system_agent)
+            composites.append(FactoryPool(factory=drone_factory))
 
     return UniformComposite(*composites)
+
+
+def create_drone(site_agent, batch_system_agent):
+    return Drone(site_agent=site_agent, batch_system_agent=batch_system_agent)
