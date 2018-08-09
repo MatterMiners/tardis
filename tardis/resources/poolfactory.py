@@ -1,4 +1,3 @@
-from ..adapter.htcondor import HTCondorAdapter
 from ..agents.batchsystemagent import BatchSystemAgent
 from ..agents.siteagent import SiteAgent
 from ..configuration.configuration import Configuration
@@ -18,7 +17,10 @@ def create_composite_pool(configuration='tardis.yml'):
 
     composites = []
 
-    batch_system_agent = BatchSystemAgent(batch_system_adapter=HTCondorAdapter())
+    batch_system = configuration.BatchSystem
+    batch_system_adapter = getattr(import_module(name="tardis.adapter.{}".format(batch_system.lower())),
+                                   "{}Adapter".format(batch_system))
+    batch_system_agent = BatchSystemAgent(batch_system_adapter=batch_system_adapter())
 
     for site in configuration.Sites:
         site_adapter = getattr(import_module(name="tardis.adapter.{}".format(site.lower())), '{}Adapter'.format(site))
