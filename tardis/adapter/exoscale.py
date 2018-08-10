@@ -1,6 +1,7 @@
 from ..configuration.configuration import Configuration
 from ..exceptions.tardisexceptions import TardisTimeout
 from ..exceptions.tardisexceptions import TardisError
+from ..interfaces.siteadapter import ResourceStatus
 from ..interfaces.siteadapter import SiteAdapter
 
 from cobald.daemon import runtime
@@ -8,6 +9,9 @@ from CloudStackAIO.CloudStack import CloudStack
 from CloudStackAIO.CloudStack import CloudStackClientException
 
 from contextlib import contextmanager
+from datetime import datetime
+from functools import partial
+
 import asyncio
 import logging
 
@@ -23,28 +27,22 @@ class ExoscaleAdapter(SiteAdapter):
         self._machine_type = machine_type
         self._site_name = site_name
 
+        key_translator = dict(resource_id='id', dns_name='name', created='created',
+                              resource_status='state', updated='created')
+
+        translator_functions = dict(created=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ"),
+                                    updated=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ"),
+                                    status=lambda x: getattr(ResourceStatus, x.title()))
+
+        self.handle_response = partial(self.handle_response, key_translator=key_translator,
+                                       translator_functions=translator_functions)
+
     async def deploy_resource(self, unique_id):
         response = await self.cloud_stack_client.deployVirtualMachine(name=self.dns_name(unique_id=unique_id),
                                                                       **self.configuration.MachineTypeConfiguration[
                                                                           self._machine_type])
         logging.debug("Exoscale deployVirtualMachine returned {}".format(response))
-        return self.handle_response(response)
-
-    def handle_response(self, response):
-        translator = dict(resource_id='id', dns_name='name', created='created',
-                          resource_status='state', updated='created')
-
-        translated_response = {}
-        logging.debug('Exoscale: {}', response)
-        if isinstance(response['virtualmachine'], list):
-            response = response['virtualmachine'][0]
-        else:
-            response = response['virtualmachine']
-
-        for translated_key, key in translator.items():
-            translated_response[translated_key] = response[key]
-
-        return translated_response
+        return self.handle_response(response['virtualmachine'])
 
     @property
     def machine_meta_data(self):
@@ -61,7 +59,7 @@ class ExoscaleAdapter(SiteAdapter):
     async def resource_status(self, resource_attributes):
         response = await self.cloud_stack_client.listVirtualMachines(id=resource_attributes.resource_id)
         logging.debug("Exoscale listVirtualMachines returned {}".format(response))
-        return self.handle_response(response)
+        return self.handle_response(response['virtualmachine'][0])
 
     async def terminate_resource(self, resource_attributes):
         response = await self.cloud_stack_client.destroyVirtualMachine(id=resource_attributes.resource_id)

@@ -5,10 +5,13 @@ from ..configuration.configuration import Configuration
 from ..exceptions.tardisexceptions import TardisAuthError
 from ..exceptions.tardisexceptions import TardisError
 from ..exceptions.tardisexceptions import TardisTimeout
+from ..interfaces.siteadapter import ResourceStatus
 from ..interfaces.siteadapter import SiteAdapter
 
 from asyncio import TimeoutError
 from contextlib import contextmanager
+from datetime import datetime
+from functools import partial
 
 import logging
 
@@ -28,6 +31,16 @@ class OTCAdapter(SiteAdapter):
 
         self.nova = NovaClient(session=auth)
 
+        key_translator = dict(resource_id='id', dns_name='name', created='created', resource_status='status',
+                              updated='updated')
+
+        translator_functions = dict(created=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ"),
+                                    updated=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ"),
+                                    status=lambda x: getattr(ResourceStatus, x.title()))
+
+        self.handle_response = partial(self.handle_response, key_translator=key_translator,
+                                       translator_functions=translator_functions)
+
     async def deploy_resource(self, unique_id):
         specs = self.configuration.MachineTypeConfiguration[self._machine_type]
         specs['name'] = self.dns_name(unique_id)
@@ -35,23 +48,6 @@ class OTCAdapter(SiteAdapter):
         response = await self.nova.servers.create(server=specs)
         logging.debug("OTC servers servers create returned {}".format(response))
         return self.handle_response(response, dns_name=specs['name'])
-
-    def handle_response(self, response, **kwargs):
-        translator = dict(resource_id='id', dns_name='name', created='created',
-                          resource_status='status', updated='updated')
-
-        translated_response = {}
-
-        for translated_key, key in translator.items():
-            try:
-                translated_response[translated_key] = response['server'][key]
-            except KeyError:
-                continue
-
-        for key, value in kwargs.items():
-            translated_response[key] = value
-
-        return translated_response
 
     @property
     def machine_meta_data(self):

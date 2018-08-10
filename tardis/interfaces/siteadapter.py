@@ -1,4 +1,13 @@
 from abc import ABCMeta, abstractmethod
+from enum import Enum
+
+
+class ResourceStatus(Enum):
+    Build = 1
+    Active = 2
+    Shutoff = 3
+    Deleted = 4
+    Error = 5
 
 
 class SiteAdapter(metaclass=ABCMeta):
@@ -9,9 +18,21 @@ class SiteAdapter(metaclass=ABCMeta):
     def dns_name(self, unique_id):
         return "{}-{}".format(self.site_name.lower(), unique_id, self.machine_type.lower())
 
-    @abstractmethod
-    def handle_response(self, response):
-        return NotImplemented
+    @staticmethod
+    def handle_response(response, key_translator: dict, translator_functions: dict, **additional_content):
+        translated_response = {}
+
+        for translated_key, key in key_translator.items():
+            try:
+                translated_response[translated_key] = translator_functions.get(key,
+                                                                               lambda x: x)(response['server'][key])
+            except KeyError:
+                continue
+
+        for key, value in additional_content.items():
+            translated_response[key] = value
+
+        return translated_response
 
     @property
     def machine_meta_data(self):
