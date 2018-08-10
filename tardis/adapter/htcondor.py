@@ -15,13 +15,14 @@ async def htcondor_status_updater():
             'Machine,State,Activity,TotalSlotMemory,Memory,TotalCpus,TotalSlotCpus,Cpus,TotalSlotDisk,Disk',
             '-json', '-constraint', 'PartitionableSlot=?=True']
     htcondor_status = {}
+
     try:
         for entry in json.loads(await async_run_command(cmd, *args)):
             htcondor_status.setdefault(entry['Machine'].split('.')[0], []).append(entry)
     except AsyncRunCommandFailure as ex:
         logging.error("condor_status could not be executed!")
         logging.error(str(ex))
-    finally:
+    else:
         return htcondor_status
 
 

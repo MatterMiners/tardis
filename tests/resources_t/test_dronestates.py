@@ -1,4 +1,4 @@
-from tardis.resources.dronestates import RequestedState
+from tardis.resources.dronestates import RequestState
 from tardis.resources.dronestates import BootingState
 from tardis.resources.dronestates import IntegratingState
 from tardis.resources.dronestates import AvailableState
