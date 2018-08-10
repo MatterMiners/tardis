@@ -2,20 +2,20 @@ from ..exceptions.tardisexceptions import TardisAuthError
 from ..exceptions.tardisexceptions import TardisTimeout
 from ..interfaces.batchsystemadapter import MachineStatus
 from ..interfaces.state import State
+from ..interfaces.siteadapter import ResourceStatus
 
 import asyncio
 import logging
 
 
-class RequestedState(State):
+class RequestState(State):
     @staticmethod
     async def run(drone):
-        logging.info("Drone {} in RequestedState".format(drone))
+        logging.info("Drone {} in RequestState".format(drone))
         try:
-            drone.resource_attributes = await drone.site_agent.deploy_resource(unique_id=drone.unique_id)
+            drone.resource_attributes.update(await drone.site_agent.deploy_resource(unique_id=drone.unique_id))
         except (TardisAuthError, TardisTimeout):
-            # Retry provisioning of the resource
-            drone.state = RequestedState()  # static state transition
+            drone.state = DownState()  # static state transition
         else:
             drone.state = BootingState()  # static state transition
         finally:
@@ -29,30 +29,51 @@ class BootingState(State):
         logging.info("Drone {} in BootingState".format(drone))
         try:
             drone.resource_attributes.update(await drone.site_agent.resource_status(drone.resource_attributes))
+            logging.info('Resource attributes: {}'.format(drone.resource_attributes))
         except (TardisAuthError, TardisTimeout):
             #  Retry to get current state of the resource
             drone.state = BootingState()  # static state transition
         else:
-            drone.state = IntegratingState()  # static state transition
-            # drone.state = cls.transition(drone.resource_attributes.resource_status)
+            drone.state = cls.transition[drone.resource_attributes.resource_status]()
         finally:
             # Can be removed in production code
             await asyncio.sleep(0.5)
 
 
-class IntegratingState(State):
+class IntegrateState(State):
     @staticmethod
     async def run(drone):
-        logging.info("Drone {} in IntegratingState".format(drone))
+        logging.info("Drone {} in IntegrateState".format(drone))
         await drone.batch_system_agent.integrate_machine(dns_name=drone.resource_attributes['dns_name'])
-        await asyncio.sleep(60)
-        drone.state = AvailableState()  # static state transition
+        await asyncio.sleep(0.5)
+        drone.state = IntegratingState()  # static state transition
+
+
+class IntegratingState(State):
+    @classmethod
+    async def run(cls, drone):
+        logging.info("Drone {} in IntegratingState".format(drone))
+        machine_status = await drone.batch_system_agent.get_machine_status(dns_name=drone.resource_attributes[
+            'dns_name'])
+        await asyncio.sleep(0.5)
+        drone.state = cls.transition[machine_status]()
 
 
 class AvailableState(State):
     @staticmethod
     async def run(drone):
         logging.info("Drone {} in AvailableState".format(drone))
+        await asyncio.sleep(60)
+        if not drone.demand:
+            drone.state = DrainingState()  # static state transition
+        else:
+            drone.state = AvailableState()  # static state transition
+
+
+class DrainState(State):
+    @staticmethod
+    async def run(drone):
+        logging.info("Drone {} in DrainState".format(drone))
         await asyncio.sleep(0.5)
         drone.state = DrainingState()  # static state transition
 
@@ -61,6 +82,14 @@ class DrainingState(State):
     @staticmethod
     async def run(drone):
         logging.info("Drone {} in DrainingState".format(drone))
+        await asyncio.sleep(0.5)
+        drone.state = DisintegrateState()  # static state transition
+
+
+class DisintegrateState(State):
+    @staticmethod
+    async def run(drone):
+        logging.info("Drone {} in DisintegrateState".format(drone))
         await asyncio.sleep(0.5)
         drone.state = ShutDownState()  # static state transition
 
@@ -72,6 +101,16 @@ class ShutDownState(State):
         logging.info('Destroying VM with ID {}'.format(drone.resource_attributes.resource_id))
         await drone.site_agent.terminate_resource(drone.resource_attributes)
         await asyncio.sleep(0.5)
+        drone.state = CleanupState()  # static state transition
+
+
+class CleanupState(State):
+    @staticmethod
+    async def run(drone):
+        logging.info("Drone {} in CleanupState".format(drone))
+        logging.info('Destroying VM with ID {}'.format(drone.resource_attributes.resource_id))
+        await drone.site_agent.terminate_resource(drone.resource_attributes)
+        await asyncio.sleep(0.5)
         drone.state = DownState()  # static state transition
 
 
@@ -80,17 +119,10 @@ class DownState(State):
     async def run(drone):
         logging.info("Drone {} in DownState".format(drone))
 
-        if drone.demand > 0:
-            drone.state = RequestedState()  # static state transition
-        else:
-            await asyncio.sleep(10)
-
 
 # define allowed state transitions
-RequestedState.transition = {'REQUESTED': RequestedState,
-                             'BOOTING': BootingState,
-                             'DOWN': DownState}
+BootingState.transition = {ResourceStatus.Booting: BootingState,
+                           ResourceStatus.Running: IntegrateState}
 
-BootingState.transition = {'BOOTING': BootingState,
-                           'INTEGRATING': IntegratingState,
-                           'DOWN': DownState}
+IntegratingState.transition = {MachineStatus.NotAvailable: IntegratingState,
+                               MachineStatus.Available: AvailableState}

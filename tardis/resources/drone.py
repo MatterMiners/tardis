@@ -1,15 +1,17 @@
-from .dronestates import RequestedState
+from .dronestates import RequestState
+from .dronestates import DownState
 from ..utilities.attributedict import AttributeDict
 from cobald.interfaces import Pool
 from cobald.daemon import service
 
 import asyncio
+import logging
 import uuid
 
 
 @service(flavour=asyncio)
 class Drone(Pool):
-    def __init__(self, site_agent, batch_system_agent, observers=None, unique_id=None, state=RequestedState()):
+    def __init__(self, site_agent, batch_system_agent, observers=None, unique_id=None, state=RequestState()):
         self._site_agent = site_agent
         self._batch_system_agent = batch_system_agent
         self._observers = observers or []
@@ -40,11 +42,11 @@ class Drone(Pool):
         self._demand = value
 
     @property
-    def maximum_demand(self):
+    def maximum_demand(self) -> float:
         return self.site_agent.machine_meta_data['Cores']
 
     @property
-    def supply(self):
+    def supply(self) -> float:
         return self._supply
 
     @property
@@ -59,6 +61,9 @@ class Drone(Pool):
         while True:
             await self.state.run(self)
             await asyncio.sleep(1)
+            if isinstance(self.state, DownState):
+                logging.debug("Garbage Collect Drone: {}".format(self.unique_id))
+                return
 
     def register_observers(self, agent):
         self._observers.append(agent)
