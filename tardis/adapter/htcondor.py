@@ -1,6 +1,6 @@
 from ..exceptions.tardisexceptions import AsyncRunCommandFailure
 from ..interfaces.batchsystemadapter import BatchSystemAdapter
-from ..interfaces.batchsystemadapter import MachineActivities
+from ..interfaces.batchsystemadapter import MachineStatus
 from ..utilities.utils import async_run_command
 from ..utilities.asynccachemap import AsyncCacheMap
 
@@ -11,7 +11,8 @@ import logging
 
 async def htcondor_status_updater():
     cmd = 'condor_status'
-    args = ['-attributes', 'Machine,Activity,TotalSlotMemory,Memory,TotalCpus,TotalSlotCpus,Cpus,TotalSlotDisk,Disk',
+    args = ['-attributes',
+            'Machine,State,Activity,TotalSlotMemory,Memory,TotalCpus,TotalSlotCpus,Cpus,TotalSlotDisk,Disk',
             '-json', '-constraint', 'PartitionableSlot=?=True']
     htcondor_status = {}
     try:
@@ -69,13 +70,18 @@ class HTCondorAdapter(BatchSystemAdapter):
         return max(await self.get_resource_ratio(dns_name))
 
     async def get_machine_status(self, dns_name=None):
+        status_mapping = {('Unclaimed', 'Idle'): MachineStatus.Available,
+                          ('Drained', 'Retiring'): MachineStatus.Draining,
+                          ('Drained', 'Idle'): MachineStatus.Drained,
+                          ('Owner', 'Idle'): MachineStatus.NotAvailable}
+
         await self._htcondor_status.update_status()
         try:
-            activity = self._htcondor_status[dns_name]['Activity']
+            machine_status = self._htcondor_status[dns_name]
         except KeyError:
-            return MachineActivities.NotIntegrated
+            return MachineStatus.NotAvailable
         else:
-            return getattr(MachineActivities, activity)
+            return status_mapping.get((machine_status['State'], machine_status['Activity']), MachineStatus.NotAvailable)
 
     async def get_utilization(self, dns_name):
         return min(await self.get_resource_ratio(dns_name))

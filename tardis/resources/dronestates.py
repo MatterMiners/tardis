@@ -1,6 +1,6 @@
 from ..exceptions.tardisexceptions import TardisAuthError
 from ..exceptions.tardisexceptions import TardisTimeout
-from ..interfaces.batchsystemadapter import MachineActivities
+from ..interfaces.batchsystemadapter import MachineStatus
 from ..interfaces.state import State
 
 import asyncio

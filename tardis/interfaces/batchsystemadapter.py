@@ -3,14 +3,11 @@ from abc import abstractmethod
 from enum import Enum
 
 
-class MachineActivities(Enum):
-    Vacating = 1
-    Killing = 2
-    Idle = 3
-    Busy = 4
-    Suspended = 5
-    Benchmarking = 6
-    NotIntegrated = 7
+class MachineStatus(Enum):
+    Available = 1
+    Draining = 2
+    Drained = 3
+    NotAvailable = 4
 
 
 class BatchSystemAdapter(metaclass=ABCMeta):
