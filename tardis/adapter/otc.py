@@ -7,6 +7,7 @@ from ..exceptions.tardisexceptions import TardisError
 from ..exceptions.tardisexceptions import TardisTimeout
 from ..interfaces.siteadapter import ResourceStatus
 from ..interfaces.siteadapter import SiteAdapter
+from ..utilities.staticmapping import StaticMapping
 
 from asyncio import TimeoutError
 from contextlib import contextmanager
@@ -31,12 +32,15 @@ class OTCAdapter(SiteAdapter):
 
         self.nova = NovaClient(session=auth)
 
-        key_translator = dict(resource_id='id', dns_name='name', created='created', resource_status='status',
-                              updated='updated')
+        key_translator = StaticMapping(resource_id='id', dns_name='name', created='created', resource_status='status',
+                                       updated='updated')
 
-        translator_functions = dict(created=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ"),
-                                    updated=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ"),
-                                    status=lambda x: getattr(ResourceStatus, x.title()))
+        translator_functions = StaticMapping(created=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ"),
+                                             updated=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ"),
+                                             status=lambda x, translator=StaticMapping(BUILD=ResourceStatus.Booting,
+                                                                                       ACTIVE=ResourceStatus.Running,
+                                                                                       SHUTOFF=ResourceStatus.Stopped):
+                                             translator[x])
 
         self.handle_response = partial(self.handle_response, key_translator=key_translator,
                                        translator_functions=translator_functions)
@@ -47,7 +51,7 @@ class OTCAdapter(SiteAdapter):
         await self.nova.init_api(timeout=60)
         response = await self.nova.servers.create(server=specs)
         logging.debug("OTC servers servers create returned {}".format(response))
-        return self.handle_response(response, dns_name=specs['name'])
+        return self.handle_response(response['server'], dns_name=specs['name'])
 
     @property
     def machine_meta_data(self):
@@ -65,7 +69,7 @@ class OTCAdapter(SiteAdapter):
         await self.nova.init_api(timeout=60)
         response = await self.nova.servers.get(resource_attributes.resource_id)
         logging.debug("OTC servers get returned {}".format(response))
-        return self.handle_response(response)
+        return self.handle_response(response['server'])
 
     async def terminate_resource(self, resource_attributes):
         await self.nova.init_api(timeout=60)

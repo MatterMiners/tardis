@@ -3,6 +3,7 @@ from ..exceptions.tardisexceptions import TardisTimeout
 from ..exceptions.tardisexceptions import TardisError
 from ..interfaces.siteadapter import ResourceStatus
 from ..interfaces.siteadapter import SiteAdapter
+from ..utilities.staticmapping import StaticMapping
 
 from cobald.daemon import runtime
 from CloudStackAIO.CloudStack import CloudStack
@@ -27,12 +28,17 @@ class ExoscaleAdapter(SiteAdapter):
         self._machine_type = machine_type
         self._site_name = site_name
 
-        key_translator = dict(resource_id='id', dns_name='name', created='created',
-                              resource_status='state', updated='created')
+        key_translator = StaticMapping(resource_id='id', dns_name='name', created='created',
+                                       resource_status='state', updated='created')
 
-        translator_functions = dict(created=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ"),
-                                    updated=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ"),
-                                    status=lambda x: getattr(ResourceStatus, x.title()))
+        translator_functions = StaticMapping(created=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%S%z"),
+                                             updated=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%S%z"),
+                                             state=lambda x, translator=StaticMapping(Present=ResourceStatus.Booting,
+                                                                                      Running=ResourceStatus.Running,
+                                                                                      Stopped=ResourceStatus.Stopped,
+                                                                                      Expunged=ResourceStatus.Deleted,
+                                                                                      Destroyed=ResourceStatus.Deleted):
+                                             translator[x])
 
         self.handle_response = partial(self.handle_response, key_translator=key_translator,
                                        translator_functions=translator_functions)

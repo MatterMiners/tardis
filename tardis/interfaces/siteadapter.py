@@ -3,11 +3,10 @@ from enum import Enum
 
 
 class ResourceStatus(Enum):
-    Build = 1
-    Active = 2
-    Shutoff = 3
+    Booting = 1
+    Running = 2
+    Stopped = 3
     Deleted = 4
-    Error = 5
 
 
 class SiteAdapter(metaclass=ABCMeta):
@@ -25,7 +24,7 @@ class SiteAdapter(metaclass=ABCMeta):
         for translated_key, key in key_translator.items():
             try:
                 translated_response[translated_key] = translator_functions.get(key,
-                                                                               lambda x: x)(response['server'][key])
+                                                                               lambda x: x)(response[key])
             except KeyError:
                 continue
 
