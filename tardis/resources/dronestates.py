@@ -64,6 +64,11 @@ class AvailableState(State):
     async def run(drone):
         logging.info("Drone {} in AvailableState".format(drone))
         await asyncio.sleep(60)
+        drone._allocation = await drone.batch_system_agent.get_allocation(dns_name=drone.resource_attributes[
+            'dns_name'])
+        drone._utilisation = await drone.batch_system_agent.get_utilization(dns_name=drone.resource_attributes[
+            'dns_name'])
+        drone._supply = drone.maximum_demand
         if not drone.demand:
             drone.state = DrainingState()  # static state transition
         else:

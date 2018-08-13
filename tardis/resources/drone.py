@@ -22,8 +22,8 @@ class Drone(Pool):
 
         self._allocation = 0.0
         self._demand = self.maximum_demand
-        self._supply = 0.0
         self._utilisation = 0.0
+        self._supply = 0.0
 
     @property
     def allocation(self) -> float:
