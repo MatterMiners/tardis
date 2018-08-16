@@ -11,10 +11,16 @@ class AsyncCacheMap(Mapping):
         self._max_age = max_age
         self._last_update = 0
         self._data = {}
-        self._lock = asyncio.Lock()
+        self._lock = None
 
     async def update_status(self):
+        # Create lock once tardis event loop is running.
+        # To avoid got Future <Future pending> attached to a different loop exception
+        if not self._lock:
+            self._lock = asyncio.Lock()
+
         current_time = time()
+
         async with self._lock:
             if (current_time - self._last_update) > self._max_age:
                     try:
