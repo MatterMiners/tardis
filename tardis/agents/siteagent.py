@@ -14,7 +14,7 @@ class SiteAgent(SiteAdapter):
     def dns_name(self, unique_id):
         return self._site_adapter.dns_name(unique_id=unique_id)
 
-    def handle_response(self, response):
+    def handle_response(self, response, key_translator: dict, translator_functions: dict, **additional_content):
         return NotImplemented
 
     @property
