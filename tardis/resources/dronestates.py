@@ -63,32 +63,47 @@ class AvailableState(State):
     @staticmethod
     async def run(drone):
         logging.info("Drone {} in AvailableState".format(drone))
-        await asyncio.sleep(60)
+        await asyncio.sleep(10)
+
+        machine_status = await drone.batch_system_agent.get_machine_status(dns_name=drone.resource_attributes[
+            'dns_name'])
+
+        if not drone.demand:
+            drone._supply = 0.0
+            drone.state = DrainState()  # static state transition
+            return
+
+        if machine_status == MachineStatus.NotAvailable:
+            drone._supply = 0.0
+            drone.state = ShutDownState()  # static state transition
+            return
+
         drone._allocation = await drone.batch_system_agent.get_allocation(dns_name=drone.resource_attributes[
             'dns_name'])
         drone._utilisation = await drone.batch_system_agent.get_utilization(dns_name=drone.resource_attributes[
             'dns_name'])
         drone._supply = drone.maximum_demand
-        if not drone.demand:
-            drone.state = DrainingState()  # static state transition
-        else:
-            drone.state = AvailableState()  # static state transition
+        drone.state = AvailableState()  # static state transition
 
 
 class DrainState(State):
     @staticmethod
     async def run(drone):
         logging.info("Drone {} in DrainState".format(drone))
+        await drone.batch_system_agent.drain_machine(dns_name=drone.resource_attributes[
+            'dns_name'])
         await asyncio.sleep(0.5)
         drone.state = DrainingState()  # static state transition
 
 
 class DrainingState(State):
-    @staticmethod
-    async def run(drone):
+    @classmethod
+    async def run(cls, drone):
         logging.info("Drone {} in DrainingState".format(drone))
         await asyncio.sleep(0.5)
-        drone.state = DisintegrateState()  # static state transition
+        machine_status = await drone.batch_system_agent.get_machine_status(dns_name=drone.resource_attributes[
+            'dns_name'])
+        drone.state = cls.transition[machine_status]
 
 
 class DisintegrateState(State):
@@ -103,8 +118,19 @@ class ShutDownState(State):
     @staticmethod
     async def run(drone):
         logging.info("Drone {} in ShutDownState".format(drone))
-        logging.info('Destroying VM with ID {}'.format(drone.resource_attributes.resource_id))
-        await drone.site_agent.terminate_resource(drone.resource_attributes)
+        logging.info('Stopping VM with ID {}'.format(drone.resource_attributes.resource_id))
+        # ToDo: Not yet uncommented due to missing implementation in AsyncOpenStack client
+        # await drone.site_agent.stop_resource(drone.resource_attributes)
+        await asyncio.sleep(0.5)
+        drone.state = ShuttingDownState()  # static state transition
+
+
+class ShuttingDownState(State):
+    @staticmethod
+    async def run(drone):
+        logging.info("Drone {} in ShuttingDownState".format(drone))
+        logging.info('Checking Status of VM with ID {}'.format(drone.resource_attributes.resource_id))
+        await drone.site_agent.resource_status(drone.resource_attributes)
         await asyncio.sleep(0.5)
         drone.state = CleanupState()  # static state transition
 
@@ -131,3 +157,7 @@ BootingState.transition = {ResourceStatus.Booting: BootingState,
 
 IntegratingState.transition = {MachineStatus.NotAvailable: IntegratingState,
                                MachineStatus.Available: AvailableState}
+
+DrainingState.transition = {MachineStatus.Draining: DrainingState,
+                            MachineStatus.Available: DrainingState,
+                            MachineStatus.Drained: DisintegrateState}
