@@ -103,7 +103,7 @@ class DrainingState(State):
         await asyncio.sleep(0.5)
         machine_status = await drone.batch_system_agent.get_machine_status(dns_name=drone.resource_attributes[
             'dns_name'])
-        drone.state = cls.transition[machine_status]
+        drone.state = cls.transition[machine_status]()
 
 
 class DisintegrateState(State):
@@ -119,20 +119,19 @@ class ShutDownState(State):
     async def run(drone):
         logging.info("Drone {} in ShutDownState".format(drone))
         logging.info('Stopping VM with ID {}'.format(drone.resource_attributes.resource_id))
-        # ToDo: Not yet uncommented due to missing implementation in AsyncOpenStack client
-        # await drone.site_agent.stop_resource(drone.resource_attributes)
+        await drone.site_agent.stop_resource(drone.resource_attributes)
         await asyncio.sleep(0.5)
         drone.state = ShuttingDownState()  # static state transition
 
 
 class ShuttingDownState(State):
-    @staticmethod
-    async def run(drone):
+    @classmethod
+    async def run(cls, drone):
         logging.info("Drone {} in ShuttingDownState".format(drone))
         logging.info('Checking Status of VM with ID {}'.format(drone.resource_attributes.resource_id))
-        await drone.site_agent.resource_status(drone.resource_attributes)
+        drone.resource_attributes.update(await drone.site_agent.resource_status(drone.resource_attributes))
+        drone.state = cls.transition[drone.resource_attributes.resource_status]()
         await asyncio.sleep(0.5)
-        drone.state = CleanupState()  # static state transition
 
 
 class CleanupState(State):
@@ -161,3 +160,6 @@ IntegratingState.transition = {MachineStatus.NotAvailable: IntegratingState,
 DrainingState.transition = {MachineStatus.Draining: DrainingState,
                             MachineStatus.Available: DrainingState,
                             MachineStatus.Drained: DisintegrateState}
+
+ShuttingDownState.transition = {ResourceStatus.Running: ShuttingDownState,
+                                ResourceStatus.Stopped: CleanupState}
