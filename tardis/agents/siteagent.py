@@ -34,7 +34,8 @@ class SiteAgent(SiteAdapter):
         return self._site_adapter.site_name
 
     async def stop_resource(self, resource_attributes):
-        return self._site_adapter.stop_resource(resource_attributes)
+        with self._site_adapter.handle_exceptions():
+            return await self._site_adapter.stop_resource(resource_attributes)
 
     async def terminate_resource(self, resource_attributes):
         with self._site_adapter.handle_exceptions():
