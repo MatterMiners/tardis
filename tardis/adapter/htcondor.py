@@ -1,3 +1,4 @@
+from ..configuration.configuration import Configuration
 from ..exceptions.tardisexceptions import AsyncRunCommandFailure
 from ..interfaces.batchsystemadapter import BatchSystemAdapter
 from ..interfaces.batchsystemadapter import MachineStatus
@@ -29,7 +30,8 @@ async def htcondor_status_updater():
 
 class HTCondorAdapter(BatchSystemAdapter):
     def __init__(self):
-        self._htcondor_status = AsyncCacheMap(update_coroutine=htcondor_status_updater, max_age=60)
+        self._htcondor_status = AsyncCacheMap(update_coroutine=htcondor_status_updater,
+                                              max_age=Configuration().BatchSystem.max_age)
 
     async def disintegrate_machine(self, dns_name):
         """
