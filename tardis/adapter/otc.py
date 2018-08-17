@@ -71,6 +71,13 @@ class OTCAdapter(SiteAdapter):
         logging.debug("OTC servers get returned {}".format(response))
         return self.handle_response(response['server'])
 
+    async def stop_resource(self, resource_attributes):
+        await self.nova.init_api(timeout=60)
+        params = {'os-stop': None}
+        response = await self.nova.servers.run_action(resource_attributes.resource_id, **params)
+        logging.debug("OTC servers stop returned {}".format(response))
+        return response
+
     async def terminate_resource(self, resource_attributes):
         await self.nova.init_api(timeout=60)
         response = await self.nova.servers.force_delete(resource_attributes.resource_id)

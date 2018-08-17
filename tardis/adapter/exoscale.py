@@ -67,6 +67,11 @@ class ExoscaleAdapter(SiteAdapter):
         logging.debug("Exoscale listVirtualMachines returned {}".format(response))
         return self.handle_response(response['virtualmachine'][0])
 
+    async def stop_resource(self, resource_attributes):
+        response = await self.cloud_stack_client.stopVirtualMachine(id=resource_attributes.resource_id)
+        logging.debug("Exoscale stopVirtualMachine returned {}".format(response))
+        return response
+
     async def terminate_resource(self, resource_attributes):
         response = await self.cloud_stack_client.destroyVirtualMachine(id=resource_attributes.resource_id)
         logging.debug("Exoscale destroyVirtualMachine returned {}".format(response))

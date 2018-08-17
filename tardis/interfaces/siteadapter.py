@@ -50,5 +50,9 @@ class SiteAdapter(metaclass=ABCMeta):
         return NotImplemented
 
     @abstractmethod
+    async def stop_resource(self, resource_attributes):
+        return NotImplemented
+
+    @abstractmethod
     async def terminate_resource(self, resource_attributes):
         return NotImplemented
