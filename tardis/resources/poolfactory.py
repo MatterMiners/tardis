@@ -5,7 +5,7 @@ from ..resources.drone import Drone
 
 from cobald.composite.uniform import UniformComposite
 from cobald.composite.factory import FactoryPool
-from cobald.decorator.coarser import Coarser
+from cobald.decorator.standardiser import Standardiser
 from cobald.decorator.logger import Logger
 
 from functools import partial
@@ -29,8 +29,9 @@ def create_composite_pool(configuration='tardis.yml'):
                                                                                     site_name=site.lower())),
                                     batch_system_agent=batch_system_agent)
             cpu_cores = getattr(configuration, site).MachineMetaData[machine_type]['Cores']
-            composites.append(Logger(Coarser(FactoryPool(factory=drone_factory),
-                                             granularity=cpu_cores),
+            composites.append(Logger(Standardiser(FactoryPool(factory=drone_factory),
+                                                  minimum=cpu_cores,
+                                                  granularity=cpu_cores),
                                      name=site.lower()))
 
     return UniformComposite(*composites)
