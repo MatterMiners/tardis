@@ -18,3 +18,7 @@ class TardisError(Exception):
 
 class TardisTimeout(Exception):
     pass
+
+
+class TardisQuotaError(Exception):
+    pass

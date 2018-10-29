@@ -1,6 +1,7 @@
 from ..configuration.configuration import Configuration
 from ..exceptions.tardisexceptions import TardisTimeout
 from ..exceptions.tardisexceptions import TardisError
+from ..exceptions.tardisexceptions import TardisQuotaError
 from ..interfaces.siteadapter import ResourceStatus
 from ..interfaces.siteadapter import SiteAdapter
 from ..utilities.staticmapping import StaticMapping
@@ -48,7 +49,13 @@ class ExoscaleAdapter(SiteAdapter):
                                                                       **self.configuration.MachineTypeConfiguration[
                                                                           self._machine_type])
         logging.debug("Exoscale deployVirtualMachine returned {}".format(response))
-        return self.handle_response(response['virtualmachine'])
+        try:
+            return self.handle_response(response['virtualmachine'])
+        except KeyError:
+            # if quota exceeded
+            if response['errorcode'] == 535:
+                raise TardisQuotaError
+
 
     @property
     def machine_meta_data(self):
