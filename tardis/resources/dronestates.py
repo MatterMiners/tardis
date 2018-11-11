@@ -1,6 +1,6 @@
 from ..exceptions.tardisexceptions import TardisAuthError
 from ..exceptions.tardisexceptions import TardisTimeout
-from ..exceptions.tardisexceptions import TardisQuotaError
+from ..exceptions.tardisexceptions import TardisQuotaExceeded
 from ..interfaces.batchsystemadapter import MachineStatus
 from ..interfaces.state import State
 from ..interfaces.siteadapter import ResourceStatus
@@ -15,7 +15,7 @@ class RequestState(State):
         logging.info("Drone {} in RequestState".format(drone))
         try:
             drone.resource_attributes.update(await drone.site_agent.deploy_resource(unique_id=drone.unique_id))
-        except (TardisAuthError, TardisTimeout, TardisQuotaError):
+        except (TardisAuthError, TardisTimeout, TardisQuotaExceeded):
             drone.state = DownState()  # static state transition
         else:
             drone.state = BootingState()  # static state transition
