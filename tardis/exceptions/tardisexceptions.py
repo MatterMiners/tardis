@@ -20,5 +20,5 @@ class TardisTimeout(Exception):
     pass
 
 
-class TardisQuotaError(Exception):
+class TardisQuotaExceeded(Exception):
     pass
