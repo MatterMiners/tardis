@@ -1,6 +1,7 @@
 from ..configuration.configuration import Configuration
 from ..exceptions.tardisexceptions import TardisTimeout
 from ..exceptions.tardisexceptions import TardisError
+from ..exceptions.tardisexceptions import TardisQuotaExceeded
 from ..interfaces.siteadapter import ResourceStatus
 from ..interfaces.siteadapter import SiteAdapter
 from ..utilities.staticmapping import StaticMapping
@@ -84,4 +85,9 @@ class ExoscaleAdapter(SiteAdapter):
         except asyncio.TimeoutError as te:
             raise TardisTimeout from te
         except CloudStackClientException as ce:
-            raise TardisError from ce
+            if ce.error_code == 535:
+                logging.info("Quota exceeded")
+                logging.debug(ce.message)
+                raise TardisQuotaExceeded
+            else:
+                raise TardisError from ce
