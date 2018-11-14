@@ -5,22 +5,27 @@ from ..interfaces.batchsystemadapter import MachineStatus
 from ..utilities.utils import async_run_command
 from ..utilities.asynccachemap import AsyncCacheMap
 
-
-import json
+from io import StringIO
+from shlex import quote
+import csv
 import logging
 
 
 async def htcondor_status_updater():
-    cmd = 'condor_status'
-    args = ['-attributes',
-            'Machine,State,Activity,TotalSlotMemory,Memory,TotalCpus,TotalSlotCpus,Cpus,TotalSlotDisk,Disk',
-            '-json', '-constraint', 'PartitionableSlot=?=True']
+    attributes = dict(Machine='Machine', State='State', Activity='Activity')
+    # Escape htcondor expressions and add them to attributes
+    attributes.update({key: quote(value) for key, value in Configuration('tardis.yml').BatchSystem.ratios.items()})
+    attributes_string = " ".join(attributes.values())
+    cmd = f'condor_status -af:t {attributes_string} -constraint PartitionableSlot=?=True'
+
     htcondor_status = {}
 
     try:
-        condor_status = await async_run_command(cmd, *args)
-        for entry in json.loads(condor_status if condor_status else '[]'):
-            htcondor_status[entry['Machine'].split('.')[0]] = entry
+        condor_status = await async_run_command(cmd)
+        with StringIO(condor_status) as csv_input:
+            cvs_reader = csv.DictReader(csv_input, fieldnames=tuple(attributes.keys()), delimiter='\t')
+            for row in cvs_reader:
+                htcondor_status[row['Machine'].split('.')[0]] = row
     except AsyncRunCommandFailure as ex:
         logging.error("condor_status could not be executed!")
         logging.error(str(ex))
@@ -30,8 +35,10 @@ async def htcondor_status_updater():
 
 class HTCondorAdapter(BatchSystemAdapter):
     def __init__(self):
+        config = Configuration()
         self._htcondor_status = AsyncCacheMap(update_coroutine=htcondor_status_updater,
-                                              max_age=Configuration().BatchSystem.max_age)
+                                              max_age=config.BatchSystem.max_age)
+        self.ratios = config.BatchSystem.ratios
 
     async def disintegrate_machine(self, dns_name):
         """
@@ -44,9 +51,8 @@ class HTCondorAdapter(BatchSystemAdapter):
     async def drain_machine(self, dns_name):
         await self._htcondor_status.update_status()
         machine = self._htcondor_status[dns_name]['Machine']
-        cmd = 'condor_drain'
-        args = ('-graceful', machine)
-        return await async_run_command(cmd, *args)
+        cmd = f'condor_drain -graceful {machine}'
+        return await async_run_command(cmd)
 
     async def integrate_machine(self, dns_name):
         """
@@ -56,22 +62,14 @@ class HTCondorAdapter(BatchSystemAdapter):
         """
         return None
 
-    async def get_resource_ratio(self, dns_name):
+    async def get_resource_ratios(self, dns_name):
         await self._htcondor_status.update_status()
         htcondor_status = self._htcondor_status[dns_name]
 
-        ratio_functions = [lambda: (htcondor_status['TotalSlotCpus'] - htcondor_status['Cpus']) / htcondor_status[
-                               'TotalSlotCpus'],
-                           lambda: (htcondor_status['TotalSlotMemory'] - htcondor_status['Memory']) / htcondor_status[
-                               'TotalSlotMemory'],
-                           lambda: (htcondor_status['TotalSlotDisk'] - htcondor_status['Disk']) / htcondor_status[
-                               'TotalSlotDisk'],
-                           ]
-
-        return (self.handle_zero_division_error(ratio_function) for ratio_function in ratio_functions)
+        return (value for key, value in htcondor_status if key in self.ratios.keys())
 
     async def get_allocation(self, dns_name):
-        return max(await self.get_resource_ratio(dns_name))
+        return max(await self.get_resource_ratios(dns_name))
 
     async def get_machine_status(self, dns_name=None):
         status_mapping = {('Unclaimed', 'Idle'): MachineStatus.Available,
@@ -88,11 +86,4 @@ class HTCondorAdapter(BatchSystemAdapter):
             return status_mapping.get((machine_status['State'], machine_status['Activity']), MachineStatus.NotAvailable)
 
     async def get_utilization(self, dns_name):
-        return min(await self.get_resource_ratio(dns_name))
-
-    @staticmethod
-    def handle_zero_division_error(ratio_function, default_return_value=0):
-        try:
-            return ratio_function()
-        except ZeroDivisionError:
-            return default_return_value
+        return min(await self.get_resource_ratios(dns_name))

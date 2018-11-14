@@ -3,8 +3,8 @@ from ..exceptions.tardisexceptions import AsyncRunCommandFailure
 import asyncio
 
 
-async def async_run_command(cmd, *args):
-    sub_process = await asyncio.create_subprocess_exec(cmd, *args, stdout=asyncio.subprocess.PIPE,
+async def async_run_command(cmd):
+    sub_process = await asyncio.create_subprocess_exec(cmd, stdout=asyncio.subprocess.PIPE,
                                                        stderr=asyncio.subprocess.PIPE)
 
     stdout, stderr = await sub_process.communicate()
