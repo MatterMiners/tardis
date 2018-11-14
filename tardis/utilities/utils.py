@@ -4,8 +4,8 @@ import asyncio
 
 
 async def async_run_command(cmd):
-    sub_process = await asyncio.create_subprocess_exec(cmd, stdout=asyncio.subprocess.PIPE,
-                                                       stderr=asyncio.subprocess.PIPE)
+    sub_process = await asyncio.create_subprocess_shell(cmd, stdout=asyncio.subprocess.PIPE,
+                                                        stderr=asyncio.subprocess.PIPE)
 
     stdout, stderr = await sub_process.communicate()
 
