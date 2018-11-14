@@ -49,11 +49,7 @@ class ExoscaleAdapter(SiteAdapter):
                                                                       **self.configuration.MachineTypeConfiguration[
                                                                           self._machine_type])
         logging.debug("Exoscale deployVirtualMachine returned {}".format(response))
-        try:
-            return self.handle_response(response['virtualmachine'])
-        except KeyError:
-            if response['errorcode'] == 535:
-                raise TardisQuotaExceeded
+        return self.handle_response(response['virtualmachine'])
 
     @property
     def machine_meta_data(self):
@@ -89,4 +85,9 @@ class ExoscaleAdapter(SiteAdapter):
         except asyncio.TimeoutError as te:
             raise TardisTimeout from te
         except CloudStackClientException as ce:
-            raise TardisError from ce
+            if ce.error_code == 535:
+                logging.info("Quota exceeded")
+                logging.debug(ce.message)
+                raise TardisQuotaExceeded
+            else:
+                raise TardisError from ce
