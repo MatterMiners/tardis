@@ -66,7 +66,7 @@ class HTCondorAdapter(BatchSystemAdapter):
         await self._htcondor_status.update_status()
         htcondor_status = self._htcondor_status[dns_name]
 
-        return (value for key, value in htcondor_status.items() if key in self.ratios.keys())
+        return (float(value) for key, value in htcondor_status.items() if key in self.ratios.keys())
 
     async def get_allocation(self, dns_name):
         return max(await self.get_resource_ratios(dns_name))
