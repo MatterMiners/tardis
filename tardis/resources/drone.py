@@ -3,6 +3,9 @@ from .dronestates import DownState
 from ..utilities.attributedict import AttributeDict
 from cobald.interfaces import Pool
 from cobald.daemon import service
+from cobald.daemon import runtime
+
+from functools import partial
 
 import asyncio
 import logging
@@ -82,4 +85,4 @@ class Drone(Pool):
 
     def notify_observers(self):
         for observer in self._observers:
-            observer.notify(self._state, self.resource_attributes)
+            runtime.adopt(partial(observer.notify, self._state, self.resource_attributes), flavour=asyncio)
