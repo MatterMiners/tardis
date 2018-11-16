@@ -160,8 +160,9 @@ IntegratingState.transition = {MachineStatus.NotAvailable: IntegratingState,
 
 DrainingState.transition = {MachineStatus.Draining: DrainingState,
                             MachineStatus.Available: DrainingState,
-                            MachineStatus.Drained: DisintegrateState}
+                            MachineStatus.Drained: DisintegrateState,
+                            MachineStatus.NotAvailable: ShutDownState
+                            }
 
 ShuttingDownState.transition = {ResourceStatus.Running: ShuttingDownState,
                                 ResourceStatus.Stopped: CleanupState}
-
