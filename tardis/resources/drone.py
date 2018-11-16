@@ -65,11 +65,11 @@ class Drone(Pool):
                 logging.debug(f"Garbage Collect Drone: {self.unique_id}")
                 return
 
-    def register_observers(self, agent):
-        self._observers.append(agent)
+    def register_observers(self, observer):
+        self._observers.append(observer)
 
-    def remove_observers(self, agent):
-        self._observers.remove(agent)
+    def remove_observers(self, observer):
+        self._observers.remove(observer)
 
     @property
     def state(self):
@@ -82,4 +82,4 @@ class Drone(Pool):
 
     def notify_observers(self):
         for observer in self._observers:
-            yield from observer.notify(self.resource_attributes)
+            observer.notify(self._state, self.resource_attributes)
