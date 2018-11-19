@@ -6,7 +6,6 @@ import os
 
 class TestConfiguration(TestCase):
     def setUp(self):
-        print(os.getcwd())
         self.test_path = os.path.dirname(os.path.realpath(__file__))
         self.configuration1 = Configuration(os.path.join(self.test_path, 'CloudStackAIO.yml'))
         self.configuration2 = Configuration()
