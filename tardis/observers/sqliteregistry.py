@@ -2,7 +2,6 @@ from ..interfaces.observer import Observer
 from ..interfaces.state import State
 
 import aiosqlite
-import asyncio
 import logging
 import sqlite3
 
@@ -13,22 +12,22 @@ class SqliteRegistry(Observer):
         self._deploy_db_schema()
 
     def add_machine_types(self, site_name, machine_type):
-        with self.connect() as connection:
+        with self.connect(flavour=sqlite3) as connection:
             cursor = connection.cursor()
             cursor.execute("""INSERT OR IGNORE INTO MachineTypes(machine_type, site_id) 
                               SELECT ?, Sites.site_id FROM Sites WHERE Sites.site_name = ?""",
                            (machine_type, site_name))
 
     def add_site(self, site_name):
-        with self.connect() as connection:
+        with self.connect(flavour=sqlite3) as connection:
             cursor = connection.cursor()
             cursor.execute("INSERT OR IGNORE INTO Sites(site_name) VALUES (?)", (site_name,))
 
-    def connect(self):
-        return sqlite3.connect(self._db_file)
+    def connect(self, flavour):
+        return flavour.connect(self._db_file)
 
     def _deploy_db_schema(self):
-        tables = {'MachineTypes': ['machine_id INTEGER PRIMARY KEY AUTOINCREMENT',
+        tables = {'MachineTypes': ['machine_type_id INTEGER PRIMARY KEY AUTOINCREMENT',
                                    'machine_type VARCHAR(255) UNIQUE',
                                    'site_id INTEGER',
                                    'FOREIGN KEY(site_id) REFERENCES Sites(site_id)'],
@@ -43,24 +42,44 @@ class SqliteRegistry(Observer):
                                 'FOREIGN KEY(state_id) REFERENCES ResourceState(state_id)',
                                 'FOREIGN KEY(site_id) REFERENCES Sites(site_id)',
                                 'FOREIGN KEY(machine_type_id) REFERENCES MachineTypes(machine_type_id)'],
-                  'ResourceState': ['state_id INTEGER PRIMARY KEY AUTOINCREMENT',
-                                    'state VARCHAR(255) UNIQUE'],
+                  'ResourceStates': ['state_id INTEGER PRIMARY KEY AUTOINCREMENT',
+                                     'state VARCHAR(255) UNIQUE'],
                   'Sites': ['site_id INTEGER PRIMARY KEY AUTOINCREMENT',
                             'site_name VARCHAR(255) UNIQUE']}
 
-        with self.connect() as connection:
+        with self.connect(flavour=sqlite3) as connection:
             cursor = connection.cursor()
             cursor.execute("PRAGMA foreign_keys = ON")
             for table_name, columns in tables.items():
                 cursor.execute(f"create table if not exists {table_name} ({', '.join(columns)})")
 
             for state in State.get_all_states():
-                cursor.execute("INSERT OR IGNORE INTO ResourceState(state) VALUES (?)",
+                cursor.execute("INSERT OR IGNORE INTO ResourceStates(state) VALUES (?)",
                                (state,))
 
     async def notify(self, state, resource_attributes):
         logging.debug(f"Drone: {str(resource_attributes)} has changed state to {state}")
-        async with aiosqlite.connect(self._db_file) as connection:
-            async with connection.execute("SELECT 42 AS age") as cursor:
-                async for row in cursor:
-                    pass
+        async with self.connect(flavour=aiosqlite) as connection:
+            async with connection.cursor() as cursor:
+                try:
+                    await cursor.execute("BEGIN TRANSACTION")
+                    await cursor.execute("""INSERT OR IGNORE INTO 
+                    Resources(resource_id, dns_name, state_id, site_id, machine_type_id, created, updated) 
+                    SELECT ?, ?, RS.state_id, S.site_id, MT.machine_type_id, ?, ?
+                    FROM ResourceStates RS
+                    JOIN Sites S ON S.site_name = ?
+                    JOIN MachineTypes MT ON MT.machine_type = ? AND MT.site_id = S.site_id
+                    WHERE RS.state = ?""", (resource_attributes['resource_id'], resource_attributes['dns_name'],
+                                            resource_attributes['created'], resource_attributes['updated'],
+                                            resource_attributes['site_name'], resource_attributes['machine_type'],
+                                            str(state)))
+                    await cursor.execute("""UPDATE Resources SET updated = ?,
+                    state_id = (SELECT state_id FROM ResourceStates WHERE state = ?) 
+                    WHERE resource_id = ? AND site_id = (SELECT site_id FROM Sites WHERE site_name = ?)""",
+                                         (resource_attributes['updated'], str(state),
+                                          resource_attributes['resource_id'], resource_attributes['site_name']))
+                except aiosqlite.Error as error:
+                    await cursor.execute("ROLLBACK")
+                    raise error
+                else:
+                    await cursor.execute("COMMIT")
