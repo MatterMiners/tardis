@@ -1,10 +1,12 @@
 from asyncopenstackclient import AuthPassword
 from asyncopenstackclient import NovaClient
 from simple_rest_client.exceptions import AuthError
+from aiohttp import ClientConnectionError
 from ..configuration.configuration import Configuration
 from ..exceptions.tardisexceptions import TardisAuthError
 from ..exceptions.tardisexceptions import TardisError
 from ..exceptions.tardisexceptions import TardisTimeout
+from ..exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from ..interfaces.siteadapter import ResourceStatus
 from ..interfaces.siteadapter import SiteAdapter
 from ..utilities.staticmapping import StaticMapping
@@ -92,5 +94,8 @@ class OTCAdapter(SiteAdapter):
             raise TardisTimeout from te
         except AuthError as ae:
             raise TardisAuthError from ae
+        except ClientConnectionError:
+            logging.info("Connection reset error")
+            raise TardisResourceStatusUpdateFailed
         except:
             raise TardisError

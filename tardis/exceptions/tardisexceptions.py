@@ -22,3 +22,7 @@ class TardisTimeout(Exception):
 
 class TardisQuotaExceeded(Exception):
     pass
+
+
+class TardisResourceStatusUpdateFailed(Exception):
+    pass
