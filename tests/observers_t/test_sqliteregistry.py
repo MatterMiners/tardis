@@ -1,7 +1,10 @@
+from tardis.resources.dronestates import RequestState
+from tardis.interfaces.state import State
 from tardis.observers.sqliteregistry import SqliteRegistry
 
 from unittest import TestCase
 
+import asyncio
 import os
 import sqlite3
 
@@ -11,7 +14,7 @@ class TestSqliteRegistry(TestCase):
     def setUpClass(cls):
         cls.test_site_name = 'MyGreatTestSite'
         cls.test_machine_type = 'MyGreatTestMachineType'
-        cls.tables_in_db = {'MachineTypes', 'Resources', 'ResourceStatus', 'Sites'}
+        cls.tables_in_db = {'MachineTypes', 'Resources', 'ResourceState', 'Sites'}
 
     def setUp(self):
         self.test_path = os.path.dirname(os.path.realpath(__file__))
@@ -51,3 +54,22 @@ class TestSqliteRegistry(TestCase):
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
             created_tables = {table_name[0] for table_name in cursor.fetchall() if table_name[0] != "sqlite_sequence"}
         self.assertEqual(created_tables, self.tables_in_db)
+
+    def test_double_schema_deployment(self):
+        SqliteRegistry(self.test_db)
+        SqliteRegistry(self.test_db)
+
+    def test_notify(self):
+        registry = SqliteRegistry(self.test_db)
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(registry.notify(RequestState(), {}))
+
+    def test_resource_status(self):
+        SqliteRegistry(self.test_db)
+
+        with sqlite3.connect(self.test_db) as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT state FROM ResourceState")
+            status = {row[0] for row in cursor.fetchall()}
+
+        self.assertEqual(status, {state for state in State.get_all_states()})

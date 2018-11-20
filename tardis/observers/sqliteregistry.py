@@ -1,4 +1,6 @@
 from ..interfaces.observer import Observer
+from ..interfaces.siteadapter import ResourceStatus
+from ..interfaces.state import State
 
 import aioodbc
 import asyncio
@@ -34,17 +36,17 @@ class SqliteRegistry(Observer):
                   'Resources': ['id INTEGER PRIMARY KEY AUTOINCREMENT,'
                                 'resource_id VARCHAR(255) UNIQUE',
                                 'dns_name VARCHAR(255) UNIQUE',
-                                'status_id INTEGER',
+                                'state_id INTEGER',
                                 'site_id INTEGER',
                                 'machine_type_id INTEGER',
                                 'created DATE',
                                 'updated DATE',
-                                'FOREIGN KEY(status_id) REFERENCES ResourceStatus(status_id)',
+                                'FOREIGN KEY(state_id) REFERENCES ResourceState(state_id)',
                                 'FOREIGN KEY(site_id) REFERENCES Sites(site_id)',
                                 'FOREIGN KEY(machine_type_id) REFERENCES MachineTypes(machine_type_id)'],
-                  'ResourceStatus': ['status_id INTEGER PRIMARY KEY AUTOINCREMENT',
-                                     'status VARCHAR(255) UNIQUE'],
-                  'Sites': ['site_id INTEGER PRIMARY KEY',
+                  'ResourceState': ['state_id INTEGER PRIMARY KEY AUTOINCREMENT',
+                                    'state VARCHAR(255) UNIQUE'],
+                  'Sites': ['site_id INTEGER PRIMARY KEY AUTOINCREMENT',
                             'site_name VARCHAR(255) UNIQUE']}
 
         with self.connect() as connection:
@@ -53,10 +55,16 @@ class SqliteRegistry(Observer):
             for table_name, columns in tables.items():
                 cursor.execute(f"create table if not exists {table_name} ({', '.join(columns)})")
 
+            for state in State.get_all_states():
+                cursor.execute("INSERT OR IGNORE INTO ResourceState(state) VALUES (?)",
+                               (state,))
+
     async def async_connect(self):
         dsn = f'Driver=SQLite;Database={self._db_file}'
         return await aioodbc.connect(dsn=dsn, loop=asyncio.get_event_loop())
 
     async def notify(self, state, resource_attributes):
         logging.debug(f"Drone: {str(resource_attributes)} has changed state to {state}")
-        db_connection = await self.async_connect()
+        connection = await self.async_connect()
+        async with connection.cursor() as cursor:
+            print(await cursor.execute("SELECT 42 AS age"))
