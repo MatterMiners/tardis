@@ -1,8 +1,7 @@
 from ..interfaces.observer import Observer
-from ..interfaces.siteadapter import ResourceStatus
 from ..interfaces.state import State
 
-import aioodbc
+import aiosqlite
 import asyncio
 import logging
 import sqlite3
@@ -59,12 +58,9 @@ class SqliteRegistry(Observer):
                 cursor.execute("INSERT OR IGNORE INTO ResourceState(state) VALUES (?)",
                                (state,))
 
-    async def async_connect(self):
-        dsn = f'Driver=SQLite;Database={self._db_file}'
-        return await aioodbc.connect(dsn=dsn, loop=asyncio.get_event_loop())
-
     async def notify(self, state, resource_attributes):
         logging.debug(f"Drone: {str(resource_attributes)} has changed state to {state}")
-        connection = await self.async_connect()
-        async with connection.cursor() as cursor:
-            print(await cursor.execute("SELECT 42 AS age"))
+        async with aiosqlite.connect(self._db_file) as connection:
+            async with connection.execute("SELECT 42 AS age") as cursor:
+                async for row in cursor:
+                    pass
