@@ -1,9 +1,9 @@
 from .dronestates import RequestState
 from .dronestates import DownState
 from ..utilities.attributedict import AttributeDict
-from cobald.interfaces import Pool
-from cobald.daemon import service
 from cobald.daemon import runtime
+from cobald.daemon import service
+from cobald.interfaces import Pool
 
 from functools import partial
 
@@ -21,7 +21,8 @@ class Drone(Pool):
         self._state = state
         self.unique_id = unique_id or uuid.uuid4().hex[:10]
 
-        self.resource_attributes = AttributeDict()
+        self.resource_attributes = AttributeDict(site_name=self._site_agent.site_name,
+                                                 machine_type=self.site_agent.machine_type)
 
         self._allocation = 0.0
         self._demand = self.maximum_demand
