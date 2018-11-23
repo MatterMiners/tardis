@@ -1,5 +1,6 @@
 from tardis.resources.dronestates import RequestState
 from tardis.resources.dronestates import BootingState
+from tardis.resources.dronestates import DownState
 from tardis.interfaces.state import State
 from tardis.observers.sqliteregistry import SqliteRegistry
 
@@ -46,7 +47,6 @@ class TestSqliteRegistry(TestCase):
                                           str(cls.test_updated_resource_attributes['created']),
                                           str(cls.test_updated_resource_attributes['updated']))
 
-
     def setUp(self):
         self.test_path = os.path.dirname(os.path.realpath(__file__))
         self.test_db = os.path.join(self.test_path, 'test.db')
@@ -91,33 +91,32 @@ class TestSqliteRegistry(TestCase):
         SqliteRegistry(self.test_db)
 
     def test_notify(self):
+        def fetch_row(db):
+            with sqlite3.connect(db) as connection:
+                cursor = connection.cursor()
+                cursor.execute("""SELECT R.resource_id, R.dns_name, RS.state, S.site_name, MT.machine_type, R.created,
+                R.updated
+                FROM Resources R
+                JOIN ResourceStates RS ON R.state_id = RS.state_id
+                JOIN Sites S ON R.site_id = S.site_id
+                JOIN MachineTypes MT ON R.machine_type_id = MT.machine_type_id""")
+                return cursor.fetchone()
+
         registry = SqliteRegistry(self.test_db)
         registry.add_site(self.test_site_name)
         registry.add_machine_types(self.test_site_name, self.test_machine_type)
         loop = asyncio.get_event_loop()
         loop.run_until_complete(registry.notify(RequestState(), self.test_resource_attributes))
 
-        with sqlite3.connect(self.test_db) as connection:
-            cursor = connection.cursor()
-            cursor.execute("""SELECT R.resource_id, R.dns_name, RS.state, S.site_name, MT.machine_type, R.created,
-            R.updated
-            FROM Resources R
-            JOIN ResourceStates RS ON R.state_id = RS.state_id
-            JOIN Sites S ON R.site_id = S.site_id
-            JOIN MachineTypes MT ON R.machine_type_id = MT.machine_type_id""")
-            self.assertEqual(self.test_notify_result, cursor.fetchone())
+        self.assertEqual(self.test_notify_result, fetch_row(self.test_db))
 
         loop.run_until_complete(registry.notify(BootingState(), self.test_updated_resource_attributes))
 
-        with sqlite3.connect(self.test_db) as connection:
-            cursor = connection.cursor()
-            cursor.execute("""SELECT R.resource_id, R.dns_name, RS.state, S.site_name, MT.machine_type, R.created,
-            R.updated
-            FROM Resources R
-            JOIN ResourceStates RS ON R.state_id = RS.state_id
-            JOIN Sites S ON R.site_id = S.site_id
-            JOIN MachineTypes MT ON R.machine_type_id = MT.machine_type_id""")
-            self.assertEqual(self.test_updated_notify_result, cursor.fetchone())
+        self.assertEqual(self.test_updated_notify_result, fetch_row(self.test_db))
+
+        loop.run_until_complete(registry.notify(DownState(), self.test_updated_resource_attributes))
+
+        self.assertIsNone(fetch_row(self.test_db))
 
     def test_resource_status(self):
         SqliteRegistry(self.test_db)

@@ -10,6 +10,8 @@ class SqliteRegistry(Observer):
     def __init__(self, db_file):
         self._db_file = db_file
         self._deploy_db_schema()
+        self._dispatch_on_state = dict(RequestState=self.insert_resource,
+                                       DownState=self.delete_resource)
 
     def add_machine_types(self, site_name, machine_type):
         with self.connect(flavour=sqlite3) as connection:
@@ -57,28 +59,38 @@ class SqliteRegistry(Observer):
                 cursor.execute("INSERT OR IGNORE INTO ResourceStates(state) VALUES (?)",
                                (state,))
 
-    async def notify(self, state, resource_attributes):
-        logging.debug(f"Drone: {str(resource_attributes)} has changed state to {state}")
-        bind_parameters = dict(state=str(state))
-        bind_parameters.update(resource_attributes)
+    async def delete_resource(self, bind_parameters):
+        sql_query = """DELETE FROM Resources 
+        WHERE resource_id = :resource_id 
+        AND site_id = (SELECT site_id from Sites WHERE site_name = :site_name)"""
+        await self.execute(sql_query, bind_parameters)
 
+    async def execute(self, sql_query, bind_parameters):
         async with self.connect(flavour=aiosqlite) as connection:
             async with connection.cursor() as cursor:
-                try:
-                    await cursor.execute("BEGIN TRANSACTION")
-                    await cursor.execute("""INSERT OR IGNORE INTO 
-                    Resources(resource_id, dns_name, state_id, site_id, machine_type_id, created, updated) 
-                    SELECT :resource_id, :dns_name, RS.state_id, S.site_id, MT.machine_type_id, :created, :updated
-                    FROM ResourceStates RS
-                    JOIN Sites S ON S.site_name = :site_name
-                    JOIN MachineTypes MT ON MT.machine_type = :machine_type AND MT.site_id = S.site_id
-                    WHERE RS.state = :state""", bind_parameters)
-                    await cursor.execute("""UPDATE Resources SET updated = :updated,
-                    state_id = (SELECT state_id FROM ResourceStates WHERE state = :state) 
-                    WHERE resource_id = :resource_id 
-                    AND site_id = (SELECT site_id FROM Sites WHERE site_name = :site_name)""", bind_parameters)
-                except aiosqlite.Error as error:
-                    await cursor.execute("ROLLBACK")
-                    raise error
-                else:
-                    await cursor.execute("COMMIT")
+                await cursor.execute(sql_query, bind_parameters)
+                await connection.commit()
+
+    async def insert_resource(self, bind_parameters):
+        sql_query = """INSERT OR IGNORE INTO 
+        Resources(resource_id, dns_name, state_id, site_id, machine_type_id, created, updated) 
+        SELECT :resource_id, :dns_name, RS.state_id, S.site_id, MT.machine_type_id, :created, :updated
+        FROM ResourceStates RS
+        JOIN Sites S ON S.site_name = :site_name
+        JOIN MachineTypes MT ON MT.machine_type = :machine_type AND MT.site_id = S.site_id
+        WHERE RS.state = :state"""
+        await self.execute(sql_query, bind_parameters)
+
+    async def notify(self, state, resource_attributes):
+        state = str(state)
+        logging.debug(f"Drone: {str(resource_attributes)} has changed state to {state}")
+        bind_parameters = dict(state=state)
+        bind_parameters.update(resource_attributes)
+        await self._dispatch_on_state.get(state, self.update_resource)(bind_parameters)
+
+    async def update_resource(self, bind_parameters):
+        sql_query = """UPDATE Resources SET updated = :updated,
+        state_id = (SELECT state_id FROM ResourceStates WHERE state = :state) 
+        WHERE resource_id = :resource_id 
+        AND site_id = (SELECT site_id FROM Sites WHERE site_name = :site_name)"""
+        await self.execute(sql_query, bind_parameters)
