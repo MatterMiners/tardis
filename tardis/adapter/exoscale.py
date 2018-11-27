@@ -2,10 +2,12 @@ from ..configuration.configuration import Configuration
 from ..exceptions.tardisexceptions import TardisTimeout
 from ..exceptions.tardisexceptions import TardisError
 from ..exceptions.tardisexceptions import TardisQuotaExceeded
+from ..exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from ..interfaces.siteadapter import ResourceStatus
 from ..interfaces.siteadapter import SiteAdapter
 from ..utilities.staticmapping import StaticMapping
 
+from aiohttp import ClientConnectionError
 from cobald.daemon import runtime
 from CloudStackAIO.CloudStack import CloudStack
 from CloudStackAIO.CloudStack import CloudStackClientException
@@ -84,6 +86,9 @@ class ExoscaleAdapter(SiteAdapter):
             yield
         except asyncio.TimeoutError as te:
             raise TardisTimeout from te
+        except ClientConnectionError:
+            logging.info("Connection reset error")
+            raise TardisResourceStatusUpdateFailed
         except CloudStackClientException as ce:
             if ce.error_code == 535:
                 logging.info("Quota exceeded")
