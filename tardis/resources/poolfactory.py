@@ -18,12 +18,12 @@ def create_composite_pool(configuration='tardis.yml'):
     composites = []
 
     batch_system = configuration.BatchSystem
-    batch_system_adapter = getattr(import_module(name="tardis.adapter.{}".format(batch_system.adapter.lower())),
-                                   "{}Adapter".format(batch_system.adapter))
+    batch_system_adapter = getattr(import_module(name=f"tardis.adapter.{batch_system.adapter.lower()}"),
+                                   f"{batch_system.adapter}Adapter")
     batch_system_agent = BatchSystemAgent(batch_system_adapter=batch_system_adapter())
 
     for site in configuration.Sites:
-        site_adapter = getattr(import_module(name="tardis.adapter.{}".format(site.lower())), '{}Adapter'.format(site))
+        site_adapter = getattr(import_module(name=f"tardis.adapter.{site.lower()}"), f'{site}Adapter')
         for machine_type in getattr(configuration, site).MachineTypes:
             drone_factory = partial(create_drone, site_agent=SiteAgent(site_adapter(machine_type=machine_type,
                                                                                     site_name=site.lower())),

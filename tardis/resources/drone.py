@@ -62,7 +62,7 @@ class Drone(Pool):
             await self.state.run(self)
             await asyncio.sleep(1)
             if isinstance(self.state, DownState):
-                logging.debug("Garbage Collect Drone: {}".format(self.unique_id))
+                logging.debug(f"Garbage Collect Drone: {self.unique_id}")
                 return
 
     def register_observers(self, agent):

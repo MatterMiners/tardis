@@ -15,7 +15,7 @@ class SiteAdapter(metaclass=ABCMeta):
         return NotImplemented
 
     def dns_name(self, unique_id):
-        return "{}-{}".format(self.site_name.lower(), unique_id, self.machine_type.lower())
+        return f"{self.site_name.lower()}-{unique_id}"
 
     @staticmethod
     def handle_response(response, key_translator: dict, translator_functions: dict, **additional_content):

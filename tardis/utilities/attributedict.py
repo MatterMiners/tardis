@@ -14,7 +14,7 @@ class AttributeDict(dict):
         try:
             return self[item]
         except KeyError:
-            raise AttributeError("{} is not a valid attribute".format(item))
+            raise AttributeError(f"{item} is not a valid attribute")
 
     def __setattr__(self, key, value):
         self[key] = value
@@ -23,4 +23,4 @@ class AttributeDict(dict):
         try:
             del self[item]
         except KeyError:
-            raise AttributeError("{} is not a valid attribute".format(item))
+            raise AttributeError(f"{item} is not a valid attribute")

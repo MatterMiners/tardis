@@ -50,7 +50,7 @@ class ExoscaleAdapter(SiteAdapter):
         response = await self.cloud_stack_client.deployVirtualMachine(name=self.dns_name(unique_id=unique_id),
                                                                       **self.configuration.MachineTypeConfiguration[
                                                                           self._machine_type])
-        logging.debug("Exoscale deployVirtualMachine returned {}".format(response))
+        logging.debug(f"Exoscale deployVirtualMachine returned {response}")
         return self.handle_response(response['virtualmachine'])
 
     @property
@@ -67,17 +67,17 @@ class ExoscaleAdapter(SiteAdapter):
 
     async def resource_status(self, resource_attributes):
         response = await self.cloud_stack_client.listVirtualMachines(id=resource_attributes.resource_id)
-        logging.debug("Exoscale listVirtualMachines returned {}".format(response))
+        logging.debug(f"Exoscale listVirtualMachines returned {response}")
         return self.handle_response(response['virtualmachine'][0])
 
     async def stop_resource(self, resource_attributes):
         response = await self.cloud_stack_client.stopVirtualMachine(id=resource_attributes.resource_id)
-        logging.debug("Exoscale stopVirtualMachine returned {}".format(response))
+        logging.debug(f"Exoscale stopVirtualMachine returned {response}")
         return response
 
     async def terminate_resource(self, resource_attributes):
         response = await self.cloud_stack_client.destroyVirtualMachine(id=resource_attributes.resource_id)
-        logging.debug("Exoscale destroyVirtualMachine returned {}".format(response))
+        logging.debug(f"Exoscale destroyVirtualMachine returned {response}")
         return response
 
     @contextmanager
