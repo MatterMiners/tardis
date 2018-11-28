@@ -52,7 +52,7 @@ class OTCAdapter(SiteAdapter):
         specs['name'] = self.dns_name(unique_id)
         await self.nova.init_api(timeout=60)
         response = await self.nova.servers.create(server=specs)
-        logging.debug("OTC servers servers create returned {}".format(response))
+        logging.debug(f"OTC servers servers create returned {response}")
         return self.handle_response(response['server'], dns_name=specs['name'])
 
     @property
@@ -70,20 +70,20 @@ class OTCAdapter(SiteAdapter):
     async def resource_status(self, resource_attributes):
         await self.nova.init_api(timeout=60)
         response = await self.nova.servers.get(resource_attributes.resource_id)
-        logging.debug("OTC servers get returned {}".format(response))
+        logging.debug(f"OTC servers get returned {response}")
         return self.handle_response(response['server'])
 
     async def stop_resource(self, resource_attributes):
         await self.nova.init_api(timeout=60)
         params = {'os-stop': None}
         response = await self.nova.servers.run_action(resource_attributes.resource_id, **params)
-        logging.debug("OTC servers stop returned {}".format(response))
+        logging.debug(f"OTC servers stop returned {response}")
         return response
 
     async def terminate_resource(self, resource_attributes):
         await self.nova.init_api(timeout=60)
         response = await self.nova.servers.force_delete(resource_attributes.resource_id)
-        logging.debug("OTC servers servers terminate returned {}".format(response))
+        logging.debug(f"OTC servers servers terminate returned {response}")
         return response
 
     @contextmanager

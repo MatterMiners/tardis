@@ -5,7 +5,7 @@ class AsyncRunCommandFailure(Exception):
         self.error_message = error_message
 
     def __str__(self):
-        return "(message={}, error_code={}, error_message={})".format(self.message, self.error_code, self.error_message)
+        return f"(message={self.message}, error_code={self.error_code}, error_message={self.error_message})"
 
 
 class TardisAuthError(Exception):
