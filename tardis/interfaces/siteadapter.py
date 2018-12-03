@@ -17,6 +17,9 @@ class SiteAdapter(metaclass=ABCMeta):
     def dns_name(self, unique_id):
         return f"{self.site_name.lower()}-{unique_id}"
 
+    def handle_exceptions(self):
+        return NotImplemented
+
     @staticmethod
     def handle_response(response, key_translator: dict, translator_functions: dict, **additional_content):
         translated_response = {}

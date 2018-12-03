@@ -1,9 +1,9 @@
 import asyncio
 
 
-def async_return(result):
+def async_return(*args, return_value=None, **kwargs):
     f = asyncio.Future()
-    f.set_result(result)
+    f.set_result(return_value)
     return f
 
 
