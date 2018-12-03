@@ -33,7 +33,7 @@ class TestHTCondorAdapter(TestCase):
                                   f"test_drained\tDrained\tIdle\t{self.cpu_ratio}\t{self.memory_ratio}",
                                   f"test_owner\tOwner\tIdle\t{self.cpu_ratio}\t{self.memory_ratio}",
                                   "exoscale-26d361290f\tUnclaimed\tIdle\t0.125\t0.125"])
-        self.mock_async_run_command.return_value = async_return(return_value)
+        self.mock_async_run_command.return_value = async_return(return_value=return_value)
 
         config = self.mock_config.return_value
         config.BatchSystem.ratios = {'cpu_ratio': 'Real(TotalSlotCpus-Cpus)/TotalSlotCpus',

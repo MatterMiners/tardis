@@ -7,12 +7,15 @@ class SiteAgent(SiteAdapter):
         self._site_adapter = site_adapter
 
     async def deploy_resource(self, unique_id):
-        with self._site_adapter.handle_exceptions():
+        with self.handle_exceptions():
             response = await self._site_adapter.deploy_resource(unique_id=unique_id)
             return convert_to_attribute_dict(response)
 
     def dns_name(self, unique_id):
         return self._site_adapter.dns_name(unique_id=unique_id)
+
+    def handle_exceptions(self):
+        return self._site_adapter.handle_exceptions()
 
     def handle_response(self, response, key_translator: dict, translator_functions: dict, **additional_content):
         return NotImplemented
