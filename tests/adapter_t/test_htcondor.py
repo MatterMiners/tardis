@@ -5,7 +5,6 @@ from tardis.adapter.htcondor import htcondor_status_updater
 from tardis.interfaces.batchsystemadapter import MachineStatus
 from tardis.exceptions.tardisexceptions import AsyncRunCommandFailure
 
-from functools import partial
 from unittest.mock import patch
 from unittest import TestCase
 
