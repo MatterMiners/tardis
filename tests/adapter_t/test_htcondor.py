@@ -1,8 +1,11 @@
 from ..utilities.utilities import async_return
 from ..utilities.utilities import run_async
 from tardis.adapter.htcondor import HTCondorAdapter
+from tardis.adapter.htcondor import htcondor_status_updater
 from tardis.interfaces.batchsystemadapter import MachineStatus
+from tardis.exceptions.tardisexceptions import AsyncRunCommandFailure
 
+from functools import partial
 from unittest.mock import patch
 from unittest import TestCase
 
@@ -27,6 +30,9 @@ class TestHTCondorAdapter(TestCase):
                        "'Real(TotalSlotCpus-Cpus)/TotalSlotCpus' -constraint PartitionableSlot=?=True"
 
         return_value = "\n".join([f"test\tUnclaimed\tIdle\t{self.cpu_ratio}\t{self.memory_ratio}",
+                                  f"test_drain\tDrained\tRetiring\t{self.cpu_ratio}\t{self.memory_ratio}",
+                                  f"test_drained\tDrained\tIdle\t{self.cpu_ratio}\t{self.memory_ratio}",
+                                  f"test_owner\tOwner\tIdle\t{self.cpu_ratio}\t{self.memory_ratio}",
                                   "exoscale-26d361290f\tUnclaimed\tIdle\t0.125\t0.125"])
         self.mock_async_run_command.return_value = async_return(return_value)
 
@@ -36,6 +42,9 @@ class TestHTCondorAdapter(TestCase):
         config.BatchSystem.max_age = 10
 
         self.htcondor_adapter = HTCondorAdapter()
+
+    def tearDown(self):
+        self.mock_async_run_command.reset_mock()
 
     def test_disintegrate_machine(self):
         self.assertIsNone(run_async(self.htcondor_adapter.disintegrate_machine, dns_name='test'))
@@ -61,8 +70,26 @@ class TestHTCondorAdapter(TestCase):
         self.assertEqual(run_async(self.htcondor_adapter.get_machine_status, dns_name='test'),
                          MachineStatus.Available)
         self.mock_async_run_command.assert_called_with(self.command)
+        self.mock_async_run_command.reset_mock()
         self.assertEqual(run_async(self.htcondor_adapter.get_machine_status, dns_name='not_exists'),
                          MachineStatus.NotAvailable)
+        self.mock_async_run_command.reset_mock()
+        self.assertEqual(run_async(self.htcondor_adapter.get_machine_status, dns_name='test_drain'),
+                         MachineStatus.Draining)
+        self.mock_async_run_command.reset_mock()
+        self.assertEqual(run_async(self.htcondor_adapter.get_machine_status, dns_name='test_drained'),
+                         MachineStatus.Drained)
+        self.mock_async_run_command.reset_mock()
+        self.assertEqual(run_async(self.htcondor_adapter.get_machine_status, dns_name='test_owner'),
+                         MachineStatus.NotAvailable)
+        self.mock_async_run_command.reset_mock()
+
+        self.mock_async_run_command.side_effect = AsyncRunCommandFailure(message="Test", error_code=123,
+                                                                         error_message="Test")
+        with self.assertLogs(level='ERROR'):
+            run_async(htcondor_status_updater)
+            self.mock_async_run_command.assert_called_with(self.command)
+        self.mock_async_run_command.side_effect = None
 
     def test_get_utilization(self):
         self.assertEqual(run_async(self.htcondor_adapter.get_utilization, dns_name='test'),
