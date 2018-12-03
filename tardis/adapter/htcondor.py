@@ -14,7 +14,7 @@ import logging
 async def htcondor_status_updater():
     attributes = dict(Machine='Machine', State='State', Activity='Activity')
     # Escape htcondor expressions and add them to attributes
-    attributes.update({key: quote(value) for key, value in Configuration('tardis.yml').BatchSystem.ratios.items()})
+    attributes.update({key: quote(value) for key, value in Configuration().BatchSystem.ratios.items()})
     attributes_string = " ".join(attributes.values())
     cmd = f'condor_status -af:t {attributes_string} -constraint PartitionableSlot=?=True'
 
