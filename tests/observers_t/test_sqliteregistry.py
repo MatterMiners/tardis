@@ -5,6 +5,7 @@ from tardis.interfaces.state import State
 from tardis.observers.sqliteregistry import SqliteRegistry
 
 from unittest import TestCase
+from unittest.mock import patch
 
 import asyncio
 import datetime
@@ -47,6 +48,13 @@ class TestSqliteRegistry(TestCase):
                                           str(cls.test_updated_resource_attributes['created']),
                                           str(cls.test_updated_resource_attributes['updated']))
 
+        cls.mock_config_patcher = patch('tardis.observers.sqliteregistry.Configuration')
+        cls.mock_config = cls.mock_config_patcher.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.mock_config_patcher.stop()
+
     def setUp(self):
         self.test_path = os.path.dirname(os.path.realpath(__file__))
         self.test_db = os.path.join(self.test_path, 'test.db')
@@ -55,8 +63,13 @@ class TestSqliteRegistry(TestCase):
         except FileNotFoundError:
             pass
 
+        config = self.mock_config.return_value
+        config.Observers.SqliteRegistry.db_file = self.test_db
+        config.Sites = [self.test_site_name]
+        getattr(config, self.test_site_name).MachineTypes = [self.test_machine_type]
+
     def test_add_machine_types(self):
-        registry = SqliteRegistry(self.test_db)
+        registry = SqliteRegistry()
         registry.add_site(self.test_site_name)
         registry.add_machine_types(self.test_site_name, self.test_machine_type)
 
@@ -68,7 +81,7 @@ class TestSqliteRegistry(TestCase):
                 self.assertEqual(row, (self.test_machine_type, self.test_site_name))
 
     def test_add_site(self):
-        registry = SqliteRegistry(self.test_db)
+        registry = SqliteRegistry()
         registry.add_site(self.test_site_name)
 
         with sqlite3.connect(self.test_db) as connection:
@@ -78,7 +91,7 @@ class TestSqliteRegistry(TestCase):
                 self.assertEqual(row[0], self.test_site_name)
 
     def test_connect(self):
-        SqliteRegistry(self.test_db)
+        SqliteRegistry()
 
         with sqlite3.connect(self.test_db) as connection:
             cursor = connection.cursor()
@@ -87,8 +100,8 @@ class TestSqliteRegistry(TestCase):
         self.assertEqual(created_tables, self.tables_in_db)
 
     def test_double_schema_deployment(self):
-        SqliteRegistry(self.test_db)
-        SqliteRegistry(self.test_db)
+        SqliteRegistry()
+        SqliteRegistry()
 
     def test_notify(self):
         def fetch_row(db):
@@ -102,7 +115,7 @@ class TestSqliteRegistry(TestCase):
                 JOIN MachineTypes MT ON R.machine_type_id = MT.machine_type_id""")
                 return cursor.fetchone()
 
-        registry = SqliteRegistry(self.test_db)
+        registry = SqliteRegistry()
         registry.add_site(self.test_site_name)
         registry.add_machine_types(self.test_site_name, self.test_machine_type)
         loop = asyncio.get_event_loop()
@@ -119,7 +132,7 @@ class TestSqliteRegistry(TestCase):
         self.assertIsNone(fetch_row(self.test_db))
 
     def test_resource_status(self):
-        SqliteRegistry(self.test_db)
+        SqliteRegistry()
 
         with sqlite3.connect(self.test_db) as connection:
             cursor = connection.cursor()
