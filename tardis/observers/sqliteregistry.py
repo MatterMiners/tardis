@@ -1,3 +1,4 @@
+from ..configuration.configuration import Configuration
 from ..interfaces.observer import Observer
 from ..interfaces.state import State
 
@@ -7,11 +8,17 @@ import sqlite3
 
 
 class SqliteRegistry(Observer):
-    def __init__(self, db_file):
-        self._db_file = db_file
+    def __init__(self):
+        configuration = Configuration()
+        self._db_file = configuration.Observers.SqliteRegistry.db_file
         self._deploy_db_schema()
         self._dispatch_on_state = dict(RequestState=self.insert_resource,
                                        DownState=self.delete_resource)
+
+        for site in configuration.Sites:
+            self.add_site(site)
+            for machine_type in getattr(configuration, site).MachineTypes:
+                self.add_machine_types(site, machine_type)
 
     def add_machine_types(self, site_name, machine_type):
         with self.connect(flavour=sqlite3) as connection:

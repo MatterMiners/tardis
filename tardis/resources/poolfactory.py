@@ -23,7 +23,7 @@ def create_composite_pool(configuration='tardis.yml'):
                                    f"{batch_system.adapter}Adapter")
     batch_system_agent = BatchSystemAgent(batch_system_adapter=batch_system_adapter())
 
-    drone_registry = SqliteRegistry(db_file='drone_registry.db')
+    drone_registry = SqliteRegistry()
     drone_observers = (drone_registry,)
 
     for site in configuration.Sites:
