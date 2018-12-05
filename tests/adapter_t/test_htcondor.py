@@ -60,7 +60,7 @@ class TestHTCondorAdapter(TestCase):
                               [self.cpu_ratio, self.memory_ratio])
         self.mock_async_run_command.assert_called_with(self.command)
 
-        self.assertListEqual(run_async(self.htcondor_adapter.get_resource_ratios, dns_name='not_exists'), [0, ])
+        self.assertEqual(run_async(self.htcondor_adapter.get_resource_ratios, dns_name='not_exists'), {})
 
     def test_get_allocation(self):
         self.assertEqual(run_async(self.htcondor_adapter.get_allocation, dns_name='test'),

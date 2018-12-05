@@ -67,12 +67,12 @@ class HTCondorAdapter(BatchSystemAdapter):
         try:
             htcondor_status = self._htcondor_status[dns_name]
         except KeyError:
-            return [0, ]
+            return {}
         else:
             return (float(value) for key, value in htcondor_status.items() if key in self.ratios.keys())
 
     async def get_allocation(self, dns_name):
-        return max(await self.get_resource_ratios(dns_name))
+        return max(await self.get_resource_ratios(dns_name), default=0.)
 
     async def get_machine_status(self, dns_name=None):
         status_mapping = {('Unclaimed', 'Idle'): MachineStatus.Available,
@@ -89,4 +89,4 @@ class HTCondorAdapter(BatchSystemAdapter):
             return status_mapping.get((machine_status['State'], machine_status['Activity']), MachineStatus.NotAvailable)
 
     async def get_utilization(self, dns_name):
-        return min(await self.get_resource_ratios(dns_name))
+        return min(await self.get_resource_ratios(dns_name), default=0.)
