@@ -15,17 +15,19 @@ import uuid
 
 @service(flavour=asyncio)
 class Drone(Pool):
-    def __init__(self, site_agent, batch_system_agent, observers=None, unique_id=None, state=RequestState()):
+    def __init__(self, site_agent, batch_system_agent, observers=None, resource_id=None, dns_name=None,
+                 state=RequestState(), created=None, updated=None):
         self._site_agent = site_agent
         self._batch_system_agent = batch_system_agent
         self._observers = observers or []
         self._state = state
-        self.unique_id = unique_id or uuid.uuid4().hex[:10]
 
         self.resource_attributes = AttributeDict(site_name=self._site_agent.site_name,
                                                  machine_type=self.site_agent.machine_type,
-                                                 created=datetime.now(),
-                                                 updated=datetime.now())
+                                                 resource_id=resource_id,
+                                                 created=created or datetime.now(),
+                                                 updated=updated or datetime.now(),
+                                                 dns_name=dns_name or self.site_agent.dns_name(uuid.uuid4().hex[:10]))
 
         self._allocation = 0.0
         self._demand = self.maximum_demand
@@ -69,7 +71,7 @@ class Drone(Pool):
             await self.state.run(self)
             await asyncio.sleep(1)
             if isinstance(self.state, DownState):
-                logging.debug(f"Garbage Collect Drone: {self.unique_id}")
+                logging.debug(f"Garbage Collect Drone: {self.resource_attributes.dns_name}")
                 return
 
     def register_observers(self, observer):

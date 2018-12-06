@@ -11,7 +11,7 @@ class ResourceStatus(Enum):
 
 class SiteAdapter(metaclass=ABCMeta):
     @abstractmethod
-    async def deploy_resource(self, unique_id):
+    async def deploy_resource(self, resource_attributes):
         return NotImplemented
 
     def dns_name(self, unique_id):

@@ -46,13 +46,13 @@ class OpenStackAdapter(SiteAdapter):
         self.handle_response = partial(self.handle_response, key_translator=key_translator,
                                        translator_functions=translator_functions)
 
-    async def deploy_resource(self, unique_id):
+    async def deploy_resource(self, resource_attributes):
         specs = self.configuration.MachineTypeConfiguration[self._machine_type]
-        specs['name'] = self.dns_name(unique_id)
+        specs['name'] = resource_attributes.dns_name
         await self.nova.init_api(timeout=60)
         response = await self.nova.servers.create(server=specs)
         logging.debug(f"OTC servers servers create returned {response}")
-        return self.handle_response(response['server'], dns_name=specs['name'])
+        return self.handle_response(response['server'])
 
     @property
     def machine_meta_data(self):

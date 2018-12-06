@@ -15,8 +15,8 @@ class TestSiteAgent(TestCase):
 
     def test_deploy_resource(self):
         self.site_adapter.deploy_resource.side_effect = async_return
-        run_async(self.site_agent.deploy_resource, unique_id="test")
-        self.site_adapter.deploy_resource.assert_called_with(unique_id='test')
+        run_async(self.site_agent.deploy_resource, resource_attributes="test")
+        self.site_adapter.deploy_resource.assert_called_with(resource_attributes='test')
 
     def test_dns_name(self):
         self.site_adapter.dns_name.return_value = None
