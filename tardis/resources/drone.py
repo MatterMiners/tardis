@@ -5,7 +5,6 @@ from cobald.daemon import runtime
 from cobald.daemon import service
 from cobald.interfaces import Pool
 
-from functools import partial
 from datetime import datetime
 
 import asyncio
@@ -93,4 +92,4 @@ class Drone(Pool):
 
     def notify_observers(self):
         for observer in self._observers:
-            runtime.adopt(partial(observer.notify, self._state, self.resource_attributes), flavour=asyncio)
+            runtime.adopt(observer.notify(self._state, self.resource_attributes), flavour=asyncio)
