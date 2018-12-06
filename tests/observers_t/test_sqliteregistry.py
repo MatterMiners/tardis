@@ -32,6 +32,12 @@ class TestSqliteRegistry(TestCase):
                                                 'created': datetime.datetime(2018, 11, 16, 15, 49, 58),
                                                 'updated': datetime.datetime(2018, 11, 16, 15, 50, 58)}
 
+        cls.test_get_resources_result = (cls.test_resource_attributes['resource_id'],
+                                         cls.test_resource_attributes['dns_name'],
+                                         str(RequestState()),
+                                         str(cls.test_resource_attributes['created']),
+                                         str(cls.test_resource_attributes['updated']))
+
         cls.test_notify_result = (cls.test_resource_attributes['resource_id'],
                                   cls.test_resource_attributes['dns_name'],
                                   str(RequestState()),
@@ -111,7 +117,7 @@ class TestSqliteRegistry(TestCase):
 
         self.assertListEqual(run_async(registry.get_resources, {'site_name': self.test_site_name,
                                                                 'machine_type': self.test_machine_type}),
-                             [self.test_notify_result])
+                             [self.test_get_resources_result])
 
     def test_notify(self):
         def fetch_row(db):
