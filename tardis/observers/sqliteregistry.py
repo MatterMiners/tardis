@@ -74,6 +74,7 @@ class SqliteRegistry(Observer):
 
     async def execute(self, sql_query, bind_parameters):
         async with self.connect(flavour=aiosqlite) as connection:
+            connection.row_factory = lambda cur, row: {col[0]: row[idx] for idx, col in enumerate(cur.description)}
             async with connection.cursor() as cursor:
                 await cursor.execute(sql_query, bind_parameters)
                 await connection.commit()
