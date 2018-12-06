@@ -32,11 +32,11 @@ class TestSqliteRegistry(TestCase):
                                                 'created': datetime.datetime(2018, 11, 16, 15, 49, 58),
                                                 'updated': datetime.datetime(2018, 11, 16, 15, 50, 58)}
 
-        cls.test_get_resources_result = (cls.test_resource_attributes['resource_id'],
-                                         cls.test_resource_attributes['dns_name'],
-                                         str(RequestState()),
-                                         str(cls.test_resource_attributes['created']),
-                                         str(cls.test_resource_attributes['updated']))
+        cls.test_get_resources_result = {'resource_id': cls.test_resource_attributes['resource_id'],
+                                         'dns_name': cls.test_resource_attributes['dns_name'],
+                                         'state': str(RequestState()),
+                                         'created': str(cls.test_resource_attributes['created']),
+                                         'updated': str(cls.test_resource_attributes['updated'])}
 
         cls.test_notify_result = (cls.test_resource_attributes['resource_id'],
                                   cls.test_resource_attributes['dns_name'],
