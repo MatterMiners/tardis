@@ -115,8 +115,8 @@ class TestSqliteRegistry(TestCase):
         registry.add_machine_types(self.test_site_name, self.test_machine_type)
         run_async(registry.notify, RequestState(), self.test_resource_attributes)
 
-        self.assertListEqual(run_async(registry.get_resources, {'site_name': self.test_site_name,
-                                                                'machine_type': self.test_machine_type}),
+        self.assertListEqual(registry.get_resources(site_name=self.test_site_name,
+                                                    machine_type=self.test_machine_type),
                              [self.test_get_resources_result])
 
     def test_notify(self):
