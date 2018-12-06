@@ -15,7 +15,7 @@ class RequestState(State):
     async def run(drone):
         logging.info(f"Drone {drone} in RequestState")
         try:
-            drone.resource_attributes.update(await drone.site_agent.deploy_resource(unique_id=drone.unique_id))
+            drone.resource_attributes.update(await drone.site_agent.deploy_resource(drone.resource_attributes))
         except (TardisAuthError, TardisTimeout, TardisQuotaExceeded):
             drone.state = DownState()  # static state transition
         except TardisResourceStatusUpdateFailed:

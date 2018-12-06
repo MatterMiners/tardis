@@ -45,8 +45,8 @@ class CloudStackAdapter(SiteAdapter):
         self.handle_response = partial(self.handle_response, key_translator=key_translator,
                                        translator_functions=translator_functions)
 
-    async def deploy_resource(self, unique_id):
-        response = await self.cloud_stack_client.deployVirtualMachine(name=self.dns_name(unique_id=unique_id),
+    async def deploy_resource(self, resource_attributes):
+        response = await self.cloud_stack_client.deployVirtualMachine(name=resource_attributes.dns_name,
                                                                       **self.configuration.MachineTypeConfiguration[
                                                                           self._machine_type])
         logging.debug(f"Exoscale deployVirtualMachine returned {response}")

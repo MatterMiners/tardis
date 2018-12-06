@@ -6,9 +6,9 @@ class SiteAgent(SiteAdapter):
     def __init__(self, site_adapter):
         self._site_adapter = site_adapter
 
-    async def deploy_resource(self, unique_id):
+    async def deploy_resource(self, resource_attributes):
         with self.handle_exceptions():
-            response = await self._site_adapter.deploy_resource(unique_id=unique_id)
+            response = await self._site_adapter.deploy_resource(resource_attributes=resource_attributes)
             return convert_to_attribute_dict(response)
 
     def dns_name(self, unique_id):
