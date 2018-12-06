@@ -80,8 +80,8 @@ class SqliteRegistry(Observer):
                 return await cursor.fetchall()
 
     async def get_resources(self, bind_parameters):
-        sql_query = """SELECT R.resource_id, R.dns_name, RS.state, S.site_name, MT.machine_type, R.created, 
-        R.updated FROM Resources R
+        sql_query = """SELECT R.resource_id, R.dns_name, RS.state, R.created, R.updated 
+        FROM Resources R
         JOIN ResourceStates RS ON R.state_id = RS.state_id
         JOIN Sites S ON R.site_id = S.site_id
         JOIN MachineTypes MT ON R.machine_type_id = MT.machine_type_id
