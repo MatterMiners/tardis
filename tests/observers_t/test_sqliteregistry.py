@@ -3,11 +3,11 @@ from tardis.resources.dronestates import BootingState
 from tardis.resources.dronestates import DownState
 from tardis.interfaces.state import State
 from tardis.observers.sqliteregistry import SqliteRegistry
+from ..utilities.utilities import run_async
 
 from unittest import TestCase
 from unittest.mock import patch
 
-import asyncio
 import datetime
 import os
 import sqlite3
@@ -64,7 +64,7 @@ class TestSqliteRegistry(TestCase):
             pass
 
         config = self.mock_config.return_value
-        config.Observers.SqliteRegistry.db_file = self.test_db
+        config.SqliteRegistry.db_file = self.test_db
         config.Sites = [self.test_site_name]
         getattr(config, self.test_site_name).MachineTypes = [self.test_machine_type]
 
@@ -103,6 +103,16 @@ class TestSqliteRegistry(TestCase):
         SqliteRegistry()
         SqliteRegistry()
 
+    def test_get_resources(self):
+        registry = SqliteRegistry()
+        registry.add_site(self.test_site_name)
+        registry.add_machine_types(self.test_site_name, self.test_machine_type)
+        run_async(registry.notify, RequestState(), self.test_resource_attributes)
+
+        self.assertListEqual(run_async(registry.get_resources, {'site_name': self.test_site_name,
+                                                                'machine_type': self.test_machine_type}),
+                             [self.test_notify_result])
+
     def test_notify(self):
         def fetch_row(db):
             with sqlite3.connect(db) as connection:
@@ -118,16 +128,16 @@ class TestSqliteRegistry(TestCase):
         registry = SqliteRegistry()
         registry.add_site(self.test_site_name)
         registry.add_machine_types(self.test_site_name, self.test_machine_type)
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(registry.notify(RequestState(), self.test_resource_attributes))
+
+        run_async(registry.notify, RequestState(), self.test_resource_attributes)
 
         self.assertEqual(self.test_notify_result, fetch_row(self.test_db))
 
-        loop.run_until_complete(registry.notify(BootingState(), self.test_updated_resource_attributes))
+        run_async(registry.notify, BootingState(), self.test_updated_resource_attributes)
 
         self.assertEqual(self.test_updated_notify_result, fetch_row(self.test_db))
 
-        loop.run_until_complete(registry.notify(DownState(), self.test_updated_resource_attributes))
+        run_async(registry.notify, DownState(), self.test_updated_resource_attributes)
 
         self.assertIsNone(fetch_row(self.test_db))
 

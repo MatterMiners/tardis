@@ -10,7 +10,7 @@ import sqlite3
 class SqliteRegistry(Observer):
     def __init__(self):
         configuration = Configuration()
-        self._db_file = configuration.Observers.SqliteRegistry.db_file
+        self._db_file = configuration.SqliteRegistry.db_file
         self._deploy_db_schema()
         self._dispatch_on_state = dict(RequestState=self.insert_resource,
                                        DownState=self.delete_resource)
@@ -77,6 +77,16 @@ class SqliteRegistry(Observer):
             async with connection.cursor() as cursor:
                 await cursor.execute(sql_query, bind_parameters)
                 await connection.commit()
+                return await cursor.fetchall()
+
+    async def get_resources(self, bind_parameters):
+        sql_query = """SELECT R.resource_id, R.dns_name, RS.state, S.site_name, MT.machine_type, R.created, 
+        R.updated FROM Resources R
+        JOIN ResourceStates RS ON R.state_id = RS.state_id
+        JOIN Sites S ON R.site_id = S.site_id
+        JOIN MachineTypes MT ON R.machine_type_id = MT.machine_type_id
+        WHERE S.site_name = :site_name AND MT.machine_type = :machine_type"""
+        return await self.execute(sql_query, bind_parameters)
 
     async def insert_resource(self, bind_parameters):
         sql_query = """INSERT OR IGNORE INTO 
