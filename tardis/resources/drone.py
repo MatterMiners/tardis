@@ -6,6 +6,7 @@ from cobald.daemon import service
 from cobald.interfaces import Pool
 
 from functools import partial
+from datetime import datetime
 
 import asyncio
 import logging
@@ -22,7 +23,9 @@ class Drone(Pool):
         self.unique_id = unique_id or uuid.uuid4().hex[:10]
 
         self.resource_attributes = AttributeDict(site_name=self._site_agent.site_name,
-                                                 machine_type=self.site_agent.machine_type)
+                                                 machine_type=self.site_agent.machine_type,
+                                                 created=datetime.now(),
+                                                 updated=datetime.now())
 
         self._allocation = 0.0
         self._demand = self.maximum_demand
@@ -81,6 +84,8 @@ class Drone(Pool):
 
     @state.setter
     def state(self, state):
+        if state.__class__ != self._state.__class__:
+            self.resource_attributes.updated = datetime.now()
         self._state = state
         self.notify_observers()
 
