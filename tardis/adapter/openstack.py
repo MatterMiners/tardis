@@ -34,8 +34,7 @@ class OpenStackAdapter(SiteAdapter):
 
         self.nova = NovaClient(session=auth)
 
-        key_translator = StaticMapping(resource_id='id', dns_name='name', created='created', resource_status='status',
-                                       updated='updated')
+        key_translator = StaticMapping(resource_id='id', dns_name='name', resource_status='status')
 
         translator_functions = StaticMapping(created=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ"),
                                              updated=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ"),

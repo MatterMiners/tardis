@@ -31,8 +31,7 @@ class CloudStackAdapter(SiteAdapter):
         self._machine_type = machine_type
         self._site_name = site_name
 
-        key_translator = StaticMapping(resource_id='id', dns_name='name', created='created',
-                                       resource_status='state', updated='created')
+        key_translator = StaticMapping(resource_id='id', dns_name='name', resource_status='state')
 
         translator_functions = StaticMapping(created=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%S%z"),
                                              updated=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%S%z"),
