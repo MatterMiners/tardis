@@ -32,7 +32,7 @@ def create_composite_pool(configuration='tardis.yml'):
             composites.append(Logger(Standardiser(FactoryPool(factory=drone_factory),
                                                   minimum=cpu_cores,
                                                   granularity=cpu_cores),
-                                     name=site.lower()))
+                                     name=f"{site.lower()}_{machine_type.lower()}"))
 
     return UniformComposite(*composites)
 
