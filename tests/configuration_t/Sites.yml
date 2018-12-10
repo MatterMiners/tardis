@@ -1,7 +1,8 @@
 Sites:
-  - Exoscale
+  - name: EXOSCALE
+    adapter: CloudStack
 
-Exoscale:
+EXOSCALE:
   MachineTypeConfiguration:
     Micro:
       user_data: tests/data/exoscale.ini

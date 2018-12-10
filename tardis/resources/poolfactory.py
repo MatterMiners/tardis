@@ -23,16 +23,16 @@ def create_composite_pool(configuration='tardis.yml'):
     batch_system_agent = BatchSystemAgent(batch_system_adapter=batch_system_adapter())
 
     for site in configuration.Sites:
-        site_adapter = getattr(import_module(name=f"tardis.adapter.{site.lower()}"), f'{site}Adapter')
+        site_adapter = getattr(import_module(name=f"tardis.adapter.{site.name.lower()}"), f'{site.adapter}Adapter')
         for machine_type in getattr(configuration, site).MachineTypes:
             drone_factory = partial(create_drone, site_agent=SiteAgent(site_adapter(machine_type=machine_type,
                                                                                     site_name=site.lower())),
                                     batch_system_agent=batch_system_agent)
-            cpu_cores = getattr(configuration, site).MachineMetaData[machine_type]['Cores']
+            cpu_cores = getattr(configuration, site.name.upper()).MachineMetaData[machine_type]['Cores']
             composites.append(Logger(Standardiser(FactoryPool(factory=drone_factory),
                                                   minimum=cpu_cores,
                                                   granularity=cpu_cores),
-                                     name=f"{site.lower()}_{machine_type.lower()}"))
+                                     name=f"{site.name.lower()}_{machine_type.lower()}"))
 
     return UniformComposite(*composites)
 
