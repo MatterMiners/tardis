@@ -21,7 +21,7 @@ import logging
 
 class OTCAdapter(SiteAdapter):
     def __init__(self, machine_type, site_name='otc'):
-        self.configuration = Configuration().OTC
+        self.configuration = getattr(Configuration(), site_name.upper())
         self._machine_type = machine_type
         self._site_name = site_name
 
