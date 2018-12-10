@@ -20,9 +20,9 @@ import asyncio
 import logging
 
 
-class ExoscaleAdapter(SiteAdapter):
+class CloudStackAdapter(SiteAdapter):
     def __init__(self, machine_type, site_name='exoscale'):
-        self.configuration = Configuration().Exoscale
+        self.configuration = getattr(Configuration(), site_name.upper())
         self.cloud_stack_client = CloudStack(end_point=self.configuration.end_point,
                                              api_key=self.configuration.api_key,
                                              api_secret=self.configuration.api_secret,
