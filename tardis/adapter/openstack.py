@@ -19,7 +19,7 @@ from functools import partial
 import logging
 
 
-class OTCAdapter(SiteAdapter):
+class OpenStackAdapter(SiteAdapter):
     def __init__(self, machine_type, site_name='otc'):
         self.configuration = getattr(Configuration(), site_name.upper())
         self._machine_type = machine_type
