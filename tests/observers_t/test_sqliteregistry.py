@@ -3,6 +3,7 @@ from tardis.resources.dronestates import BootingState
 from tardis.resources.dronestates import DownState
 from tardis.interfaces.state import State
 from tardis.observers.sqliteregistry import SqliteRegistry
+from tardis.utilities.attributedict import AttributeDict
 from ..utilities.utilities import run_async
 
 from unittest import TestCase
@@ -71,7 +72,7 @@ class TestSqliteRegistry(TestCase):
 
         config = self.mock_config.return_value
         config.SqliteRegistry.db_file = self.test_db
-        config.Sites = [self.test_site_name]
+        config.Sites = [AttributeDict(name=self.test_site_name)]
         getattr(config, self.test_site_name).MachineTypes = [self.test_machine_type]
 
     def test_add_machine_types(self):

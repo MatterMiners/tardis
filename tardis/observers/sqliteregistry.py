@@ -16,9 +16,9 @@ class SqliteRegistry(Observer):
                                        DownState=self.delete_resource)
 
         for site in configuration.Sites:
-            self.add_site(site)
-            for machine_type in getattr(configuration, site).MachineTypes:
-                self.add_machine_types(site, machine_type)
+            self.add_site(site.name)
+            for machine_type in getattr(configuration, site.name).MachineTypes:
+                self.add_machine_types(site.name, machine_type)
 
     def add_machine_types(self, site_name, machine_type):
         sql_query = """INSERT OR IGNORE INTO MachineTypes(machine_type, site_id) 
