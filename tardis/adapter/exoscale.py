@@ -8,6 +8,7 @@ from ..interfaces.siteadapter import SiteAdapter
 from ..utilities.staticmapping import StaticMapping
 
 from aiohttp import ClientConnectionError
+from cobald.daemon import runtime
 from CloudStackAIO.CloudStack import CloudStack
 from CloudStackAIO.CloudStack import CloudStackClientException
 
@@ -25,7 +26,7 @@ class ExoscaleAdapter(SiteAdapter):
         self.cloud_stack_client = CloudStack(end_point=self.configuration.end_point,
                                              api_key=self.configuration.api_key,
                                              api_secret=self.configuration.api_secret,
-                                             event_loop=asyncio.get_event_loop()
+                                             event_loop=runtime._meta_runner.runners[asyncio].event_loop
                                              )
         self._machine_type = machine_type
         self._site_name = site_name
