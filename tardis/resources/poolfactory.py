@@ -24,7 +24,7 @@ def create_composite_pool(configuration='tardis.yml'):
 
     for site in configuration.Sites:
         site_adapter = getattr(import_module(name=f"tardis.adapter.{site.adapter.lower()}"), f'{site.adapter}Adapter')
-        for machine_type in getattr(configuration, site).MachineTypes:
+        for machine_type in getattr(configuration, site.name.upper()).MachineTypes:
             drone_factory = partial(create_drone, site_agent=SiteAgent(site_adapter(machine_type=machine_type,
                                                                                     site_name=site.lower())),
                                     batch_system_agent=batch_system_agent)
