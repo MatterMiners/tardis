@@ -85,11 +85,11 @@ class Drone(Pool):
 
     @state.setter
     def state(self, state):
-        if state.__class__ != self._state.__class__:
+        if state.__class__ != self.state.__class__:
             self.resource_attributes.updated = datetime.now()
         self._state = state
         self.notify_observers()
 
     def notify_observers(self):
         for observer in self._observers:
-            runtime.adopt(observer.notify(self._state, self.resource_attributes), flavour=asyncio)
+            runtime.adopt(observer.notify, self.state, self.resource_attributes, flavour=asyncio)
