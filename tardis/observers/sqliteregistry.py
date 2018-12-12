@@ -21,7 +21,7 @@ class SqliteRegistry(Observer):
                 self.add_machine_types(site.name, machine_type)
 
     def add_machine_types(self, site_name, machine_type):
-        sql_query = """INSERT OR IGNORE INTO MachineTypes(machine_type, site_id) 
+        sql_query = """INSERT OR IGNORE INTO MachineTypes(machine_type, site_id)
         SELECT :machine_type, Sites.site_id FROM Sites WHERE Sites.site_name = :site_name"""
         self.execute(sql_query, dict(site_name=site_name, machine_type=machine_type))
 
@@ -34,8 +34,9 @@ class SqliteRegistry(Observer):
             connection.row_factory = lambda cur, row: {col[0]: row[idx] for idx, col in enumerate(cur.description)}
             async with connection.cursor() as cursor:
                 await cursor.execute(sql_query, bind_parameters)
+                return_value = await cursor.fetchall()
                 await connection.commit()
-                return await cursor.fetchall()
+                return return_value
 
     def connect(self, flavour):
         return flavour.connect(self._db_file)
@@ -72,8 +73,8 @@ class SqliteRegistry(Observer):
                                (state,))
 
     async def delete_resource(self, bind_parameters):
-        sql_query = """DELETE FROM Resources 
-        WHERE resource_id = :resource_id 
+        sql_query = """DELETE FROM Resources
+        WHERE resource_id = :resource_id
         AND site_id = (SELECT site_id from Sites WHERE site_name = :site_name)"""
         await self.async_execute(sql_query, bind_parameters)
 
@@ -85,7 +86,7 @@ class SqliteRegistry(Observer):
             return cursor.fetchall()
 
     def get_resources(self, site_name, machine_type):
-        sql_query = """SELECT R.resource_id, R.dns_name, RS.state, R.created, R.updated 
+        sql_query = """SELECT R.resource_id, R.dns_name, RS.state, R.created, R.updated
         FROM Resources R
         JOIN ResourceStates RS ON R.state_id = RS.state_id
         JOIN Sites S ON R.site_id = S.site_id
@@ -94,8 +95,8 @@ class SqliteRegistry(Observer):
         return self.execute(sql_query, dict(site_name=site_name, machine_type=machine_type))
 
     async def insert_resource(self, bind_parameters):
-        sql_query = """INSERT OR IGNORE INTO 
-        Resources(resource_id, dns_name, state_id, site_id, machine_type_id, created, updated) 
+        sql_query = """INSERT OR IGNORE INTO
+        Resources(resource_id, dns_name, state_id, site_id, machine_type_id, created, updated)
         SELECT :resource_id, :dns_name, RS.state_id, S.site_id, MT.machine_type_id, :created, :updated
         FROM ResourceStates RS
         JOIN Sites S ON S.site_name = :site_name
@@ -112,7 +113,7 @@ class SqliteRegistry(Observer):
 
     async def update_resource(self, bind_parameters):
         sql_query = """UPDATE Resources SET updated = :updated,
-        state_id = (SELECT state_id FROM ResourceStates WHERE state = :state) 
-        WHERE resource_id = :resource_id 
+        state_id = (SELECT state_id FROM ResourceStates WHERE state = :state)
+        WHERE resource_id = :resource_id
         AND site_id = (SELECT site_id FROM Sites WHERE site_name = :site_name)"""
         await self.async_execute(sql_query, bind_parameters)
