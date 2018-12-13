@@ -74,7 +74,7 @@ class SqliteRegistry(Observer):
 
     async def delete_resource(self, bind_parameters):
         sql_query = """DELETE FROM Resources
-        WHERE resource_id = :resource_id
+        WHERE dns_name = :dns_name
         AND site_id = (SELECT site_id from Sites WHERE site_name = :site_name)"""
         await self.async_execute(sql_query, bind_parameters)
 
@@ -114,6 +114,6 @@ class SqliteRegistry(Observer):
     async def update_resource(self, bind_parameters):
         sql_query = """UPDATE Resources SET updated = :updated,
         state_id = (SELECT state_id FROM ResourceStates WHERE state = :state)
-        WHERE resource_id = :resource_id
+        WHERE dns_name = :dns_name
         AND site_id = (SELECT site_id FROM Sites WHERE site_name = :site_name)"""
         await self.async_execute(sql_query, bind_parameters)
