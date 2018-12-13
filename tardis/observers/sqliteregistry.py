@@ -3,6 +3,7 @@ from ..interfaces.observer import Observer
 from ..interfaces.state import State
 
 import aiosqlite
+import asyncio
 import logging
 import sqlite3
 
@@ -12,13 +13,22 @@ class SqliteRegistry(Observer):
         configuration = Configuration()
         self._db_file = configuration.SqliteRegistry.db_file
         self._deploy_db_schema()
-        self._dispatch_on_state = dict(RequestState=self.insert_resource,
+        self._dispatch_on_state = dict(BootingState=self.insert_resource,
                                        DownState=self.delete_resource)
+        self._lock = None
 
         for site in configuration.Sites:
             self.add_site(site.name)
             for machine_type in getattr(configuration, site.name).MachineTypes:
                 self.add_machine_types(site.name, machine_type)
+
+    @property
+    def _async_lock(self):
+        # Create lock once tardis event loop is running.
+        # To avoid got Future <Future pending> attached to a different loop exception
+        if not self._lock:
+            self._lock = asyncio.Lock()
+        return self._lock
 
     def add_machine_types(self, site_name, machine_type):
         sql_query = """INSERT OR IGNORE INTO MachineTypes(machine_type, site_id)
@@ -30,13 +40,14 @@ class SqliteRegistry(Observer):
         self.execute(sql_query, dict(site_name=site_name))
 
     async def async_execute(self, sql_query, bind_parameters):
-        async with self.connect(flavour=aiosqlite) as connection:
-            connection.row_factory = lambda cur, row: {col[0]: row[idx] for idx, col in enumerate(cur.description)}
-            async with connection.cursor() as cursor:
-                await cursor.execute(sql_query, bind_parameters)
-                return_value = await cursor.fetchall()
-                await connection.commit()
-                return return_value
+        async with self._async_lock:
+            async with self.connect(flavour=aiosqlite) as connection:
+                connection.row_factory = lambda cur, row: {col[0]: row[idx] for idx, col in enumerate(cur.description)}
+                async with connection.cursor() as cursor:
+                    await cursor.execute(sql_query, bind_parameters)
+                    return_value = await cursor.fetchall()
+                    await connection.commit()
+                    return return_value
 
     def connect(self, flavour):
         return flavour.connect(self._db_file)

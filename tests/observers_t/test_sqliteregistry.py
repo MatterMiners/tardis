@@ -1,5 +1,5 @@
-from tardis.resources.dronestates import RequestState
 from tardis.resources.dronestates import BootingState
+from tardis.resources.dronestates import IntegrateState
 from tardis.resources.dronestates import DownState
 from tardis.interfaces.state import State
 from tardis.observers.sqliteregistry import SqliteRegistry
@@ -35,13 +35,13 @@ class TestSqliteRegistry(TestCase):
 
         cls.test_get_resources_result = {'resource_id': cls.test_resource_attributes['resource_id'],
                                          'dns_name': cls.test_resource_attributes['dns_name'],
-                                         'state': str(RequestState()),
+                                         'state': str(BootingState()),
                                          'created': str(cls.test_resource_attributes['created']),
                                          'updated': str(cls.test_resource_attributes['updated'])}
 
         cls.test_notify_result = (cls.test_resource_attributes['resource_id'],
                                   cls.test_resource_attributes['dns_name'],
-                                  str(RequestState()),
+                                  str(BootingState()),
                                   cls.test_resource_attributes['site_name'],
                                   cls.test_resource_attributes['machine_type'],
                                   str(cls.test_resource_attributes['created']),
@@ -49,7 +49,7 @@ class TestSqliteRegistry(TestCase):
 
         cls.test_updated_notify_result = (cls.test_updated_resource_attributes['resource_id'],
                                           cls.test_updated_resource_attributes['dns_name'],
-                                          str(BootingState()),
+                                          str(IntegrateState()),
                                           cls.test_updated_resource_attributes['site_name'],
                                           cls.test_updated_resource_attributes['machine_type'],
                                           str(cls.test_updated_resource_attributes['created']),
@@ -114,7 +114,7 @@ class TestSqliteRegistry(TestCase):
         registry = SqliteRegistry()
         registry.add_site(self.test_site_name)
         registry.add_machine_types(self.test_site_name, self.test_machine_type)
-        run_async(registry.notify, RequestState(), self.test_resource_attributes)
+        run_async(registry.notify, BootingState(), self.test_resource_attributes)
 
         self.assertListEqual(registry.get_resources(site_name=self.test_site_name,
                                                     machine_type=self.test_machine_type),
@@ -136,11 +136,11 @@ class TestSqliteRegistry(TestCase):
         registry.add_site(self.test_site_name)
         registry.add_machine_types(self.test_site_name, self.test_machine_type)
 
-        run_async(registry.notify, RequestState(), self.test_resource_attributes)
+        run_async(registry.notify, BootingState(), self.test_resource_attributes)
 
         self.assertEqual(self.test_notify_result, fetch_row(self.test_db))
 
-        run_async(registry.notify, BootingState(), self.test_updated_resource_attributes)
+        run_async(registry.notify, IntegrateState(), self.test_updated_resource_attributes)
 
         self.assertEqual(self.test_updated_notify_result, fetch_row(self.test_db))
 
