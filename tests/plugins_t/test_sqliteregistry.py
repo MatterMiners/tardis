@@ -71,7 +71,7 @@ class TestSqliteRegistry(TestCase):
             pass
 
         config = self.mock_config.return_value
-        config.SqliteRegistry.db_file = self.test_db
+        config.Plugins.SqliteRegistry.db_file = self.test_db
         config.Sites = [AttributeDict(name=self.test_site_name)]
         getattr(config, self.test_site_name).MachineTypes = [self.test_machine_type]
 
