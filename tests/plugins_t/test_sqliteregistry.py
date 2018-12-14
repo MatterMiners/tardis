@@ -2,7 +2,7 @@ from tardis.resources.dronestates import BootingState
 from tardis.resources.dronestates import IntegrateState
 from tardis.resources.dronestates import DownState
 from tardis.interfaces.state import State
-from tardis.observers.sqliteregistry import SqliteRegistry
+from tardis.plugins.sqliteregistry import SqliteRegistry
 from tardis.utilities.attributedict import AttributeDict
 from ..utilities.utilities import run_async
 
@@ -55,7 +55,7 @@ class TestSqliteRegistry(TestCase):
                                           str(cls.test_updated_resource_attributes['created']),
                                           str(cls.test_updated_resource_attributes['updated']))
 
-        cls.mock_config_patcher = patch('tardis.observers.sqliteregistry.Configuration')
+        cls.mock_config_patcher = patch('tardis.plugins.sqliteregistry.Configuration')
         cls.mock_config = cls.mock_config_patcher.start()
 
     @classmethod
