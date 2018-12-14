@@ -3,7 +3,7 @@ from ..agents.siteagent import SiteAgent
 from ..configuration.configuration import Configuration
 from ..resources.drone import Drone
 from ..resources.dronestates import RequestState
-from ..observers.sqliteregistry import SqliteRegistry
+from ..plugins.sqliteregistry import SqliteRegistry
 
 from cobald.composite.uniform import UniformComposite
 from cobald.composite.factory import FactoryPool
