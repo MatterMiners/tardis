@@ -41,7 +41,7 @@ def create_composite_pool(configuration='tardis.yml'):
             try:
                 sql_registry = plugins['SqliteRegistry']
             except KeyError:
-                pass
+                check_pointed_drones = []
             else:
                 check_pointed_resources = str_to_state(sql_registry.get_resources(site_name=site.name,
                                                                                   machine_type=machine_type))

@@ -73,10 +73,10 @@ class Drone(Pool):
                 logging.debug(f"Garbage Collect Drone: {self.resource_attributes.dns_name}")
                 return
 
-    def register_observers(self, observer):
+    def register_plugins(self, observer):
         self._plugins.append(observer)
 
-    def remove_observers(self, observer):
+    def remove_plugins(self, observer):
         self._plugins.remove(observer)
 
     @property
@@ -88,8 +88,8 @@ class Drone(Pool):
         if state.__class__ != self.state.__class__:
             self.resource_attributes.updated = datetime.now()
         self._state = state
-        self.notify_observers()
+        self.notify_plugins()
 
-    def notify_observers(self):
-        for observer in self._plugins:
-            runtime.adopt(observer.notify, self.state, self.resource_attributes, flavour=asyncio)
+    def notify_plugins(self):
+        for plugin in self._plugins:
+            runtime.adopt(plugin.notify, self.state, self.resource_attributes, flavour=asyncio)

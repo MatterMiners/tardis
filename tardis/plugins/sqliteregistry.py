@@ -1,5 +1,5 @@
 from ..configuration.configuration import Configuration
-from ..interfaces.observer import Observer
+from ..interfaces.plugin import Plugin
 from ..interfaces.state import State
 
 import aiosqlite
@@ -10,7 +10,7 @@ import sqlite3
 logging.getLogger("aiosqlite").setLevel(logging.WARNING)
 
 
-class SqliteRegistry(Observer):
+class SqliteRegistry(Plugin):
     def __init__(self):
         configuration = Configuration()
         self._db_file = configuration.Plugins.SqliteRegistry.db_file
