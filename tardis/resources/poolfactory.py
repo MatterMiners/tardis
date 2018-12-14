@@ -3,7 +3,6 @@ from ..agents.siteagent import SiteAgent
 from ..configuration.configuration import Configuration
 from ..resources.drone import Drone
 from ..resources.dronestates import RequestState
-from ..plugins.sqliteregistry import SqliteRegistry
 
 from cobald.composite.uniform import UniformComposite
 from cobald.composite.factory import FactoryPool
@@ -31,8 +30,7 @@ def create_composite_pool(configuration='tardis.yml'):
                                    f"{batch_system.adapter}Adapter")
     batch_system_agent = BatchSystemAgent(batch_system_adapter=batch_system_adapter())
 
-    drone_registry = SqliteRegistry()
-    drone_observers = (drone_registry,)
+    plugins = load_plugins()
 
     for site in configuration.Sites:
         site_adapter = getattr(import_module(name=f"tardis.adapter.{site.adapter.lower()}"), f'{site.adapter}Adapter')
@@ -40,18 +38,23 @@ def create_composite_pool(configuration='tardis.yml'):
             site_agent = SiteAgent(site_adapter(machine_type=machine_type, site_name=site.name))
 
             # Restore check_pointed resources from previously running tardis instance
-            check_pointed_resources = str_to_state(drone_registry.get_resources(site_name=site.name,
-                                                                                machine_type=machine_type))
-            check_pointed_drones = [create_drone(site_agent=site_agent,
-                                                 batch_system_agent=batch_system_agent,
-                                                 drone_observers=drone_observers,
-                                                 **resource_attributes)
-                                    for resource_attributes in check_pointed_resources]
+            try:
+                sql_registry = plugins['SqliteRegistry']
+            except KeyError:
+                pass
+            else:
+                check_pointed_resources = str_to_state(sql_registry.get_resources(site_name=site.name,
+                                                                                  machine_type=machine_type))
+                check_pointed_drones = [create_drone(site_agent=site_agent,
+                                                     batch_system_agent=batch_system_agent,
+                                                     plugins=plugins.values(),
+                                                     **resource_attributes)
+                                        for resource_attributes in check_pointed_resources]
 
             # create drone factory for COBalD FactoryPool
             drone_factory = partial(create_drone, site_agent=site_agent,
                                     batch_system_agent=batch_system_agent,
-                                    drone_observers=drone_observers)
+                                    plugins=plugins.values())
             cpu_cores = getattr(configuration, site.name).MachineMetaData[machine_type]['Cores']
             composites.append(Logger(Standardiser(FactoryPool(*check_pointed_drones,
                                                               factory=drone_factory),
@@ -62,7 +65,18 @@ def create_composite_pool(configuration='tardis.yml'):
     return UniformComposite(*composites)
 
 
-def create_drone(site_agent, batch_system_agent, drone_observers=None, resource_id=None, dns_name=None,
+def create_drone(site_agent, batch_system_agent, plugins=None, resource_id=None, dns_name=None,
                  state=RequestState(), created=None, updated=None):
-    return Drone(site_agent=site_agent, batch_system_agent=batch_system_agent, observers=drone_observers,
+    return Drone(site_agent=site_agent, batch_system_agent=batch_system_agent, plugins=plugins,
                  resource_id=resource_id, dns_name=dns_name, state=state, created=created, updated=updated)
+
+
+def load_plugins():
+    try:
+        plugin_configuration = Configuration().Plugins
+    except AttributeError:
+        return []
+    else:
+        def create_instance(plugin):
+            return getattr(import_module(name=f"tardis.plugins.{plugin.lower()}"), f'{plugin}')()
+        return {plugin: create_instance(plugin) for plugin in plugin_configuration.keys()}

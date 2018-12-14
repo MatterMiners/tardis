@@ -14,11 +14,11 @@ import uuid
 
 @service(flavour=asyncio)
 class Drone(Pool):
-    def __init__(self, site_agent, batch_system_agent, observers=None, resource_id=None, dns_name=None,
+    def __init__(self, site_agent, batch_system_agent, plugins=None, resource_id=None, dns_name=None,
                  state=RequestState(), created=None, updated=None):
         self._site_agent = site_agent
         self._batch_system_agent = batch_system_agent
-        self._observers = observers or []
+        self._plugins = plugins or []
         self._state = state
 
         self.resource_attributes = AttributeDict(site_name=self._site_agent.site_name,
@@ -74,10 +74,10 @@ class Drone(Pool):
                 return
 
     def register_observers(self, observer):
-        self._observers.append(observer)
+        self._plugins.append(observer)
 
     def remove_observers(self, observer):
-        self._observers.remove(observer)
+        self._plugins.remove(observer)
 
     @property
     def state(self):
@@ -91,5 +91,5 @@ class Drone(Pool):
         self.notify_observers()
 
     def notify_observers(self):
-        for observer in self._observers:
+        for observer in self._plugins:
             runtime.adopt(observer.notify, self.state, self.resource_attributes, flavour=asyncio)
