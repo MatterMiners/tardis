@@ -21,7 +21,7 @@ import logging
 
 
 class CloudStackAdapter(SiteAdapter):
-    def __init__(self, machine_type, site_name='exoscale'):
+    def __init__(self, machine_type, site_name):
         self.configuration = getattr(Configuration(), site_name.upper())
         self.cloud_stack_client = CloudStack(end_point=self.configuration.end_point,
                                              api_key=self.configuration.api_key,
@@ -49,7 +49,7 @@ class CloudStackAdapter(SiteAdapter):
         response = await self.cloud_stack_client.deployVirtualMachine(name=resource_attributes.dns_name,
                                                                       **self.configuration.MachineTypeConfiguration[
                                                                           self._machine_type])
-        logging.debug(f"Exoscale deployVirtualMachine returned {response}")
+        logging.debug(f"{self.site_name} deployVirtualMachine returned {response}")
         return self.handle_response(response['virtualmachine'])
 
     @property
@@ -66,17 +66,17 @@ class CloudStackAdapter(SiteAdapter):
 
     async def resource_status(self, resource_attributes):
         response = await self.cloud_stack_client.listVirtualMachines(id=resource_attributes.resource_id)
-        logging.debug(f"Exoscale listVirtualMachines returned {response}")
+        logging.debug(f"{self.site_name} listVirtualMachines returned {response}")
         return self.handle_response(response['virtualmachine'][0])
 
     async def stop_resource(self, resource_attributes):
         response = await self.cloud_stack_client.stopVirtualMachine(id=resource_attributes.resource_id)
-        logging.debug(f"Exoscale stopVirtualMachine returned {response}")
+        logging.debug(f"{self.site_name} stopVirtualMachine returned {response}")
         return response
 
     async def terminate_resource(self, resource_attributes):
         response = await self.cloud_stack_client.destroyVirtualMachine(id=resource_attributes.resource_id)
-        logging.debug(f"Exoscale destroyVirtualMachine returned {response}")
+        logging.debug(f"{self.site_name} destroyVirtualMachine returned {response}")
         return response
 
     @contextmanager

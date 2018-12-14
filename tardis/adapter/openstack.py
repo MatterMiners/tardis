@@ -20,7 +20,7 @@ import logging
 
 
 class OpenStackAdapter(SiteAdapter):
-    def __init__(self, machine_type, site_name='otc'):
+    def __init__(self, machine_type, site_name):
         self.configuration = getattr(Configuration(), site_name.upper())
         self._machine_type = machine_type
         self._site_name = site_name
@@ -51,7 +51,7 @@ class OpenStackAdapter(SiteAdapter):
         specs['name'] = resource_attributes.dns_name
         await self.nova.init_api(timeout=60)
         response = await self.nova.servers.create(server=specs)
-        logging.debug(f"OTC servers servers create returned {response}")
+        logging.debug(f"{self.site_name} servers create returned {response}")
         return self.handle_response(response['server'])
 
     @property
@@ -69,20 +69,20 @@ class OpenStackAdapter(SiteAdapter):
     async def resource_status(self, resource_attributes):
         await self.nova.init_api(timeout=60)
         response = await self.nova.servers.get(resource_attributes.resource_id)
-        logging.debug(f"OTC servers get returned {response}")
+        logging.debug(f"{self.site_name} servers get returned {response}")
         return self.handle_response(response['server'])
 
     async def stop_resource(self, resource_attributes):
         await self.nova.init_api(timeout=60)
         params = {'os-stop': None}
         response = await self.nova.servers.run_action(resource_attributes.resource_id, **params)
-        logging.debug(f"OTC servers stop returned {response}")
+        logging.debug(f"{self.site_name} servers stop returned {response}")
         return response
 
     async def terminate_resource(self, resource_attributes):
         await self.nova.init_api(timeout=60)
         response = await self.nova.servers.force_delete(resource_attributes.resource_id)
-        logging.debug(f"OTC servers servers terminate returned {response}")
+        logging.debug(f"{self.site_name} servers terminate returned {response}")
         return response
 
     @contextmanager
