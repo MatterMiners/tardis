@@ -7,6 +7,8 @@ import asyncio
 import logging
 import sqlite3
 
+logging.getLogger("aiosqlite").setLevel(logging.WARNING)
+
 
 class SqliteRegistry(Observer):
     def __init__(self):
