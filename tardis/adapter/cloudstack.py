@@ -22,7 +22,7 @@ import logging
 
 class CloudStackAdapter(SiteAdapter):
     def __init__(self, machine_type, site_name):
-        self.configuration = getattr(Configuration(), site_name.upper())
+        self.configuration = getattr(Configuration(), site_name)
         self.cloud_stack_client = CloudStack(end_point=self.configuration.end_point,
                                              api_key=self.configuration.api_key,
                                              api_secret=self.configuration.api_secret,
