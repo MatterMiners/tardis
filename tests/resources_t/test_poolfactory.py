@@ -1,5 +1,6 @@
 from tardis.resources.dronestates import RequestState
 from tardis.resources.poolfactory import create_composite_pool
+from tardis.resources.poolfactory import get_drones_to_restore
 from tardis.resources.poolfactory import load_plugins
 from tardis.resources.poolfactory import str_to_state
 from tardis.utilities.attributedict import AttributeDict
@@ -23,7 +24,10 @@ class TestPoolFactory(TestCase):
 
     def setUp(self):
         self.config = self.mock_config.return_value
+        self.config.Sites.name = 'TestSite'
         self.config.Plugins = AttributeDict(SqliteRegistry=AttributeDict(db_file='test.db'))
+        sqlite_registry = self.mock_sqliteregistry.return_value
+        sqlite_registry.get_resources.return_value = [{'state': 'RequestState'}]
 
     def test_str_to_state(self):
         test = [{'state': 'RequestState', 'dns_name': 'test-abc123'}]
@@ -37,3 +41,10 @@ class TestPoolFactory(TestCase):
         self.mock_config.side_effect = AttributeError
         self.assertEqual(load_plugins(), {})
         self.mock_config.side_effect = None
+
+    def test_get_drones_to_restore(self):
+        self.assertEqual(get_drones_to_restore(plugins={}, site=self.config.Sites, machine_type='TestMachineType'), [])
+
+        self.assertIsInstance(get_drones_to_restore(plugins={'SqliteRegistry': self.mock_sqliteregistry()},
+                                                    site=self.config.Sites,
+                                                    machine_type='TestMachineType')[0]['state'], RequestState)
