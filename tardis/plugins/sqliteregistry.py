@@ -10,6 +10,8 @@ import sqlite3
 
 class SqliteRegistry(Plugin):
     def __init__(self):
+        self.logger = logging.getLogger("sqliteregistry")
+        self.logger.setLevel(logging.DEBUG)
         configuration = Configuration()
         self._db_file = configuration.Plugins.SqliteRegistry.db_file
         self._deploy_db_schema()
@@ -106,7 +108,7 @@ class SqliteRegistry(Plugin):
 
     async def notify(self, state, resource_attributes):
         state = str(state)
-        logging.debug(f"Drone: {str(resource_attributes)} has changed state to {state}")
+        self.logger.debug(f"Drone: {str(resource_attributes)} has changed state to {state}")
         bind_parameters = dict(state=state)
         bind_parameters.update(resource_attributes)
         await self._dispatch_on_state.get(state, self.update_resource)(bind_parameters)
