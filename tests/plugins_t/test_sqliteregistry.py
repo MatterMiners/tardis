@@ -8,6 +8,7 @@ from ..utilities.utilities import run_async
 
 from unittest import TestCase
 from unittest.mock import patch
+from unittest.mock import Mock
 
 import datetime
 import os
@@ -110,6 +111,7 @@ class TestSqliteRegistry(TestCase):
         SqliteRegistry()
         SqliteRegistry()
 
+    @patch('tardis.plugins.sqliteregistry.logging', Mock())
     def test_get_resources(self):
         registry = SqliteRegistry()
         registry.add_site(self.test_site_name)
@@ -120,6 +122,7 @@ class TestSqliteRegistry(TestCase):
                                                     machine_type=self.test_machine_type),
                              [self.test_get_resources_result])
 
+    @patch('tardis.plugins.sqliteregistry.logging', Mock())
     def test_notify(self):
         def fetch_row(db):
             with sqlite3.connect(db) as connection:
