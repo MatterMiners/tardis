@@ -38,19 +38,12 @@ def create_composite_pool(configuration='tardis.yml'):
         for machine_type in getattr(configuration, site.name).MachineTypes:
             site_agent = SiteAgent(site_adapter(machine_type=machine_type, site_name=site.name))
 
-            # Restore check_pointed resources from previously running tardis instance
-            try:
-                sql_registry = plugins['SqliteRegistry']
-            except KeyError:
-                check_pointed_drones = []
-            else:
-                check_pointed_resources = str_to_state(sql_registry.get_resources(site_name=site.name,
-                                                                                  machine_type=machine_type))
-                check_pointed_drones = [create_drone(site_agent=site_agent,
-                                                     batch_system_agent=batch_system_agent,
-                                                     plugins=plugins.values(),
-                                                     **resource_attributes)
-                                        for resource_attributes in check_pointed_resources]
+            check_pointed_resources = get_drones_to_restore(plugins, site, machine_type)
+            check_pointed_drones = [create_drone(site_agent=site_agent,
+                                                 batch_system_agent=batch_system_agent,
+                                                 plugins=plugins.values(),
+                                                 **resource_attributes)
+                                    for resource_attributes in check_pointed_resources]
 
             # create drone factory for COBalD FactoryPool
             drone_factory = partial(create_drone, site_agent=site_agent,
@@ -73,7 +66,19 @@ def create_drone(site_agent, batch_system_agent, plugins=None, resource_id=None,
                  resource_id=resource_id, dns_name=dns_name, state=state, created=created, updated=updated)
 
 
+def get_drones_to_restore(plugins, site, machine_type):
+    """Restore check_pointed resources from previously running tardis instance"""
+    try:
+        sql_registry = plugins['SqliteRegistry']
+    except KeyError:
+        return []
+    else:
+        return str_to_state(sql_registry.get_resources(site_name=site.name,
+                                                       machine_type=machine_type))
+
+
 def load_plugins():
+    """Load plugins specified in configuration"""
     try:
         plugin_configuration = Configuration().Plugins
     except AttributeError:
