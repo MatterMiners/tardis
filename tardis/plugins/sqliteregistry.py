@@ -7,8 +7,6 @@ import asyncio
 import logging
 import sqlite3
 
-logging.getLogger("aiosqlite").setLevel(logging.WARNING)
-
 
 class SqliteRegistry(Plugin):
     def __init__(self):
@@ -78,6 +76,8 @@ class SqliteRegistry(Plugin):
         with self.connect(flavour=sqlite3) as connection:
             cursor = connection.cursor()
             cursor.execute("PRAGMA foreign_keys = ON")
+            cursor.execute("PRAGMA locking_mode = EXCLUSIVE")
+            cursor.execute("PRAGMA journal_mode = WAL")
             for table_name, columns in tables.items():
                 cursor.execute(f"create table if not exists {table_name} ({', '.join(columns)})")
 
