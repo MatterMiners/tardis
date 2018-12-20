@@ -82,8 +82,10 @@ class Drone(Pool):
         """Should be replaced by asynchronous state.setter property once available"""
         if state.__class__ != self.state.__class__:
             self.resource_attributes.updated = datetime.now()
-        self._state = state
-        await self.notify_plugins()
+            self._state = state
+            await self.notify_plugins()
+        else:
+            self._state = state
 
     @property
     def state(self):
