@@ -7,6 +7,7 @@ class ResourceStatus(Enum):
     Running = 2
     Stopped = 3
     Deleted = 4
+    Error = 5
 
 
 class SiteAdapter(metaclass=ABCMeta):

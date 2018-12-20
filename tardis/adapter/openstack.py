@@ -40,7 +40,8 @@ class OpenStackAdapter(SiteAdapter):
                                              updated=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ"),
                                              status=lambda x, translator=StaticMapping(BUILD=ResourceStatus.Booting,
                                                                                        ACTIVE=ResourceStatus.Running,
-                                                                                       SHUTOFF=ResourceStatus.Stopped):
+                                                                                       SHUTOFF=ResourceStatus.Stopped,
+                                                                                       ERROR=ResourceStatus.Error):
                                              translator[x])
 
         self.handle_response = partial(self.handle_response, key_translator=key_translator,
