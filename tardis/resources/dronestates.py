@@ -17,12 +17,12 @@ class RequestState(State):
         try:
             drone.resource_attributes.update(await drone.site_agent.deploy_resource(drone.resource_attributes))
         except (TardisAuthError, TardisTimeout, TardisQuotaExceeded):
-            drone.state = DownState()  # static state transition
+            await drone.set_state(DownState())  # static state transition
         except TardisResourceStatusUpdateFailed:
             await asyncio.sleep(1.0)
-            drone.state = RequestState()
+            await drone.set_state(RequestState())
         else:
-            drone.state = BootingState()  # static state transition
+            await drone.set_state(BootingState())  # static state transition
         finally:
             # Can be removed in production code
             await asyncio.sleep(0.5)
@@ -37,12 +37,12 @@ class BootingState(State):
             logging.info(f'Resource attributes: {drone.resource_attributes}')
         except (TardisAuthError, TardisTimeout):
             #  Retry to get current state of the resource
-            drone.state = BootingState()  # static state transition
+            await drone.set_state(BootingState())  # static state transition
         except TardisResourceStatusUpdateFailed:
             await asyncio.sleep(1.0)
-            drone.state = BootingState()
+            await drone.set_state(BootingState())
         else:
-            drone.state = cls.transition[drone.resource_attributes.resource_status]()
+            await drone.set_state(cls.transition[drone.resource_attributes.resource_status]())
         finally:
             # Can be removed in production code
             await asyncio.sleep(0.5)
@@ -54,7 +54,7 @@ class IntegrateState(State):
         logging.info(f"Drone {drone} in IntegrateState")
         await drone.batch_system_agent.integrate_machine(dns_name=drone.resource_attributes['dns_name'])
         await asyncio.sleep(0.5)
-        drone.state = IntegratingState()  # static state transition
+        await drone.set_state(IntegratingState())  # static state transition
 
 
 class IntegratingState(State):
@@ -64,7 +64,7 @@ class IntegratingState(State):
         machine_status = await drone.batch_system_agent.get_machine_status(dns_name=drone.resource_attributes[
             'dns_name'])
         await asyncio.sleep(0.5)
-        drone.state = cls.transition[machine_status]()
+        await drone.set_state(cls.transition[machine_status]())
 
 
 class AvailableState(State):
@@ -78,12 +78,12 @@ class AvailableState(State):
 
         if not drone.demand:
             drone._supply = 0.0
-            drone.state = DrainState()  # static state transition
+            await drone.set_state(DrainState())  # static state transition
             return
 
         if machine_status == MachineStatus.NotAvailable:
             drone._supply = 0.0
-            drone.state = ShutDownState()  # static state transition
+            await drone.set_state(ShutDownState())  # static state transition
             return
 
         drone._allocation = await drone.batch_system_agent.get_allocation(dns_name=drone.resource_attributes[
@@ -91,7 +91,7 @@ class AvailableState(State):
         drone._utilisation = await drone.batch_system_agent.get_utilization(dns_name=drone.resource_attributes[
             'dns_name'])
         drone._supply = drone.maximum_demand
-        drone.state = AvailableState()  # static state transition
+        await drone.set_state(AvailableState())  # static state transition
 
 
 class DrainState(State):
@@ -101,7 +101,7 @@ class DrainState(State):
         await drone.batch_system_agent.drain_machine(dns_name=drone.resource_attributes[
             'dns_name'])
         await asyncio.sleep(0.5)
-        drone.state = DrainingState()  # static state transition
+        await drone.set_state(DrainingState())  # static state transition
 
 
 class DrainingState(State):
@@ -111,7 +111,7 @@ class DrainingState(State):
         await asyncio.sleep(0.5)
         machine_status = await drone.batch_system_agent.get_machine_status(dns_name=drone.resource_attributes[
             'dns_name'])
-        drone.state = cls.transition[machine_status]()
+        await drone.set_state(cls.transition[machine_status]())
 
 
 class DisintegrateState(State):
@@ -119,7 +119,7 @@ class DisintegrateState(State):
     async def run(drone):
         logging.info(f"Drone {drone} in DisintegrateState")
         await asyncio.sleep(0.5)
-        drone.state = ShutDownState()  # static state transition
+        await drone.set_state(ShutDownState())  # static state transition
 
 
 class ShutDownState(State):
@@ -131,9 +131,9 @@ class ShutDownState(State):
             await drone.site_agent.stop_resource(drone.resource_attributes)
         except TardisResourceStatusUpdateFailed:
             await asyncio.sleep(1.0)
-            drone.state = ShutDownState()
+            await drone.set_state(ShutDownState())
         await asyncio.sleep(0.5)
-        drone.state = ShuttingDownState()  # static state transition
+        await drone.set_state(ShuttingDownState())  # static state transition
 
 
 class ShuttingDownState(State):
@@ -145,8 +145,8 @@ class ShuttingDownState(State):
             drone.resource_attributes.update(await drone.site_agent.resource_status(drone.resource_attributes))
         except TardisResourceStatusUpdateFailed:
             await asyncio.sleep(1.0)
-            drone.state = ShuttingDownState()
-        drone.state = cls.transition[drone.resource_attributes.resource_status]()
+            await drone.set_state(ShuttingDownState())
+        await drone.set_state(cls.transition[drone.resource_attributes.resource_status]())
         await asyncio.sleep(0.5)
 
 
@@ -159,9 +159,9 @@ class CleanupState(State):
             await drone.site_agent.terminate_resource(drone.resource_attributes)
         except TardisResourceStatusUpdateFailed:
             await asyncio.sleep(1.0)
-            drone.state = CleanupState()
+            await drone.set_state(CleanupState())
         await asyncio.sleep(0.5)
-        drone.state = DownState()  # static state transition
+        await drone.set_state(DownState())  # static state transition
 
 
 class DownState(State):
