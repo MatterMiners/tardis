@@ -50,9 +50,13 @@ class HTCondorAdapter(BatchSystemAdapter):
 
     async def drain_machine(self, dns_name):
         await self._htcondor_status.update_status()
-        machine = self._htcondor_status[dns_name]['Machine']
-        cmd = f'condor_drain -graceful {machine}'
-        return await async_run_command(cmd)
+        try:
+            machine = self._htcondor_status[dns_name]['Machine']
+        except KeyError:
+            return
+        else:
+            cmd = f'condor_drain -graceful {machine}'
+            return await async_run_command(cmd)
 
     async def integrate_machine(self, dns_name):
         """
