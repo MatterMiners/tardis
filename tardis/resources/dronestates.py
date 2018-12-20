@@ -173,6 +173,7 @@ class DownState(State):
 # define allowed state transitions
 BootingState.transition = {ResourceStatus.Booting: BootingState,
                            ResourceStatus.Running: IntegrateState,
+                           ResourceStatus.Stopped: CleanupState,
                            ResourceStatus.Error: CleanupState}
 
 IntegratingState.transition = {MachineStatus.NotAvailable: IntegratingState,
@@ -186,4 +187,3 @@ DrainingState.transition = {MachineStatus.Draining: DrainingState,
 
 ShuttingDownState.transition = {ResourceStatus.Running: ShuttingDownState,
                                 ResourceStatus.Stopped: CleanupState}
-
