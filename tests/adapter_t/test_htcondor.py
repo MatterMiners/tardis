@@ -51,6 +51,7 @@ class TestHTCondorAdapter(TestCase):
     def test_drain_machine(self):
         run_async(self.htcondor_adapter.drain_machine, dns_name='test')
         self.mock_async_run_command.assert_called_with('condor_drain -graceful test')
+        self.assertIsNone(run_async(self.htcondor_adapter.drain_machine, dns_name="not_exists"))
 
     def test_integrate_machine(self):
         self.assertIsNone(run_async(self.htcondor_adapter.integrate_machine, dns_name='test'))
