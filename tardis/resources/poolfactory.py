@@ -8,6 +8,7 @@ from cobald.composite.uniform import UniformComposite
 from cobald.composite.factory import FactoryPool
 from cobald.decorator.standardiser import Standardiser
 from cobald.decorator.logger import Logger
+from cobald.utility.primitives import infinity as inf
 
 from functools import partial
 from importlib import import_module
@@ -59,6 +60,7 @@ def create_composite_pool(configuration='tardis.yml'):
             composites.append(Logger(Standardiser(FactoryPool(*check_pointed_drones,
                                                               factory=drone_factory),
                                                   minimum=cpu_cores,
+                                                  maximum=site.quota if site.quota >= 0 else inf,
                                                   granularity=cpu_cores),
                                      name=f"{site.name.lower()}_{machine_type.lower()}"))
 
