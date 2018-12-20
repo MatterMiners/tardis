@@ -1,7 +1,6 @@
 from .dronestates import RequestState
 from .dronestates import DownState
 from ..utilities.attributedict import AttributeDict
-from cobald.daemon import runtime
 from cobald.daemon import service
 from cobald.interfaces import Pool
 
@@ -79,17 +78,17 @@ class Drone(Pool):
     def remove_plugins(self, observer):
         self._plugins.remove(observer)
 
+    async def set_state(self, state):
+        """Should be replaced by asynchronous state.setter property once available"""
+        if state.__class__ != self.state.__class__:
+            self.resource_attributes.updated = datetime.now()
+        self._state = state
+        await self.notify_plugins()
+
     @property
     def state(self):
         return self._state
 
-    @state.setter
-    def state(self, state):
-        if state.__class__ != self.state.__class__:
-            self.resource_attributes.updated = datetime.now()
-        self._state = state
-        self.notify_plugins()
-
-    def notify_plugins(self):
+    async def notify_plugins(self):
         for plugin in self._plugins:
-            runtime.adopt(plugin.notify, self.state, self.resource_attributes, flavour=asyncio)
+            await plugin.notify(self.state, self.resource_attributes)
