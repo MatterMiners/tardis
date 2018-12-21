@@ -67,7 +67,7 @@ class Drone(Pool):
     async def run(self):
         while True:
             await self.state.run(self)
-            await asyncio.sleep(1)
+            await asyncio.sleep(60)
             if isinstance(self.state, DownState):
                 logging.debug(f"Garbage Collect Drone: {self.resource_attributes.dns_name}")
                 return
