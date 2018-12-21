@@ -37,7 +37,7 @@ class HTCondorAdapter(BatchSystemAdapter):
     def __init__(self):
         config = Configuration()
         self._htcondor_status = AsyncCacheMap(update_coroutine=htcondor_status_updater,
-                                              max_age=config.BatchSystem.max_age)
+                                              max_age=config.BatchSystem.max_age * 60)
         self.ratios = config.BatchSystem.ratios
 
     async def disintegrate_machine(self, dns_name):
