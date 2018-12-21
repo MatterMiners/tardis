@@ -6,7 +6,7 @@ import json
 
 
 class AsyncCacheMap(Mapping):
-    def __init__(self, update_coroutine, max_age: int= 60 * 15):
+    def __init__(self, update_coroutine, max_age: int = 60 * 15):
         self._update_coroutine = update_coroutine
         self._max_age = max_age
         self._last_update = 0
