@@ -2,7 +2,7 @@ from ..configuration.configuration import Configuration
 from ..interfaces.plugin import Plugin
 from ..interfaces.state import State
 
-import aiosqlite
+from concurrent.futures import ThreadPoolExecutor
 import asyncio
 import logging
 import sqlite3
@@ -15,20 +15,12 @@ class SqliteRegistry(Plugin):
         self._deploy_db_schema()
         self._dispatch_on_state = dict(BootingState=self.insert_resource,
                                        DownState=self.delete_resource)
-        self._lock = None
+        self.thread_pool_executor = ThreadPoolExecutor(max_workers=1)
 
         for site in configuration.Sites:
             self.add_site(site.name)
             for machine_type in getattr(configuration, site.name).MachineTypes:
                 self.add_machine_types(site.name, machine_type)
-
-    @property
-    def _async_lock(self):
-        # Create lock once tardis event loop is running.
-        # To avoid got Future <Future pending> attached to a different loop exception
-        if not self._lock:
-            self._lock = asyncio.Lock()
-        return self._lock
 
     def add_machine_types(self, site_name, machine_type):
         sql_query = """INSERT OR IGNORE INTO MachineTypes(machine_type, site_id)
@@ -40,17 +32,11 @@ class SqliteRegistry(Plugin):
         self.execute(sql_query, dict(site_name=site_name))
 
     async def async_execute(self, sql_query, bind_parameters):
-        async with self._async_lock:
-            async with self.connect(flavour=aiosqlite) as connection:
-                connection.row_factory = lambda cur, row: {col[0]: row[idx] for idx, col in enumerate(cur.description)}
-                async with connection.cursor() as cursor:
-                    await cursor.execute(sql_query, bind_parameters)
-                    return_value = await cursor.fetchall()
-                    await connection.commit()
-                    return return_value
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(self.thread_pool_executor, self.execute, sql_query, bind_parameters)
 
-    def connect(self, flavour):
-        return flavour.connect(self._db_file)
+    def connect(self):
+        return sqlite3.connect(self._db_file)
 
     def _deploy_db_schema(self):
         tables = {'MachineTypes': ['machine_type_id INTEGER PRIMARY KEY AUTOINCREMENT',
@@ -73,7 +59,7 @@ class SqliteRegistry(Plugin):
                   'Sites': ['site_id INTEGER PRIMARY KEY AUTOINCREMENT',
                             'site_name VARCHAR(255) UNIQUE']}
 
-        with self.connect(flavour=sqlite3) as connection:
+        with self.connect() as connection:
             cursor = connection.cursor()
             cursor.execute("PRAGMA foreign_keys = ON")
             cursor.execute("PRAGMA locking_mode = EXCLUSIVE")
@@ -92,10 +78,11 @@ class SqliteRegistry(Plugin):
         await self.async_execute(sql_query, bind_parameters)
 
     def execute(self, sql_query, bind_parameters):
-        with self.connect(flavour=sqlite3) as connection:
+        with self.connect() as connection:
             connection.row_factory = lambda cur, row: {col[0]: row[idx] for idx, col in enumerate(cur.description)}
             cursor = connection.cursor()
             cursor.execute(sql_query, bind_parameters)
+            logging.debug(f"{sql_query},{bind_parameters} executed")
             return cursor.fetchall()
 
     def get_resources(self, site_name, machine_type):
