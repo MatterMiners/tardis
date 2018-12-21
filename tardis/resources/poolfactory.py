@@ -77,7 +77,7 @@ def load_plugins():
     try:
         plugin_configuration = Configuration().Plugins
     except AttributeError:
-        return []
+        return {}
     else:
         def create_instance(plugin):
             return getattr(import_module(name=f"tardis.plugins.{plugin.lower()}"), f'{plugin}')()

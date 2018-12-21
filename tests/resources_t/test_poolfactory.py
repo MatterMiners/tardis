@@ -35,5 +35,5 @@ class TestPoolFactory(TestCase):
         self.assertEqual(load_plugins(), {'SqliteRegistry': self.mock_sqliteregistry()})
 
         self.mock_config.side_effect = AttributeError
-        load_plugins()
+        self.assertEqual(load_plugins(), {})
         self.mock_config.side_effect = None
