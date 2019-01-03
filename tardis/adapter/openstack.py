@@ -1,7 +1,9 @@
 from asyncopenstackclient import AuthPassword
 from asyncopenstackclient import NovaClient
 from simple_rest_client.exceptions import AuthError
+from simple_rest_client.exceptions import ClientError
 from aiohttp import ClientConnectionError
+from aiohttp import ContentTypeError
 from ..configuration.configuration import Configuration
 from ..exceptions.tardisexceptions import TardisAuthError
 from ..exceptions.tardisexceptions import TardisError
@@ -94,6 +96,12 @@ class OpenStackAdapter(SiteAdapter):
             raise TardisTimeout from te
         except AuthError as ae:
             raise TardisAuthError from ae
+        except ContentTypeError:
+            logging.info("OpenStack: content Type Error")
+            raise TardisResourceStatusUpdateFailed
+        except ClientError as ce:
+            logging.info("REST client error")
+            raise TardisResourceStatusUpdateFailed
         except ClientConnectionError:
             logging.info("Connection reset error")
             raise TardisResourceStatusUpdateFailed
