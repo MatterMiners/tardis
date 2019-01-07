@@ -12,6 +12,10 @@ class TardisAuthError(Exception):
     pass
 
 
+class TardisDroneCrashed(Exception):
+    pass
+
+
 class TardisError(Exception):
     pass
 

@@ -6,6 +6,7 @@ from aiohttp import ClientConnectionError
 from aiohttp import ContentTypeError
 from ..configuration.configuration import Configuration
 from ..exceptions.tardisexceptions import TardisAuthError
+from ..exceptions.tardisexceptions import TardisDroneCrashed
 from ..exceptions.tardisexceptions import TardisError
 from ..exceptions.tardisexceptions import TardisTimeout
 from ..exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
@@ -101,7 +102,7 @@ class OpenStackAdapter(SiteAdapter):
             raise TardisResourceStatusUpdateFailed
         except ClientError as ce:
             logging.info("REST client error")
-            raise TardisResourceStatusUpdateFailed
+            raise TardisDroneCrashed
         except ClientConnectionError:
             logging.info("Connection reset error")
             raise TardisResourceStatusUpdateFailed
