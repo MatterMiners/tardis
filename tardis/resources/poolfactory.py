@@ -4,7 +4,7 @@ from ..configuration.configuration import Configuration
 from ..resources.drone import Drone
 from ..resources.dronestates import RequestState
 
-from cobald.composite.uniform import UniformComposite
+from cobald.composite.weighted import WeightedComposite
 from cobald.composite.factory import FactoryPool
 from cobald.decorator.standardiser import Standardiser
 from cobald.decorator.logger import Logger
@@ -64,7 +64,7 @@ def create_composite_pool(configuration='tardis.yml'):
                                                   granularity=cpu_cores),
                                      name=f"{site.name.lower()}_{machine_type.lower()}"))
 
-    return UniformComposite(*composites)
+    return WeightedComposite(*composites)
 
 
 def create_drone(site_agent, batch_system_agent, plugins=None, resource_id=None, dns_name=None,
