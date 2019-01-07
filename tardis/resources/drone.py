@@ -70,6 +70,7 @@ class Drone(Pool):
             await asyncio.sleep(60)
             if isinstance(self.state, DownState):
                 logging.debug(f"Garbage Collect Drone: {self.resource_attributes.dns_name}")
+                self._demand = 0
                 return
 
     def register_plugins(self, observer):
