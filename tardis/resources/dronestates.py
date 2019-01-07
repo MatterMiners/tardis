@@ -1,4 +1,5 @@
 from ..exceptions.tardisexceptions import TardisAuthError
+from ..exceptions.tardisexceptions import TardisDroneCrashed
 from ..exceptions.tardisexceptions import TardisTimeout
 from ..exceptions.tardisexceptions import TardisQuotaExceeded
 from ..exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
@@ -18,6 +19,8 @@ class RequestState(State):
             drone.resource_attributes.update(await drone.site_agent.deploy_resource(drone.resource_attributes))
         except (TardisAuthError, TardisTimeout, TardisQuotaExceeded):
             await drone.set_state(DownState())  # static state transition
+        except TardisDroneCrashed:
+            await drone.set_state(CleanupState())
         except TardisResourceStatusUpdateFailed:
             await asyncio.sleep(1.0)
             await drone.set_state(RequestState())
@@ -41,6 +44,8 @@ class BootingState(State):
         except TardisResourceStatusUpdateFailed:
             await asyncio.sleep(1.0)
             await drone.set_state(BootingState())
+        except TardisDroneCrashed:
+            await drone.set_state(CleanupState())
         else:
             await drone.set_state(cls.transition[drone.resource_attributes.resource_status]())
         finally:
@@ -129,6 +134,8 @@ class ShutDownState(State):
         logging.info(f'Stopping VM with ID {drone.resource_attributes.resource_id}')
         try:
             await drone.site_agent.stop_resource(drone.resource_attributes)
+        except TardisDroneCrashed:
+            await drone.set_state(CleanupState())
         except TardisResourceStatusUpdateFailed:
             await asyncio.sleep(1.0)
             await drone.set_state(ShutDownState())
@@ -143,6 +150,8 @@ class ShuttingDownState(State):
         logging.info(f'Checking Status of VM with ID {drone.resource_attributes.resource_id}')
         try:
             drone.resource_attributes.update(await drone.site_agent.resource_status(drone.resource_attributes))
+        except TardisDroneCrashed:
+            await drone.set_state(CleanupState())
         except TardisResourceStatusUpdateFailed:
             await asyncio.sleep(1.0)
             await drone.set_state(ShuttingDownState())
@@ -157,6 +166,8 @@ class CleanupState(State):
         logging.info(f'Destroying VM with ID {drone.resource_attributes.resource_id}')
         try:
             await drone.site_agent.terminate_resource(drone.resource_attributes)
+        except TardisDroneCrashed:
+            await drone.set_state(DownState())
         except TardisResourceStatusUpdateFailed:
             await asyncio.sleep(1.0)
             await drone.set_state(CleanupState())
