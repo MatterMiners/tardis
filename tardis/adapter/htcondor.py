@@ -21,6 +21,7 @@ async def htcondor_status_updater():
     htcondor_status = {}
 
     try:
+        logging.debug("HTCondor status update is running.")
         condor_status = await async_run_command(cmd)
         with StringIO(condor_status) as csv_input:
             cvs_reader = csv.DictReader(csv_input, fieldnames=tuple(attributes.keys()), delimiter='\t')
@@ -30,6 +31,7 @@ async def htcondor_status_updater():
         logging.error("condor_status could not be executed!")
         logging.error(str(ex))
     else:
+        logging.debug("HTCondor status update finished.")
         return htcondor_status
 
 
@@ -54,9 +56,15 @@ class HTCondorAdapter(BatchSystemAdapter):
             machine = self._htcondor_status[dns_name]['Machine']
         except KeyError:
             return
-        else:
+        try:
             cmd = f'condor_drain -graceful {machine}'
             return await async_run_command(cmd)
+        except AsyncRunCommandFailure as ex:
+            if ex.error_code is 1:
+                # exit code 1: HTCondor can't connect to StartD of Drone
+                # https://github.com/htcondor/htcondor/blob/master/src/condor_tools/drain.cpp
+                logging.debug("Drone %s is not in HTCondor anymore." % dns_name)
+                return
 
     async def integrate_machine(self, dns_name):
         """
