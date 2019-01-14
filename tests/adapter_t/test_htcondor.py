@@ -52,6 +52,18 @@ class TestHTCondorAdapter(TestCase):
         run_async(self.htcondor_adapter.drain_machine, dns_name='test')
         self.mock_async_run_command.assert_called_with('condor_drain -graceful test')
         self.assertIsNone(run_async(self.htcondor_adapter.drain_machine, dns_name="not_exists"))
+        self.mock_async_run_command.side_effect = AsyncRunCommandFailure(message="Does not exists",
+                                                                         error_code=1,
+                                                                         error_message="Does not exists")
+        self.assertIsNone(run_async(self.htcondor_adapter.drain_machine, dns_name="test"))
+
+        self.mock_async_run_command.side_effect = AsyncRunCommandFailure(message="Unhandled error",
+                                                                         error_code=2,
+                                                                         error_message="Unhandled error")
+        with self.assertRaises(AsyncRunCommandFailure):
+            self.assertIsNone(run_async(self.htcondor_adapter.drain_machine, dns_name="test"))
+
+        self.mock_async_run_command.side_effect = None
 
     def test_integrate_machine(self):
         self.assertIsNone(run_async(self.htcondor_adapter.integrate_machine, dns_name='test'))

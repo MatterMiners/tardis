@@ -65,6 +65,7 @@ class HTCondorAdapter(BatchSystemAdapter):
                 # https://github.com/htcondor/htcondor/blob/master/src/condor_tools/drain.cpp
                 logging.debug("Drone %s is not in HTCondor anymore." % dns_name)
                 return
+            raise ex
 
     async def integrate_machine(self, dns_name):
         """
