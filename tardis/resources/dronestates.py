@@ -57,19 +57,29 @@ class IntegrateState(State):
     @staticmethod
     async def run(drone):
         logging.info(f"Drone {drone} in IntegrateState")
-        await drone.batch_system_agent.integrate_machine(dns_name=drone.resource_attributes['dns_name'])
-        await asyncio.sleep(0.5)
-        await drone.set_state(IntegratingState())  # static state transition
+        drone.resource_attributes.update(await drone.site_agent.resource_status(drone.resource_attributes))
+        if drone.resource_attributes.resource_status is not ResourceStatus.Running:
+            logging.info("Drone %s has resource state %s in IntegrateState" % (drone, drone.resource_attributes.resource_status) )
+            await drone.set_state(CleanupState())
+        else:
+            await drone.batch_system_agent.integrate_machine(dns_name=drone.resource_attributes['dns_name'])
+            await asyncio.sleep(0.5)
+            await drone.set_state(IntegratingState())  # static state transition
 
 
 class IntegratingState(State):
     @classmethod
     async def run(cls, drone):
         logging.info(f"Drone {drone} in IntegratingState")
-        machine_status = await drone.batch_system_agent.get_machine_status(dns_name=drone.resource_attributes[
-            'dns_name'])
-        await asyncio.sleep(0.5)
-        await drone.set_state(cls.transition[machine_status]())
+        drone.resource_attributes.update(await drone.site_agent.resource_status(drone.resource_attributes))
+        if drone.resource_attributes.resource_status is not ResourceStatus.Running:
+            logging.info("Drone %s has resource state %s in IntegratingState" % (drone, drone.resource_attributes.resource_status) )
+            await drone.set_state(CleanupState())
+        else:
+            machine_status = await drone.batch_system_agent.get_machine_status(dns_name=drone.resource_attributes[
+                'dns_name'])
+            await asyncio.sleep(0.5)
+            await drone.set_state(cls.transition[machine_status]())
 
 
 class AvailableState(State):
