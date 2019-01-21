@@ -93,5 +93,13 @@ class CloudStackAdapter(SiteAdapter):
                 logging.info("Quota exceeded")
                 logging.debug(ce.message)
                 raise TardisQuotaExceeded
+            elif not ce.error_code:
+                if 'timed out' in ce.response['message']:
+                    logging.debug(f"Timed out: {ce.response}")
+                    raise TardisTimeout from ce
+                else:
+                    logging.debug(f"CloudStackClient response: {ce.response}")
+                    raise TardisError from ce
             else:
+                logging.info(f"Error code: {ce.error_code}, error text: {ce.error_text}, response: {ce.response}")
                 raise TardisError from ce
