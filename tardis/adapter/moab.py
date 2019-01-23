@@ -1,20 +1,18 @@
 from ..configuration.configuration import Configuration
-from ..exceptions.tardisexceptions import TardisAuthError
 from ..exceptions.tardisexceptions import TardisError
 from ..exceptions.tardisexceptions import TardisTimeout
 from ..exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from ..interfaces.siteadapter import ResourceStatus
 from ..interfaces.siteadapter import SiteAdapter
 from ..utilities.staticmapping import StaticMapping
-from asyncssh import Error
-from asyncssh
 
 from asyncio import TimeoutError
 from contextlib import contextmanager
-from datetime import datetime
 from functools import partial
 
+import asyncssh
 import logging
+import re
 
 
 class MoabAdapter(SiteAdapter):
@@ -28,28 +26,65 @@ class MoabAdapter(SiteAdapter):
         self._login = self.configuration.login
         self._key = self.configuration.key
 
+        key_translator = StaticMapping(resource_id='SystemJID', resource_status='State')
+
+        translator_functions = StaticMapping(State=lambda x, translator=StaticMapping(Idle=ResourceStatus.Booting,
+                                                                                      Running=ResourceStatus.Running,
+                                                                                      Completed=ResourceStatus.Stopped,
+                                                                                      Canceling=ResourceStatus.Error,
+                                                                                      Vacated=ResourceStatus.Error):
+                                             translator[x],
+                                             SystemJID=lambda x: int(x))
+
+        self.handle_response = partial(self.handle_response, key_translator=key_translator,
+                                       translator_functions=translator_functions)
+
     async def deploy_resource(self, resource_attributes):
-        async with asyncssh.connect(self._remote_host, user=self._login, client_keys=[self._key] ) as conn:
-            request_command = 'msub -j oe -m p -l walltime=02:00:00:00,mem=120gb,nodes=1:ppn=20 startVM.py'
+        async with asyncssh.connect(self._remote_host, username=self._login, client_keys=[self._key]) as conn:
+            request_command = f'msub -j oe -m p -l walltime={self.machine_meta_data.Walltime},' \
+                f'mem={self.machine_meta_data.Memory},nodes={self.machine_meta_data.NodeType} ' \
+                f'{self.machine_meta_data.StartupCommand}'
             result = await conn.run(request_command, check=True)
             logging.debug(f"{self.site_name} servers create returned {result}")
             try:
-                resource_id = int(result.stdout)
-
+                resource_attributes.resource_id = int(result.stdout)
+                return resource_attributes
             except:
                 raise TardisError
 
+    @property
+    def machine_meta_data(self):
+        return self.configuration.MachineMetaData[self._machine_type]
 
+    @property
+    def machine_type(self):
+        return self._machine_type
+
+    @property
+    def site_name(self):
+        return self._site_name
 
     async def resource_status(self, resource_attributes):
-        raise NotImplementedError
+        async with asyncssh.connect(self._remote_host, username=self._login, client_keys=[self._key]) as conn:
+            status_command = f'checkjob {resource_attributes.resource_id}'
+            response = await conn.run(status_command, check=True)
+        pattern = re.compile(r'^(.*):\s+(.*)$', flags=re.MULTILINE)
+        response = dict(pattern.findall(response.stdout))
+        logging.debug(f'{self.site_name} has status {response}.')
+        return self.handle_response(response)
 
     async def terminate_resource(self, resource_attributes):
-        async with asyncssh.connect(self._remote_host, user=self._login, client_keys=[self._key] ) as conn:
+        async with asyncssh.connect(self._remote_host, username=self._login, client_keys=[self._key]) as conn:
             request_command = f"canceljob {resource_attributes.resource_id}"
             response = await conn.run(request_command, check=True)
+        pattern = re.compile(r'^job \'(\d*)\' cancelled', flags=re.MULTILINE)
         logging.debug(f"{self.site_name} servers terminate returned {response}")
-        return response
+        resource_id = int(pattern.findall(response.stdout)[0])
+        return self.handle_response({'SystemJID': resource_id})
+
+    async def stop_resource(self, resource_attributes):
+        logging.debug('MOAB jobs cannot be stopped gracefully. Terminating instead.')
+        return await self.terminate_resource(resource_attributes)
 
     @contextmanager
     def handle_exceptions(self):
