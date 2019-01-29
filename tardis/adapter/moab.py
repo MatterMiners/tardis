@@ -67,9 +67,6 @@ class MoabAdapter(SiteAdapter):
     def site_name(self):
         return self._site_name
 
-    def dns_name(self, resource_id):
-        return f'{self.site_name}-{resource_id}'
-
     async def resource_status(self, resource_attributes):
         async with asyncssh.connect(self._remote_host, username=self._login, client_keys=[self._key]) as conn:
             status_command = f'checkjob {resource_attributes.resource_id}'
