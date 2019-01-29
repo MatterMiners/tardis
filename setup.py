@@ -12,7 +12,7 @@ setup(
     description='StateMachine using asyncio',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/giffels/AsyncStateMachine',
+    url='https://github.com/tardis-resourcemanager/tardis',
     author='Manuel Giffels',
     author_email='giffels@gmail.com',
     classifiers=[
@@ -37,7 +37,7 @@ setup(
     zip_safe=False,
     test_suite='tests',
     project_urls={
-        'Bug Reports': 'https://github.com/giffels/AsyncStateMachine/issues',
-        'Source': 'https://github.com/giffels/AsyncStateMachine',
+        'Bug Reports': 'https://github.com/tardis-resourcemanager/tardis/issues',
+        'Source': 'https://github.com/tardis-resourcemanager/tardis',
     },
 )
