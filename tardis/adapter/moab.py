@@ -9,6 +9,7 @@ from ..utilities.staticmapping import StaticMapping
 from asyncio import TimeoutError
 from contextlib import contextmanager
 from functools import partial
+from datetime import datetime
 
 import asyncssh
 import logging
@@ -47,7 +48,9 @@ class MoabAdapter(SiteAdapter):
             result = await conn.run(request_command, check=True)
             logging.debug(f"{self.site_name} servers create returned {result}")
             try:
-                resource_attributes.resource_id = int(result.stdout)
+                resource_id = int(result.stdout)
+                resource_attributes.update(resource_id=resource_id, created=datetime.now(), updated=datetime.now(),
+                                           dns_name=self.dns_name(resource_id), resource_status=ResourceStatus.Booting)
                 return resource_attributes
             except:
                 raise TardisError
@@ -64,6 +67,9 @@ class MoabAdapter(SiteAdapter):
     def site_name(self):
         return self._site_name
 
+    def dns_name(self, resource_id):
+        return f'{self.site_name}-{resource_id}'
+
     async def resource_status(self, resource_attributes):
         async with asyncssh.connect(self._remote_host, username=self._login, client_keys=[self._key]) as conn:
             status_command = f'checkjob {resource_attributes.resource_id}'
@@ -71,7 +77,8 @@ class MoabAdapter(SiteAdapter):
         pattern = re.compile(r'^(.*):\s+(.*)$', flags=re.MULTILINE)
         response = dict(pattern.findall(response.stdout))
         logging.debug(f'{self.site_name} has status {response}.')
-        return self.handle_response(response)
+        resource_attributes.update(updated=datetime.now())
+        return self.handle_response(response, **resource_attributes)
 
     async def terminate_resource(self, resource_attributes):
         async with asyncssh.connect(self._remote_host, username=self._login, client_keys=[self._key]) as conn:
@@ -80,7 +87,10 @@ class MoabAdapter(SiteAdapter):
         pattern = re.compile(r'^job \'(\d*)\' cancelled', flags=re.MULTILINE)
         logging.debug(f"{self.site_name} servers terminate returned {response}")
         resource_id = int(pattern.findall(response.stdout)[0])
-        return self.handle_response({'SystemJID': resource_id})
+        if resource_id != resource_attributes.resource_id:
+            raise TardisError(f'Failed to terminate {resource_attributes.resource_id}.')
+        resource_attributes.update(resource_status=ResourceStatus.Stopped, updated=datetime.now())
+        return self.handle_response({'SystemJID': resource_id}, **resource_attributes)
 
     async def stop_resource(self, resource_attributes):
         logging.debug('MOAB jobs cannot be stopped gracefully. Terminating instead.')
