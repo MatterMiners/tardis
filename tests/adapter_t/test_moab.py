@@ -7,6 +7,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from contextlib import asynccontextmanager
+from datetime import datetime, timedelta
 
 __all__ = ['TestMoabAdapter']
 
@@ -106,10 +107,29 @@ class TestMoabAdapter(TestCase):
         return AttributeDict(test2large=AttributeDict(Cores=128, Walltime='02:00:00:00', Memory='120gb',
                                                       NodeType='1:ppn=20', StartupCommand='startVM.py'))
 
+    @property
+    def resource_attributes(self):
+        return AttributeDict(machine_type='test2large',
+                             site_name='TestSite',
+                             resource_id=4761849,
+                             resource_status=ResourceStatus.Booting,
+                             created=datetime.strptime("Wed Jan 23 2019 15:01:47", '%a %b %d %Y %H:%M:%S'),
+                             updated=datetime.strptime("Wed Jan 23 2019 15:02:17", '%a %b %d %Y %H:%M:%S'),
+                             dns_name='TestSite-4761849')
+
     @mock_asyncssh_run(TEST_DEPLOY_RESOURCE_RESPONSE)
     def test_deploy_resource(self):
-        self.assertEqual(run_async(self.moab_adapter.deploy_resource, resource_attributes=AttributeDict()),
-                         {'resource_id': int(TEST_DEPLOY_RESOURCE_RESPONSE)})
+        expected_resource_attributes = self.resource_attributes
+        expected_resource_attributes.update(created=datetime.now(), updated=datetime.now())
+        return_resource_attributes = run_async(self.moab_adapter.deploy_resource,
+                                               resource_attributes=AttributeDict(machine_type='test2large',
+                                                                                 site_name='TestSite'))
+        if return_resource_attributes.created - expected_resource_attributes.created > timedelta(seconds=1) or \
+                return_resource_attributes.updated - expected_resource_attributes.updated > timedelta(seconds=1):
+            raise Exception("Creation time or update time wrong!")
+        del expected_resource_attributes.created, expected_resource_attributes.updated, \
+            return_resource_attributes.created, return_resource_attributes.updated
+        self.assertEqual(return_resource_attributes, expected_resource_attributes)
         self.mock_asyncssh.assert_called_with('https://test.nova.client.local', username='TestUser',
                                               client_keys=['/some/path/id_rsa'])
 
@@ -124,18 +144,33 @@ class TestMoabAdapter(TestCase):
 
     @mock_asyncssh_run(TEST_RESOURCE_STATUS_RESPONSE)
     def test_resource_status(self):
-        resource_attributes = AttributeDict(resource_id=4761849, resource_status=ResourceStatus.Booting)
-        self.assertEqual(run_async(self.moab_adapter.resource_status, resource_attributes=resource_attributes),
-                         resource_attributes)
+        expected_resource_attributes = self.resource_attributes
+        expected_resource_attributes.update(updated=datetime.now())
+        return_resource_attributes = run_async(self.moab_adapter.resource_status,
+                                               resource_attributes=self.resource_attributes)
+        if return_resource_attributes.updated - expected_resource_attributes.updated > timedelta(seconds=1):
+            raise Exception("Update time wrong!")
+        del expected_resource_attributes.updated, return_resource_attributes.updated
+        self.assertEqual(return_resource_attributes, expected_resource_attributes)
 
     @mock_asyncssh_run(TEST_TERMINATE_RESOURCE_RESPONSE)
     def test_stop_resource(self):
-        resource_attributes = AttributeDict(resource_id=4761849)
-        self.assertEqual(run_async(self.moab_adapter.stop_resource, resource_attributes=resource_attributes),
-                         resource_attributes)
+        expected_resource_attributes = self.resource_attributes
+        expected_resource_attributes.update(updated=datetime.now(), resource_status=ResourceStatus.Stopped)
+        return_resource_attributes = run_async(self.moab_adapter.stop_resource,
+                                               resource_attributes=self.resource_attributes)
+        if return_resource_attributes.updated - expected_resource_attributes.updated > timedelta(seconds=1):
+            raise Exception("Update time wrong!")
+        del expected_resource_attributes.updated, return_resource_attributes.updated
+        self.assertEqual(return_resource_attributes, expected_resource_attributes)
 
     @mock_asyncssh_run(TEST_TERMINATE_RESOURCE_RESPONSE)
     def test_terminate_resource(self):
-        resource_attributes = AttributeDict(resource_id=4761849)
-        self.assertEqual(run_async(self.moab_adapter.terminate_resource, resource_attributes=resource_attributes),
-                         resource_attributes)
+        expected_resource_attributes = self.resource_attributes
+        expected_resource_attributes.update(updated=datetime.now(), resource_status=ResourceStatus.Stopped)
+        return_resource_attributes = run_async(self.moab_adapter.terminate_resource,
+                                               resource_attributes=self.resource_attributes)
+        if return_resource_attributes.updated - expected_resource_attributes.updated > timedelta(seconds=1):
+            raise Exception("Update time wrong!")
+        del expected_resource_attributes.updated, return_resource_attributes.updated
+        self.assertEqual(return_resource_attributes, expected_resource_attributes)
