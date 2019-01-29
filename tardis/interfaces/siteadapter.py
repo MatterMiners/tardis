@@ -1,3 +1,5 @@
+from tardis.utilities.attributedict import AttributeDict
+
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 
@@ -23,7 +25,7 @@ class SiteAdapter(metaclass=ABCMeta):
 
     @staticmethod
     def handle_response(response, key_translator: dict, translator_functions: dict, **additional_content):
-        translated_response = {}
+        translated_response = AttributeDict()
 
         for translated_key, key in key_translator.items():
             try:
