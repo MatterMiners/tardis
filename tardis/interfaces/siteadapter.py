@@ -1,4 +1,4 @@
-from tardis.utilities.attributedict import AttributeDict
+from ..utilities.attributedict import AttributeDict
 
 from abc import ABCMeta, abstractmethod
 from enum import Enum
