@@ -6,7 +6,11 @@ from ..utilities.utilities import run_async
 from unittest import TestCase
 from unittest.mock import patch
 
-from contextlib import asynccontextmanager
+try:
+    from contextlib import asynccontextmanager
+except ImportError:
+    from ..utilities.utilities import async_ctx_manager as asynccontextmanager
+
 from datetime import datetime, timedelta
 
 __all__ = ['TestMoabAdapter']
