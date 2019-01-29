@@ -9,7 +9,7 @@ from unittest.mock import patch
 try:
     from contextlib import asynccontextmanager
 except ImportError:
-    from ..utilities.utilities import async_ctx_manager as asynccontextmanager
+    from aiotools import async_ctx_manager as asynccontextmanager
 
 from datetime import datetime, timedelta
 
