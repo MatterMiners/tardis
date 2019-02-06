@@ -51,8 +51,8 @@ class OpenStackAdapter(SiteAdapter):
                                        translator_functions=translator_functions)
 
     async def deploy_resource(self, resource_attributes):
-        specs = self.configuration.MachineTypeConfiguration[self._machine_type]
-        specs['name'] = resource_attributes.dns_name
+        specs = dict(name=resource_attributes.dns_name)
+        specs.update(self.configuration.MachineTypeConfiguration[self._machine_type])
         await self.nova.init_api(timeout=60)
         response = await self.nova.servers.create(server=specs)
         logging.debug(f"{self.site_name} servers create returned {response}")
