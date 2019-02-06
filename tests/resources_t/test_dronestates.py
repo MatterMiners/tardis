@@ -48,6 +48,7 @@ class TestDroneStates(TestCase):
         self.drone = self.mock_drone.return_value
         self.drone.resource_attributes = AttributeDict(dns_name='test-923ABF', resource_id='0815')
         self.drone.demand = 8.0
+        self.drone._supply = 8.0
         self.drone.set_state.side_effect = partial(mock_set_state, self.drone)
         self.drone.site_agent.deploy_resource.return_value = async_return(return_value=AttributeDict())
         self.drone.site_agent.resource_status.return_value = async_return(return_value=AttributeDict())
@@ -70,18 +71,23 @@ class TestDroneStates(TestCase):
             run_async(self.drone.state.return_value.run, self.drone)
             self.assertIsInstance(self.drone.state, new_state)
 
+    def run_side_effects(self, initial_state, api_call_to_test, exceptions, finial_state):
+        for exception in exceptions:
+            self.drone.state.return_value = initial_state
+            api_call_to_test.side_effect = exception()
+            run_async(self.drone.state.return_value.run, self.drone)
+            self.assertIsInstance(self.drone.state, finial_state)
+
+        api_call_to_test.side_effect = None
+
     def test_request_state(self):
         self.drone.state.return_value = RequestState()
         run_async(self.drone.state.return_value.run, self.drone)
         self.assertIsInstance(self.drone.state, BootingState)
 
-        for exception in (TardisAuthError, TardisTimeout, TardisQuotaExceeded, TardisResourceStatusUpdateFailed):
-            self.drone.state.return_value = RequestState()
-            self.drone.site_agent.deploy_resource.side_effect = exception()
-            run_async(self.drone.state.return_value.run, self.drone)
-            self.assertIsInstance(self.drone.state, DownState)
-
-        self.drone.site_agent.deploy_resource.side_effect = None
+        self.run_side_effects(RequestState(), self.drone.site_agent.deploy_resource,
+                              (TardisAuthError, TardisTimeout, TardisQuotaExceeded, TardisResourceStatusUpdateFailed),
+                              DownState)
 
         self.run_side_effects(RequestState(), self.drone.site_agent.deploy_resource,
                               (TardisDroneCrashed,),
@@ -94,6 +100,12 @@ class TestDroneStates(TestCase):
                   (ResourceStatus.Stopped, None, CleanupState)]
 
         self.run_the_matrix(matrix, initial_state=BootingState)
+
+        self.run_side_effects(BootingState(), self.drone.site_agent.resource_status,
+                              (TardisAuthError, TardisTimeout, TardisResourceStatusUpdateFailed), BootingState)
+
+        self.run_side_effects(BootingState(), self.drone.site_agent.resource_status,
+                              (TardisDroneCrashed,), CleanupState)
 
     def test_integrate_state(self):
         self.drone.state.return_value = IntegrateState
@@ -127,6 +139,13 @@ class TestDroneStates(TestCase):
 
         self.run_the_matrix(matrix, initial_state=AvailableState)
 
+        # Test draining procedure if cobald sets drone demand to zero
+        self.drone.demand = 0.0
+        self.drone.state.return_value = AvailableState()
+        run_async(self.drone.state.return_value.run, self.drone)
+        self.assertIsInstance(self.drone.state, DrainState)
+        self.assertEqual(self.drone._supply, 0.0)
+
     def test_drain_state(self):
         self.drone.state.return_value = DrainState
         run_async(self.drone.state.return_value.run, self.drone)
@@ -156,18 +175,11 @@ class TestDroneStates(TestCase):
 
         self.run_the_matrix(matrix, initial_state=ShutDownState)
 
-        for exception in (TardisAuthError, TardisTimeout, TardisResourceStatusUpdateFailed):
-            self.drone.state.return_value = ShutDownState()
-            self.drone.site_agent.resource_status.side_effect = exception()
-            run_async(self.drone.state.return_value.run, self.drone)
-            self.assertIsInstance(self.drone.state, ShutDownState)
+        self.run_side_effects(ShutDownState, self.drone.site_agent.resource_status,
+                              (TardisAuthError, TardisTimeout, TardisResourceStatusUpdateFailed), ShutDownState)
 
-            self.drone.state.return_value = ShutDownState()
-            self.drone.site_agent.resource_status.side_effect = TardisDroneCrashed()
-            run_async(self.drone.state.return_value.run, self.drone)
-            self.assertIsInstance(self.drone.state, CleanupState)
-
-            self.drone.site_agent.resource_status.side_effect = None
+        self.run_side_effects(ShutDownState, self.drone.site_agent.resource_status,
+                              (TardisDroneCrashed,), CleanupState)
 
     def test_shutting_down_state(self):
         matrix = [(ResourceStatus.Running, None, ShuttingDownState),
@@ -182,15 +194,11 @@ class TestDroneStates(TestCase):
         self.assertIsInstance(self.drone.state, DownState)
         self.drone.site_agent.terminate_resource.assert_called_with(self.drone.resource_attributes)
 
-        self.drone.state.return_value = CleanupState()
-        self.drone.site_agent.terminate_resource.side_effect = TardisDroneCrashed()
-        run_async(self.drone.state.return_value.run, self.drone)
-        self.assertIsInstance(self.drone.state, DownState)
+        self.run_side_effects(CleanupState(), self.drone.site_agent.terminate_resource,
+                              (TardisDroneCrashed,), DownState)
 
-        self.drone.state.return_value = CleanupState()
-        self.drone.site_agent.terminate_resource.side_effect = TardisResourceStatusUpdateFailed()
-        run_async(self.drone.state.return_value.run, self.drone)
-        self.assertIsInstance(self.drone.state, CleanupState)
+        self.run_side_effects(CleanupState(), self.drone.site_agent.terminate_resource,
+                              (TardisResourceStatusUpdateFailed,), CleanupState)
 
         self.drone.site_agent.terminate_resource.side_effect = None
 
