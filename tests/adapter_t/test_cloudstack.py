@@ -1,4 +1,4 @@
-from tardis.adapter.cloudstack import CloudStackAdapter
+from tardis.adapter.sites.cloudstack import CloudStackAdapter
 from tardis.utilities.attributedict import AttributeDict
 from tardis.interfaces.siteadapter import ResourceStatus
 from tardis.exceptions.tardisexceptions import TardisTimeout
@@ -20,9 +20,9 @@ import asyncio
 class TestCloudStackAdapter(TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.mock_config_patcher = patch('tardis.adapter.cloudstack.Configuration')
+        cls.mock_config_patcher = patch('tardis.adapter.sites.cloudstack.Configuration')
         cls.mock_config = cls.mock_config_patcher.start()
-        cls.mock_cloudstack_api_patcher = patch('tardis.adapter.cloudstack.CloudStack')
+        cls.mock_cloudstack_api_patcher = patch('tardis.adapter.sites.cloudstack.CloudStack')
         cls.mock_cloudstack_api = cls.mock_cloudstack_api_patcher.start()
 
     @classmethod
