@@ -1,7 +1,7 @@
 from ..utilities.utilities import async_return
 from ..utilities.utilities import run_async
-from tardis.adapter.batchsystems.htcondor import HTCondorAdapter
-from tardis.adapter.batchsystems.htcondor import htcondor_status_updater
+from tardis.adapters.batchsystems.htcondor import HTCondorAdapter
+from tardis.adapters.batchsystems.htcondor import htcondor_status_updater
 from tardis.interfaces.batchsystemadapter import MachineStatus
 from tardis.exceptions.tardisexceptions import AsyncRunCommandFailure
 
@@ -12,8 +12,8 @@ from unittest import TestCase
 class TestHTCondorAdapter(TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.mock_config_patcher = patch('tardis.adapter.batchsystems.htcondor.Configuration')
-        cls.mock_async_run_command_patcher = patch('tardis.adapter.batchsystems.htcondor.async_run_command')
+        cls.mock_config_patcher = patch('tardis.adapters.batchsystems.htcondor.Configuration')
+        cls.mock_async_run_command_patcher = patch('tardis.adapters.batchsystems.htcondor.async_run_command')
         cls.mock_config = cls.mock_config_patcher.start()
         cls.mock_async_run_command = cls.mock_async_run_command_patcher.start()
 

@@ -1,4 +1,4 @@
-from tardis.adapter.sites.openstack import OpenStackAdapter
+from tardis.adapters.sites.openstack import OpenStackAdapter
 from tardis.utilities.attributedict import AttributeDict
 from tardis.interfaces.siteadapter import ResourceStatus
 from ..utilities.utilities import async_return
@@ -11,9 +11,9 @@ from unittest.mock import patch
 class TestOpenStackAdapter(TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.mock_config_patcher = patch('tardis.adapter.sites.openstack.Configuration')
+        cls.mock_config_patcher = patch('tardis.adapters.sites.openstack.Configuration')
         cls.mock_config = cls.mock_config_patcher.start()
-        cls.mock_openstack_api_patcher = patch('tardis.adapter.sites.openstack.NovaClient')
+        cls.mock_openstack_api_patcher = patch('tardis.adapters.sites.openstack.NovaClient')
         cls.mock_openstack_api = cls.mock_openstack_api_patcher.start()
 
     @classmethod

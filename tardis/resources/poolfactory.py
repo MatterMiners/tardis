@@ -27,14 +27,14 @@ def create_composite_pool(configuration='tardis.yml'):
     composites = []
 
     batch_system = configuration.BatchSystem
-    batch_system_adapter = getattr(import_module(name=f"tardis.adapter.batchsystems.{batch_system.adapter.lower()}"),
+    batch_system_adapter = getattr(import_module(name=f"tardis.adapters.batchsystems.{batch_system.adapter.lower()}"),
                                    f"{batch_system.adapter}Adapter")
     batch_system_agent = BatchSystemAgent(batch_system_adapter=batch_system_adapter())
 
     plugins = load_plugins()
 
     for site in configuration.Sites:
-        site_adapter = getattr(import_module(name=f"tardis.adapter.sites.{site.adapter.lower()}"),
+        site_adapter = getattr(import_module(name=f"tardis.adapters.sites.{site.adapter.lower()}"),
                                f'{site.adapter}Adapter')
         for machine_type in getattr(configuration, site.name).MachineTypes:
             site_agent = SiteAgent(site_adapter(machine_type=machine_type, site_name=site.name))
