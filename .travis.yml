@@ -21,7 +21,7 @@ matrix:
 install:
   - pip install codecov
   - pip install coverage
-  - pip install git+https://github.com/MaineKuehn/cobald.git
+  - pip install git+https://github.com/MatterMiners/cobald.git
 
 script:
   - coverage run setup.py test
