@@ -1,6 +1,6 @@
-from ..configuration.configuration import Configuration
-from ..interfaces.batchsystemadapter import BatchSystemAdapter
-from ..interfaces.batchsystemadapter import MachineStatus
+from tardis.configuration.configuration import Configuration
+from tardis.interfaces.batchsystemadapter import BatchSystemAdapter
+from tardis.interfaces.batchsystemadapter import MachineStatus
 
 
 class DummyBatchSystemAdapter(BatchSystemAdapter):

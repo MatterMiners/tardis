@@ -27,7 +27,7 @@ def create_composite_pool(configuration='tardis.yml'):
     composites = []
 
     batch_system = configuration.BatchSystem
-    batch_system_adapter = getattr(import_module(name=f"tardis.adapter.{batch_system.adapter.lower()}"),
+    batch_system_adapter = getattr(import_module(name=f"tardis.adapter.batchsystems.{batch_system.adapter.lower()}"),
                                    f"{batch_system.adapter}Adapter")
     batch_system_agent = BatchSystemAgent(batch_system_adapter=batch_system_adapter())
 
