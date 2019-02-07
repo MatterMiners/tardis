@@ -1,10 +1,10 @@
-from ..configuration.configuration import Configuration
-from ..exceptions.tardisexceptions import TardisError
-from ..exceptions.tardisexceptions import TardisTimeout
-from ..exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
-from ..interfaces.siteadapter import ResourceStatus
-from ..interfaces.siteadapter import SiteAdapter
-from ..utilities.staticmapping import StaticMapping
+from tardis.configuration.configuration import Configuration
+from tardis.exceptions.tardisexceptions import TardisError
+from tardis.exceptions.tardisexceptions import TardisTimeout
+from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
+from tardis.interfaces.siteadapter import ResourceStatus
+from tardis.interfaces.siteadapter import SiteAdapter
+from tardis.utilities.staticmapping import StaticMapping
 
 from asyncio import TimeoutError
 from contextlib import contextmanager

@@ -1,4 +1,4 @@
-from tardis.adapter.moab import MoabAdapter
+from tardis.adapter.sites.moab import MoabAdapter
 from tardis.utilities.attributedict import AttributeDict
 from tardis.interfaces.siteadapter import ResourceStatus
 from ..utilities.utilities import run_async
@@ -64,9 +64,9 @@ job '4761849' cancelled
 class TestMoabAdapter(TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.mock_config_patcher = patch('tardis.adapter.moab.Configuration')
+        cls.mock_config_patcher = patch('tardis.adapter.sites.moab.Configuration')
         cls.mock_config = cls.mock_config_patcher.start()
-        cls.mock_asyncssh_patcher = patch('tardis.adapter.moab.asyncssh.connect')
+        cls.mock_asyncssh_patcher = patch('tardis.adapter.sites.moab.asyncssh.connect')
         cls.mock_asyncssh = cls.mock_asyncssh_patcher.start()
 
     @classmethod
