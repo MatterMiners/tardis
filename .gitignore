@@ -102,3 +102,6 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# test database
+tests/plugins_t/test.db
