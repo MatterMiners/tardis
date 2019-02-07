@@ -1,7 +1,7 @@
 from tardis.adapters.batchsystems.dummybatchsystem import DummyBatchSystemAdapter
 from tardis.interfaces.batchsystemadapter import MachineStatus
 
-from ..utilities.utilities import run_async
+from tests.utilities.utilities import run_async
 
 from unittest.mock import patch
 from unittest import TestCase
