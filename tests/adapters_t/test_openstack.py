@@ -1,11 +1,23 @@
 from tardis.adapters.sites.openstack import OpenStackAdapter
+from tardis.exceptions.tardisexceptions import TardisAuthError
+from tardis.exceptions.tardisexceptions import TardisDroneCrashed
+from tardis.exceptions.tardisexceptions import TardisError
+from tardis.exceptions.tardisexceptions import TardisTimeout
+from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from tardis.utilities.attributedict import AttributeDict
 from tardis.interfaces.siteadapter import ResourceStatus
 from ..utilities.utilities import async_return
 from ..utilities.utilities import run_async
 
+from aiohttp import ClientConnectionError
+from aiohttp import ContentTypeError
+from simple_rest_client.exceptions import AuthError
+from simple_rest_client.exceptions import ClientError
+
 from unittest import TestCase
 from unittest.mock import patch
+
+import asyncio
 
 
 class TestOpenStackAdapter(TestCase):
@@ -94,3 +106,19 @@ class TestOpenStackAdapter(TestCase):
 
         self.mock_openstack_api.return_value.init_api.assert_called_with(timeout=60)
         self.mock_openstack_api.return_value.servers.force_delete.assert_called_with('029312-1231-123123')
+
+    def test_exception_handling(self):
+        def test_exception_handling(to_raise, to_catch):
+            with self.assertRaises(to_catch):
+                with self.openstack_adapter.handle_exceptions():
+                    raise to_raise
+
+        matrix = [(asyncio.TimeoutError(), TardisTimeout),
+                  (AuthError(message="Test_Error", response="Not Allowed"), TardisAuthError),
+                  (ContentTypeError(request_info="Test", history="Test"), TardisResourceStatusUpdateFailed),
+                  (ClientError(message="Test_Error", response="Internal Server Error"), TardisDroneCrashed),
+                  (ClientConnectionError(), TardisResourceStatusUpdateFailed),
+                  (BaseException, TardisError)]
+
+        for to_raise, to_catch in matrix:
+            test_exception_handling(to_raise, to_catch)
