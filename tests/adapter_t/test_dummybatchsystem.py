@@ -1,4 +1,4 @@
-from tardis.adapter.dummybatchsystem import DummyBatchSystemAdapter
+from tardis.adapter.batchsystems.dummybatchsystem import DummyBatchSystemAdapter
 from tardis.interfaces.batchsystemadapter import MachineStatus
 
 from ..utilities.utilities import run_async
@@ -10,7 +10,7 @@ from unittest import TestCase
 class TestDummyBatchSystemAdapter(TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.mock_config_patcher = patch('tardis.adapter.dummybatchsystem.Configuration')
+        cls.mock_config_patcher = patch('tardis.adapter.batchsystems.dummybatchsystem.Configuration')
         cls.mock_config = cls.mock_config_patcher.start()
 
     @classmethod

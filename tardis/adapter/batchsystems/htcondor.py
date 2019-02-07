@@ -1,9 +1,9 @@
-from ..configuration.configuration import Configuration
-from ..exceptions.tardisexceptions import AsyncRunCommandFailure
-from ..interfaces.batchsystemadapter import BatchSystemAdapter
-from ..interfaces.batchsystemadapter import MachineStatus
-from ..utilities.utils import async_run_command
-from ..utilities.asynccachemap import AsyncCacheMap
+from tardis.configuration.configuration import Configuration
+from tardis.exceptions.tardisexceptions import AsyncRunCommandFailure
+from tardis.interfaces.batchsystemadapter import BatchSystemAdapter
+from tardis.interfaces.batchsystemadapter import MachineStatus
+from tardis.utilities.utils import async_run_command
+from tardis.utilities.asynccachemap import AsyncCacheMap
 
 from io import StringIO
 from shlex import quote
