@@ -1,5 +1,5 @@
-from ..utilities.utilities import async_return
-from ..utilities.utilities import run_async
+from tests.utilities.utilities import async_return
+from tests.utilities.utilities import run_async
 from tardis.adapters.batchsystems.htcondor import HTCondorAdapter
 from tardis.adapters.batchsystems.htcondor import htcondor_status_updater
 from tardis.interfaces.batchsystemadapter import MachineStatus

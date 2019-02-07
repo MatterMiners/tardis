@@ -7,8 +7,8 @@ from tardis.exceptions.tardisexceptions import TardisQuotaExceeded
 from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from CloudStackAIO.CloudStack import CloudStackClientException
 
-from ..utilities.utilities import async_return
-from ..utilities.utilities import run_async
+from tests.utilities.utilities import async_return
+from tests.utilities.utilities import run_async
 
 from aiohttp import ClientConnectionError
 from unittest import TestCase

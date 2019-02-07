@@ -6,8 +6,8 @@ from tardis.exceptions.tardisexceptions import TardisTimeout
 from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from tardis.utilities.attributedict import AttributeDict
 from tardis.interfaces.siteadapter import ResourceStatus
-from ..utilities.utilities import async_return
-from ..utilities.utilities import run_async
+from tests.utilities.utilities import async_return
+from tests.utilities.utilities import run_async
 
 from aiohttp import ClientConnectionError
 from aiohttp import ContentTypeError
