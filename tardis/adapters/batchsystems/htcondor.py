@@ -60,7 +60,7 @@ class HTCondorAdapter(BatchSystemAdapter):
             cmd = f'condor_drain -graceful {machine}'
             return await async_run_command(cmd)
         except AsyncRunCommandFailure as ex:
-            if ex.error_code is 1:
+            if ex.error_code == 1:
                 # exit code 1: HTCondor can't connect to StartD of Drone
                 # https://github.com/htcondor/htcondor/blob/master/src/condor_tools/drain.cpp
                 logging.debug("Drone %s is not in HTCondor anymore." % dns_name)

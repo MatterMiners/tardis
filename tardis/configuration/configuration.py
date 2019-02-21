@@ -25,7 +25,7 @@ def encode_user_data(obj):
 class Configuration(Borg):
     _shared_state = AttributeDict()
 
-    def __init__(self, config_file: str=None):
+    def __init__(self, config_file: str = None):
         super(Configuration, self).__init__()
         if config_file:
             self.load_config(config_file)

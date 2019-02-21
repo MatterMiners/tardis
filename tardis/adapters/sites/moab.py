@@ -47,13 +47,11 @@ class MoabAdapter(SiteAdapter):
                 f'{self.machine_meta_data.StartupCommand}'
             result = await conn.run(request_command, check=True)
             logging.debug(f"{self.site_name} servers create returned {result}")
-            try:
-                resource_id = int(result.stdout)
-                resource_attributes.update(resource_id=resource_id, created=datetime.now(), updated=datetime.now(),
-                                           dns_name=self.dns_name(resource_id), resource_status=ResourceStatus.Booting)
-                return resource_attributes
-            except:
-                raise TardisError
+
+            resource_id = int(result.stdout)
+            resource_attributes.update(resource_id=resource_id, created=datetime.now(), updated=datetime.now(),
+                                       dns_name=self.dns_name(resource_id), resource_status=ResourceStatus.Booting)
+            return resource_attributes
 
     @property
     def machine_meta_data(self):
@@ -102,5 +100,5 @@ class MoabAdapter(SiteAdapter):
         except asyncssh.Error as exc:
             logging.info('SSH connection failed: ' + str(exc))
             raise TardisResourceStatusUpdateFailed
-        except:
-            raise TardisError
+        except Exception as ex:
+            raise TardisError from ex

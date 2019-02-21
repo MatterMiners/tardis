@@ -26,13 +26,13 @@ class AsyncCacheMap(Mapping):
 
         async with self._async_lock:
             if (current_time - self._last_update) > self._max_age:
-                    try:
-                        data = await self._update_coroutine()
-                    except json.decoder.JSONDecodeError:
-                        pass
-                    else:
-                        self._data = data
-                    self._last_update = current_time
+                try:
+                    data = await self._update_coroutine()
+                except json.decoder.JSONDecodeError:
+                    pass
+                else:
+                    self._data = data
+                self._last_update = current_time
 
     def __iter__(self):
         return iter(self._data)

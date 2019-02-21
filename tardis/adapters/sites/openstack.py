@@ -100,11 +100,11 @@ class OpenStackAdapter(SiteAdapter):
         except ContentTypeError:
             logging.info("OpenStack: content Type Error")
             raise TardisResourceStatusUpdateFailed
-        except ClientError as ce:
+        except ClientError:
             logging.info("REST client error")
             raise TardisDroneCrashed
         except ClientConnectionError:
             logging.info("Connection reset error")
             raise TardisResourceStatusUpdateFailed
-        except:
-            raise TardisError
+        except Exception as ex:
+            raise TardisError from ex
