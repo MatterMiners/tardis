@@ -118,7 +118,7 @@ class TestOpenStackAdapter(TestCase):
                   (ContentTypeError(request_info="Test", history="Test"), TardisResourceStatusUpdateFailed),
                   (ClientError(message="Test_Error", response="Internal Server Error"), TardisDroneCrashed),
                   (ClientConnectionError(), TardisResourceStatusUpdateFailed),
-                  (BaseException, TardisError)]
+                  (Exception, TardisError)]
 
         for to_raise, to_catch in matrix:
             test_exception_handling(to_raise, to_catch)
