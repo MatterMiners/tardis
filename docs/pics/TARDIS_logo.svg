@@ -26,10 +26,10 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="3.959798"
-     inkscape:cx="31.643569"
+     inkscape:cx="-37.299342"
      inkscape:cy="13.378231"
      inkscape:document-units="mm"
-     inkscape:current-layer="text17269-2-8-7-2"
+     inkscape:current-layer="text17265-7-2-0-5"
      showgrid="false"
      fit-margin-top="0"
      fit-margin-left="0"
@@ -89,17 +89,19 @@
          d="m 50.837662,34.421192 v -2.87495 l -1.452881,0.42899 v 2.87495 z"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:1.25;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;fill:#000097;fill-opacity:1;stroke:none;stroke-width:0.05552374px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
          sodipodi:nodetypes="ccccc" />
-      <text
-         id="text17265-7-2-0-5"
-         y="50.534218"
-         x="33.051258"
+      <g
+         aria-label="TA"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;fill:#000097;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-         xml:space="preserve"><tspan
+         id="text17265-7-2-0-5">
+        <path
+           d="m 37.546419,42.725564 v 1.562696 h -1.205784 v 6.245958 H 34.310096 V 44.28826 h -1.20096 v -1.562696 z"
            style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.87777805px;font-family:Impact;-inkscape-font-specification:Impact;fill:#000097;fill-opacity:1;stroke-width:0.26458332"
-           y="50.534218"
-           x="33.051258"
-           id="tspan17263-9-2-3-6"
-           sodipodi:role="line">TA</tspan></text>
+           id="path826" />
+        <path
+           d="m 41.130007,42.725564 1.162376,7.808654 h -2.078771 l -0.101286,-1.403532 h -0.728293 l -0.120578,1.403532 h -2.102887 l 1.032151,-7.808654 z m -1.075559,5.020882 q -0.15434,-1.326361 -0.30868,-3.274907 -0.308681,2.237934 -0.385851,3.274907 z"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.87777805px;font-family:Impact;-inkscape-font-specification:Impact;fill:#000097;fill-opacity:1;stroke-width:0.26458332"
+           id="path828" />
+      </g>
       <g
          aria-label="IS"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;fill:#000097;fill-opacity:1;stroke:none;stroke-width:0.26458332"
