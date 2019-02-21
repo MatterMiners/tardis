@@ -17,14 +17,19 @@ matrix:
   include:
     - python: 3.7
       dist: xenial
+    - python: 3.7
+      name: Style
+      dist: xenial
+      script: python setup.py flake8
+  fast_finish: true
 
 install:
   - pip install codecov
   - pip install coverage
+  - pip install flake8
   - pip install git+https://github.com/MatterMiners/cobald.git
 
-script:
-  - coverage run setup.py test
+script: coverage run setup.py test
 
 after_success:
   - coverage report
