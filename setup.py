@@ -33,7 +33,7 @@ setup(
     keywords='asyncio tardis cloud scheduler',
     packages=find_packages(exclude=['tests']),
     install_requires=['aiohttp', 'CloudStackAIO', 'PyYAML', 'AsyncOpenStackClient', 'cobald', 'asyncssh'],
-    tests_require=['aiotools'],
+    tests_require=['aiotools', 'flake8'],
     zip_safe=False,
     test_suite='tests',
     project_urls={
