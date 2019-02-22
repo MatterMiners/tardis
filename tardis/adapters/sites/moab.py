@@ -73,7 +73,7 @@ class MoabAdapter(SiteAdapter):
         response = dict(pattern.findall(response.stdout))
         logging.debug(f'{self.site_name} has status {response}.')
         resource_attributes.update(updated=datetime.now())
-        return self.handle_response(response, **resource_attributes)
+        return self.handle_response(response)
 
     async def terminate_resource(self, resource_attributes):
         async with asyncssh.connect(self._remote_host, username=self._login, client_keys=[self._key]) as conn:
