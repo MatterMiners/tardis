@@ -5,6 +5,7 @@ from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from tardis.interfaces.siteadapter import ResourceStatus
 from tardis.interfaces.siteadapter import SiteAdapter
 from tardis.utilities.staticmapping import StaticMapping
+from tardis.utilities.attributedict import convert_to_attribute_dict
 
 from asyncio import TimeoutError
 from contextlib import contextmanager
@@ -71,9 +72,10 @@ class MoabAdapter(SiteAdapter):
             response = await conn.run(status_command, check=True)
         pattern = re.compile(r'^(.*):\s+(.*)$', flags=re.MULTILINE)
         response = dict(pattern.findall(response.stdout))
+        response["State"] = response["State"].rstrip()
         logging.debug(f'{self.site_name} has status {response}.')
         resource_attributes.update(updated=datetime.now())
-        return self.handle_response(response)
+        return convert_to_attribute_dict({**resource_attributes, **self.handle_response(response)})
 
     async def terminate_resource(self, resource_attributes):
         async with asyncssh.connect(self._remote_host, username=self._login, client_keys=[self._key]) as conn:

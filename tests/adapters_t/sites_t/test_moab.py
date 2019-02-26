@@ -53,7 +53,7 @@ TEST_RESOURCE_STATUS_RESPONSE_RUNNING = '''
 job 4761849
 
 AName: hostname
-State: Running
+State: Running 
 Creds:  user:abc1234  group:abcdef  account:ab12cd34
 WallTime:   9:23:52 of 2:00:00:00
 SubmitTime: Wed Jan 23 15:01:47
@@ -200,10 +200,8 @@ class TestMoabAdapter(TestCase):
         self.assertEqual(return_resource_attributes, expected_resource_attributes)
 
     @mock_asyncssh_run(TEST_RESOURCE_STATUS_RESPONSE_RUNNING)
-    def test_resource_status(self):
-        expected_resource_attributes = self.resource_attributes
-        expected_resource_attributes.update(updated=datetime.now(), resource_status=ResourceStatus.Running)
-        expected_resource_attributes.update(updated=datetime.now())
+    def test_resource_status_update(self):
+        self.assertEqual(self.resource_attributes["resource_status"], ResourceStatus.Booting)
         return_resource_attributes = run_async(self.moab_adapter.resource_status,
                                                resource_attributes=self.resource_attributes)
         self.assertEqual(return_resource_attributes["resource_status"], ResourceStatus.Running)
