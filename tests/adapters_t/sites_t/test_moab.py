@@ -142,6 +142,7 @@ class TestMoabAdapter(TestCase):
         test_site_config.login = 'TestUser'
         test_site_config.key = '/some/path/id_rsa'
         test_site_config.MachineMetaData = self.machine_meta_data
+        test_site_config._startup_command = 'startVM.py'
 
         self.moab_adapter = MoabAdapter(machine_type='test2large', site_name='TestSite')
 
@@ -150,8 +151,8 @@ class TestMoabAdapter(TestCase):
 
     @property
     def machine_meta_data(self):
-        return AttributeDict(test2large=AttributeDict(Cores=128, Walltime='02:00:00:00', Memory='120gb',
-                                                      NodeType='1:ppn=20', StartupCommand='startVM.py'))
+        return AttributeDict(test2large=AttributeDict(Cores=128, Walltime='02:00:00:00', Memory='120',
+                                                      NodeType='1:ppn=20'))
 
     @property
     def resource_attributes(self):

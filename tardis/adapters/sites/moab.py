@@ -22,6 +22,7 @@ class MoabAdapter(SiteAdapter):
         self.configuration = getattr(Configuration(), site_name)
         self._machine_type = machine_type
         self._site_name = site_name
+        self._startup_command = self.configuration.StartupCommand
 
         # get authentification
         self._remote_host = self.configuration.remote_host
@@ -44,8 +45,8 @@ class MoabAdapter(SiteAdapter):
     async def deploy_resource(self, resource_attributes):
         async with asyncssh.connect(self._remote_host, username=self._login, client_keys=[self._key]) as conn:
             request_command = f'msub -j oe -m p -l walltime={self.machine_meta_data.Walltime},' \
-                f'mem={self.machine_meta_data.Memory},nodes={self.machine_meta_data.NodeType} ' \
-                f'{self.machine_meta_data.StartupCommand}'
+                f'mem={self.machine_meta_data.Memory}gb,nodes={self.machine_meta_data.NodeType} ' \
+                f'{self._startup_command}'
             result = await conn.run(request_command, check=True)
             logging.debug(f"{self.site_name} servers create returned {result}")
 
