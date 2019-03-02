@@ -82,13 +82,25 @@ class MoabAdapter(SiteAdapter):
     async def terminate_resource(self, resource_attributes):
         async with asyncssh.connect(self._remote_host, username=self._login, client_keys=[self._key]) as conn:
             request_command = f"canceljob {resource_attributes.resource_id}"
-            response = await conn.run(request_command, check=True)
-        pattern = re.compile(r'^job \'(\d*)\' cancelled', flags=re.MULTILINE)
+            response = await conn.run(request_command)
         logging.debug(f"{self.site_name} servers terminate returned {response}")
-        resource_id = int(pattern.findall(response.stdout)[0])
-        if resource_id != resource_attributes.resource_id:
-            raise TardisError(f'Failed to terminate {resource_attributes.resource_id}.')
-        resource_attributes.update(resource_status=ResourceStatus.Stopped, updated=datetime.now())
+        if response.exit_status == 0:
+            pattern = re.compile(r'^job \'(\d*)\' cancelled', flags=re.MULTILINE)
+            resource_id = int(pattern.findall(response.stdout)[0])
+            if resource_id != resource_attributes.resource_id:
+                raise TardisError(f'Failed to terminate {resource_attributes.resource_id}.')
+            else:
+                resource_attributes.update(resource_status=ResourceStatus.Stopped, updated=datetime.now())
+        elif response.exit_status == 1:
+            pattern = re.compile(r'ERROR:  invalid job specified \((\d*)\)', flags=re.MULTILINE)
+            resource_id = int(pattern.findall(response.stdout)[0])
+            if resource_id != resource_attributes.resource_id:
+                raise TardisError(f'Failed to terminate {resource_attributes.resource_id}.')
+            else:
+                resource_attributes.update(resource_status=ResourceStatus.Stopped, updated=datetime.now())
+        else:
+            raise asyncssh.ProcessError(command=request_command, stdout=response.stdout)
+
         return self.handle_response({'SystemJID': resource_id}, **resource_attributes)
 
     async def stop_resource(self, resource_attributes):

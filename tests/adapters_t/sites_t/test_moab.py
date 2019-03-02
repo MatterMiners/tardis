@@ -102,6 +102,10 @@ job '4761849' cancelled
 
 '''
 
+TEST_TERMINATE_DEAD_RESOURCE_RESPONSE = '''
+ERROR:  invalid job specified (4761849)
+
+'''
 
 class TestMoabAdapter(TestCase):
     @classmethod
@@ -116,7 +120,7 @@ class TestMoabAdapter(TestCase):
         cls.mock_config_patcher.stop()
         cls.mock_asyncssh_patcher.stop()
 
-    def mock_asyncssh_run(response):
+    def mock_asyncssh_run(response, exit_status=0):
         def decorator(func):
             def wrapper(self):
                 @asynccontextmanager
@@ -128,6 +132,9 @@ class TestMoabAdapter(TestCase):
                         @property
                         def stdout(self):
                             return response
+                        @property
+                        def exit_status(self):
+                            return exit_status
                     yield connection()
                 self.mock_asyncssh.side_effect = connect
                 func(self)
@@ -229,3 +236,11 @@ class TestMoabAdapter(TestCase):
             raise Exception("Update time wrong!")
         del expected_resource_attributes.updated, return_resource_attributes.updated
         self.assertEqual(return_resource_attributes, expected_resource_attributes)
+
+    @mock_asyncssh_run(TEST_TERMINATE_DEAD_RESOURCE_RESPONSE, exit_status=1)
+    def test_terminate_dead_resource(self):
+        expected_resource_attributes = self.resource_attributes
+        expected_resource_attributes.update(updated=datetime.now(), resource_status=ResourceStatus.Stopped)
+        return_resource_attributes = run_async(self.moab_adapter.terminate_resource,
+                                               resource_attributes=self.resource_attributes)
+        self.assertEqual(return_resource_attributes["resource_status"], ResourceStatus.Stopped)
