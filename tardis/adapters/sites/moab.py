@@ -44,10 +44,11 @@ class MoabAdapter(SiteAdapter):
 
     async def deploy_resource(self, resource_attributes):
         async with asyncssh.connect(self._remote_host, username=self._login, client_keys=[self._key]) as conn:
-            request_command = f'msub -j oe -m p -l walltime={self.configuration.MachineTypeConfiguration.Walltime},' \
-                f'mem={self.machine_meta_data.Memory}gb,' \
-                f'nodes={self.configuration.MachineTypeConfiguration.NodeType} ' \
-                f'{self._startup_command}'
+            request_command = f'msub -j oe -m p -l ' \
+                              f'walltime={self.configuration.MachineTypeConfiguration[self._machine_type].Walltime},' \
+                              f'mem={self.machine_meta_data.Memory}gb,' \
+                              f'nodes={self.configuration.MachineTypeConfiguration[self._machine_type].NodeType} ' \
+                              f'{self._startup_command}'
             result = await conn.run(request_command, check=True)
             logging.debug(f"{self.site_name} servers create returned {result}")
 
@@ -87,14 +88,14 @@ class MoabAdapter(SiteAdapter):
         if response.exit_status == 0:
             pattern = re.compile(r'^job \'(\d*)\' cancelled', flags=re.MULTILINE)
             resource_id = int(pattern.findall(response.stdout)[0])
-            if resource_id != resource_attributes.resource_id:
+            if resource_id != int(resource_attributes.resource_id):
                 raise TardisError(f'Failed to terminate {resource_attributes.resource_id}.')
             else:
                 resource_attributes.update(resource_status=ResourceStatus.Stopped, updated=datetime.now())
         elif response.exit_status == 1:
             pattern = re.compile(r'ERROR:  invalid job specified \((\d*)\)', flags=re.MULTILINE)
-            resource_id = int(pattern.findall(response.stdout)[0])
-            if resource_id != resource_attributes.resource_id:
+            resource_id = int(pattern.findall(response.stderr)[0])
+            if resource_id != int(resource_attributes.resource_id):
                 raise TardisError(f'Failed to terminate {resource_attributes.resource_id}.')
             else:
                 resource_attributes.update(resource_status=ResourceStatus.Stopped, updated=datetime.now())
@@ -116,5 +117,7 @@ class MoabAdapter(SiteAdapter):
         except asyncssh.Error as exc:
             logging.info('SSH connection failed: ' + str(exc))
             raise TardisResourceStatusUpdateFailed
+        except IndexError as ide:
+            raise TardisResourceStatusUpdateFailed from ide
         except Exception as ex:
             raise TardisError from ex
