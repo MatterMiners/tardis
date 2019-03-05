@@ -1,19 +1,15 @@
+from .shellexecutor import ShellExecutor
 from ..exceptions.tardisexceptions import AsyncRunCommandFailure
 
-import asyncio
 
-
-async def async_run_command(cmd):
-    sub_process = await asyncio.create_subprocess_shell(cmd, stdout=asyncio.subprocess.PIPE,
-                                                        stderr=asyncio.subprocess.PIPE)
-
-    stdout, stderr = await sub_process.communicate()
+async def async_run_command(cmd, shell_executor=ShellExecutor()):
+    response = await shell_executor.run_command(cmd)
 
     # Potentially due to a Python bug, if waitpid(0) is called somewhere else, the message
     # "WARNING:asyncio:Unknown child process pid 2960761, will report returncode 255 appears"
     # However the command succeeded
 
-    if sub_process.returncode in (0, 255):
-        return stdout.decode().strip()
+    if response.exit_code in (0, 255):
+        return response.stdout
 
-    raise AsyncRunCommandFailure(message=stdout, error_code=sub_process.returncode, error_message=stderr)
+    raise AsyncRunCommandFailure(message=response.stdout, error_code=response.exit_code, error_message=response.stderr)
