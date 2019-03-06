@@ -69,6 +69,15 @@ class MoabAdapter(SiteAdapter):
     def site_name(self):
         return self._site_name
 
+    def check_resource_id(self, resource_attributes, regex, response):
+        pattern = re.compile(regex, flags=re.MULTILINE)
+        resource_id = int(pattern.findall(response)[0])
+        if resource_id != int(resource_attributes.resource_id):
+            raise TardisError(f'Failed to terminate {resource_attributes.resource_id}.')
+        else:
+            resource_attributes.update(resource_status=ResourceStatus.Stopped, updated=datetime.now())
+        return resource_id
+
     async def resource_status(self, resource_attributes):
         async with asyncssh.connect(self._remote_host, username=self._login, client_keys=[self._key]) as conn:
             status_command = f'checkjob {resource_attributes.resource_id}'
@@ -86,19 +95,10 @@ class MoabAdapter(SiteAdapter):
             response = await conn.run(request_command)
         logging.debug(f"{self.site_name} servers terminate returned {response}")
         if response.exit_status == 0:
-            pattern = re.compile(r'^job \'(\d*)\' cancelled', flags=re.MULTILINE)
-            resource_id = int(pattern.findall(response.stdout)[0])
-            if resource_id != int(resource_attributes.resource_id):
-                raise TardisError(f'Failed to terminate {resource_attributes.resource_id}.')
-            else:
-                resource_attributes.update(resource_status=ResourceStatus.Stopped, updated=datetime.now())
+            resource_id = self.check_resource_id(resource_attributes, r'^job \'(\d*)\' cancelled', response.stdout)
         elif response.exit_status == 1:
-            pattern = re.compile(r'ERROR:  invalid job specified \((\d*)\)', flags=re.MULTILINE)
-            resource_id = int(pattern.findall(response.stderr)[0])
-            if resource_id != int(resource_attributes.resource_id):
-                raise TardisError(f'Failed to terminate {resource_attributes.resource_id}.')
-            else:
-                resource_attributes.update(resource_status=ResourceStatus.Stopped, updated=datetime.now())
+            resource_id = self.check_resource_id(resource_attributes, r'ERROR:  invalid job specified \((\d*)\)',
+                                                 response.stderr)
         else:
             raise asyncssh.ProcessError(command=request_command, stdout=response.stdout)
 
