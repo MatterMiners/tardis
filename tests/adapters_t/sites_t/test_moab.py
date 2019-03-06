@@ -124,7 +124,7 @@ class TestMoabAdapter(TestCase):
         cls.mock_config_patcher.stop()
         cls.mock_asyncssh_patcher.stop()
 
-    def mock_asyncssh_run(response, stderr="", exit_status=0):
+    def mock_asyncssh_run(stdout, stderr="", exit_status=0):
         def decorator(func):
             def wrapper(self):
                 @asynccontextmanager
@@ -135,7 +135,7 @@ class TestMoabAdapter(TestCase):
 
                         @property
                         def stdout(self):
-                            return response
+                            return stdout
 
                         @property
                         def stderr(self):
@@ -247,7 +247,7 @@ class TestMoabAdapter(TestCase):
         del expected_resource_attributes.updated, return_resource_attributes.updated
         self.assertEqual(return_resource_attributes, expected_resource_attributes)
 
-    @mock_asyncssh_run(response="", stderr=TEST_TERMINATE_DEAD_RESOURCE_RESPONSE, exit_status=1)
+    @mock_asyncssh_run(stdout="", stderr=TEST_TERMINATE_DEAD_RESOURCE_RESPONSE, exit_status=1)
     def test_terminate_dead_resource(self):
         expected_resource_attributes = self.resource_attributes
         expected_resource_attributes.update(updated=datetime.now(), resource_status=ResourceStatus.Stopped)
