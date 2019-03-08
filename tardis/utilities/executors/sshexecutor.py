@@ -1,4 +1,5 @@
 from ...configuration.utilities import enable_yaml_load
+from ...exceptions.executorexceptions import CommandExecutionFailure
 from ...interfaces.executor import Executor
 from ..attributedict import AttributeDict
 
@@ -12,5 +13,10 @@ class SSHExecutor(Executor):
 
     async def run_command(self, command):
         async with asyncssh.connect(**self._parameters) as conn:
-            response = await conn.run(command, check=True)
-            return AttributeDict(stdout=response.stdout, stderr=response.stderr, exit_code=response.exit_status)
+            try:
+                response = await conn.run(command, check=True)
+            except asyncssh.ProcessError as pe:
+                raise CommandExecutionFailure(message=f"Run command {command} via SSHExecutor failed",
+                                              exit_code=pe.exit_status, stdout=pe.stdout, stderr=pe.stderr) from pe
+            else:
+                return AttributeDict(stdout=response.stdout, stderr=response.stderr, exit_code=response.exit_status)

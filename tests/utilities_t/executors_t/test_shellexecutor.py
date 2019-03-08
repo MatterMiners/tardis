@@ -1,4 +1,5 @@
 from tests.utilities.utilities import run_async
+from tardis.exceptions.executorexceptions import CommandExecutionFailure
 from tardis.utilities.executors.shellexecutor import ShellExecutor
 
 from unittest import TestCase
@@ -13,7 +14,10 @@ class TestAsyncRunCommand(TestCase):
     def test_run_command(self):
 
         self.assertEqual(run_async(self.executor.run_command, 'exit 0').exit_code, 0)
-        self.assertEqual(run_async(self.executor.run_command, 'exit 255').exit_code, 255)
+
+        with self.assertRaises(CommandExecutionFailure) as cf:
+            run_async(self.executor.run_command, 'exit 255')
+        self.assertEqual(cf.exception.exit_code, 255)
 
         self.assertEqual(run_async(self.executor.run_command, 'echo "Test"').stdout, "Test")
 
@@ -24,7 +28,10 @@ class TestAsyncRunCommand(TestCase):
                       !ShellExecutor
         """)
         self.assertEqual(run_async(executor.run_command, 'exit 0').exit_code, 0)
-        self.assertEqual(run_async(executor.run_command, 'exit 255').exit_code, 255)
+
+        with self.assertRaises(CommandExecutionFailure) as cf:
+            run_async(self.executor.run_command, 'exit 255')
+        self.assertEqual(cf.exception.exit_code, 255)
 
         self.assertEqual(run_async(executor.run_command, 'echo "Test"').stdout, "Test")
 
