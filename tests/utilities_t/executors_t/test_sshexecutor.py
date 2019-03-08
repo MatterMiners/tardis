@@ -1,6 +1,6 @@
-from ..utilities.utilities import run_async
+from tests.utilities.utilities import run_async
 from tardis.utilities.attributedict import AttributeDict
-from tardis.utilities.sshexecutor import SSHExecutor
+from tardis.utilities.executors.sshexecutor import SSHExecutor
 
 try:
     from contextlib import asynccontextmanager
@@ -9,6 +9,8 @@ except ImportError:
 
 from unittest import TestCase
 from unittest.mock import patch
+
+import yaml
 
 
 def generate_connect(response):
@@ -36,7 +38,7 @@ def generate_connect(response):
 class TestSSHExecutor(TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.mock_asyncssh_patcher = patch('tardis.utilities.sshexecutor.asyncssh')
+        cls.mock_asyncssh_patcher = patch('tardis.utilities.executors.sshexecutor.asyncssh')
         cls.mock_asyncssh = cls.mock_asyncssh_patcher.start()
 
     @classmethod
@@ -59,3 +61,19 @@ class TestSSHExecutor(TestCase):
         self.mock_asyncssh.connect.side_effect = None
         self.mock_asyncssh.reset_mock()
 
+    def test_construction_by_yaml(self):
+        executor = yaml.load("""
+                   !SSHExecutor
+                   host: test_host
+                   username: test
+                   client_keys:
+                    - TestKey
+                   """)
+        response = AttributeDict(stdout="Test", stderr="", exit_status=0)
+
+        self.mock_asyncssh.connect.side_effect = generate_connect(response)
+        self.assertEqual(run_async(executor.run_command, command="Test").stdout, "Test")
+        self.mock_asyncssh.connect.assert_called_with(host="test_host", username="test",
+                                                      client_keys=["TestKey"])
+        self.mock_asyncssh.connect.side_effect = None
+        self.mock_asyncssh.reset_mock()
