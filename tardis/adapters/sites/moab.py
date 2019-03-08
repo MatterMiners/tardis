@@ -1,11 +1,13 @@
-from tardis.configuration.configuration import Configuration
-from tardis.exceptions.tardisexceptions import TardisError
-from tardis.exceptions.tardisexceptions import TardisTimeout
-from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
-from tardis.interfaces.siteadapter import ResourceStatus
-from tardis.interfaces.siteadapter import SiteAdapter
-from tardis.utilities.staticmapping import StaticMapping
-from tardis.utilities.attributedict import convert_to_attribute_dict
+from ...configuration.configuration import Configuration
+from ...exceptions.executorexceptions import CommandExecutionFailure
+from ...exceptions.tardisexceptions import TardisError
+from ...exceptions.tardisexceptions import TardisTimeout
+from ...exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
+from ...interfaces.siteadapter import ResourceStatus
+from ...interfaces.siteadapter import SiteAdapter
+from ...utilities.staticmapping import StaticMapping
+from ...utilities.attributedict import convert_to_attribute_dict
+from ...utilities.executors.shellexecutor import ShellExecutor
 
 from asyncio import TimeoutError
 from contextlib import contextmanager
@@ -24,10 +26,7 @@ class MoabAdapter(SiteAdapter):
         self._site_name = site_name
         self._startup_command = self.configuration.StartupCommand
 
-        # get authentification
-        self._remote_host = self.configuration.remote_host
-        self._login = self.configuration.login
-        self._key = self.configuration.key
+        self._executor = getattr(self.configuration, 'executor', ShellExecutor())
 
         key_translator = StaticMapping(resource_id='SystemJID', resource_status='State')
 
@@ -43,19 +42,18 @@ class MoabAdapter(SiteAdapter):
                                        translator_functions=translator_functions)
 
     async def deploy_resource(self, resource_attributes):
-        async with asyncssh.connect(self._remote_host, username=self._login, client_keys=[self._key]) as conn:
-            request_command = f'msub -j oe -m p -l ' \
-                              f'walltime={self.configuration.MachineTypeConfiguration[self._machine_type].Walltime},' \
-                              f'mem={self.machine_meta_data.Memory}gb,' \
-                              f'nodes={self.configuration.MachineTypeConfiguration[self._machine_type].NodeType} ' \
-                              f'{self._startup_command}'
-            result = await conn.run(request_command, check=True)
-            logging.debug(f"{self.site_name} servers create returned {result}")
+        request_command = f'msub -j oe -m p -l ' \
+                          f'walltime={self.configuration.MachineTypeConfiguration[self._machine_type].Walltime},' \
+                          f'mem={self.machine_meta_data.Memory}gb,' \
+                          f'nodes={self.configuration.MachineTypeConfiguration[self._machine_type].NodeType} ' \
+                          f'{self._startup_command}'
+        result = await self._executor.run_command(request_command)
+        logging.debug(f"{self.site_name} servers create returned {result}")
 
-            resource_id = int(result.stdout)
-            resource_attributes.update(resource_id=resource_id, created=datetime.now(), updated=datetime.now(),
-                                       dns_name=self.dns_name(resource_id), resource_status=ResourceStatus.Booting)
-            return resource_attributes
+        resource_id = int(result.stdout)
+        resource_attributes.update(resource_id=resource_id, created=datetime.now(), updated=datetime.now(),
+                                   dns_name=self.dns_name(resource_id), resource_status=ResourceStatus.Booting)
+        return resource_attributes
 
     @property
     def machine_meta_data(self):
@@ -69,7 +67,8 @@ class MoabAdapter(SiteAdapter):
     def site_name(self):
         return self._site_name
 
-    def check_resource_id(self, resource_attributes, regex, response):
+    @staticmethod
+    def check_resource_id(resource_attributes, regex, response):
         pattern = re.compile(regex, flags=re.MULTILINE)
         resource_id = int(pattern.findall(response)[0])
         if resource_id != int(resource_attributes.resource_id):
@@ -79,9 +78,8 @@ class MoabAdapter(SiteAdapter):
         return resource_id
 
     async def resource_status(self, resource_attributes):
-        async with asyncssh.connect(self._remote_host, username=self._login, client_keys=[self._key]) as conn:
-            status_command = f'checkjob {resource_attributes.resource_id}'
-            response = await conn.run(status_command, check=True)
+        status_command = f'checkjob {resource_attributes.resource_id}'
+        response = await self._executor.run_command(status_command)
         pattern = re.compile(r'^(.*):\s+(.*)$', flags=re.MULTILINE)
         response = dict(pattern.findall(response.stdout))
         response["State"] = response["State"].rstrip()
@@ -90,17 +88,19 @@ class MoabAdapter(SiteAdapter):
         return convert_to_attribute_dict({**resource_attributes, **self.handle_response(response)})
 
     async def terminate_resource(self, resource_attributes):
-        async with asyncssh.connect(self._remote_host, username=self._login, client_keys=[self._key]) as conn:
-            request_command = f"canceljob {resource_attributes.resource_id}"
-            response = await conn.run(request_command)
-        logging.debug(f"{self.site_name} servers terminate returned {response}")
-        if response.exit_status == 0:
-            resource_id = self.check_resource_id(resource_attributes, r'^job \'(\d*)\' cancelled', response.stdout)
-        elif response.exit_status == 1:
-            resource_id = self.check_resource_id(resource_attributes, r'ERROR:  invalid job specified \((\d*)\)',
-                                                 response.stderr)
+        request_command = f"canceljob {resource_attributes.resource_id}"
+        try:
+            response = await self._executor.run_command(request_command)
+        except CommandExecutionFailure as cf:
+            if cf.exit_code == 1:
+                logging.debug(f"{self.site_name} servers terminate returned {cf.stdout}")
+                resource_id = self.check_resource_id(resource_attributes, r'ERROR:  invalid job specified \((\d*)\)',
+                                                     cf.stderr)
+            else:
+                raise cf
         else:
-            raise asyncssh.ProcessError(command=request_command, stdout=response.stdout)
+            logging.debug(f"{self.site_name} servers terminate returned {response}")
+            resource_id = self.check_resource_id(resource_attributes, r'^job \'(\d*)\' cancelled', response.stdout)
 
         return self.handle_response({'SystemJID': resource_id}, **resource_attributes)
 

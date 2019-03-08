@@ -1,15 +1,12 @@
 from tardis.adapters.sites.moab import MoabAdapter
-from tardis.utilities.attributedict import AttributeDict
+from tardis.exceptions.executorexceptions import CommandExecutionFailure
 from tardis.interfaces.siteadapter import ResourceStatus
+from tardis.utilities.attributedict import AttributeDict
+from tests.utilities.utilities import async_return
 from tests.utilities.utilities import run_async
 
 from unittest import TestCase
 from unittest.mock import patch
-
-try:
-    from contextlib import asynccontextmanager
-except ImportError:
-    from aiotools import async_ctx_manager as asynccontextmanager
 
 from datetime import datetime, timedelta
 
@@ -111,57 +108,43 @@ ERROR:  invalid job specified (4761849)
 
 '''
 
+
+def mock_executor_run_command(stdout, stderr="", exit_code=0, raise_exception=None):
+    def decorator(func):
+        def wrapper(self):
+            executor = self.mock_executor.return_value
+            executor.run_command.return_value = async_return(return_value=AttributeDict(stdout=stdout,
+                                                                                        stderr=stderr,
+                                                                                        exit_code=exit_code))
+            executor.run_command.side_effect = raise_exception
+            func(self)
+            executor.run_command.side_effect = None
+
+        return wrapper
+
+    return decorator
+
+
 class TestMoabAdapter(TestCase):
     @classmethod
     def setUpClass(cls):
         cls.mock_config_patcher = patch('tardis.adapters.sites.moab.Configuration')
         cls.mock_config = cls.mock_config_patcher.start()
-        cls.mock_asyncssh_patcher = patch('tardis.adapters.sites.moab.asyncssh.connect')
-        cls.mock_asyncssh = cls.mock_asyncssh_patcher.start()
+        cls.mock_executor_patcher = patch('tardis.adapters.sites.moab.ShellExecutor')
+        cls.mock_executor = cls.mock_executor_patcher.start()
 
     @classmethod
     def tearDownClass(cls):
         cls.mock_config_patcher.stop()
-        cls.mock_asyncssh_patcher.stop()
-
-    def mock_asyncssh_run(stdout, stderr="", exit_status=0):
-        def decorator(func):
-            def wrapper(self):
-                @asynccontextmanager
-                async def connect(*args, **kwargs):
-                    class connection:
-                        async def run(self, *args, **kwargs):
-                            return self
-
-                        @property
-                        def stdout(self):
-                            return stdout
-
-                        @property
-                        def stderr(self):
-                            return stderr
-
-                        @property
-                        def exit_status(self):
-                            return exit_status
-
-                    yield connection()
-                self.mock_asyncssh.side_effect = connect
-                func(self)
-                self.mock_asyncssh.side_effect = None
-            return wrapper
-        return decorator
+        cls.mock_executor_patcher.stop()
 
     def setUp(self):
         config = self.mock_config.return_value
         test_site_config = config.TestSite
-        test_site_config.remote_host = 'https://test.nova.client.local'
-        test_site_config.login = 'TestUser'
-        test_site_config.key = '/some/path/id_rsa'
         test_site_config.MachineMetaData = self.machine_meta_data
-        test_site_config._startup_command = 'startVM.py'
-        test_site_config.configuration.MachineTypeConfiguration.NodeType = '1:ppn=20'
-        test_site_config.configuration.MachineTypeConfiguration.Walltime = '02:00:00:00'
+        test_site_config.StartupCommand = 'startVM.py'
+        test_site_config.MachineTypeConfiguration = self.machine_type_configuration
+        test_site_config.executor = self.mock_executor.return_value
 
         self.moab_adapter = MoabAdapter(machine_type='test2large', site_name='TestSite')
 
@@ -173,6 +156,10 @@ class TestMoabAdapter(TestCase):
         return AttributeDict(test2large=AttributeDict(Cores=128, Memory='120'))
 
     @property
+    def machine_type_configuration(self):
+        return AttributeDict(test2large=AttributeDict(NodeType='1:ppn=20', Walltime='02:00:00:00'))
+
+    @property
     def resource_attributes(self):
         return AttributeDict(machine_type='test2large',
                              site_name='TestSite',
@@ -182,7 +169,7 @@ class TestMoabAdapter(TestCase):
                              updated=datetime.strptime("Wed Jan 23 2019 15:02:17", '%a %b %d %Y %H:%M:%S'),
                              dns_name='testsite-4761849')
 
-    @mock_asyncssh_run(TEST_DEPLOY_RESOURCE_RESPONSE)
+    @mock_executor_run_command(TEST_DEPLOY_RESOURCE_RESPONSE)
     def test_deploy_resource(self):
         expected_resource_attributes = self.resource_attributes
         expected_resource_attributes.update(created=datetime.now(), updated=datetime.now())
@@ -195,8 +182,8 @@ class TestMoabAdapter(TestCase):
         del expected_resource_attributes.created, expected_resource_attributes.updated, \
             return_resource_attributes.created, return_resource_attributes.updated
         self.assertEqual(return_resource_attributes, expected_resource_attributes)
-        self.mock_asyncssh.assert_called_with('https://test.nova.client.local', username='TestUser',
-                                              client_keys=['/some/path/id_rsa'])
+        self.mock_executor.return_value.run_command.assert_called_with(
+            'msub -j oe -m p -l walltime=02:00:00:00,mem=120gb,nodes=1:ppn=20 startVM.py')
 
     def test_machine_meta_data(self):
         self.assertEqual(self.moab_adapter.machine_meta_data, self.machine_meta_data['test2large'])
@@ -207,7 +194,7 @@ class TestMoabAdapter(TestCase):
     def test_site_name(self):
         self.assertEqual(self.moab_adapter.site_name, 'TestSite')
 
-    @mock_asyncssh_run(TEST_RESOURCE_STATUS_RESPONSE)
+    @mock_executor_run_command(TEST_RESOURCE_STATUS_RESPONSE)
     def test_resource_status(self):
         expected_resource_attributes = self.resource_attributes
         expected_resource_attributes.update(updated=datetime.now())
@@ -218,14 +205,14 @@ class TestMoabAdapter(TestCase):
         del expected_resource_attributes.updated, return_resource_attributes.updated
         self.assertEqual(return_resource_attributes, expected_resource_attributes)
 
-    @mock_asyncssh_run(TEST_RESOURCE_STATUS_RESPONSE_RUNNING)
+    @mock_executor_run_command(TEST_RESOURCE_STATUS_RESPONSE_RUNNING)
     def test_resource_status_update(self):
         self.assertEqual(self.resource_attributes["resource_status"], ResourceStatus.Booting)
         return_resource_attributes = run_async(self.moab_adapter.resource_status,
                                                resource_attributes=self.resource_attributes)
         self.assertEqual(return_resource_attributes["resource_status"], ResourceStatus.Running)
 
-    @mock_asyncssh_run(TEST_TERMINATE_RESOURCE_RESPONSE)
+    @mock_executor_run_command(TEST_TERMINATE_RESOURCE_RESPONSE)
     def test_stop_resource(self):
         expected_resource_attributes = self.resource_attributes
         expected_resource_attributes.update(updated=datetime.now(), resource_status=ResourceStatus.Stopped)
@@ -236,7 +223,7 @@ class TestMoabAdapter(TestCase):
         del expected_resource_attributes.updated, return_resource_attributes.updated
         self.assertEqual(return_resource_attributes, expected_resource_attributes)
 
-    @mock_asyncssh_run(TEST_TERMINATE_RESOURCE_RESPONSE)
+    @mock_executor_run_command(TEST_TERMINATE_RESOURCE_RESPONSE)
     def test_terminate_resource(self):
         expected_resource_attributes = self.resource_attributes
         expected_resource_attributes.update(updated=datetime.now(), resource_status=ResourceStatus.Stopped)
@@ -247,7 +234,11 @@ class TestMoabAdapter(TestCase):
         del expected_resource_attributes.updated, return_resource_attributes.updated
         self.assertEqual(return_resource_attributes, expected_resource_attributes)
 
-    @mock_asyncssh_run(stdout="", stderr=TEST_TERMINATE_DEAD_RESOURCE_RESPONSE, exit_status=1)
+    @mock_executor_run_command("", stderr=TEST_TERMINATE_DEAD_RESOURCE_RESPONSE, exit_code=1,
+                               raise_exception=CommandExecutionFailure(message='Test',
+                                                                       stdout="",
+                                                                       stderr=TEST_TERMINATE_DEAD_RESOURCE_RESPONSE,
+                                                                       exit_code=1))
     def test_terminate_dead_resource(self):
         expected_resource_attributes = self.resource_attributes
         expected_resource_attributes.update(updated=datetime.now(), resource_status=ResourceStatus.Stopped)
