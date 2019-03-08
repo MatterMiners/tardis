@@ -1,4 +1,4 @@
-from .shellexecutor import ShellExecutor
+from tardis.utilities.executors.shellexecutor import ShellExecutor
 from ..exceptions.tardisexceptions import AsyncRunCommandFailure
 
 

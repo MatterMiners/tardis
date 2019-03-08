@@ -1,9 +1,11 @@
-from ..interfaces.executor import Executor
-from ..utilities.attributedict import AttributeDict
+from ...configuration.utilities import enable_yaml_load
+from ...interfaces.executor import Executor
+from ..attributedict import AttributeDict
 
 import asyncssh
 
 
+@enable_yaml_load('!SSHExecutor')
 class SSHExecutor(Executor):
     def __init__(self, **parameters):
         self._parameters = parameters
