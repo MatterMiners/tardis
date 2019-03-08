@@ -1,5 +1,8 @@
 from tardis.adapters.sites.moab import MoabAdapter
 from tardis.exceptions.executorexceptions import CommandExecutionFailure
+from tardis.exceptions.tardisexceptions import TardisError
+from tardis.exceptions.tardisexceptions import TardisTimeout
+from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from tardis.interfaces.siteadapter import ResourceStatus
 from tardis.utilities.attributedict import AttributeDict
 from tests.utilities.utilities import async_return
@@ -9,6 +12,9 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from datetime import datetime, timedelta
+
+import asyncio
+import asyncssh
 
 __all__ = ['TestMoabAdapter']
 
@@ -245,3 +251,23 @@ class TestMoabAdapter(TestCase):
         return_resource_attributes = run_async(self.moab_adapter.terminate_resource,
                                                resource_attributes=self.resource_attributes)
         self.assertEqual(return_resource_attributes["resource_status"], ResourceStatus.Stopped)
+
+    def test_exception_handling(self):
+        def test_exception_handling(to_raise, to_catch):
+            with self.assertRaises(to_catch):
+                with self.moab_adapter.handle_exceptions():
+                    raise to_raise
+
+        matrix = [(asyncio.TimeoutError(), TardisTimeout),
+                  (asyncssh.Error(code=255,
+                                  reason="Test",
+                                  lang="Test"), TardisResourceStatusUpdateFailed),
+                  (IndexError, TardisResourceStatusUpdateFailed),
+                  (Exception, TardisError)]
+
+        for to_raise, to_catch in matrix:
+            test_exception_handling(to_raise, to_catch)
+
+    def test_check_resource_id(self):
+        with self.assertRaises(TardisError):
+            self.moab_adapter.check_resource_id(AttributeDict(resource_id=1), regex=r"^(\d)$", response="2")
