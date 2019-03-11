@@ -1,0 +1,36 @@
+from tardis.configuration.utilities import enable_yaml_load
+
+from unittest import TestCase
+
+import yaml
+
+
+@enable_yaml_load('!TestDummy')
+class TestDummy(object):
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+
+
+class TestEnableYAMLLoad(TestCase):
+    def test_enable_yaml_load(self):
+        no_args_yml = """!TestDummy"""
+        instance = yaml.load(no_args_yml)
+        self.assertEqual(instance.args, ())
+        self.assertEqual(instance.kwargs, {})
+
+        args_yml = """
+        !TestDummy
+        - test
+        """
+        instance = yaml.load(args_yml)
+        self.assertEqual(instance.args, ('test',))
+        self.assertEqual(instance.kwargs, {})
+
+        kwargs_yml = """
+        !TestDummy
+        test: test
+        """
+        instance = yaml.load(kwargs_yml)
+        self.assertEqual(instance.args, ())
+        self.assertEqual(instance.kwargs, {'test': 'test'})
