@@ -8,8 +8,7 @@ def enable_yaml_load(tag):
                 parameters = loader.construct_mapping(node)
                 new_cls = cls(**parameters)
             elif isinstance(node, yaml.nodes.ScalarNode):
-                parameter = loader.construct_scalar(node)
-                new_cls = cls(parameter)
+                new_cls = cls()
             elif isinstance(node, yaml.nodes.SequenceNode):
                 parameters = loader.construct_sequence(node)
                 new_cls = cls(*parameters)
