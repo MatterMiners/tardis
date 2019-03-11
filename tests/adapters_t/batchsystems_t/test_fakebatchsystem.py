@@ -1,4 +1,4 @@
-from tardis.adapters.batchsystems.dummybatchsystem import DummyBatchSystemAdapter
+from tardis.adapters.batchsystems.fakebatchsystem import FakeBatchSystemAdapter
 from tardis.interfaces.batchsystemadapter import MachineStatus
 
 from tests.utilities.utilities import run_async
@@ -7,10 +7,10 @@ from unittest.mock import patch
 from unittest import TestCase
 
 
-class TestDummyBatchSystemAdapter(TestCase):
+class TestFakeBatchSystemAdapter(TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.mock_config_patcher = patch('tardis.adapters.batchsystems.dummybatchsystem.Configuration')
+        cls.mock_config_patcher = patch('tardis.adapters.batchsystems.fakebatchsystem.Configuration')
         cls.mock_config = cls.mock_config_patcher.start()
 
     @classmethod
@@ -23,7 +23,7 @@ class TestDummyBatchSystemAdapter(TestCase):
         config.BatchSystem.utilization = 1.0
         config.BatchSystem.machine_status = "Available"
 
-        self.dummy_adapter = DummyBatchSystemAdapter()
+        self.dummy_adapter = FakeBatchSystemAdapter()
 
     def test_disintegrate_machine(self):
         self.assertIsNone(run_async(self.dummy_adapter.disintegrate_machine, 'test-123'))

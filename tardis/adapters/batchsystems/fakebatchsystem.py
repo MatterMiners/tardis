@@ -3,7 +3,7 @@ from tardis.interfaces.batchsystemadapter import BatchSystemAdapter
 from tardis.interfaces.batchsystemadapter import MachineStatus
 
 
-class DummyBatchSystemAdapter(BatchSystemAdapter):
+class FakeBatchSystemAdapter(BatchSystemAdapter):
     def __init__(self):
         config = Configuration()
         self.dummy_config = config.BatchSystem
