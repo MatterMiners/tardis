@@ -4,6 +4,7 @@ import yaml
 def enable_yaml_load(tag):
     def yaml_load_decorator(cls):
         def class_factory(loader, node):
+            new_cls = cls
             if isinstance(node, yaml.nodes.MappingNode):
                 parameters = loader.construct_mapping(node)
                 new_cls = cls(**parameters)
