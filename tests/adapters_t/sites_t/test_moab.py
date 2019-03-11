@@ -252,6 +252,14 @@ class TestMoabAdapter(TestCase):
                                                resource_attributes=self.resource_attributes)
         self.assertEqual(return_resource_attributes["resource_status"], ResourceStatus.Stopped)
 
+    @mock_executor_run_command("", exit_code=2, raise_exception=CommandExecutionFailure(message='Test',
+                                                                                        stdout="",
+                                                                                        stderr="",
+                                                                                        exit_code=2))
+    def test_terminate_resource_error(self):
+        with self.assertRaises(CommandExecutionFailure):
+            run_async(self.moab_adapter.terminate_resource, resource_attributes=self.resource_attributes)
+
     def test_exception_handling(self):
         def test_exception_handling(to_raise, to_catch):
             with self.assertRaises(to_catch):
