@@ -6,6 +6,7 @@ from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from tardis.interfaces.siteadapter import ResourceStatus
 from tardis.utilities.attributedict import AttributeDict
 from tests.utilities.utilities import async_return
+from tests.utilities.utilities import mock_executor_run_command
 from tests.utilities.utilities import run_async
 
 from unittest import TestCase
@@ -78,22 +79,6 @@ TEST_TERMINATE_DEAD_RESOURCE_RESPONSE = '''
 ERROR:  invalid job specified (4761849)
 
 '''
-
-
-def mock_executor_run_command(stdout, stderr="", exit_code=0, raise_exception=None):
-    def decorator(func):
-        def wrapper(self):
-            executor = self.mock_executor.return_value
-            executor.run_command.return_value = async_return(return_value=AttributeDict(stdout=stdout,
-                                                                                        stderr=stderr,
-                                                                                        exit_code=exit_code))
-            executor.run_command.side_effect = raise_exception
-            func(self)
-            executor.run_command.side_effect = None
-
-        return wrapper
-
-    return decorator
 
 
 class TestMoabAdapter(TestCase):
