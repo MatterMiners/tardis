@@ -19,15 +19,23 @@ import asyncssh
 __all__ = ['TestSlurmAdapter']
 
 TEST_RESOURCE_STATUS_RESPONSE = '''
-JOBID EXEC_HOST ST
-1390066 fh2n1551 R
-1390065 n/a PD
+1390065|None assigned|PENDING
+1391999|fh2n1573|TIMEOUT
+1391999.batch|fh2n1573|CANCELLED
 '''
 
 TEST_RESOURCE_STATUS_RESPONSE_RUNNING = '''
-JOBID EXEC_HOST ST
-1390066 fh2n1551 R
-1390065 fh2n1552 R
+1390065|fh2n1552|RUNNING
+1390065.batch|fh2n1552|RUNNING
+1391999|fh2n1573|TIMEOUT
+1391999.batch|fh2n1573|CANCELLED
+'''
+
+TEST_RESOURCE_STATUS_RESPONSE_DEAD = '''
+1390065|fh2n1552|TIMEOUT
+1390065.batch|fh2n1552|CANCELLED
+1391999|fh2n1573|TIMEOUT
+1391999.batch|fh2n1573|CANCELLED
 '''
 
 TEST_DEPLOY_RESOURCE_RESPONSE = '''
@@ -179,6 +187,12 @@ class TestSlurmAdapter(TestCase):
         expected_resource_attributes = self.resource_attributes
         expected_resource_attributes.update(updated=datetime.now(), resource_status=ResourceStatus.Stopped)
         return_resource_attributes = run_async(self.slurm_adapter.terminate_resource,
+                                               resource_attributes=self.resource_attributes)
+        self.assertEqual(return_resource_attributes["resource_status"], ResourceStatus.Stopped)
+
+    @mock_executor_run_command(TEST_RESOURCE_STATUS_RESPONSE_DEAD)
+    def test_dead_resource(self):
+        return_resource_attributes = run_async(self.slurm_adapter.resource_status,
                                                resource_attributes=self.resource_attributes)
         self.assertEqual(return_resource_attributes["resource_status"], ResourceStatus.Stopped)
 
