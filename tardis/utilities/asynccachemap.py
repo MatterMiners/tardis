@@ -1,7 +1,9 @@
+from ..exceptions.executorexceptions import CommandExecutionFailure
 from collections.abc import Mapping
 from time import time
 
 import asyncio
+import logging
 import json
 
 
@@ -28,8 +30,10 @@ class AsyncCacheMap(Mapping):
             if (current_time - self._last_update) > self._max_age:
                 try:
                     data = await self._update_coroutine()
-                except json.decoder.JSONDecodeError:
-                    pass
+                except json.decoder.JSONDecodeError as je:
+                    logging.error(f"AsyncMap update_status failed: Could not decode json {je}")
+                except CommandExecutionFailure as cf:
+                    logging.error(f"AsyncMap update_status failed: {cf}")
                 else:
                     self._data = data
                 self._last_update = current_time
