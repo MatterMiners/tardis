@@ -2,6 +2,7 @@ from tardis.adapters.sites.slurm import SlurmAdapter
 from tardis.exceptions.tardisexceptions import TardisError
 from tardis.exceptions.tardisexceptions import TardisTimeout
 from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
+from tardis.exceptions.executorexceptions import CommandExecutionFailure
 from tardis.interfaces.siteadapter import ResourceStatus
 from tardis.utilities.attributedict import AttributeDict
 from tests.utilities.utilities import async_return
@@ -65,13 +66,13 @@ class TestSlurmAdapter(TestCase):
 
     def setUp(self):
         config = self.mock_config.return_value
-        test_site_config = config.TestSite
-        test_site_config.MachineMetaData = self.machine_meta_data
-        test_site_config.StartupCommand = 'pilot.sh'
-        test_site_config.StatusUpdate = 1
-        test_site_config.MachineTypeConfiguration = self.machine_type_configuration
-        test_site_config.executor = self.mock_executor.return_value
-        test_site_config.UpdateDnsName = True
+        self.test_site_config = config.TestSite
+        self.test_site_config.MachineMetaData = self.machine_meta_data
+        self.test_site_config.StartupCommand = 'pilot.sh'
+        self.test_site_config.StatusUpdate = 1
+        self.test_site_config.MachineTypeConfiguration = self.machine_type_configuration
+        self.test_site_config.executor = self.mock_executor.return_value
+        self.test_site_config.UpdateDnsName = False
 
         self.slurm_adapter = SlurmAdapter(machine_type='test2large', site_name='TestSite')
 
@@ -133,16 +134,17 @@ class TestSlurmAdapter(TestCase):
         del expected_resource_attributes.updated, return_resource_attributes.updated
         self.assertEqual(return_resource_attributes, expected_resource_attributes)
 
-#    @mock_executor_run_command(TEST_RESOURCE_STATUS_RESPONSE_RUNNING)
-#    def test_resource_status_update(self):
-#        self.assertEqual(self.resource_attributes["resource_status"], ResourceStatus.Booting)
-#        return_resource_attributes = run_async(self.slurm_adapter.resource_status,
-#                                               resource_attributes=self.resource_attributes)
-#        self.assertEqual(return_resource_attributes["resource_status"], ResourceStatus.Running)
-#        self.assertEqual(return_resource_attributes["dns_name"], 'testsite-1390065')
+    @mock_executor_run_command(TEST_RESOURCE_STATUS_RESPONSE_RUNNING)
+    def test_resource_status_update(self):
+        self.assertEqual(self.resource_attributes["resource_status"], ResourceStatus.Booting)
+        return_resource_attributes = run_async(self.slurm_adapter.resource_status,
+                                               resource_attributes=self.resource_attributes)
+        self.assertEqual(return_resource_attributes["resource_status"], ResourceStatus.Running)
+        self.assertEqual(return_resource_attributes["dns_name"], 'testsite-1390065')
 
     @mock_executor_run_command(TEST_RESOURCE_STATUS_RESPONSE_RUNNING)
     def test_resource_status_and_dns_update(self):
+        self.test_site_config.UpdateDnsName = True
         self.assertEqual(self.resource_attributes["resource_status"], ResourceStatus.Booting)
         return_resource_attributes = run_async(self.slurm_adapter.resource_status,
                                                resource_attributes=self.resource_attributes)
@@ -187,9 +189,8 @@ class TestSlurmAdapter(TestCase):
                     raise to_raise
 
         matrix = [(asyncio.TimeoutError(), TardisTimeout),
-                  (asyncssh.Error(code=255,
-                                  reason="Test",
-                                  lang="Test"), TardisResourceStatusUpdateFailed),
+                  (CommandExecutionFailure(message="Test", exit_code=255, stdout="Test", stderr="Test")
+                   , TardisResourceStatusUpdateFailed),
                   (Exception, TardisError)]
 
         for to_raise, to_catch in matrix:

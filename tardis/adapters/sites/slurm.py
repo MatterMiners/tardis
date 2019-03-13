@@ -1,5 +1,5 @@
 from ...configuration.configuration import Configuration
-from tardis.exceptions.tardisexceptions import AsyncRunCommandFailure
+from ...exceptions.executorexceptions import CommandExecutionFailure
 from ...exceptions.tardisexceptions import TardisError
 from ...exceptions.tardisexceptions import TardisTimeout
 from ...exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
@@ -17,7 +17,6 @@ from datetime import datetime
 from io import StringIO
 import csv
 
-import asyncssh
 import logging
 import re
 
@@ -27,22 +26,15 @@ async def slurm_status_updater(executor):
     # Escape slurm expressions and add them to attributes
     attributes.update({key: value for key, value in Configuration().BatchSystem.ratios.items()})
     cmd = f'squeue -o "%A %B %t"'
-
     slurm_resource_status = {}
-
-    try:
-        logging.debug("Slurm status update is running.")
-        slurm_status = await executor.run_command(cmd)
-        with StringIO(slurm_status.stdout) as csv_input:
-            cvs_reader = csv.DictReader(csv_input, fieldnames=tuple(attributes.keys()), delimiter=' ')
-            for row in cvs_reader:
-                slurm_resource_status[row['JobId']] = row
-    except AsyncRunCommandFailure as ex:
-        logging.error("squeue could not be executed!")
-        logging.error(str(ex))
-    else:
-        logging.debug("Slurm status update finished.")
-        return slurm_resource_status
+    logging.debug("Slurm status update is running.")
+    slurm_status = await executor.run_command(cmd)
+    with StringIO(slurm_status.stdout) as csv_input:
+        cvs_reader = csv.DictReader(csv_input, fieldnames=tuple(attributes.keys()), delimiter=' ')
+        for row in cvs_reader:
+            slurm_resource_status[row['JobId']] = row
+    logging.debug("Slurm status update finished.")
+    return slurm_resource_status
 
 
 class SlurmAdapter(SiteAdapter):
@@ -120,7 +112,7 @@ class SlurmAdapter(SiteAdapter):
         resource_status = self._slurm_status[str(resource_attributes.resource_id)]
         logging.debug(f'{self.site_name} has status {resource_status}.')
         resource_attributes.update(updated=datetime.now())
-        if self.configuration.UpdateDnsName is True and resource_status['Host'] != 'n/a':
+        if self.configuration.UpdateDnsName and resource_status['Host'] != 'n/a':
             resource_attributes.update(dns_name=resource_status['Host'])
         return convert_to_attribute_dict({**resource_attributes, **self.handle_response(resource_status)})
 
@@ -138,10 +130,10 @@ class SlurmAdapter(SiteAdapter):
     def handle_exceptions(self):
         try:
             yield
+        except CommandExecutionFailure as ex:
+            logging.info("Execute command failed: %s" % str(ex))
+            raise TardisResourceStatusUpdateFailed
         except TimeoutError as te:
             raise TardisTimeout from te
-        except asyncssh.Error as exc:
-            logging.info('SSH connection failed: ' + str(exc))
-            raise TardisResourceStatusUpdateFailed
         except Exception as ex:
             raise TardisError from ex
