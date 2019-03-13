@@ -22,15 +22,15 @@ import re
 
 
 async def slurm_status_updater(executor):
-    attributes = dict(JobId='JOBID', Host='EXEC_HOST', State='ST')
+    attributes = dict(JobId='JOBID', Host='NodeList', State='State')
     # Escape slurm expressions and add them to attributes
     attributes.update({key: value for key, value in Configuration().BatchSystem.ratios.items()})
-    cmd = f'squeue -o "%A %B %t"'
+    cmd = f'sacct -o "JobID,NodeList,State" -n -P'
     slurm_resource_status = {}
     logging.debug("Slurm status update is running.")
     slurm_status = await executor.run_command(cmd)
     with StringIO(slurm_status.stdout) as csv_input:
-        cvs_reader = csv.DictReader(csv_input, fieldnames=tuple(attributes.keys()), delimiter=' ')
+        cvs_reader = csv.DictReader(csv_input, fieldnames=tuple(attributes.keys()), delimiter='|')
         for row in cvs_reader:
             slurm_resource_status[row['JobId']] = row
     logging.debug("Slurm status update finished.")
@@ -52,29 +52,21 @@ class SlurmAdapter(SiteAdapter):
         key_translator = StaticMapping(resource_id='JobId', resource_status='State')
 
         # see job state codes at https://slurm.schedmd.com/squeue.html
-        translator_functions = StaticMapping(State=lambda x, translator=StaticMapping(BF=ResourceStatus.Error,
-                                                                                      CA=ResourceStatus.Stopped,
-                                                                                      CD=ResourceStatus.Stopped,
-                                                                                      CF=ResourceStatus.Booting,
-                                                                                      CG=ResourceStatus.Running,
-                                                                                      DL=ResourceStatus.Stopped,
-                                                                                      F=ResourceStatus.Error,
-                                                                                      NF=ResourceStatus.Error,
-                                                                                      OOM=ResourceStatus.Error,
-                                                                                      PD=ResourceStatus.Booting,
-                                                                                      PR=ResourceStatus.Stopped,
-                                                                                      R=ResourceStatus.Running,
-                                                                                      RD=ResourceStatus.Error,
-                                                                                      RF=ResourceStatus.Error,
-                                                                                      RH=ResourceStatus.Error,
-                                                                                      RS=ResourceStatus.Error,
-                                                                                      RV=ResourceStatus.Stopped,
-                                                                                      SI=ResourceStatus.Error,
-                                                                                      SE=ResourceStatus.Stopped,
-                                                                                      SO=ResourceStatus.Running,
-                                                                                      ST=ResourceStatus.Stopped,
-                                                                                      S=ResourceStatus.Running,
-                                                                                      TO=ResourceStatus.Stopped):
+        translator_functions = StaticMapping(State=lambda x, translator=StaticMapping(BOOT_FAIL=ResourceStatus.Error,
+                                                                                      CANCELLED=ResourceStatus.Error,
+                                                                                      COMPLETED=ResourceStatus.Stopped,
+                                                                                      DEADLINE=ResourceStatus.Stopped,
+                                                                                      FAILED=ResourceStatus.Error,
+                                                                                      NODE_FAIL=ResourceStatus.Error,
+                                                                                      OUT_OF_MEMORY=
+                                                                                      ResourceStatus.Error,
+                                                                                      PENDING=ResourceStatus.Booting,
+                                                                                      RUNNING=ResourceStatus.Running,
+                                                                                      REQUEUED=ResourceStatus.Error,
+                                                                                      RESIZING=ResourceStatus.Error,
+                                                                                      REVOKED=ResourceStatus.Error,
+                                                                                      SUSPENDED=ResourceStatus.Running,
+                                                                                      TIMEOUT=ResourceStatus.Stopped):
                                              translator[x],
                                              JobId=lambda x: int(x))
 
@@ -112,7 +104,7 @@ class SlurmAdapter(SiteAdapter):
         resource_status = self._slurm_status[str(resource_attributes.resource_id)]
         logging.debug(f'{self.site_name} has status {resource_status}.')
         resource_attributes.update(updated=datetime.now())
-        if self.configuration.UpdateDnsName and resource_status['Host'] != 'n/a':
+        if self.configuration.UpdateDnsName and resource_status['Host'] != 'None assigned':
             resource_attributes.update(dns_name=resource_status['Host'])
         return convert_to_attribute_dict({**resource_attributes, **self.handle_response(resource_status)})
 
