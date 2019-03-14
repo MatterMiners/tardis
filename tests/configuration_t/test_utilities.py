@@ -15,7 +15,7 @@ class TestDummy(object):
 class TestEnableYAMLLoad(TestCase):
     def test_enable_yaml_load(self):
         no_args_yml = """!TestDummy"""
-        instance = yaml.load(no_args_yml)
+        instance = yaml.safe_load(no_args_yml)
         self.assertEqual(instance.args, ())
         self.assertEqual(instance.kwargs, {})
 
@@ -23,7 +23,7 @@ class TestEnableYAMLLoad(TestCase):
         !TestDummy
         - test
         """
-        instance = yaml.load(args_yml)
+        instance = yaml.safe_load(args_yml)
         self.assertEqual(instance.args, ('test',))
         self.assertEqual(instance.kwargs, {})
 
@@ -31,6 +31,6 @@ class TestEnableYAMLLoad(TestCase):
         !TestDummy
         test: test
         """
-        instance = yaml.load(kwargs_yml)
+        instance = yaml.safe_load(kwargs_yml)
         self.assertEqual(instance.args, ())
         self.assertEqual(instance.kwargs, {'test': 'test'})
