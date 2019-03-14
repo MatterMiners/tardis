@@ -1,6 +1,7 @@
 from ..exceptions.executorexceptions import CommandExecutionFailure
 from collections.abc import Mapping
-from time import time
+from datetime import datetime
+from datetime import timedelta
 
 import asyncio
 import logging
@@ -11,7 +12,7 @@ class AsyncCacheMap(Mapping):
     def __init__(self, update_coroutine, max_age: int = 60 * 15):
         self._update_coroutine = update_coroutine
         self._max_age = max_age
-        self._last_update = 0
+        self._last_update = datetime.fromtimestamp(0)
         self._data = {}
         self._lock = None
 
@@ -23,11 +24,15 @@ class AsyncCacheMap(Mapping):
             self._lock = asyncio.Lock()
         return self._lock
 
+    @property
+    def last_update(self):
+        return self._last_update
+
     async def update_status(self):
-        current_time = time()
+        current_time = datetime.now()
 
         async with self._async_lock:
-            if (current_time - self._last_update) > self._max_age:
+            if (current_time - self._last_update) > timedelta(seconds=self._max_age):
                 try:
                     data = await self._update_coroutine()
                 except json.decoder.JSONDecodeError as je:
@@ -36,7 +41,7 @@ class AsyncCacheMap(Mapping):
                     logging.error(f"AsyncMap update_status failed: {cf}")
                 else:
                     self._data = data
-                self._last_update = current_time
+                    self._last_update = current_time
 
     def __iter__(self):
         return iter(self._data)
