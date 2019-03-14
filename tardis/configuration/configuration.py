@@ -39,4 +39,4 @@ class Configuration(Borg):
         :type config_file: str
         """
         with open(config_file, 'r') as config_file:
-            self._shared_state.update(encode_user_data(convert_to_attribute_dict(yaml.load(config_file))))
+            self._shared_state.update(encode_user_data(convert_to_attribute_dict(yaml.safe_load(config_file))))

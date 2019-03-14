@@ -62,7 +62,7 @@ class TestSSHExecutor(TestCase):
         self.mock_asyncssh.reset_mock()
 
     def test_construction_by_yaml(self):
-        executor = yaml.load("""
+        executor = yaml.safe_load("""
                    !SSHExecutor
                    host: test_host
                    username: test
