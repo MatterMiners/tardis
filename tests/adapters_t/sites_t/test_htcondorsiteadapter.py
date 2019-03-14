@@ -1,7 +1,9 @@
 from tardis.adapters.sites.htcondor import HTCondorSiteAdapter
+from tardis.exceptions.executorexceptions import CommandExecutionFailure
 from tardis.exceptions.tardisexceptions import TardisError
+from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
+from tardis.interfaces.siteadapter import ResourceStatus
 from tardis.utilities.attributedict import AttributeDict
-from ...utilities.utilities import async_return
 from ...utilities.utilities import mock_executor_run_command
 from ...utilities.utilities import run_async
 
@@ -10,25 +12,18 @@ from datetime import timedelta
 from unittest import TestCase
 from unittest.mock import patch
 
+import logging
+
 CONDOR_SUBMIT_OUTPUT = """Submitting job(s).
 1 job(s) submitted to cluster 1351043."""
 
-CONDOR_Q_OUTPUT_IDLE = """"
-
--- Schedd: test.etp.kit.edu : <129.11.111.111:9618?... @ 03/12/19 09:16:58
-OWNER   BATCH_NAME      SUBMITTED   DONE   RUN    IDLE  TOTAL JOB_IDS
-test CMD: test.sh   3/12 09:15      _      _      1      1 1351043.0
-
-1 jobs; 0 completed, 0 removed, 1 idle, 0 running, 0 held, 0 suspended"""
-
-CONDOR_Q_OUTPUT_RUN = """
-
-
--- Schedd: test.etp.kit.edu : <129.11.111.111:9618?... @ 03/12/19 09:23:09
-OWNER   BATCH_NAME      SUBMITTED   DONE   RUN    IDLE  TOTAL JOB_IDS
-test CMD: test.sh   3/12 09:15      _      1      _      1 1351043.0
-
-1 jobs; 0 completed, 0 removed, 0 idle, 1 running, 0 held, 0 suspended"""
+CONDOR_Q_OUTPUT_UNEXANPANDED = "giffels\t0\t1351043\t0"
+CONDOR_Q_OUTPUT_IDLE = "giffels\t1\t1351043\t0"
+CONDOR_Q_OUTPUT_RUN = "giffels\t2\t1351043\t0"
+CONDOR_Q_OUTPUT_REMOVED = "giffels\t3\t1351043\t0"
+CONDOR_Q_OUTPUT_COMPLETED = "giffels\t4\t1351043\t0"
+CONDOR_Q_OUTPUT_HELD = "giffels\t5\t1351043\t0"
+CONDOR_Q_OUTPUT_SUBMISSION_ERR = "giffels\t6\t1351043\t0"
 
 CONDOR_RM_OUTPUT = """"All jobs in cluster 1351043 have been marked for removal"""
 
@@ -87,8 +82,56 @@ class TestHTCondorSiteAdapter(TestCase):
     def test_site_name(self):
         self.assertEqual(self.adapter.site_name, 'TestSite')
 
-    def test_resource_status(self):
-        run_async(self.adapter.resource_status, AttributeDict(resource_id=1351043))
+    @mock_executor_run_command(stdout=CONDOR_Q_OUTPUT_UNEXANPANDED)
+    def test_resource_status_unexpanded(self):
+        response = run_async(self.adapter.resource_status, AttributeDict(resource_id=1351043))
+        self.assertEqual(response.resource_status, ResourceStatus.Error)
+
+    @mock_executor_run_command(stdout=CONDOR_Q_OUTPUT_IDLE)
+    def test_resource_status_idle(self):
+        response = run_async(self.adapter.resource_status, AttributeDict(resource_id=1351043))
+        self.assertEqual(response.resource_status, ResourceStatus.Booting)
+
+    @mock_executor_run_command(stdout=CONDOR_Q_OUTPUT_RUN)
+    def test_resource_status_run(self):
+        response = run_async(self.adapter.resource_status, AttributeDict(resource_id=1351043))
+        self.assertEqual(response.resource_status, ResourceStatus.Running)
+
+    @mock_executor_run_command(stdout=CONDOR_Q_OUTPUT_COMPLETED)
+    def test_resource_status_idle(self):
+        response = run_async(self.adapter.resource_status, AttributeDict(resource_id=1351043))
+        self.assertEqual(response.resource_status, ResourceStatus.Stopped)
+
+    @mock_executor_run_command(stdout=CONDOR_Q_OUTPUT_HELD)
+    def test_resource_status_idle(self):
+        response = run_async(self.adapter.resource_status, AttributeDict(resource_id=1351043))
+        self.assertEqual(response.resource_status, ResourceStatus.Error)
+
+    @mock_executor_run_command(stdout=CONDOR_Q_OUTPUT_SUBMISSION_ERR)
+    def test_resource_status_idle(self):
+        response = run_async(self.adapter.resource_status, AttributeDict(resource_id=1351043))
+        self.assertEqual(response.resource_status, ResourceStatus.Error)
+
+    @mock_executor_run_command(stdout="", raise_exception=CommandExecutionFailure(message="Failed", stdout="Failed",
+                                                                                  stderr="Failed", exit_code=2))
+    def test_resource_status_raise_future(self):
+        future_timestamp = datetime.now()+timedelta(minutes=1)
+        with self.assertRaises(TardisResourceStatusUpdateFailed):
+            with self.assertLogs(logging.getLogger(), logging.ERROR):
+                run_async(self.adapter.resource_status, AttributeDict(resource_id=1351043,
+                                                                      created=future_timestamp))
+
+    @mock_executor_run_command(stdout="", raise_exception=CommandExecutionFailure(message="Failed", stdout="Failed",
+                                                                                  stderr="Failed", exit_code=2))
+    def test_resource_status_raise_past(self):
+        # Update interval is 10 minutes, so set last update back by 11 minutes in order to execute condor_q command and
+        # creation date to 12 minutes ago
+        past_timestamp = datetime.now()-timedelta(minutes=12)
+        self.adapter._htcondor_queue._last_update = datetime.now()-timedelta(minutes=11)
+        with self.assertLogs(logging.getLogger(), logging.ERROR):
+            response = run_async(self.adapter.resource_status, AttributeDict(resource_id=1351043,
+                                                                             created=past_timestamp))
+        self.assertEqual(response.resource_status, ResourceStatus.Deleted)
 
     def test_stop_resource(self):
         run_async(self.adapter.stop_resource, AttributeDict(resource_id=1351043))
@@ -102,7 +145,8 @@ class TestHTCondorSiteAdapter(TestCase):
                 with self.adapter.handle_exceptions():
                     raise raise_it
 
-        matrix = [(Exception, TardisError)]
+        matrix = [(Exception, TardisError),
+                  (TardisResourceStatusUpdateFailed, TardisResourceStatusUpdateFailed)]
 
         for to_raise, to_catch in matrix:
             test_exception_handling(to_raise, to_catch)
