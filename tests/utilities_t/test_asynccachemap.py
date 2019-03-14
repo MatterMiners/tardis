@@ -4,6 +4,8 @@ from tardis.utilities.asynccachemap import AsyncCacheMap
 from ..utilities.utilities import run_async
 
 from json.decoder import JSONDecodeError
+from datetime import datetime
+from datetime import timedelta
 from unittest import TestCase
 
 import logging
@@ -55,3 +57,8 @@ class TestAsyncCacheMap(TestCase):
         with self.assertLogs(logging.getLogger(), logging.ERROR):
             run_async(self.json_failing_async_cache_map.update_status)
             self.assertEqual(len(self.json_failing_async_cache_map), 0)
+
+    def test_last_update(self):
+        self.assertEqual(self.async_cache_map.last_update, datetime.fromtimestamp(0))
+        run_async(self.async_cache_map.update_status)
+        self.assertTrue(datetime.now()-self.async_cache_map.last_update < timedelta(seconds=1))
