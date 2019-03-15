@@ -50,7 +50,6 @@ class TestHTCondorSiteAdapter(TestCase):
         test_site_config.MachineMetaData = self.machine_meta_data
         test_site_config.MachineTypeConfiguration = self.machine_type_configuration
         test_site_config.executor = self.mock_executor.return_value
-        test_site_config.jdl = 'submit.jdl'
         test_site_config.max_age = 10
 
         self.adapter = HTCondorSiteAdapter(machine_type='test2large', site_name='TestSite')
@@ -61,7 +60,7 @@ class TestHTCondorSiteAdapter(TestCase):
 
     @property
     def machine_type_configuration(self):
-        return AttributeDict(test2large=AttributeDict())
+        return AttributeDict(test2large=AttributeDict(jdl='submit.jdl'))
 
     @mock_executor_run_command(stdout=CONDOR_SUBMIT_OUTPUT)
     def test_deploy_resource(self):
