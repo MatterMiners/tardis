@@ -71,7 +71,8 @@ class HTCondorSiteAdapter(SiteAdapter):
                                              max_age=self.configuration.max_age * 60)
 
     async def deploy_resource(self, resource_attributes):
-        submit_command = f"condor_submit {self.configuration.jdl}"
+        submit_jdl = self.configuration.MachineTypeConfiguration[self._machine_type].jdl
+        submit_command = f"condor_submit {submit_jdl}"
         response = await self._executor.run_command(submit_command)
         pattern = re.compile(r"^.*?(?P<Jobs>\d+).*?(?P<ClusterId>\d+).$", flags=re.MULTILINE)
         response = AttributeDict(pattern.search(response.stdout).groupdict())
