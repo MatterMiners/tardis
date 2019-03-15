@@ -1,4 +1,4 @@
-from tardis.adapters.sites.htcondor import HTCondorSiteAdapter
+from tardis.adapters.sites.htcondor import HTCondorAdapter
 from tardis.exceptions.executorexceptions import CommandExecutionFailure
 from tardis.exceptions.tardisexceptions import TardisError
 from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
@@ -52,7 +52,7 @@ class TestHTCondorSiteAdapter(TestCase):
         test_site_config.executor = self.mock_executor.return_value
         test_site_config.max_age = 10
 
-        self.adapter = HTCondorSiteAdapter(machine_type='test2large', site_name='TestSite')
+        self.adapter = HTCondorAdapter(machine_type='test2large', site_name='TestSite')
 
     @property
     def machine_meta_data(self):

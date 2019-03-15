@@ -47,7 +47,7 @@ htcondor_status_codes = {'0': ResourceStatus.Error,
                          '6': ResourceStatus.Error}
 
 
-class HTCondorSiteAdapter(SiteAdapter):
+class HTCondorAdapter(SiteAdapter):
     def __init__(self, machine_type, site_name):
         self.configuration = getattr(Configuration(), site_name)
         self._machine_type = machine_type
