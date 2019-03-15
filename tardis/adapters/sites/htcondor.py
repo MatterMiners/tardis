@@ -38,6 +38,15 @@ async def htcondor_queue_updater(executor):
         return htcondor_queue
 
 
+htcondor_status_codes = {'0': ResourceStatus.Error,
+                         '1': ResourceStatus.Booting,
+                         '2': ResourceStatus.Running,
+                         '3': ResourceStatus.Stopped,
+                         '4': ResourceStatus.Deleted,
+                         '5': ResourceStatus.Error,
+                         '6': ResourceStatus.Error}
+
+
 class HTCondorSiteAdapter(SiteAdapter):
     def __init__(self, machine_type, site_name):
         self.configuration = getattr(Configuration(), site_name)
@@ -49,16 +58,10 @@ class HTCondorSiteAdapter(SiteAdapter):
                                        created='created', updated='updated')
 
         # HTCondor uses digits to indicate job states and digit as variable names are not allowed in Python, therefore
-        # the trick using an expanded dictionary is necessary. Somehow ugly.
+        # the trick using an expanded htcondor_status_code dictionary is necessary. Somehow ugly.
         translator_functions = StaticMapping(ClusterId=lambda x: int(x),
                                              JobStatus=lambda x,
-                                             translator=StaticMapping(**{'0': ResourceStatus.Error,
-                                                                         '1': ResourceStatus.Booting,
-                                                                         '2': ResourceStatus.Running,
-                                                                         '3': ResourceStatus.Stopped,
-                                                                         '4': ResourceStatus.Deleted,
-                                                                         '5': ResourceStatus.Error,
-                                                                         '6': ResourceStatus.Error}):
+                                             translator=StaticMapping(**htcondor_status_codes):
                                              translator[x])
 
         self.handle_response = partial(self.handle_response, key_translator=key_translator,
@@ -72,8 +75,7 @@ class HTCondorSiteAdapter(SiteAdapter):
         response = await self._executor.run_command(submit_command)
         pattern = re.compile(r"^.*?(?P<Jobs>\d+).*?(?P<ClusterId>\d+).$", flags=re.MULTILINE)
         response = AttributeDict(pattern.search(response.stdout).groupdict())
-        now = datetime.now()
-        response.update(AttributeDict(created=now, updated=now))
+        response.update(self.update_timestamps())
         return self.handle_response(response)
 
     @property
@@ -108,8 +110,16 @@ class HTCondorSiteAdapter(SiteAdapter):
 
     async def terminate_resource(self, resource_attributes):
         terminate_command = f"condor_rm {resource_attributes.resource_id}"
-        response = self._executor.run_command(terminate_command)
-        return response
+        response = await self._executor.run_command(terminate_command)
+        pattern = re.compile(r"^.*?(?P<ClusterId>\d+).*$", flags=re.MULTILINE)
+        response = AttributeDict(pattern.search(response.stdout).groupdict())
+        response.update(self.update_timestamps())
+        return self.handle_response(response)
+
+    @staticmethod
+    def update_timestamps():
+        now = datetime.now()
+        return AttributeDict(created=now, updated=now)
 
     @contextmanager
     def handle_exceptions(self):

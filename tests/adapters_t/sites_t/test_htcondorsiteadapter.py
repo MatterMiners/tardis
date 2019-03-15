@@ -17,15 +17,15 @@ import logging
 CONDOR_SUBMIT_OUTPUT = """Submitting job(s).
 1 job(s) submitted to cluster 1351043."""
 
-CONDOR_Q_OUTPUT_UNEXANPANDED = "giffels\t0\t1351043\t0"
-CONDOR_Q_OUTPUT_IDLE = "giffels\t1\t1351043\t0"
-CONDOR_Q_OUTPUT_RUN = "giffels\t2\t1351043\t0"
-CONDOR_Q_OUTPUT_REMOVED = "giffels\t3\t1351043\t0"
-CONDOR_Q_OUTPUT_COMPLETED = "giffels\t4\t1351043\t0"
-CONDOR_Q_OUTPUT_HELD = "giffels\t5\t1351043\t0"
-CONDOR_Q_OUTPUT_SUBMISSION_ERR = "giffels\t6\t1351043\t0"
+CONDOR_Q_OUTPUT_UNEXANPANDED = "test\t0\t1351043\t0"
+CONDOR_Q_OUTPUT_IDLE = "test\t1\t1351043\t0"
+CONDOR_Q_OUTPUT_RUN = "test\t2\t1351043\t0"
+CONDOR_Q_OUTPUT_REMOVED = "test\t3\t1351043\t0"
+CONDOR_Q_OUTPUT_COMPLETED = "test\t4\t1351043\t0"
+CONDOR_Q_OUTPUT_HELD = "test\t5\t1351043\t0"
+CONDOR_Q_OUTPUT_SUBMISSION_ERR = "test\t6\t1351043\t0"
 
-CONDOR_RM_OUTPUT = """"All jobs in cluster 1351043 have been marked for removal"""
+CONDOR_RM_OUTPUT = """All jobs in cluster 1351043 have been marked for removal"""
 
 
 class TestHTCondorSiteAdapter(TestCase):
@@ -133,11 +133,19 @@ class TestHTCondorSiteAdapter(TestCase):
                                                                              created=past_timestamp))
         self.assertEqual(response.resource_status, ResourceStatus.Deleted)
 
+    @mock_executor_run_command(stdout=CONDOR_RM_OUTPUT)
     def test_stop_resource(self):
-        run_async(self.adapter.stop_resource, AttributeDict(resource_id=1351043))
+        response = run_async(self.adapter.stop_resource, AttributeDict(resource_id=1351043))
+        self.assertEqual(response.resource_id, 1351043)
+        self.assertFalse(response.created - datetime.now() > timedelta(seconds=1))
+        self.assertFalse(response.updated - datetime.now() > timedelta(seconds=1))
 
+    @mock_executor_run_command(stdout=CONDOR_RM_OUTPUT)
     def test_terminate_resource(self):
-        run_async(self.adapter.terminate_resource, AttributeDict(resource_id=1351043))
+        response = run_async(self.adapter.terminate_resource, AttributeDict(resource_id=1351043))
+        self.assertEqual(response.resource_id, 1351043)
+        self.assertFalse(response.created - datetime.now() > timedelta(seconds=1))
+        self.assertFalse(response.updated - datetime.now() > timedelta(seconds=1))
 
     def test_exception_handling(self):
         def test_exception_handling(raise_it, catch_it):
