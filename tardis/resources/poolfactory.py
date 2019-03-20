@@ -61,10 +61,11 @@ def create_composite_pool(configuration='tardis.yml'):
     return WeightedComposite(*composites)
 
 
-def create_drone(site_agent, batch_system_agent, plugins=None, resource_id=None, dns_name=None,
+def create_drone(site_agent, batch_system_agent, plugins=None, remote_resource_uuid=None, dns_name=None,
                  state=RequestState(), created=None, updated=None):
     return Drone(site_agent=site_agent, batch_system_agent=batch_system_agent, plugins=plugins,
-                 resource_id=resource_id, dns_name=dns_name, state=state, created=created, updated=updated)
+                 remote_resource_uuid=remote_resource_uuid, dns_name=dns_name, state=state,
+                 created=created, updated=updated)
 
 
 def get_drones_to_restore(plugins, site, machine_type):

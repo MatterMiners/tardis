@@ -31,7 +31,7 @@ class CloudStackAdapter(SiteAdapter):
         self._machine_type = machine_type
         self._site_name = site_name
 
-        key_translator = StaticMapping(resource_id='id', dns_name='name', resource_status='state')
+        key_translator = StaticMapping(remote_resource_uuid='id', dns_name='name', resource_status='state')
 
         translator_functions = StaticMapping(created=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%S%z"),
                                              updated=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%S%z"),
@@ -65,17 +65,17 @@ class CloudStackAdapter(SiteAdapter):
         return self._site_name
 
     async def resource_status(self, resource_attributes):
-        response = await self.cloud_stack_client.listVirtualMachines(id=resource_attributes.resource_id)
+        response = await self.cloud_stack_client.listVirtualMachines(id=resource_attributes.remote_resource_uuid)
         logging.debug(f"{self.site_name} listVirtualMachines returned {response}")
         return self.handle_response(response['virtualmachine'][0])
 
     async def stop_resource(self, resource_attributes):
-        response = await self.cloud_stack_client.stopVirtualMachine(id=resource_attributes.resource_id)
+        response = await self.cloud_stack_client.stopVirtualMachine(id=resource_attributes.remote_resource_uuid)
         logging.debug(f"{self.site_name} stopVirtualMachine returned {response}")
         return response
 
     async def terminate_resource(self, resource_attributes):
-        response = await self.cloud_stack_client.destroyVirtualMachine(id=resource_attributes.resource_id)
+        response = await self.cloud_stack_client.destroyVirtualMachine(id=resource_attributes.remote_resource_uuid)
         logging.debug(f"{self.site_name} destroyVirtualMachine returned {response}")
         return response
 

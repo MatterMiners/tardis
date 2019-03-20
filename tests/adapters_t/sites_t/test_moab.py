@@ -169,7 +169,7 @@ class TestMoabAdapter(TestCase):
     def resource_attributes(self):
         return AttributeDict(machine_type='test2large',
                              site_name='TestSite',
-                             resource_id=4761849,
+                             remote_resource_uuid=4761849,
                              resource_status=ResourceStatus.Booting,
                              created=datetime.strptime("Wed Jan 23 2019 15:01:47", '%a %b %d %Y %H:%M:%S'),
                              updated=datetime.strptime("Wed Jan 23 2019 15:02:17", '%a %b %d %Y %H:%M:%S'),
@@ -276,6 +276,6 @@ class TestMoabAdapter(TestCase):
         for to_raise, to_catch in matrix:
             test_exception_handling(to_raise, to_catch)
 
-    def test_check_resource_id(self):
+    def test_check_remote_resource_uuid(self):
         with self.assertRaises(TardisError):
-            self.moab_adapter.check_resource_id(AttributeDict(resource_id=1), regex=r"^(\d)$", response="2")
+            self.moab_adapter.check_remote_resource_uuid(AttributeDict(remote_resource_uuid=1), regex=r"^(\d)$", response="2")

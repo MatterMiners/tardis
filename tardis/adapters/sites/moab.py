@@ -28,7 +28,7 @@ class MoabAdapter(SiteAdapter):
 
         self._executor = getattr(self.configuration, 'executor', ShellExecutor())
 
-        key_translator = StaticMapping(resource_id='SystemJID', resource_status='State')
+        key_translator = StaticMapping(remote_resource_uuid='SystemJID', resource_status='State')
 
         translator_functions = StaticMapping(State=lambda x, translator=StaticMapping(Idle=ResourceStatus.Booting,
                                                                                       Running=ResourceStatus.Running,
@@ -50,9 +50,10 @@ class MoabAdapter(SiteAdapter):
         result = await self._executor.run_command(request_command)
         logging.debug(f"{self.site_name} servers create returned {result}")
 
-        resource_id = int(result.stdout)
-        resource_attributes.update(resource_id=resource_id, created=datetime.now(), updated=datetime.now(),
-                                   dns_name=self.dns_name(resource_id), resource_status=ResourceStatus.Booting)
+        remote_resource_uuid = int(result.stdout)
+        resource_attributes.update(remote_resource_uuid=remote_resource_uuid, created=datetime.now(),
+                                   updated=datetime.now(), dns_name=self.dns_name(remote_resource_uuid),
+                                   resource_status=ResourceStatus.Booting)
         return resource_attributes
 
     @property
@@ -68,17 +69,17 @@ class MoabAdapter(SiteAdapter):
         return self._site_name
 
     @staticmethod
-    def check_resource_id(resource_attributes, regex, response):
+    def check_remote_resource_uuid(resource_attributes, regex, response):
         pattern = re.compile(regex, flags=re.MULTILINE)
-        resource_id = int(pattern.findall(response)[0])
-        if resource_id != int(resource_attributes.resource_id):
-            raise TardisError(f'Failed to terminate {resource_attributes.resource_id}.')
+        remote_resource_uuid = int(pattern.findall(response)[0])
+        if remote_resource_uuid != int(resource_attributes.remote_resource_uuid):
+            raise TardisError(f'Failed to terminate {resource_attributes.remote_resource_uuid}.')
         else:
             resource_attributes.update(resource_status=ResourceStatus.Stopped, updated=datetime.now())
-        return resource_id
+        return remote_resource_uuid
 
     async def resource_status(self, resource_attributes):
-        status_command = f'checkjob {resource_attributes.resource_id}'
+        status_command = f'checkjob {resource_attributes.remote_resource_uuid}'
         response = await self._executor.run_command(status_command)
         pattern = re.compile(r'^(.*):\s+(.*)$', flags=re.MULTILINE)
         response = dict(pattern.findall(response.stdout))
@@ -88,21 +89,24 @@ class MoabAdapter(SiteAdapter):
         return convert_to_attribute_dict({**resource_attributes, **self.handle_response(response)})
 
     async def terminate_resource(self, resource_attributes):
-        request_command = f"canceljob {resource_attributes.resource_id}"
+        request_command = f"canceljob {resource_attributes.remote_resource_uuid}"
         try:
             response = await self._executor.run_command(request_command)
         except CommandExecutionFailure as cf:
             if cf.exit_code == 1:
                 logging.debug(f"{self.site_name} servers terminate returned {cf.stdout}")
-                resource_id = self.check_resource_id(resource_attributes, r'ERROR:  invalid job specified \((\d*)\)',
-                                                     cf.stderr)
+                remote_resource_uuid = self.check_remote_resource_uuid(resource_attributes,
+                                                                       r'ERROR:  invalid job specified \((\d*)\)',
+                                                                       cf.stderr)
             else:
                 raise cf
         else:
             logging.debug(f"{self.site_name} servers terminate returned {response}")
-            resource_id = self.check_resource_id(resource_attributes, r'^job \'(\d*)\' cancelled', response.stdout)
+            remote_resource_uuid = self.check_remote_resource_uuid(resource_attributes,
+                                                                   r'^job \'(\d*)\' cancelled',
+                                                                   response.stdout)
 
-        return self.handle_response({'SystemJID': resource_id}, **resource_attributes)
+        return self.handle_response({'SystemJID': remote_resource_uuid}, **resource_attributes)
 
     async def stop_resource(self, resource_attributes):
         logging.debug('MOAB jobs cannot be stopped gracefully. Terminating instead.')

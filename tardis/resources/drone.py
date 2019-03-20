@@ -13,7 +13,7 @@ import uuid
 
 @service(flavour=asyncio)
 class Drone(Pool):
-    def __init__(self, site_agent, batch_system_agent, plugins=None, resource_id=None, dns_name=None,
+    def __init__(self, site_agent, batch_system_agent, plugins=None, remote_resource_uuid=None, dns_name=None,
                  state=RequestState(), created=None, updated=None):
         self._site_agent = site_agent
         self._batch_system_agent = batch_system_agent
@@ -22,7 +22,7 @@ class Drone(Pool):
 
         self.resource_attributes = AttributeDict(site_name=self._site_agent.site_name,
                                                  machine_type=self.site_agent.machine_type,
-                                                 resource_id=resource_id,
+                                                 remote_resource_uuid=remote_resource_uuid,
                                                  created=created or datetime.now(),
                                                  updated=updated or datetime.now(),
                                                  dns_name=dns_name or self.site_agent.dns_name(uuid.uuid4().hex[:10]))

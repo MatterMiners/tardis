@@ -163,7 +163,7 @@ class ShutDownState(State):
     @classmethod
     async def run(cls, drone):
         logging.info(f"Drone {drone} in ShutDownState")
-        logging.info(f'Stopping VM with ID {drone.resource_attributes.resource_id}')
+        logging.info(f'Stopping VM with ID {drone.resource_attributes.remote_resource_uuid}')
 
         new_state = await cls.run_processing_pipeline(drone)
 
@@ -181,7 +181,7 @@ class ShuttingDownState(State):
     @classmethod
     async def run(cls, drone):
         logging.info(f"Drone {drone} in ShuttingDownState")
-        logging.info(f'Checking Status of VM with ID {drone.resource_attributes.resource_id}')
+        logging.info(f'Checking Status of VM with ID {drone.resource_attributes.remote_resource_uuid}')
         await drone.set_state(await cls.run_processing_pipeline(drone))
 
 
@@ -189,7 +189,7 @@ class CleanupState(State):
     @classmethod
     async def run(cls, drone):
         logging.info(f"Drone {drone} in CleanupState")
-        logging.info(f'Destroying VM with ID {drone.resource_attributes.resource_id}')
+        logging.info(f'Destroying VM with ID {drone.resource_attributes.remote_resource_uuid}')
         try:
             await drone.site_agent.terminate_resource(drone.resource_attributes)
         except TardisDroneCrashed:

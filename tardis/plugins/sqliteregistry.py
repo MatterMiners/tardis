@@ -46,7 +46,7 @@ class SqliteRegistry(Plugin):
                                    'site_id INTEGER',
                                    'FOREIGN KEY(site_id) REFERENCES Sites(site_id)'],
                   'Resources': ['id INTEGER PRIMARY KEY AUTOINCREMENT,'
-                                'resource_id VARCHAR(255) UNIQUE',
+                                'remote_resource_uuid VARCHAR(255) UNIQUE',
                                 'dns_name VARCHAR(255) UNIQUE',
                                 'state_id INTEGER',
                                 'site_id INTEGER',
@@ -88,7 +88,7 @@ class SqliteRegistry(Plugin):
             return cursor.fetchall()
 
     def get_resources(self, site_name, machine_type):
-        sql_query = """SELECT R.resource_id, R.dns_name, RS.state, R.created, R.updated
+        sql_query = """SELECT R.remote_resource_uuid, R.dns_name, RS.state, R.created, R.updated
         FROM Resources R
         JOIN ResourceStates RS ON R.state_id = RS.state_id
         JOIN Sites S ON R.site_id = S.site_id
@@ -98,8 +98,8 @@ class SqliteRegistry(Plugin):
 
     async def insert_resource(self, bind_parameters):
         sql_query = """INSERT OR IGNORE INTO
-        Resources(resource_id, dns_name, state_id, site_id, machine_type_id, created, updated)
-        SELECT :resource_id, :dns_name, RS.state_id, S.site_id, MT.machine_type_id, :created, :updated
+        Resources(remote_resource_uuid, dns_name, state_id, site_id, machine_type_id, created, updated)
+        SELECT :remote_resource_uuid, :dns_name, RS.state_id, S.site_id, MT.machine_type_id, :created, :updated
         FROM ResourceStates RS
         JOIN Sites S ON S.site_name = :site_name
         JOIN MachineTypes MT ON MT.machine_type = :machine_type AND MT.site_id = S.site_id

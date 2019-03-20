@@ -46,7 +46,7 @@ class TestDroneStates(TestCase):
             return f
 
         self.drone = self.mock_drone.return_value
-        self.drone.resource_attributes = AttributeDict(dns_name='test-923ABF', resource_id='0815')
+        self.drone.resource_attributes = AttributeDict(dns_name='test-923ABF', remote_resource_uuid='0815')
         self.drone.demand = 8.0
         self.drone._supply = 8.0
         self.drone.set_state.side_effect = partial(mock_set_state, self.drone)
