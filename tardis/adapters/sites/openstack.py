@@ -37,7 +37,7 @@ class OpenStackAdapter(SiteAdapter):
 
         self.nova = NovaClient(session=auth)
 
-        key_translator = StaticMapping(remote_resource_uuid='id', dns_name='name', resource_status='status')
+        key_translator = StaticMapping(remote_resource_uuid='id', drone_uuid='name', resource_status='status')
 
         translator_functions = StaticMapping(created=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ"),
                                              updated=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ"),
@@ -51,7 +51,7 @@ class OpenStackAdapter(SiteAdapter):
                                        translator_functions=translator_functions)
 
     async def deploy_resource(self, resource_attributes):
-        specs = dict(name=resource_attributes.dns_name)
+        specs = dict(name=resource_attributes.drone_uuid)
         specs.update(self.configuration.MachineTypeConfiguration[self._machine_type])
         await self.nova.init_api(timeout=60)
         response = await self.nova.servers.create(server=specs)

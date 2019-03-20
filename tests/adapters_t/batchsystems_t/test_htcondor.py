@@ -46,55 +46,55 @@ class TestHTCondorAdapter(TestCase):
         self.mock_async_run_command.reset_mock()
 
     def test_disintegrate_machine(self):
-        self.assertIsNone(run_async(self.htcondor_adapter.disintegrate_machine, dns_name='test'))
+        self.assertIsNone(run_async(self.htcondor_adapter.disintegrate_machine, drone_uuid='test'))
 
     def test_drain_machine(self):
-        run_async(self.htcondor_adapter.drain_machine, dns_name='test')
+        run_async(self.htcondor_adapter.drain_machine, drone_uuid='test')
         self.mock_async_run_command.assert_called_with('condor_drain -graceful test')
-        self.assertIsNone(run_async(self.htcondor_adapter.drain_machine, dns_name="not_exists"))
+        self.assertIsNone(run_async(self.htcondor_adapter.drain_machine, drone_uuid="not_exists"))
         self.mock_async_run_command.side_effect = AsyncRunCommandFailure(message="Does not exists",
                                                                          error_code=1,
                                                                          error_message="Does not exists")
-        self.assertIsNone(run_async(self.htcondor_adapter.drain_machine, dns_name="test"))
+        self.assertIsNone(run_async(self.htcondor_adapter.drain_machine, drone_uuid="test"))
 
         self.mock_async_run_command.side_effect = AsyncRunCommandFailure(message="Unhandled error",
                                                                          error_code=2,
                                                                          error_message="Unhandled error")
         with self.assertRaises(AsyncRunCommandFailure):
-            self.assertIsNone(run_async(self.htcondor_adapter.drain_machine, dns_name="test"))
+            self.assertIsNone(run_async(self.htcondor_adapter.drain_machine, drone_uuid="test"))
 
         self.mock_async_run_command.side_effect = None
 
     def test_integrate_machine(self):
-        self.assertIsNone(run_async(self.htcondor_adapter.integrate_machine, dns_name='test'))
+        self.assertIsNone(run_async(self.htcondor_adapter.integrate_machine, drone_uuid='test'))
 
     def test_get_resource_ratios(self):
-        self.assertCountEqual(list(run_async(self.htcondor_adapter.get_resource_ratios, dns_name='test')),
+        self.assertCountEqual(list(run_async(self.htcondor_adapter.get_resource_ratios, drone_uuid='test')),
                               [self.cpu_ratio, self.memory_ratio])
         self.mock_async_run_command.assert_called_with(self.command)
 
-        self.assertEqual(run_async(self.htcondor_adapter.get_resource_ratios, dns_name='not_exists'), {})
+        self.assertEqual(run_async(self.htcondor_adapter.get_resource_ratios, drone_uuid='not_exists'), {})
 
     def test_get_allocation(self):
-        self.assertEqual(run_async(self.htcondor_adapter.get_allocation, dns_name='test'),
+        self.assertEqual(run_async(self.htcondor_adapter.get_allocation, drone_uuid='test'),
                          max([self.cpu_ratio, self.memory_ratio]))
         self.mock_async_run_command.assert_called_with(self.command)
 
     def test_get_machine_status(self):
-        self.assertEqual(run_async(self.htcondor_adapter.get_machine_status, dns_name='test'),
+        self.assertEqual(run_async(self.htcondor_adapter.get_machine_status, drone_uuid='test'),
                          MachineStatus.Available)
         self.mock_async_run_command.assert_called_with(self.command)
         self.mock_async_run_command.reset_mock()
-        self.assertEqual(run_async(self.htcondor_adapter.get_machine_status, dns_name='not_exists'),
+        self.assertEqual(run_async(self.htcondor_adapter.get_machine_status, drone_uuid='not_exists'),
                          MachineStatus.NotAvailable)
         self.mock_async_run_command.reset_mock()
-        self.assertEqual(run_async(self.htcondor_adapter.get_machine_status, dns_name='test_drain'),
+        self.assertEqual(run_async(self.htcondor_adapter.get_machine_status, drone_uuid='test_drain'),
                          MachineStatus.Draining)
         self.mock_async_run_command.reset_mock()
-        self.assertEqual(run_async(self.htcondor_adapter.get_machine_status, dns_name='test_drained'),
+        self.assertEqual(run_async(self.htcondor_adapter.get_machine_status, drone_uuid='test_drained'),
                          MachineStatus.Drained)
         self.mock_async_run_command.reset_mock()
-        self.assertEqual(run_async(self.htcondor_adapter.get_machine_status, dns_name='test_owner'),
+        self.assertEqual(run_async(self.htcondor_adapter.get_machine_status, drone_uuid='test_owner'),
                          MachineStatus.NotAvailable)
         self.mock_async_run_command.reset_mock()
 
@@ -106,6 +106,6 @@ class TestHTCondorAdapter(TestCase):
         self.mock_async_run_command.side_effect = None
 
     def test_get_utilization(self):
-        self.assertEqual(run_async(self.htcondor_adapter.get_utilization, dns_name='test'),
+        self.assertEqual(run_async(self.htcondor_adapter.get_utilization, drone_uuid='test'),
                          min([self.cpu_ratio, self.memory_ratio]))
         self.mock_async_run_command.assert_called_with(self.command)

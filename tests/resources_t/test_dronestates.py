@@ -46,7 +46,7 @@ class TestDroneStates(TestCase):
             return f
 
         self.drone = self.mock_drone.return_value
-        self.drone.resource_attributes = AttributeDict(dns_name='test-923ABF', remote_resource_uuid='0815')
+        self.drone.resource_attributes = AttributeDict(drone_uuid='test-923ABF', remote_resource_uuid='0815')
         self.drone.demand = 8.0
         self.drone._supply = 8.0
         self.drone.set_state.side_effect = partial(mock_set_state, self.drone)
@@ -111,7 +111,7 @@ class TestDroneStates(TestCase):
         self.drone.state.return_value = IntegrateState
         run_async(self.drone.state.return_value.run, self.drone)
         self.assertIsInstance(self.drone.state, IntegratingState)
-        self.drone.batch_system_agent.integrate_machine.assert_called_with(dns_name='test-923ABF')
+        self.drone.batch_system_agent.integrate_machine.assert_called_with(drone_uuid='test-923ABF')
 
     def test_integrating_state(self):
 
@@ -150,7 +150,7 @@ class TestDroneStates(TestCase):
         self.drone.state.return_value = DrainState
         run_async(self.drone.state.return_value.run, self.drone)
         self.assertIsInstance(self.drone.state, DrainingState)
-        self.drone.batch_system_agent.drain_machine.assert_called_with(dns_name='test-923ABF')
+        self.drone.batch_system_agent.drain_machine.assert_called_with(drone_uuid='test-923ABF')
 
     def test_draining_state(self):
         matrix = [(ResourceStatus.Running, MachineStatus.Draining, DrainingState),
@@ -166,7 +166,7 @@ class TestDroneStates(TestCase):
         self.drone.state.return_value = DisintegrateState
         run_async(self.drone.state.return_value.run, self.drone)
         self.assertIsInstance(self.drone.state, ShutDownState)
-        self.drone.batch_system_agent.disintegrate_machine.assert_called_with(dns_name='test-923ABF')
+        self.drone.batch_system_agent.disintegrate_machine.assert_called_with(drone_uuid='test-923ABF')
 
     def test_shutdown_state(self):
         matrix = [(ResourceStatus.Running, None, ShuttingDownState),

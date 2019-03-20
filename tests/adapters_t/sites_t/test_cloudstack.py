@@ -64,8 +64,8 @@ class TestCloudStackAdapter(TestCase):
 
     def test_deploy_resource(self):
         self.assertEqual(run_async(self.cloudstack_adapter.deploy_resource,
-                                   resource_attributes=AttributeDict(dns_name='testsite-089123')),
-                         AttributeDict(dns_name='testsite-089123', remote_resource_uuid='123456',
+                                   resource_attributes=AttributeDict(drone_uuid='testsite-089123')),
+                         AttributeDict(drone_uuid='testsite-089123', remote_resource_uuid='123456',
                                        resource_status=ResourceStatus.Booting))
 
         self.mock_cloudstack_api.return_value.deployVirtualMachine.assert_called_with(
@@ -85,7 +85,7 @@ class TestCloudStackAdapter(TestCase):
     def test_resource_status(self):
         self.assertEqual(run_async(self.cloudstack_adapter.resource_status,
                                    resource_attributes=AttributeDict(remote_resource_uuid='123456')),
-                         AttributeDict(dns_name='testsite-089123', remote_resource_uuid='123456',
+                         AttributeDict(drone_uuid='testsite-089123', remote_resource_uuid='123456',
                                        resource_status=ResourceStatus.Running))
         self.mock_cloudstack_api.return_value.listVirtualMachines.assert_called_with(id='123456')
 

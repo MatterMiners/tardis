@@ -31,7 +31,7 @@ class CloudStackAdapter(SiteAdapter):
         self._machine_type = machine_type
         self._site_name = site_name
 
-        key_translator = StaticMapping(remote_resource_uuid='id', dns_name='name', resource_status='state')
+        key_translator = StaticMapping(remote_resource_uuid='id', drone_uuid='name', resource_status='state')
 
         translator_functions = StaticMapping(created=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%S%z"),
                                              updated=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%S%z"),
@@ -46,7 +46,7 @@ class CloudStackAdapter(SiteAdapter):
                                        translator_functions=translator_functions)
 
     async def deploy_resource(self, resource_attributes):
-        response = await self.cloud_stack_client.deployVirtualMachine(name=resource_attributes.dns_name,
+        response = await self.cloud_stack_client.deployVirtualMachine(name=resource_attributes.drone_uuid,
                                                                       **self.configuration.MachineTypeConfiguration[
                                                                           self._machine_type])
         logging.debug(f"{self.site_name} deployVirtualMachine returned {response}")

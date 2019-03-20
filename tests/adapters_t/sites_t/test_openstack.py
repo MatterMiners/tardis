@@ -68,8 +68,8 @@ class TestOpenStackAdapter(TestCase):
 
     def test_deploy_resource(self):
         self.assertEqual(run_async(self.openstack_adapter.deploy_resource,
-                                   resource_attributes=AttributeDict(dns_name='testsite-089123')),
-                         AttributeDict(dns_name='testsite-089123'))
+                                   resource_attributes=AttributeDict(drone_uuid='testsite-089123')),
+                         AttributeDict(drone_uuid='testsite-089123'))
 
         self.mock_openstack_api.return_value.init_api.assert_called_with(timeout=60)
 
@@ -88,7 +88,7 @@ class TestOpenStackAdapter(TestCase):
     def test_resource_status(self):
         self.assertEqual(run_async(self.openstack_adapter.resource_status,
                                    resource_attributes=AttributeDict(remote_resource_uuid='029312-1231-123123')),
-                         AttributeDict(dns_name='testsite-089123', remote_resource_uuid='029312-1231-123123',
+                         AttributeDict(drone_uuid='testsite-089123', remote_resource_uuid='029312-1231-123123',
                                        resource_status=ResourceStatus.Running))
         self.mock_openstack_api.return_value.init_api.assert_called_with(timeout=60)
         self.mock_openstack_api.return_value.servers.get.assert_called_with('029312-1231-123123')

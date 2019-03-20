@@ -30,10 +30,10 @@ class TestPoolFactory(TestCase):
         sqlite_registry.get_resources.return_value = [{'state': 'RequestState'}]
 
     def test_str_to_state(self):
-        test = [{'state': 'RequestState', 'dns_name': 'test-abc123'}]
+        test = [{'state': 'RequestState', 'drone_uuid': 'test-abc123'}]
         converted_test = str_to_state(test)
         self.assertTrue(converted_test[0]['state'], RequestState)
-        self.assertEqual(converted_test[0]['dns_name'], 'test-abc123')
+        self.assertEqual(converted_test[0]['drone_uuid'], 'test-abc123')
 
     def test_load_plugins(self):
         self.assertEqual(load_plugins(), {'SqliteRegistry': self.mock_sqliteregistry()})
