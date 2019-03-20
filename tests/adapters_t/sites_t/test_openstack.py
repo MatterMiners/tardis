@@ -87,22 +87,22 @@ class TestOpenStackAdapter(TestCase):
 
     def test_resource_status(self):
         self.assertEqual(run_async(self.openstack_adapter.resource_status,
-                                   resource_attributes=AttributeDict(resource_id='029312-1231-123123')),
-                         AttributeDict(dns_name='testsite-089123', resource_id='029312-1231-123123',
+                                   resource_attributes=AttributeDict(remote_resource_uuid='029312-1231-123123')),
+                         AttributeDict(dns_name='testsite-089123', remote_resource_uuid='029312-1231-123123',
                                        resource_status=ResourceStatus.Running))
         self.mock_openstack_api.return_value.init_api.assert_called_with(timeout=60)
         self.mock_openstack_api.return_value.servers.get.assert_called_with('029312-1231-123123')
 
     def test_stop_resource(self):
         run_async(self.openstack_adapter.stop_resource,
-                  resource_attributes=AttributeDict(resource_id='029312-1231-123123'))
+                  resource_attributes=AttributeDict(remote_resource_uuid='029312-1231-123123'))
         params = {'os-stop': None}
         self.mock_openstack_api.return_value.init_api.assert_called_with(timeout=60)
         self.mock_openstack_api.return_value.servers.run_action.assert_called_with('029312-1231-123123', **params)
 
     def test_terminate_resource(self):
         run_async(self.openstack_adapter.terminate_resource,
-                  resource_attributes=AttributeDict(resource_id='029312-1231-123123'))
+                  resource_attributes=AttributeDict(remote_resource_uuid='029312-1231-123123'))
 
         self.mock_openstack_api.return_value.init_api.assert_called_with(timeout=60)
         self.mock_openstack_api.return_value.servers.force_delete.assert_called_with('029312-1231-123123')

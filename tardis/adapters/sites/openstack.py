@@ -37,7 +37,7 @@ class OpenStackAdapter(SiteAdapter):
 
         self.nova = NovaClient(session=auth)
 
-        key_translator = StaticMapping(resource_id='id', dns_name='name', resource_status='status')
+        key_translator = StaticMapping(remote_resource_uuid='id', dns_name='name', resource_status='status')
 
         translator_functions = StaticMapping(created=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ"),
                                              updated=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ"),
@@ -72,20 +72,20 @@ class OpenStackAdapter(SiteAdapter):
 
     async def resource_status(self, resource_attributes):
         await self.nova.init_api(timeout=60)
-        response = await self.nova.servers.get(resource_attributes.resource_id)
+        response = await self.nova.servers.get(resource_attributes.remote_resource_uuid)
         logging.debug(f"{self.site_name} servers get returned {response}")
         return self.handle_response(response['server'])
 
     async def stop_resource(self, resource_attributes):
         await self.nova.init_api(timeout=60)
         params = {'os-stop': None}
-        response = await self.nova.servers.run_action(resource_attributes.resource_id, **params)
+        response = await self.nova.servers.run_action(resource_attributes.remote_resource_uuid, **params)
         logging.debug(f"{self.site_name} servers stop returned {response}")
         return response
 
     async def terminate_resource(self, resource_attributes):
         await self.nova.init_api(timeout=60)
-        response = await self.nova.servers.force_delete(resource_attributes.resource_id)
+        response = await self.nova.servers.force_delete(resource_attributes.remote_resource_uuid)
         logging.debug(f"{self.site_name} servers terminate returned {response}")
         return response
 
