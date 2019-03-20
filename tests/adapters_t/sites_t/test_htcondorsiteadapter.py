@@ -64,12 +64,13 @@ class TestHTCondorSiteAdapter(TestCase):
 
     @mock_executor_run_command(stdout=CONDOR_SUBMIT_OUTPUT)
     def test_deploy_resource(self):
-        response = run_async(self.adapter.deploy_resource, AttributeDict())
+        response = run_async(self.adapter.deploy_resource, AttributeDict(dns_name='test-123'))
         self.assertEqual(response.resource_id, 1351043)
         self.assertFalse(response.created - datetime.now() > timedelta(seconds=1))
         self.assertFalse(response.updated - datetime.now() > timedelta(seconds=1))
 
-        self.mock_executor.return_value.run_command.assert_called_with('condor_submit submit.jdl')
+        self.mock_executor.return_value.run_command.assert_called_with(
+            'condor_submit submit.jdl')
         self.mock_executor.reset()
 
     def test_machine_meta_data(self):
@@ -114,7 +115,7 @@ class TestHTCondorSiteAdapter(TestCase):
     @mock_executor_run_command(stdout="", raise_exception=CommandExecutionFailure(message="Failed", stdout="Failed",
                                                                                   stderr="Failed", exit_code=2))
     def test_resource_status_raise_future(self):
-        future_timestamp = datetime.now()+timedelta(minutes=1)
+        future_timestamp = datetime.now() + timedelta(minutes=1)
         with self.assertRaises(TardisResourceStatusUpdateFailed):
             with self.assertLogs(logging.getLogger(), logging.ERROR):
                 run_async(self.adapter.resource_status, AttributeDict(resource_id=1351043,
@@ -125,8 +126,8 @@ class TestHTCondorSiteAdapter(TestCase):
     def test_resource_status_raise_past(self):
         # Update interval is 10 minutes, so set last update back by 11 minutes in order to execute condor_q command and
         # creation date to 12 minutes ago
-        past_timestamp = datetime.now()-timedelta(minutes=12)
-        self.adapter._htcondor_queue._last_update = datetime.now()-timedelta(minutes=11)
+        past_timestamp = datetime.now() - timedelta(minutes=12)
+        self.adapter._htcondor_queue._last_update = datetime.now() - timedelta(minutes=11)
         with self.assertLogs(logging.getLogger(), logging.ERROR):
             response = run_async(self.adapter.resource_status, AttributeDict(resource_id=1351043,
                                                                              created=past_timestamp))

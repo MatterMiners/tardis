@@ -1,13 +1,12 @@
-from tardis.configuration.configuration import Configuration
-from tardis.exceptions.tardisexceptions import AsyncRunCommandFailure
-from tardis.interfaces.batchsystemadapter import BatchSystemAdapter
-from tardis.interfaces.batchsystemadapter import MachineStatus
-from tardis.utilities.utils import async_run_command
-from tardis.utilities.asynccachemap import AsyncCacheMap
+from ...configuration.configuration import Configuration
+from ...exceptions.tardisexceptions import AsyncRunCommandFailure
+from ...interfaces.batchsystemadapter import BatchSystemAdapter
+from ...interfaces.batchsystemadapter import MachineStatus
+from ...utilities.utils import async_run_command
+from ...utilities.utils import htcondor_csv_parser
+from ...utilities.asynccachemap import AsyncCacheMap
 
-from io import StringIO
 from shlex import quote
-import csv
 import logging
 
 
@@ -23,10 +22,10 @@ async def htcondor_status_updater():
     try:
         logging.debug("HTCondor status update is running.")
         condor_status = await async_run_command(cmd)
-        with StringIO(condor_status) as csv_input:
-            cvs_reader = csv.DictReader(csv_input, fieldnames=tuple(attributes.keys()), delimiter='\t')
-            for row in cvs_reader:
-                htcondor_status[row['Machine'].split('.')[0]] = row
+        for row in htcondor_csv_parser(htcondor_input=condor_status, fieldnames=tuple(attributes.keys()),
+                                       delimiter='\t', replacements=dict(undefined=None)):
+            htcondor_status[row['Machine'].split('.')[0]] = row
+
     except AsyncRunCommandFailure as ex:
         logging.error("condor_status could not be executed!")
         logging.error(str(ex))

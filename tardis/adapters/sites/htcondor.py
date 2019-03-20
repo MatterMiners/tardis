@@ -8,13 +8,12 @@ from ...utilities.asynccachemap import AsyncCacheMap
 from ...utilities.attributedict import AttributeDict
 from ...utilities.staticmapping import StaticMapping
 from ...utilities.executors.shellexecutor import ShellExecutor
+from ...utilities.utils import htcondor_csv_parser
 
 from contextlib import contextmanager
 from datetime import datetime
 from functools import partial
-from io import StringIO
 
-import csv
 import logging
 import re
 
@@ -31,10 +30,9 @@ async def htcondor_queue_updater(executor):
         logging.error(f"htcondor_queue_update failed: {cf}")
         raise
     else:
-        with StringIO(condor_queue.stdout) as csv_input:
-            cvs_reader = csv.DictReader(csv_input, fieldnames=tuple(attributes.keys()), delimiter='\t')
-            for row in cvs_reader:
-                htcondor_queue[int(row['ClusterId'])] = row
+        for row in htcondor_csv_parser(htcondor_input=condor_queue.stdout, fieldnames=tuple(attributes.keys()),
+                                       delimiter='\t', replacements=dict(undefined=None)):
+            htcondor_queue[int(row['ClusterId'])] = row
         return htcondor_queue
 
 
