@@ -25,14 +25,16 @@ class TestHTCondorAdapter(TestCase):
     def setUp(self):
         self.cpu_ratio = 0.9
         self.memory_ratio = 0.8
-        self.command = "condor_status -af:t Machine State Activity 'Real(TotalSlotCpus-Cpus)/TotalSlotCpus' " \
+        self.command = "condor_status -af:t Machine State Activity TardisDroneUuid " \
+                       "'Real(TotalSlotCpus-Cpus)/TotalSlotCpus' " \
                        "'Real(TotalSlotCpus-Cpus)/TotalSlotCpus' -constraint PartitionableSlot=?=True"
 
-        return_value = "\n".join([f"test\tUnclaimed\tIdle\t{self.cpu_ratio}\t{self.memory_ratio}",
-                                  f"test_drain\tDrained\tRetiring\t{self.cpu_ratio}\t{self.memory_ratio}",
-                                  f"test_drained\tDrained\tIdle\t{self.cpu_ratio}\t{self.memory_ratio}",
-                                  f"test_owner\tOwner\tIdle\t{self.cpu_ratio}\t{self.memory_ratio}",
-                                  "exoscale-26d361290f\tUnclaimed\tIdle\t0.125\t0.125"])
+        return_value = "\n".join([f"test\tUnclaimed\tIdle\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",
+                                  f"test_drain\tDrained\tRetiring\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",
+                                  f"test_drained\tDrained\tIdle\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",
+                                  f"test_owner\tOwner\tIdle\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",
+                                  f"test_uuid_plus\tUnclaimed\tIdle\ttest_uuid\t{self.cpu_ratio}\t{self.memory_ratio}",
+                                  "exoscale-26d361290f\tUnclaimed\tIdle\tundefined\t0.125\t0.125"])
         self.mock_async_run_command.return_value = async_return(return_value=return_value)
 
         config = self.mock_config.return_value
@@ -96,6 +98,10 @@ class TestHTCondorAdapter(TestCase):
         self.mock_async_run_command.reset_mock()
         self.assertEqual(run_async(self.htcondor_adapter.get_machine_status, drone_uuid='test_owner'),
                          MachineStatus.NotAvailable)
+        self.mock_async_run_command.reset_mock()
+
+        self.assertEqual(run_async(self.htcondor_adapter.get_machine_status, drone_uuid='test_uuid'),
+                         MachineStatus.Available)
         self.mock_async_run_command.reset_mock()
 
         self.mock_async_run_command.side_effect = AsyncRunCommandFailure(message="Test", error_code=123,

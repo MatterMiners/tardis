@@ -58,8 +58,7 @@ class HTCondorAdapter(SiteAdapter):
         # HTCondor uses digits to indicate job states and digit as variable names are not allowed in Python, therefore
         # the trick using an expanded htcondor_status_code dictionary is necessary. Somehow ugly.
         translator_functions = StaticMapping(ClusterId=lambda x: int(x),
-                                             JobStatus=lambda x,
-                                             translator=StaticMapping(**htcondor_status_codes):
+                                             JobStatus=lambda x, translator=StaticMapping(**htcondor_status_codes):
                                              translator[x])
 
         self.handle_response = partial(self.handle_response, key_translator=key_translator,
@@ -70,7 +69,8 @@ class HTCondorAdapter(SiteAdapter):
 
     async def deploy_resource(self, resource_attributes):
         submit_jdl = self.configuration.MachineTypeConfiguration[self._machine_type].jdl
-        submit_command = f"condor_submit {submit_jdl}"
+        submit_command = \
+            f'condor_submit -append "environment = TardisDroneUuid={resource_attributes.drone_uuid}" {submit_jdl}'
         response = await self._executor.run_command(submit_command)
         pattern = re.compile(r"^.*?(?P<Jobs>\d+).*?(?P<ClusterId>\d+).$", flags=re.MULTILINE)
         response = AttributeDict(pattern.search(response.stdout).groupdict())

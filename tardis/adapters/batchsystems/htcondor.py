@@ -11,7 +11,7 @@ import logging
 
 
 async def htcondor_status_updater():
-    attributes = dict(Machine='Machine', State='State', Activity='Activity')
+    attributes = dict(Machine='Machine', State='State', Activity='Activity', TardisDroneUuid='TardisDroneUuid')
     # Escape htcondor expressions and add them to attributes
     attributes.update({key: quote(value) for key, value in Configuration().BatchSystem.ratios.items()})
     attributes_string = " ".join(attributes.values())
@@ -24,7 +24,8 @@ async def htcondor_status_updater():
         condor_status = await async_run_command(cmd)
         for row in htcondor_csv_parser(htcondor_input=condor_status, fieldnames=tuple(attributes.keys()),
                                        delimiter='\t', replacements=dict(undefined=None)):
-            htcondor_status[row['Machine'].split('.')[0]] = row
+            status_key = row['TardisDroneUuid'] or row['Machine'].split('.')[0]
+            htcondor_status[status_key] = row
 
     except AsyncRunCommandFailure as ex:
         logging.error("condor_status could not be executed!")
