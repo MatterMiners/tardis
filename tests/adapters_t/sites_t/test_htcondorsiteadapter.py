@@ -64,13 +64,13 @@ class TestHTCondorSiteAdapter(TestCase):
 
     @mock_executor_run_command(stdout=CONDOR_SUBMIT_OUTPUT)
     def test_deploy_resource(self):
-        response = run_async(self.adapter.deploy_resource, AttributeDict(dns_name='test-123'))
+        response = run_async(self.adapter.deploy_resource, AttributeDict(drone_uuid='test-123'))
         self.assertEqual(response.resource_id, 1351043)
         self.assertFalse(response.created - datetime.now() > timedelta(seconds=1))
         self.assertFalse(response.updated - datetime.now() > timedelta(seconds=1))
 
         self.mock_executor.return_value.run_command.assert_called_with(
-            'condor_submit submit.jdl')
+            'condor_submit -append "environment = TardisDroneUuid=test-123" submit.jdl')
         self.mock_executor.reset()
 
     def test_machine_meta_data(self):
