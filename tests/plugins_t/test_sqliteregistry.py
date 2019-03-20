@@ -22,26 +22,26 @@ class TestSqliteRegistry(TestCase):
         cls.test_machine_type = 'MyGreatTestMachineType'
         cls.tables_in_db = {'MachineTypes', 'Resources', 'ResourceStates', 'Sites'}
         cls.test_resource_attributes = {'remote_resource_uuid': 'bf85022b-fdd6-42b1-932d-086c288d4755',
-                                        'dns_name': f'{cls.test_site_name}-07af52405e',
+                                        'drone_uuid': f'{cls.test_site_name}-07af52405e',
                                         'site_name': cls.test_site_name,
                                         'machine_type': cls.test_machine_type,
                                         'created': datetime.datetime(2018, 11, 16, 15, 49, 58),
                                         'updated': datetime.datetime(2018, 11, 16, 15, 49, 58)}
         cls.test_updated_resource_attributes = {'remote_resource_uuid': 'bf85022b-fdd6-42b1-932d-086c288d4755',
-                                                'dns_name': f'{cls.test_site_name}-07af52405e',
+                                                'drone_uuid': f'{cls.test_site_name}-07af52405e',
                                                 'site_name': cls.test_site_name,
                                                 'machine_type': cls.test_machine_type,
                                                 'created': datetime.datetime(2018, 11, 16, 15, 49, 58),
                                                 'updated': datetime.datetime(2018, 11, 16, 15, 50, 58)}
 
         cls.test_get_resources_result = {'remote_resource_uuid': cls.test_resource_attributes['remote_resource_uuid'],
-                                         'dns_name': cls.test_resource_attributes['dns_name'],
+                                         'drone_uuid': cls.test_resource_attributes['drone_uuid'],
                                          'state': str(BootingState()),
                                          'created': str(cls.test_resource_attributes['created']),
                                          'updated': str(cls.test_resource_attributes['updated'])}
 
         cls.test_notify_result = (cls.test_resource_attributes['remote_resource_uuid'],
-                                  cls.test_resource_attributes['dns_name'],
+                                  cls.test_resource_attributes['drone_uuid'],
                                   str(BootingState()),
                                   cls.test_resource_attributes['site_name'],
                                   cls.test_resource_attributes['machine_type'],
@@ -49,7 +49,7 @@ class TestSqliteRegistry(TestCase):
                                   str(cls.test_resource_attributes['updated']))
 
         cls.test_updated_notify_result = (cls.test_updated_resource_attributes['remote_resource_uuid'],
-                                          cls.test_updated_resource_attributes['dns_name'],
+                                          cls.test_updated_resource_attributes['drone_uuid'],
                                           str(IntegrateState()),
                                           cls.test_updated_resource_attributes['site_name'],
                                           cls.test_updated_resource_attributes['machine_type'],
@@ -127,8 +127,8 @@ class TestSqliteRegistry(TestCase):
         def fetch_row(db):
             with sqlite3.connect(db) as connection:
                 cursor = connection.cursor()
-                cursor.execute("""SELECT R.remote_resource_uuid, R.dns_name, RS.state, S.site_name, MT.machine_type, R.created,
-                R.updated
+                cursor.execute("""SELECT R.remote_resource_uuid, R.drone_uuid, RS.state, S.site_name, MT.machine_type, 
+                R.created, R.updated
                 FROM Resources R
                 JOIN ResourceStates RS ON R.state_id = RS.state_id
                 JOIN Sites S ON R.site_id = S.site_id

@@ -14,8 +14,8 @@ import logging
 
 
 async def batchsystem_machine_status(state_transition, drone, current_state):
-    machine_status = await drone.batch_system_agent.get_machine_status(dns_name=drone.resource_attributes[
-        'dns_name'])
+    machine_status = await drone.batch_system_agent.get_machine_status(
+        drone_uuid=drone.resource_attributes['drone_uuid'])
     return state_transition[machine_status]()
 
 
@@ -66,7 +66,7 @@ class IntegrateState(State):
     @classmethod
     async def run(cls, drone):
         logging.info(f"Drone {drone} in IntegrateState")
-        await drone.batch_system_agent.integrate_machine(dns_name=drone.resource_attributes['dns_name'])
+        await drone.batch_system_agent.integrate_machine(drone_uuid=drone.resource_attributes['drone_uuid'])
         await drone.set_state(IntegratingState())  # static state transition
 
 
@@ -110,10 +110,10 @@ class AvailableState(State):
         new_state = await cls.run_processing_pipeline(drone)
 
         if isinstance(new_state, AvailableState):
-            drone._allocation = await drone.batch_system_agent.get_allocation(dns_name=drone.resource_attributes[
-                'dns_name'])
-            drone._utilisation = await drone.batch_system_agent.get_utilization(dns_name=drone.resource_attributes[
-                'dns_name'])
+            drone._allocation = await drone.batch_system_agent.get_allocation(
+                drone_uuid=drone.resource_attributes['drone_uuid'])
+            drone._utilisation = await drone.batch_system_agent.get_utilization(
+                drone_uuid=drone.resource_attributes['drone_uuid'])
             drone._supply = drone.maximum_demand
 
         await drone.set_state(new_state)
@@ -123,8 +123,7 @@ class DrainState(State):
     @classmethod
     async def run(cls, drone):
         logging.info(f"Drone {drone} in DrainState")
-        await drone.batch_system_agent.drain_machine(dns_name=drone.resource_attributes[
-            'dns_name'])
+        await drone.batch_system_agent.drain_machine(drone_uuid=drone.resource_attributes['drone_uuid'])
         await asyncio.sleep(0.5)
         await drone.set_state(DrainingState())  # static state transition
 
@@ -149,7 +148,7 @@ class DisintegrateState(State):
     @classmethod
     async def run(cls, drone):
         logging.info(f"Drone {drone} in DisintegrateState")
-        await drone.batch_system_agent.disintegrate_machine(dns_name=drone.resource_attributes['dns_name'])
+        await drone.batch_system_agent.disintegrate_machine(drone_uuid=drone.resource_attributes['drone_uuid'])
         await drone.set_state(ShutDownState())  # static state transition
 
 

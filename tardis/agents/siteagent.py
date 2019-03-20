@@ -11,8 +11,8 @@ class SiteAgent(SiteAdapter):
             response = await self._site_adapter.deploy_resource(resource_attributes=resource_attributes)
             return convert_to_attribute_dict(response)
 
-    def dns_name(self, unique_id):
-        return self._site_adapter.dns_name(unique_id=unique_id)
+    def drone_uuid(self, uuid):
+        return self._site_adapter.drone_uuid(uuid=uuid)
 
     def handle_exceptions(self):
         return self._site_adapter.handle_exceptions()

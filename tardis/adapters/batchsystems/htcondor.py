@@ -42,18 +42,18 @@ class HTCondorAdapter(BatchSystemAdapter):
                                               max_age=config.BatchSystem.max_age * 60)
         self.ratios = config.BatchSystem.ratios
 
-    async def disintegrate_machine(self, dns_name):
+    async def disintegrate_machine(self, drone_uuid):
         """
         HTCondor does not require any specific disintegration procedure. Other batchsystems probably do.
-        :param dns_name: DNS name of the worker node
+        :param drone_uuid: Uuid of the worker node, for some sites corresponding to the host name of drone
         :return: None
         """
         return None
 
-    async def drain_machine(self, dns_name):
+    async def drain_machine(self, drone_uuid):
         await self._htcondor_status.update_status()
         try:
-            machine = self._htcondor_status[dns_name]['Machine']
+            machine = self._htcondor_status[drone_uuid]['Machine']
         except KeyError:
             return
         try:
@@ -63,31 +63,31 @@ class HTCondorAdapter(BatchSystemAdapter):
             if ex.error_code == 1:
                 # exit code 1: HTCondor can't connect to StartD of Drone
                 # https://github.com/htcondor/htcondor/blob/master/src/condor_tools/drain.cpp
-                logging.debug("Drone %s is not in HTCondor anymore." % dns_name)
+                logging.debug("Drone %s is not in HTCondor anymore." % drone_uuid)
                 return
             raise ex
 
-    async def integrate_machine(self, dns_name):
+    async def integrate_machine(self, drone_uuid):
         """
         HTCondor does not require any specific integration procedure. Other batchsystems probably do.
-        :param dns_name: DNS name of the worker node
+        :param drone_uuid: DNS name of the worker node
         :return: None
         """
         return None
 
-    async def get_resource_ratios(self, dns_name):
+    async def get_resource_ratios(self, drone_uuid):
         await self._htcondor_status.update_status()
         try:
-            htcondor_status = self._htcondor_status[dns_name]
+            htcondor_status = self._htcondor_status[drone_uuid]
         except KeyError:
             return {}
         else:
             return (float(value) for key, value in htcondor_status.items() if key in self.ratios.keys())
 
-    async def get_allocation(self, dns_name):
-        return max(await self.get_resource_ratios(dns_name), default=0.)
+    async def get_allocation(self, drone_uuid):
+        return max(await self.get_resource_ratios(drone_uuid), default=0.)
 
-    async def get_machine_status(self, dns_name=None):
+    async def get_machine_status(self, drone_uuid):
         status_mapping = {('Unclaimed', 'Idle'): MachineStatus.Available,
                           ('Drained', 'Retiring'): MachineStatus.Draining,
                           ('Drained', 'Idle'): MachineStatus.Drained,
@@ -95,11 +95,11 @@ class HTCondorAdapter(BatchSystemAdapter):
 
         await self._htcondor_status.update_status()
         try:
-            machine_status = self._htcondor_status[dns_name]
+            machine_status = self._htcondor_status[drone_uuid]
         except KeyError:
             return MachineStatus.NotAvailable
         else:
             return status_mapping.get((machine_status['State'], machine_status['Activity']), MachineStatus.NotAvailable)
 
-    async def get_utilization(self, dns_name):
-        return min(await self.get_resource_ratios(dns_name), default=0.)
+    async def get_utilization(self, drone_uuid):
+        return min(await self.get_resource_ratios(drone_uuid), default=0.)

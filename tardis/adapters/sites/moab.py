@@ -52,7 +52,7 @@ class MoabAdapter(SiteAdapter):
 
         remote_resource_uuid = int(result.stdout)
         resource_attributes.update(remote_resource_uuid=remote_resource_uuid, created=datetime.now(),
-                                   updated=datetime.now(), dns_name=self.dns_name(remote_resource_uuid),
+                                   updated=datetime.now(), drone_uuid=self.drone_uuid(remote_resource_uuid),
                                    resource_status=ResourceStatus.Booting)
         return resource_attributes
 

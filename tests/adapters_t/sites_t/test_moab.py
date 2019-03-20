@@ -173,7 +173,7 @@ class TestMoabAdapter(TestCase):
                              resource_status=ResourceStatus.Booting,
                              created=datetime.strptime("Wed Jan 23 2019 15:01:47", '%a %b %d %Y %H:%M:%S'),
                              updated=datetime.strptime("Wed Jan 23 2019 15:02:17", '%a %b %d %Y %H:%M:%S'),
-                             dns_name='testsite-4761849')
+                             drone_uuid='testsite-4761849')
 
     @mock_executor_run_command(TEST_DEPLOY_RESOURCE_RESPONSE)
     def test_deploy_resource(self):

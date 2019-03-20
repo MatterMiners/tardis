@@ -18,10 +18,10 @@ class TestSiteAgent(TestCase):
         run_async(self.site_agent.deploy_resource, resource_attributes="test")
         self.site_adapter.deploy_resource.assert_called_with(resource_attributes='test')
 
-    def test_dns_name(self):
-        self.site_adapter.dns_name.return_value = None
-        self.site_agent.dns_name(unique_id="test")
-        self.site_adapter.dns_name.assert_called_with(unique_id='test')
+    def test_drone_uuid(self):
+        self.site_adapter.drone_uuid.return_value = None
+        self.site_agent.drone_uuid(uuid="test")
+        self.site_adapter.drone_uuid.assert_called_with(uuid='test')
 
     def test_handle_exceptions(self):
         self.site_adapter.handle_exceptions.return_value = None
