@@ -32,6 +32,7 @@ async def slurm_status_updater(executor):
     with StringIO(slurm_status.stdout) as csv_input:
         cvs_reader = csv.DictReader(csv_input, fieldnames=tuple(attributes.keys()), delimiter='|')
         for row in cvs_reader:
+            row['State'] = row["State"].split(" ", 1)[0]
             slurm_resource_status[row['JobId']] = row
     logging.debug("Slurm status update finished.")
     return slurm_resource_status
@@ -52,21 +53,21 @@ class SlurmAdapter(SiteAdapter):
         key_translator = StaticMapping(resource_id='JobId', resource_status='State')
 
         # see job state codes at https://slurm.schedmd.com/squeue.html
-        translator_functions = StaticMapping(State=lambda x, translator=StaticMapping(BOOT_FAIL=ResourceStatus.Error,
-                                                                                      CANCELLED=ResourceStatus.Error,
-                                                                                      COMPLETED=ResourceStatus.Stopped,
-                                                                                      DEADLINE=ResourceStatus.Stopped,
-                                                                                      FAILED=ResourceStatus.Error,
-                                                                                      NODE_FAIL=ResourceStatus.Error,
-                                                                                      OUT_OF_MEMORY=
-                                                                                      ResourceStatus.Error,
-                                                                                      PENDING=ResourceStatus.Booting,
-                                                                                      RUNNING=ResourceStatus.Running,
-                                                                                      REQUEUED=ResourceStatus.Error,
-                                                                                      RESIZING=ResourceStatus.Error,
-                                                                                      REVOKED=ResourceStatus.Error,
-                                                                                      SUSPENDED=ResourceStatus.Running,
-                                                                                      TIMEOUT=ResourceStatus.Stopped):
+        translator_functions = StaticMapping(State=lambda x,
+                                             translator=StaticMapping(BOOT_FAIL=ResourceStatus.Error,
+                                                                      CANCELLED=ResourceStatus.Stopped,
+                                                                      COMPLETED=ResourceStatus.Stopped,
+                                                                      DEADLINE=ResourceStatus.Stopped,
+                                                                      FAILED=ResourceStatus.Error,
+                                                                      NODE_FAIL=ResourceStatus.Error,
+                                                                      OUT_OF_MEMORY=ResourceStatus.Error,
+                                                                      PENDING=ResourceStatus.Booting,
+                                                                      RUNNING=ResourceStatus.Running,
+                                                                      REQUEUED=ResourceStatus.Error,
+                                                                      RESIZING=ResourceStatus.Error,
+                                                                      REVOKED=ResourceStatus.Error,
+                                                                      SUSPENDED=ResourceStatus.Running,
+                                                                      TIMEOUT=ResourceStatus.Stopped):
                                              translator[x],
                                              JobId=lambda x: int(x))
 
