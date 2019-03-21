@@ -80,7 +80,6 @@ class TestSlurmAdapter(TestCase):
         self.test_site_config.StatusUpdate = 1
         self.test_site_config.MachineTypeConfiguration = self.machine_type_configuration
         self.test_site_config.executor = self.mock_executor.return_value
-        self.test_site_config.UpdateDnsName = False
 
         self.slurm_adapter = SlurmAdapter(machine_type='test2large', site_name='TestSite')
 
@@ -99,11 +98,11 @@ class TestSlurmAdapter(TestCase):
     def resource_attributes(self):
         return AttributeDict(machine_type='test2large',
                              site_name='TestSite',
-                             resource_id=1390065,
+                             remote_resource_uuid=1390065,
                              resource_status=ResourceStatus.Booting,
                              created=datetime.strptime("Wed Jan 23 2019 15:01:47", '%a %b %d %Y %H:%M:%S'),
                              updated=datetime.strptime("Wed Jan 23 2019 15:02:17", '%a %b %d %Y %H:%M:%S'),
-                             dns_name='testsite-1390065')
+                             drone_uuid='testsite-1390065')
 
     @mock_executor_run_command(TEST_DEPLOY_RESOURCE_RESPONSE)
     def test_deploy_resource(self):
@@ -148,17 +147,7 @@ class TestSlurmAdapter(TestCase):
         return_resource_attributes = run_async(self.slurm_adapter.resource_status,
                                                resource_attributes=self.resource_attributes)
         self.assertEqual(return_resource_attributes["resource_status"], ResourceStatus.Running)
-        self.assertEqual(return_resource_attributes["dns_name"], 'testsite-1390065')
-
-    @mock_executor_run_command(TEST_RESOURCE_STATUS_RESPONSE_RUNNING)
-    def test_resource_status_and_dns_update(self):
-        self.test_site_config.UpdateDnsName = True
-        self.assertEqual(self.resource_attributes["resource_status"], ResourceStatus.Booting)
-        return_resource_attributes = run_async(self.slurm_adapter.resource_status,
-                                               resource_attributes=self.resource_attributes)
-        self.assertEqual(return_resource_attributes["resource_status"], ResourceStatus.Running)
-        self.assertEqual(return_resource_attributes["dns_name"], 'fh2n1552')
-
+        self.assertEqual(return_resource_attributes["drone_uuid"], 'testsite-1390065')
 
     @mock_executor_run_command(stdout="", stderr="", exit_code=0)
     def test_stop_resource(self):
