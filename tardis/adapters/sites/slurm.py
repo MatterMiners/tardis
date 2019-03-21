@@ -50,7 +50,7 @@ class SlurmAdapter(SiteAdapter):
         self._slurm_status = AsyncCacheMap(update_coroutine=partial(slurm_status_updater, self._executor),
                                            max_age=self.configuration.StatusUpdate * 60)
 
-        key_translator = StaticMapping(resource_id='JobId', resource_status='State')
+        key_translator = StaticMapping(remote_resource_uuid='JobId', resource_status='State')
 
         # see job state codes at https://slurm.schedmd.com/squeue.html
         translator_functions = StaticMapping(State=lambda x,
@@ -83,9 +83,10 @@ class SlurmAdapter(SiteAdapter):
         result = await self._executor.run_command(request_command)
         logging.debug(f"{self.site_name} servers create returned {result}")
         pattern = re.compile(r'^Submitted batch job (\d*)', flags=re.MULTILINE)
-        resource_id = int(pattern.findall(result.stdout)[0])
-        resource_attributes.update(resource_id=resource_id, created=datetime.now(), updated=datetime.now(),
-                                   dns_name=self.dns_name(resource_id), resource_status=ResourceStatus.Booting)
+        remote_resource_uuid = int(pattern.findall(result.stdout)[0])
+        resource_attributes.update(remote_resource_uuid=remote_resource_uuid, created=datetime.now(),
+                                   updated=datetime.now(), drone_uuid=self.drone_uuid(remote_resource_uuid),
+                                   resource_status=ResourceStatus.Booting)
         return resource_attributes
 
     @property
@@ -102,18 +103,16 @@ class SlurmAdapter(SiteAdapter):
 
     async def resource_status(self, resource_attributes):
         await self._slurm_status.update_status()
-        resource_status = self._slurm_status[str(resource_attributes.resource_id)]
+        resource_status = self._slurm_status[str(resource_attributes.remote_resource_uuid)]
         logging.debug(f'{self.site_name} has status {resource_status}.')
         resource_attributes.update(updated=datetime.now())
-        if self.configuration.UpdateDnsName and resource_status['Host'] != 'None assigned':
-            resource_attributes.update(dns_name=resource_status['Host'])
         return convert_to_attribute_dict({**resource_attributes, **self.handle_response(resource_status)})
 
     async def terminate_resource(self, resource_attributes):
-        request_command = f"scancel {resource_attributes.resource_id}"
+        request_command = f"scancel {resource_attributes.remote_resource_uuid}"
         await self._executor.run_command(request_command)
         resource_attributes.update(resource_status=ResourceStatus.Stopped, updated=datetime.now())
-        return self.handle_response({'JobId': resource_attributes.resource_id}, **resource_attributes)
+        return self.handle_response({'JobId': resource_attributes.remote_resource_uuid}, **resource_attributes)
 
     async def stop_resource(self, resource_attributes):
         logging.debug('Slurm jobs cannot be stopped gracefully. Terminating instead.')
