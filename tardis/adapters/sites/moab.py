@@ -8,15 +8,38 @@ from ...interfaces.siteadapter import SiteAdapter
 from ...utilities.staticmapping import StaticMapping
 from ...utilities.attributedict import convert_to_attribute_dict
 from ...utilities.executors.shellexecutor import ShellExecutor
+from tardis.utilities.asynccachemap import AsyncCacheMap
 
 from asyncio import TimeoutError
 from contextlib import contextmanager
 from functools import partial
 from datetime import datetime
+from collections import OrderedDict
 
 import asyncssh
 import logging
 import re
+from xml.dom import minidom
+
+
+async def moab_status_updater(executor):
+    cmd = "showq --xml $(whoami) && showq -c --xml $(whoami)"
+    logging.debug("Moab status update is running.")
+    response = await executor.run_command(cmd)
+    # combine two XML outputs to one
+    xml_output = minidom.parseString(response["stdout"].replace('\n', '').replace("</Data><Data>", ""))
+    xml_jobs_list = xml_output.getElementsByTagName('queue')
+    # parse XML output
+    moab_resource_status = {}
+    for queue in xml_jobs_list:
+        queue_jobs_list = queue.getElementsByTagName('job')
+        for line in queue_jobs_list:
+            moab_resource_status[line.attributes['JobID'].value] = OrderedDict([('JobID',
+                                                                                 line.attributes['JobID'].value),
+                                                                                ('State',
+                                                                                 line.attributes['State'].value)])
+    logging.debug("Moab status update completed")
+    return moab_resource_status
 
 
 class MoabAdapter(SiteAdapter):
@@ -28,7 +51,9 @@ class MoabAdapter(SiteAdapter):
 
         self._executor = getattr(self.configuration, 'executor', ShellExecutor())
 
-        key_translator = StaticMapping(remote_resource_uuid='SystemJID', resource_status='State')
+        self._moab_status = AsyncCacheMap(update_coroutine=partial(moab_status_updater, self._executor),
+                                          max_age=self.configuration.StatusUpdate * 60)
+        key_translator = StaticMapping(remote_resource_uuid='JobID', resource_status='State')
 
         translator_functions = StaticMapping(State=lambda x, translator=StaticMapping(Idle=ResourceStatus.Booting,
                                                                                       Running=ResourceStatus.Running,
@@ -36,7 +61,7 @@ class MoabAdapter(SiteAdapter):
                                                                                       Canceling=ResourceStatus.Error,
                                                                                       Vacated=ResourceStatus.Error):
                                              translator[x],
-                                             SystemJID=lambda x: int(x))
+                                             JobID=lambda x: int(x))
 
         self.handle_response = partial(self.handle_response, key_translator=key_translator,
                                        translator_functions=translator_functions)
@@ -79,14 +104,11 @@ class MoabAdapter(SiteAdapter):
         return remote_resource_uuid
 
     async def resource_status(self, resource_attributes):
-        status_command = f'checkjob {resource_attributes.remote_resource_uuid}'
-        response = await self._executor.run_command(status_command)
-        pattern = re.compile(r'^(.*):\s+(.*)$', flags=re.MULTILINE)
-        response = dict(pattern.findall(response.stdout))
-        response["State"] = response["State"].rstrip()
-        logging.debug(f'{self.site_name} has status {response}.')
+        await self._moab_status.update_status()
+        resource_status = self._moab_status[str(resource_attributes.remote_resource_uuid)]
+        logging.debug(f'{self.site_name} has status {resource_status}.')
         resource_attributes.update(updated=datetime.now())
-        return convert_to_attribute_dict({**resource_attributes, **self.handle_response(response)})
+        return convert_to_attribute_dict({**resource_attributes, **self.handle_response(resource_status)})
 
     async def terminate_resource(self, resource_attributes):
         request_command = f"canceljob {resource_attributes.remote_resource_uuid}"
