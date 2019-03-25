@@ -19,78 +19,43 @@ import asyncssh
 __all__ = ['TestMoabAdapter']
 
 TEST_RESOURCE_STATUS_RESPONSE = '''
-job 4761849
-
-AName: hostname
-State: Idle
-Creds:  user:abc1234  group:abcdef  account:ab12cd34
-WallTime:   00:00:00 of 2:00:00:00
-SubmitTime: Wed Jan 23 15:01:47
-  (Time Queued  Total: 00:00:26  Eligible: 00:00:26)
-
-TemplateSets:  DEFAULT
-Total Requested Tasks: 20
-
-Req[0]  TaskCount: 20  Partition: ALL
-Dedicated Resources Per Task: PROCS: 1  MEM: 6144M
-
-
-SystemID:   Moab
-SystemJID:  4761849
-Notification Events: JobFail
-
-IWD:            $HOME
-SubmitDir:      $HOME
-Executable:     /usr/bin/hostname
-
-BypassCount:    1
-Flags:          FSVIOLATION,GLOBALQUEUE,JOINSTDERRTOSTDOUT
-Attr:           FSVIOLATION
-StartPriority:  -20731
-IterationJobRank: 1034
-PE:             21.28
+<Data>
+ <Object>queue</Object>
+ <cluster LocalActiveNodes="68" LocalAllocProcs="1360" LocalConfigNodes="1037" LocalIdleNodes="7" LocalIdleProcs="7192" LocalUpNodes="922" LocalUpProcs="18432" RemoteActiveNodes="0" RemoteAllocProcs="0" RemoteConfigNodes="0" RemoteIdleNodes="0" RemoteIdleProcs="0" RemoteUpNodes="0" RemoteUpProcs="0" time="1553503935"/>
+ <queue count="68" option="active">
+  <job AWDuration="140875" Account="bw16g013" DRMJID="5096381.mg1.nemo.privat" EEDuration="44150" GJID="5096381" Group="ka_etp" JobID="5096381" JobName="startVM.py" MasterHost="n4545.nemo.privat" PAL="torque" ReqAWDuration="172800" ReqProcs="20" RsvStartTime="1553362801" RunPriority="-43322" StartPriority="-43322" StartTime="1553362801" StatPSDed="2813667.000000" StatPSUtl="140642.124800" State="Running" SubmissionTime="1553318572" SuspendDuration="0" User="ka_qb1555"/>
+ </queue>
+ <queue count="20" option="eligible">
+  <job Account="bw16g013" EEDuration="72423" GJID="4761849" Group="ka_etp" JobID="4761849" JobName="startVM.py" ReqAWDuration="172800" ReqProcs="20" StartPriority="-38601" StartTime="0" State="Idle" SubmissionTime="1553431244" SuspendDuration="0" User="ka_qb1555"/>
+ </queue>
+ <queue count="0" option="blocked"/>
+</Data><Data>
+ <Object>queue</Object>
+ <cluster LocalActiveNodes="0" LocalAllocProcs="0" LocalConfigNodes="1037" LocalIdleNodes="1" LocalIdleProcs="5895" LocalUpNodes="922" LocalUpProcs="18432" RemoteActiveNodes="0" RemoteAllocProcs="0" RemoteConfigNodes="0" RemoteIdleNodes="0" RemoteIdleProcs="0" RemoteUpNodes="0" RemoteUpProcs="0" time="1553521152"/>
+ <queue count="1" option="completed" purgetime="86400">
+  <job AWDuration="169164" Account="bw16g013" Class="compute" CompletionCode="0" CompletionTime="1553436477" DRMJID="5087810.mg1.nemo.privat" EEDuration="1457" GJID="5087810" Group="ka_etp" JobID="5087810" JobName="startVM.py" MasterHost="n4250.nemo.privat" PAL="torque" ReqAWDuration="172800" ReqNodes="1" ReqProcs="20" StartTime="1553267313" StatPSDed="3383282.000000" StatPSUtl="168401.142000" State="Completed" SubmissionTime="1553265273" SuspendDuration="0" User="ka_qb1555"/>
+ </queue>
+</Data>
 
 '''
 
 TEST_RESOURCE_STATUS_RESPONSE_RUNNING = '''
-job 4761849
-
-AName: hostname
-State: Running 
-Creds:  user:abc1234  group:abcdef  account:ab12cd34
-WallTime:   9:23:52 of 2:00:00:00
-SubmitTime: Wed Jan 23 15:01:47
-  (Time Queued  Total: 00:31:00  Eligible: 00:00:26)
-
-StartTime: Wed Jan 23 15:31:47
-TemplateSets:  DEFAULT
-Total Requested Tasks: 20
-
-Req[0]  TaskCount: 20  Partition: ALL
-Dedicated Resources Per Task: PROCS: 1  MEM: 6144M
-NodeSet=FIRSTOF:FEATURE:[NONE]
-
-Allocated Nodes:
-[n4310.nemo.privat:20]
-Applied Nodeset: OPA431STOF:FEATURE:[NONE]
-
-
-SystemID:   Moab
-SystemJID:  4761849
-Notification Events: JobFail
-
-IWD:            $HOME
-SubmitDir:      $HOME
-Executable:     /usr/bin/hostname
-
-StartCount:     1
-BypassCount:    1
-Flags:          FSVIOLATION,GLOBALQUEUE,JOINSTDERRTOSTDOUT
-Attr:           FSVIOLATION
-StartPriority:  -20731
-IterationJobRank: 1034
-PE:             21.28
-Reservation '4932931' (-9:25:13 -> 1:14:34:47  Duration: 2:00:00:00
+<Data>
+ <Object>queue</Object>
+ <cluster LocalActiveNodes="2" LocalAllocProcs="40" LocalConfigNodes="1038" LocalIdleNodes="5" LocalIdleProcs="555" LocalUpNodes="917" LocalUpProcs="18320" RemoteActiveNodes="0" RemoteAllocProcs="0" RemoteConfigNodes="0" RemoteIdleNodes="0" RemoteIdleProcs="0" RemoteUpNodes="0" RemoteUpProcs="0" time="1551959144"/>
+ <queue count="2" option="active">
+  <job AWDuration="80173" Account="bw16g013" DRMJID="4986904.mg1.nemo.privat" EEDuration="7575" GJID="4761849" Group="ka_etp" JobID="4761849" JobName="startVM.py" MasterHost="n3559.nemo.privat" PAL="torque" ReqAWDuration="172800" ReqProcs="20" RsvStartTime="1551878897" RunPriority="-43174" StartPriority="-43174" StartTime="1551878897" StatPSDed="1603250.600000" StatPSUtl="80162.530000" State="Running" SubmissionTime="1551871257" SuspendDuration="0" User="ka_qb1555"/>
+  <job AWDuration="35418" Account="bw16g013" DRMJID="4989355.mg1.nemo.privat" EEDuration="1831" GJID="4761850" Group="ka_etp" JobID="4761850" JobName="startVM.py" MasterHost="n4131.nemo.privat" PAL="torque" ReqAWDuration="172800" ReqProcs="20" RsvStartTime="1551923652" RunPriority="-44134" StartPriority="-44134" StartTime="1551923652" StatPSDed="708148.200000" StatPSUtl="35407.410000" State="Running" SubmissionTime="1551921753" SuspendDuration="0" User="ka_qb1555"/>
+ </queue>
+ <queue count="0" option="eligible"/>
+ <queue count="0" option="blocked"/>
+</Data><Data>
+ <Object>queue</Object>
+ <cluster LocalActiveNodes="0" LocalAllocProcs="0" LocalConfigNodes="1037" LocalIdleNodes="1" LocalIdleProcs="5895" LocalUpNodes="922" LocalUpProcs="18432" RemoteActiveNodes="0" RemoteAllocProcs="0" RemoteConfigNodes="0" RemoteIdleNodes="0" RemoteIdleProcs="0" RemoteUpNodes="0" RemoteUpProcs="0" time="1553521152"/>
+ <queue count="1" option="completed" purgetime="86400">
+  <job AWDuration="169164" Account="bw16g013" Class="compute" CompletionCode="0" CompletionTime="1553436477" DRMJID="5087810.mg1.nemo.privat" EEDuration="1457" GJID="5087810" Group="ka_etp" JobID="5087810" JobName="startVM.py" MasterHost="n4250.nemo.privat" PAL="torque" ReqAWDuration="172800" ReqNodes="1" ReqProcs="20" StartTime="1553267313" StatPSDed="3383282.000000" StatPSUtl="168401.142000" State="Completed" SubmissionTime="1553265273" SuspendDuration="0" User="ka_qb1555"/>
+ </queue>
+</Data>
 
 '''
 
@@ -146,11 +111,12 @@ class TestMoabAdapter(TestCase):
 
     def setUp(self):
         config = self.mock_config.return_value
-        test_site_config = config.TestSite
-        test_site_config.MachineMetaData = self.machine_meta_data
-        test_site_config.StartupCommand = 'startVM.py'
-        test_site_config.MachineTypeConfiguration = self.machine_type_configuration
-        test_site_config.executor = self.mock_executor.return_value
+        self.test_site_config = config.TestSite
+        self.test_site_config.MachineMetaData = self.machine_meta_data
+        self.test_site_config.StartupCommand = 'startVM.py'
+        self.test_site_config.StatusUpdate = 1
+        self.test_site_config.MachineTypeConfiguration = self.machine_type_configuration
+        self.test_site_config.executor = self.mock_executor.return_value
 
         self.moab_adapter = MoabAdapter(machine_type='test2large', site_name='TestSite')
 
