@@ -23,7 +23,7 @@ from xml.dom import minidom
 
 
 async def moab_status_updater(executor):
-    cmd = "showq --xml $(whoami) && showq -c --xml $(whoami)"
+    cmd = "showq --xml -w user=$(whoami) && showq -c --xml -w user=$(whoami)"
     logging.debug("Moab status update is running.")
     response = await executor.run_command(cmd)
     # combine two XML outputs to one
