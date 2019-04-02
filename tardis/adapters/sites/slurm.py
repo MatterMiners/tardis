@@ -8,7 +8,7 @@ from ...interfaces.siteadapter import SiteAdapter
 from ...utilities.staticmapping import StaticMapping
 from ...utilities.attributedict import convert_to_attribute_dict
 from ...utilities.executors.shellexecutor import ShellExecutor
-from tardis.utilities.asynccachemap import AsyncCacheMap
+from ...utilities.asynccachemap import AsyncCacheMap
 
 from asyncio import TimeoutError
 from contextlib import contextmanager
@@ -127,5 +127,7 @@ class SlurmAdapter(SiteAdapter):
             raise TardisResourceStatusUpdateFailed
         except TimeoutError as te:
             raise TardisTimeout from te
+        except KeyError as ke:
+            raise TardisResourceStatusUpdateFailed
         except Exception as ex:
             raise TardisError from ex
