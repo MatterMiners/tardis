@@ -5,8 +5,8 @@ from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from tardis.exceptions.executorexceptions import CommandExecutionFailure
 from tardis.interfaces.siteadapter import ResourceStatus
 from tardis.utilities.attributedict import AttributeDict
-from tests.utilities.utilities import async_return
-from tests.utilities.utilities import run_async
+from ...utilities.utilities import async_return
+from ...utilities.utilities import run_async
 
 from unittest import TestCase
 from unittest.mock import patch
@@ -14,7 +14,6 @@ from unittest.mock import patch
 from datetime import datetime, timedelta
 
 import asyncio
-import asyncssh
 
 __all__ = ['TestSlurmAdapter']
 
@@ -194,6 +193,7 @@ class TestSlurmAdapter(TestCase):
         matrix = [(asyncio.TimeoutError(), TardisTimeout),
                   (CommandExecutionFailure(message="Test", exit_code=255, stdout="Test", stderr="Test")
                    , TardisResourceStatusUpdateFailed),
+                  (KeyError, TardisResourceStatusUpdateFailed),
                   (Exception, TardisError)]
 
         for to_raise, to_catch in matrix:

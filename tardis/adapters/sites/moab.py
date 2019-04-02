@@ -8,13 +8,12 @@ from ...interfaces.siteadapter import SiteAdapter
 from ...utilities.staticmapping import StaticMapping
 from ...utilities.attributedict import convert_to_attribute_dict
 from ...utilities.executors.shellexecutor import ShellExecutor
-from tardis.utilities.asynccachemap import AsyncCacheMap
+from ...utilities.asynccachemap import AsyncCacheMap
 
 from asyncio import TimeoutError
 from contextlib import contextmanager
 from functools import partial
 from datetime import datetime
-from collections import OrderedDict
 
 import asyncssh
 import logging
@@ -34,10 +33,8 @@ async def moab_status_updater(executor):
     for queue in xml_jobs_list:
         queue_jobs_list = queue.getElementsByTagName('job')
         for line in queue_jobs_list:
-            moab_resource_status[line.attributes['JobID'].value] = OrderedDict([('JobID',
-                                                                                 line.attributes['JobID'].value),
-                                                                                ('State',
-                                                                                 line.attributes['State'].value)])
+            moab_resource_status[line.attributes['JobID'].value] = {'JobID' : line.attributes['JobID'].value,
+                                                                    'State' :line.attributes['State'].value}
     logging.debug("Moab status update completed")
     return moab_resource_status
 
