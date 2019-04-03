@@ -32,7 +32,7 @@ async def slurm_status_updater(executor):
     with StringIO(slurm_status.stdout) as csv_input:
         cvs_reader = csv.DictReader(csv_input, fieldnames=tuple(attributes.keys()), delimiter='|')
         for row in cvs_reader:
-            row['State'] = row["State"].split(" ", 1)[0]
+            row['State'] = row["State"].strip()
             slurm_resource_status[row['JobId']] = row
     logging.debug("Slurm status update finished.")
     return slurm_resource_status
@@ -103,7 +103,15 @@ class SlurmAdapter(SiteAdapter):
 
     async def resource_status(self, resource_attributes):
         await self._slurm_status.update_status()
-        resource_status = self._slurm_status[str(resource_attributes.remote_resource_uuid)]
+        # In case the created timestamp is after last update timestamp of the asynccachemap,
+        # no decision about the current state can be given, since map is updated asynchronously.
+        try:
+            resource_status = self._slurm_status[str(resource_attributes.remote_resource_uuid)]
+        except KeyError:
+            if (self._slurm_status._last_update - resource_attributes.created) < 0:
+                raise TardisResourceStatusUpdateFailed
+            else:
+                resource_status = {"JobID": resource_attributes.remote_resource_uuid, "State": "COMPLETED"}
         logging.debug(f'{self.site_name} has status {resource_status}.')
         resource_attributes.update(updated=datetime.now())
         return convert_to_attribute_dict({**resource_attributes, **self.handle_response(resource_status)})
@@ -127,7 +135,5 @@ class SlurmAdapter(SiteAdapter):
             raise TardisResourceStatusUpdateFailed
         except TimeoutError as te:
             raise TardisTimeout from te
-        except KeyError as ke:
-            raise TardisResourceStatusUpdateFailed
         except Exception as ex:
             raise TardisError from ex

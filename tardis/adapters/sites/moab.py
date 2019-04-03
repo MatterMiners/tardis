@@ -33,8 +33,8 @@ async def moab_status_updater(executor):
     for queue in xml_jobs_list:
         queue_jobs_list = queue.getElementsByTagName('job')
         for line in queue_jobs_list:
-            moab_resource_status[line.attributes['JobID'].value] = {'JobID' : line.attributes['JobID'].value,
-                                                                    'State' :line.attributes['State'].value}
+            moab_resource_status[line.attributes['JobID'].value] = {'JobID': line.attributes['JobID'].value,
+                                                                    'State': line.attributes['State'].value}
     logging.debug("Moab status update completed")
     return moab_resource_status
 
@@ -102,7 +102,15 @@ class MoabAdapter(SiteAdapter):
 
     async def resource_status(self, resource_attributes):
         await self._moab_status.update_status()
-        resource_status = self._moab_status[str(resource_attributes.remote_resource_uuid)]
+        # In case the created timestamp is after last update timestamp of the asynccachemap,
+        # no decision about the current state can be given, since map is updated asynchronously.
+        try:
+            resource_status = self._moab_status[str(resource_attributes.remote_resource_uuid)]
+        except KeyError:
+            if (self._moab_status._last_update - resource_attributes.created) < 0:
+                raise TardisResourceStatusUpdateFailed
+            else:
+                resource_status = {"JobID": resource_attributes.remote_resource_uuid, "State": "Completed"}
         logging.debug(f'{self.site_name} has status {resource_status}.')
         resource_attributes.update(updated=datetime.now())
         return convert_to_attribute_dict({**resource_attributes, **self.handle_response(resource_status)})
