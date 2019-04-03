@@ -76,7 +76,7 @@ class TestSlurmAdapter(TestCase):
         self.test_site_config = config.TestSite
         self.test_site_config.MachineMetaData = self.machine_meta_data
         self.test_site_config.StartupCommand = 'pilot.sh'
-        self.test_site_config.StatusUpdate = 1
+        self.test_site_config.StatusUpdate = 10
         self.test_site_config.MachineTypeConfiguration = self.machine_type_configuration
         self.test_site_config.executor = self.mock_executor.return_value
 
@@ -184,6 +184,29 @@ class TestSlurmAdapter(TestCase):
                                                resource_attributes=self.resource_attributes)
         self.assertEqual(return_resource_attributes["resource_status"], ResourceStatus.Stopped)
 
+    def test_resource_status_raise(self):
+        # Update interval is 10 minutes, so set last update back by 2 minutes in order to execute sacct command and
+        # creation date to current date
+        created_timestamp = datetime.now()
+        new_timestamp = datetime.now() - timedelta(minutes=2)
+        self.slurm_adapter._slurm_status._last_update = new_timestamp.timestamp()
+        with self.assertRaises(TardisResourceStatusUpdateFailed):
+            response = run_async(self.slurm_adapter.resource_status,
+                                 AttributeDict(resource_id=1351043, remote_resource_uuid=1351043,
+                                               resource_state=ResourceStatus.Booting,
+                                               created=created_timestamp.timestamp()))
+
+    def test_resource_status_raise_past(self):
+        # Update interval is 10 minutes, so set last update back by 11 minutes in order to execute sacct command and
+        # creation date to 12 minutes ago
+        past_timestamp = datetime.now() - timedelta(minutes=12)
+        new_timestamp = datetime.now() - timedelta(minutes=11)
+        self.slurm_adapter._slurm_status._last_update = new_timestamp.timestamp()
+        response = run_async(self.slurm_adapter.resource_status, AttributeDict(resource_id=1390065,
+                                                                               remote_resource_uuid=1351043,
+                                                                               created=past_timestamp.timestamp()))
+        self.assertEqual(response.resource_status, ResourceStatus.Stopped)
+
     def test_exception_handling(self):
         def test_exception_handling(to_raise, to_catch):
             with self.assertRaises(to_catch):
@@ -191,9 +214,8 @@ class TestSlurmAdapter(TestCase):
                     raise to_raise
 
         matrix = [(asyncio.TimeoutError(), TardisTimeout),
-                  (CommandExecutionFailure(message="Test", exit_code=255, stdout="Test", stderr="Test")
-                   , TardisResourceStatusUpdateFailed),
-                  (KeyError, TardisResourceStatusUpdateFailed),
+                  (CommandExecutionFailure(message="Test", exit_code=255, stdout="Test", stderr="Test"),
+                   TardisResourceStatusUpdateFailed),
                   (Exception, TardisError)]
 
         for to_raise, to_catch in matrix:
