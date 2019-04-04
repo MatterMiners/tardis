@@ -9,13 +9,12 @@ from ...utilities.staticmapping import StaticMapping
 from ...utilities.attributedict import convert_to_attribute_dict
 from ...utilities.executors.shellexecutor import ShellExecutor
 from ...utilities.asynccachemap import AsyncCacheMap
+from ...utilities.utils import htcondor_csv_parser
 
 from asyncio import TimeoutError
 from contextlib import contextmanager
 from functools import partial
 from datetime import datetime
-from io import StringIO
-import csv
 
 import logging
 import re
@@ -29,11 +28,9 @@ async def slurm_status_updater(executor):
     slurm_resource_status = {}
     logging.debug("Slurm status update is running.")
     slurm_status = await executor.run_command(cmd)
-    with StringIO(slurm_status.stdout) as csv_input:
-        cvs_reader = csv.DictReader(csv_input, fieldnames=tuple(attributes.keys()), delimiter='|')
-        for row in cvs_reader:
-            row['State'] = row["State"].strip()
-            slurm_resource_status[row['JobId']] = row
+    for row in htcondor_csv_parser(slurm_status.stdout, fieldnames=tuple(attributes.keys()), delimiter='|'):
+        row['State'] = row["State"].strip()
+        slurm_resource_status[row['JobId']] = row
     logging.debug("Slurm status update finished.")
     return slurm_resource_status
 
@@ -108,7 +105,7 @@ class SlurmAdapter(SiteAdapter):
         try:
             resource_status = self._slurm_status[str(resource_attributes.remote_resource_uuid)]
         except KeyError:
-            if (self._slurm_status._last_update - resource_attributes.created) < 0:
+            if (self._slurm_status.last_update - resource_attributes.created).total_seconds() < 0:
                 raise TardisResourceStatusUpdateFailed
             else:
                 resource_status = {"JobID": resource_attributes.remote_resource_uuid, "State": "COMPLETED"}
