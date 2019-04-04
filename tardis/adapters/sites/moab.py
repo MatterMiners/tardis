@@ -107,7 +107,7 @@ class MoabAdapter(SiteAdapter):
         try:
             resource_status = self._moab_status[str(resource_attributes.remote_resource_uuid)]
         except KeyError:
-            if (self._moab_status._last_update - resource_attributes.created) < 0:
+            if (self._moab_status.last_update - resource_attributes.created).total_seconds() < 0:
                 raise TardisResourceStatusUpdateFailed
             else:
                 resource_status = {"JobID": resource_attributes.remote_resource_uuid, "State": "Completed"}
