@@ -216,22 +216,22 @@ class TestMoabAdapter(TestCase):
         # creation date to current date
         created_timestamp = datetime.now()
         new_timestamp = datetime.now() - timedelta(minutes=2)
-        self.moab_adapter._moab_status._last_update = new_timestamp.timestamp()
+        self.moab_adapter._moab_status._last_update = new_timestamp
         with self.assertRaises(TardisResourceStatusUpdateFailed):
             response = run_async(self.moab_adapter.resource_status,
                                  AttributeDict(resource_id=1351043, remote_resource_uuid=1351043,
                                                resource_state=ResourceStatus.Booting,
-                                               created=created_timestamp.timestamp()))
+                                               created=created_timestamp))
 
     def test_resource_status_raise_past(self):
         # Update interval is 10 minutes, so set last update back by 11 minutes in order to execute sacct command and
         # creation date to 12 minutes ago
         past_timestamp = datetime.now() - timedelta(minutes=12)
         new_timestamp = datetime.now() - timedelta(minutes=11)
-        self.moab_adapter._moab_status._last_update = new_timestamp.timestamp()
+        self.moab_adapter._moab_status._last_update = new_timestamp
         response = run_async(self.moab_adapter.resource_status, AttributeDict(resource_id=1390065,
                                                                               remote_resource_uuid=1351043,
-                                                                              created=past_timestamp.timestamp()))
+                                                                              created=past_timestamp))
         self.assertEqual(response.resource_status, ResourceStatus.Stopped)
 
     def test_exception_handling(self):
