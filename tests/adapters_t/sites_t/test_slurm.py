@@ -91,7 +91,7 @@ class TestSlurmAdapter(TestCase):
 
     @property
     def machine_type_configuration(self):
-        return AttributeDict(test2large=AttributeDict(Partition='normal', Walltime='01:00:00'))
+        return AttributeDict(test2large=AttributeDict(Partition='normal', Walltime='60'))
 
     @property
     def resource_attributes(self):
@@ -117,7 +117,7 @@ class TestSlurmAdapter(TestCase):
             return_resource_attributes.created, return_resource_attributes.updated
         self.assertEqual(return_resource_attributes, expected_resource_attributes)
         self.mock_executor.return_value.run_command.assert_called_with(
-            'sbatch -p normal -N 1 -n 20 --mem=62gb -t 01:00:00 pilot.sh')
+            'sbatch -p normal -N 1 -n 20 --mem=62gb -t 60 --export=SLURM_Walltime=60 pilot.sh')
 
     def test_machine_meta_data(self):
         self.assertEqual(self.slurm_adapter.machine_meta_data, self.machine_meta_data['test2large'])
@@ -216,6 +216,7 @@ class TestSlurmAdapter(TestCase):
         matrix = [(asyncio.TimeoutError(), TardisTimeout),
                   (CommandExecutionFailure(message="Test", exit_code=255, stdout="Test", stderr="Test"),
                    TardisResourceStatusUpdateFailed),
+                  (TardisResourceStatusUpdateFailed,TardisResourceStatusUpdateFailed),
                   (Exception, TardisError)]
 
         for to_raise, to_catch in matrix:
