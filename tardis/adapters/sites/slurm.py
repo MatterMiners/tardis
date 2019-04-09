@@ -55,7 +55,7 @@ class SlurmAdapter(SiteAdapter):
                                                                       CANCELLED=ResourceStatus.Stopped,
                                                                       COMPLETED=ResourceStatus.Stopped,
                                                                       DEADLINE=ResourceStatus.Stopped,
-                                                                      FAILED=ResourceStatus.Error,
+                                                                      FAILED=ResourceStatus.Stopped,
                                                                       NODE_FAIL=ResourceStatus.Error,
                                                                       OUT_OF_MEMORY=ResourceStatus.Error,
                                                                       PENDING=ResourceStatus.Booting,
@@ -76,6 +76,8 @@ class SlurmAdapter(SiteAdapter):
                           f'-N 1 -n {self.machine_meta_data.Cores} ' \
                           f'--mem={self.machine_meta_data.Memory}gb ' \
                           f'-t {self.configuration.MachineTypeConfiguration[self._machine_type].Walltime} ' \
+                          f'--export=SLURM_Walltime=' \
+                          f'{self.configuration.MachineTypeConfiguration[self._machine_type].Walltime} ' \
                           f'{self._startup_command}'
         result = await self._executor.run_command(request_command)
         logging.debug(f"{self.site_name} servers create returned {result}")
@@ -130,6 +132,8 @@ class SlurmAdapter(SiteAdapter):
         except CommandExecutionFailure as ex:
             logging.info("Execute command failed: %s" % str(ex))
             raise TardisResourceStatusUpdateFailed
+        except TardisResourceStatusUpdateFailed as truf:
+            raise TardisResourceStatusUpdateFailed from truf
         except TimeoutError as te:
             raise TardisTimeout from te
         except Exception as ex:
