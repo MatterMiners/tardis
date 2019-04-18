@@ -55,8 +55,8 @@ class MoabAdapter(SiteAdapter):
         translator_functions = StaticMapping(State=lambda x, translator=StaticMapping(Idle=ResourceStatus.Booting,
                                                                                       Running=ResourceStatus.Running,
                                                                                       Completed=ResourceStatus.Stopped,
-                                                                                      Canceling=ResourceStatus.Error,
-                                                                                      Vacated=ResourceStatus.Error):
+                                                                                      Canceling=ResourceStatus.Running,
+                                                                                      Vacated=ResourceStatus.Stopped):
                                              translator[x],
                                              JobID=lambda x: int(x))
 
@@ -107,7 +107,7 @@ class MoabAdapter(SiteAdapter):
         try:
             resource_status = self._moab_status[str(resource_attributes.remote_resource_uuid)]
         except KeyError:
-            if (self._moab_status.last_update - resource_attributes.created).total_seconds() < 0:
+            if (self._moab_status._last_update - resource_attributes.created).total_seconds() < 0:
                 raise TardisResourceStatusUpdateFailed
             else:
                 resource_status = {"JobID": resource_attributes.remote_resource_uuid, "State": "Completed"}
@@ -150,5 +150,7 @@ class MoabAdapter(SiteAdapter):
             raise TardisResourceStatusUpdateFailed
         except IndexError as ide:
             raise TardisResourceStatusUpdateFailed from ide
+        except TardisResourceStatusUpdateFailed:
+            raise
         except Exception as ex:
             raise TardisError from ex

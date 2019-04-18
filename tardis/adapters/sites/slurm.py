@@ -132,8 +132,8 @@ class SlurmAdapter(SiteAdapter):
         except CommandExecutionFailure as ex:
             logging.info("Execute command failed: %s" % str(ex))
             raise TardisResourceStatusUpdateFailed
-        except TardisResourceStatusUpdateFailed as truf:
-            raise TardisResourceStatusUpdateFailed from truf
+        except TardisResourceStatusUpdateFailed:
+            raise
         except TimeoutError as te:
             raise TardisTimeout from te
         except Exception as ex:
