@@ -37,8 +37,8 @@ class TestSqliteRegistry(TestCase):
         cls.test_get_resources_result = {'remote_resource_uuid': cls.test_resource_attributes['remote_resource_uuid'],
                                          'drone_uuid': cls.test_resource_attributes['drone_uuid'],
                                          'state': str(BootingState()),
-                                         'created': str(cls.test_resource_attributes['created']),
-                                         'updated': str(cls.test_resource_attributes['updated'])}
+                                         'created': cls.test_resource_attributes['created'],
+                                         'updated': cls.test_resource_attributes['updated']}
 
         cls.test_notify_result = (cls.test_resource_attributes['remote_resource_uuid'],
                                   cls.test_resource_attributes['drone_uuid'],

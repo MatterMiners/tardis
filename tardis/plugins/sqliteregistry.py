@@ -38,7 +38,7 @@ class SqliteRegistry(Plugin):
         return await loop.run_in_executor(self.thread_pool_executor, self.execute, sql_query, bind_parameters)
 
     def connect(self):
-        return sqlite3.connect(self._db_file)
+        return sqlite3.connect(self._db_file, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
 
     def _deploy_db_schema(self):
         tables = {'MachineTypes': ['machine_type_id INTEGER PRIMARY KEY AUTOINCREMENT',
@@ -51,8 +51,8 @@ class SqliteRegistry(Plugin):
                                 'state_id INTEGER',
                                 'site_id INTEGER',
                                 'machine_type_id INTEGER',
-                                'created DATE',
-                                'updated DATE',
+                                'created TIMESTAMP',
+                                'updated TIMESTAMP',
                                 'FOREIGN KEY(state_id) REFERENCES ResourceState(state_id)',
                                 'FOREIGN KEY(site_id) REFERENCES Sites(site_id)',
                                 'FOREIGN KEY(machine_type_id) REFERENCES MachineTypes(machine_type_id)'],
