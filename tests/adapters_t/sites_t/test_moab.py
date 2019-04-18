@@ -245,6 +245,7 @@ class TestMoabAdapter(TestCase):
                                   reason="Test",
                                   lang="Test"), TardisResourceStatusUpdateFailed),
                   (IndexError, TardisResourceStatusUpdateFailed),
+                  (TardisResourceStatusUpdateFailed, TardisResourceStatusUpdateFailed),
                   (Exception, TardisError)]
 
         for to_raise, to_catch in matrix:
