@@ -5,6 +5,8 @@ from tardis.adapters.batchsystems.htcondor import htcondor_status_updater
 from tardis.interfaces.batchsystemadapter import MachineStatus
 from tardis.exceptions.tardisexceptions import AsyncRunCommandFailure
 
+from functools import partial
+from shlex import quote
 from unittest.mock import patch
 from unittest import TestCase
 
@@ -27,7 +29,12 @@ class TestHTCondorAdapter(TestCase):
         self.memory_ratio = 0.8
         self.command = "condor_status -af:t Machine State Activity TardisDroneUuid " \
                        "'Real(TotalSlotCpus-Cpus)/TotalSlotCpus' " \
-                       "'Real(TotalSlotCpus-Cpus)/TotalSlotCpus' -constraint PartitionableSlot=?=True"
+                       "'Real(TotalSlotCpus-Cpus)/TotalSlotCpus' -constraint PartitionableSlot=?=True" \
+                       " -pool my-htcondor.local -test"
+
+        self.command_wo_options = "condor_status -af:t Machine State Activity TardisDroneUuid " \
+                                  "'Real(TotalSlotCpus-Cpus)/TotalSlotCpus' " \
+                                  "'Real(TotalSlotCpus-Cpus)/TotalSlotCpus' -constraint PartitionableSlot=?=True"
 
         return_value = "\n".join([f"test\tUnclaimed\tIdle\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",
                                   f"test_drain\tDrained\tRetiring\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",
@@ -37,10 +44,12 @@ class TestHTCondorAdapter(TestCase):
                                   "exoscale-26d361290f\tUnclaimed\tIdle\tundefined\t0.125\t0.125"])
         self.mock_async_run_command.return_value = async_return(return_value=return_value)
 
-        config = self.mock_config.return_value
-        config.BatchSystem.ratios = {'cpu_ratio': 'Real(TotalSlotCpus-Cpus)/TotalSlotCpus',
-                                     'memory_ratio': 'Real(TotalSlotCpus-Cpus)/TotalSlotCpus'}
-        config.BatchSystem.max_age = 10
+        self.config = self.mock_config.return_value
+        self.config.BatchSystem.ratios = {'cpu_ratio': 'Real(TotalSlotCpus-Cpus)/TotalSlotCpus',
+                                          'memory_ratio': 'Real(TotalSlotCpus-Cpus)/TotalSlotCpus'}
+        self.config.BatchSystem.max_age = 10
+        self.config.BatchSystem.options = {'pool': 'my-htcondor.local',
+                                           'test': None}
 
         self.htcondor_adapter = HTCondorAdapter()
 
@@ -77,6 +86,15 @@ class TestHTCondorAdapter(TestCase):
 
         self.assertEqual(run_async(self.htcondor_adapter.get_resource_ratios, drone_uuid='not_exists'), {})
 
+    def test_get_resource_ratios_without_options(self):
+        del self.config.BatchSystem.options
+        htcondor_adapter_wo_options = HTCondorAdapter()
+
+        self.assertCountEqual(list(run_async(htcondor_adapter_wo_options.get_resource_ratios, drone_uuid='test')),
+                             [self.cpu_ratio, self.memory_ratio])
+
+        self.mock_async_run_command.assert_called_with(self.command_wo_options)
+
     def test_get_allocation(self):
         self.assertEqual(run_async(self.htcondor_adapter.get_allocation, drone_uuid='test'),
                          max([self.cpu_ratio, self.memory_ratio]))
@@ -107,7 +125,11 @@ class TestHTCondorAdapter(TestCase):
         self.mock_async_run_command.side_effect = AsyncRunCommandFailure(message="Test", error_code=123,
                                                                          error_message="Test")
         with self.assertLogs(level='ERROR'):
-            run_async(htcondor_status_updater)
+            attributes = dict(Machine='Machine', State='State', Activity='Activity', TardisDroneUuid='TardisDroneUuid')
+            # Escape htcondor expressions and add them to attributes
+            attributes.update({key: quote(value) for key, value in self.config.BatchSystem.ratios.items()})
+
+            run_async(partial(htcondor_status_updater, self.config.BatchSystem.options, attributes))
             self.mock_async_run_command.assert_called_with(self.command)
         self.mock_async_run_command.side_effect = None
 
