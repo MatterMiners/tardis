@@ -6,16 +6,23 @@ from ...utilities.utils import async_run_command
 from ...utilities.utils import htcondor_csv_parser
 from ...utilities.asynccachemap import AsyncCacheMap
 
+from functools import partial
 from shlex import quote
 import logging
 
 
-async def htcondor_status_updater():
-    attributes = dict(Machine='Machine', State='State', Activity='Activity', TardisDroneUuid='TardisDroneUuid')
-    # Escape htcondor expressions and add them to attributes
-    attributes.update({key: quote(value) for key, value in Configuration().BatchSystem.ratios.items()})
-    attributes_string = " ".join(attributes.values())
-    cmd = f'condor_status -af:t {attributes_string} -constraint PartitionableSlot=?=True'
+async def htcondor_status_updater(options, attributes):
+    attributes_string = f'-af:t {" ".join(attributes.values())}'
+
+    options = (f"-{name} {value}" if value is not None else f"-{name}"
+               for name, value in options.items())
+
+    options_string = " ".join(options)
+
+    cmd = f"condor_status {attributes_string} -constraint PartitionableSlot=?=True"
+
+    if options_string:
+        cmd = f"{cmd} {options_string}"
 
     htcondor_status = {}
 
@@ -38,9 +45,19 @@ async def htcondor_status_updater():
 class HTCondorAdapter(BatchSystemAdapter):
     def __init__(self):
         config = Configuration()
-        self._htcondor_status = AsyncCacheMap(update_coroutine=htcondor_status_updater,
-                                              max_age=config.BatchSystem.max_age * 60)
         self.ratios = config.BatchSystem.ratios
+
+        try:
+            options = config.BatchSystem.options
+        except AttributeError:
+            options = {}
+
+        attributes = dict(Machine='Machine', State='State', Activity='Activity', TardisDroneUuid='TardisDroneUuid')
+        # Escape htcondor expressions and add them to attributes
+        attributes.update({key: quote(value) for key, value in self.ratios.items()})
+
+        self._htcondor_status = AsyncCacheMap(update_coroutine=partial(htcondor_status_updater, options, attributes),
+                                              max_age=config.BatchSystem.max_age * 60)
 
     async def disintegrate_machine(self, drone_uuid):
         """
