@@ -4,6 +4,7 @@ from tardis.utilities.attributedict import AttributeDict
 
 from datetime import datetime
 from unittest import TestCase
+from unittest.mock import Mock
 from unittest.mock import patch
 
 from ..utilities.utilities import async_return
@@ -23,6 +24,7 @@ class TestTelegrafMonitoring(TestCase):
         cls.mock_config_patcher.stop()
         cls.mock_aiotelegraf_patcher.stop()
 
+    @patch('tardis.plugins.telegrafmonitoring.logging', Mock())
     def setUp(self):
         config = self.mock_config.return_value
         config.Plugins.TelegrafMonitoring.host = "telegraf.test"
@@ -36,6 +38,7 @@ class TestTelegrafMonitoring(TestCase):
 
         self.plugin = TelegrafMonitoring()
 
+    @patch('tardis.plugins.telegrafmonitoring.logging', Mock())
     def test_notify(self):
         test_param = AttributeDict(site_name='test-site',
                                    machine_type='test_machine_type',
@@ -43,7 +46,8 @@ class TestTelegrafMonitoring(TestCase):
                                    updated=datetime.now())
         test_state = RequestState()
         test_result = dict(state=str(test_state))
-        test_result.update(created=test_param.created, updated=test_param.updated)
+        test_result.update(created=datetime.timestamp(test_param.created),
+                           updated=datetime.timestamp(test_param.updated))
         test_tags = dict(site_name=test_param.site_name, machine_type=test_param.machine_type)
         run_async(self.plugin.notify, test_state, test_param)
         self.mock_aiotelegraf.Client.assert_called_with(host='telegraf.test', port=1234, tags={'test_tag': 'test'})
