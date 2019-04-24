@@ -5,7 +5,6 @@ from tardis.exceptions.tardisexceptions import TardisTimeout
 from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from tardis.interfaces.siteadapter import ResourceStatus
 from tardis.utilities.attributedict import AttributeDict
-from tests.utilities.utilities import async_return
 from tests.utilities.utilities import mock_executor_run_command
 from tests.utilities.utilities import run_async
 
@@ -246,6 +245,10 @@ class TestMoabAdapter(TestCase):
                                   lang="Test"), TardisResourceStatusUpdateFailed),
                   (IndexError, TardisResourceStatusUpdateFailed),
                   (TardisResourceStatusUpdateFailed, TardisResourceStatusUpdateFailed),
+                  (CommandExecutionFailure(message="Run test command",
+                                           exit_code=1,
+                                           stdout="Test",
+                                           stderr="Test"), TardisResourceStatusUpdateFailed),
                   (Exception, TardisError)]
 
         for to_raise, to_catch in matrix:
