@@ -152,5 +152,7 @@ class MoabAdapter(SiteAdapter):
             raise TardisResourceStatusUpdateFailed from ide
         except TardisResourceStatusUpdateFailed:
             raise
+        except CommandExecutionFailure as cef:
+            raise TardisResourceStatusUpdateFailed from cef
         except Exception as ex:
             raise TardisError from ex
