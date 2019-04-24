@@ -2,7 +2,7 @@ from tardis.plugins.telegrafmonitoring import TelegrafMonitoring
 from tardis.resources.dronestates import RequestState
 from tardis.utilities.attributedict import AttributeDict
 
-
+from datetime import datetime
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -36,9 +36,16 @@ class TestTelegrafMonitoring(TestCase):
         self.plugin = TelegrafMonitoring()
 
     def test_notify(self):
-        run_async(self.plugin.notify, RequestState(), AttributeDict(test='test'))
+        test_param = AttributeDict(site_name='test-site',
+                                   machine_type='test_machine_type',
+                                   created=datetime.now(),
+                                   updated=datetime.now())
+        test_state = RequestState()
+        test_result = dict(state=str(test_state))
+        test_result.update(created=test_param.created, updated=test_param.updated)
+        test_tags = dict(site_name=test_param.site_name, machine_type=test_param.machine_type)
+        run_async(self.plugin.notify, test_state, test_param)
         self.mock_aiotelegraf.Client.assert_called_with(host='telegraf.test', port=1234, tags={'test_tag': 'test'})
         self.mock_aiotelegraf.Client.return_value.connect.assert_called_with()
-        self.mock_aiotelegraf.Client.return_value.metric.assert_called_with('tardis_metric',
-                                                                            {'state': 'RequestState', 'test': 'test'})
+        self.mock_aiotelegraf.Client.return_value.metric.assert_called_with('tardis_data', test_result, tags=test_tags)
         self.mock_aiotelegraf.Client.return_value.close.assert_called_with()
