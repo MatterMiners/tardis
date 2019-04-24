@@ -6,11 +6,12 @@ import aiotelegraf
 
 class TelegrafMonitoring(Plugin):
     def __init__(self):
-        config = Configuration()
+        config = Configuration().Plugins.TelegrafMonitoring
 
-        host = config.Plugins.TelegrafMonitoring.host
-        port = config.Plugins.TelegrafMonitoring.port
-        default_tags = getattr(config.Plugins.TelegrafMonitoring, 'default_tags', None)
+        host = config.host
+        port = config.port
+        default_tags = getattr(config, 'default_tags', None)
+        self.metric = getattr(config, 'metric', 'tardis_data')
 
         self.client = aiotelegraf.Client(host=host, port=port, tags=default_tags)
 
@@ -20,5 +21,5 @@ class TelegrafMonitoring(Plugin):
                     updated=resource_attributes.updated)
         tags = dict(site_name=resource_attributes.site_name,
                     machine_type=resource_attributes.machine_type)
-        self.client.metric('tardis_data', data, tags=tags)
+        self.client.metric(self.metric, data, tags=tags)
         await self.client.close()
