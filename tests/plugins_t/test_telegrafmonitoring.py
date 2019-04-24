@@ -28,6 +28,7 @@ class TestTelegrafMonitoring(TestCase):
         config.Plugins.TelegrafMonitoring.host = "telegraf.test"
         config.Plugins.TelegrafMonitoring.port = 1234
         config.Plugins.TelegrafMonitoring.default_tags = {'test_tag': 'test'}
+        config.Plugins.TelegrafMonitoring.metric = "tardis_data"
 
         telegraf_client = self.mock_aiotelegraf.Client.return_value
         telegraf_client.connect.return_value = async_return()
