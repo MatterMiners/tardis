@@ -34,6 +34,7 @@ def create_composite_pool(configuration='tardis.yml'):
     plugins = load_plugins()
 
     for site in configuration.Sites:
+        site_composites = []
         site_adapter = getattr(import_module(name=f"tardis.adapters.sites.{site.adapter.lower()}"),
                                f'{site.adapter}Adapter')
         for machine_type in getattr(configuration, site.name).MachineTypes:
@@ -51,12 +52,13 @@ def create_composite_pool(configuration='tardis.yml'):
                                     batch_system_agent=batch_system_agent,
                                     plugins=plugins.values())
             cpu_cores = getattr(configuration, site.name).MachineMetaData[machine_type]['Cores']
-            composites.append(Logger(Standardiser(FactoryPool(*check_pointed_drones,
-                                                              factory=drone_factory),
-                                                  minimum=cpu_cores,
-                                                  maximum=site.quota if site.quota >= 0 else inf,
-                                                  granularity=cpu_cores),
-                                     name=f"{site.name.lower()}_{machine_type.lower()}"))
+            site_composites.append(Logger(Standardiser(FactoryPool(*check_pointed_drones,
+                                                                   factory=drone_factory),
+                                                       minimum=cpu_cores,
+                                                       granularity=cpu_cores),
+                                          name=f"{site.name.lower()}_{machine_type.lower()}"))
+        composites.append(Standardiser(WeightedComposite(*site_composites),
+                                       maximum=site.quota if site.quota >= 0 else inf))
 
     return WeightedComposite(*composites)
 
