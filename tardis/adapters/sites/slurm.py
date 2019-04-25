@@ -55,7 +55,7 @@ class SlurmAdapter(SiteAdapter):
                                                                       CANCELLED=ResourceStatus.Stopped,
                                                                       COMPLETED=ResourceStatus.Stopped,
                                                                       DEADLINE=ResourceStatus.Stopped,
-                                                                      FAILED=ResourceStatus.Stopped,
+                                                                      FAILED=ResourceStatus.Error,
                                                                       NODE_FAIL=ResourceStatus.Error,
                                                                       OUT_OF_MEMORY=ResourceStatus.Error,
                                                                       PENDING=ResourceStatus.Booting,
