@@ -77,7 +77,8 @@ class IntegratingState(State):
                                                    MachineStatus.Drained: lambda: DisintegrateState()},
                   ResourceStatus.Booting: lambda: defaultdict(lambda: BootingState),
                   ResourceStatus.Deleted: lambda: defaultdict(lambda: DownState),
-                  ResourceStatus.Stopped: lambda: defaultdict(lambda: CleanupState)}
+                  ResourceStatus.Stopped: lambda: defaultdict(lambda: CleanupState),
+                  ResourceStatus.Error: lambda: CleanupState()}
 
     processing_pipeline = [resource_status, batchsystem_machine_status]
 
@@ -94,7 +95,8 @@ class AvailableState(State):
                                                    MachineStatus.Drained: lambda: DisintegrateState()},
                   ResourceStatus.Booting: lambda: defaultdict(lambda: BootingState),
                   ResourceStatus.Deleted: lambda: defaultdict(lambda: DownState),
-                  ResourceStatus.Stopped: lambda: defaultdict(lambda: CleanupState)}
+                  ResourceStatus.Stopped: lambda: defaultdict(lambda: CleanupState),
+                  ResourceStatus.Error: lambda: CleanupState()}
 
     processing_pipeline = [resource_status, batchsystem_machine_status]
 
@@ -135,7 +137,8 @@ class DrainingState(State):
                                                    MachineStatus.NotAvailable: lambda: ShutDownState()
                                                    },
                   ResourceStatus.Deleted: lambda: defaultdict(lambda: DownState),
-                  ResourceStatus.Stopped: lambda: defaultdict(lambda: CleanupState)}
+                  ResourceStatus.Stopped: lambda: defaultdict(lambda: CleanupState),
+                  ResourceStatus.Error: lambda: CleanupState()}
     processing_pipeline = [resource_status, batchsystem_machine_status]
 
     @classmethod
@@ -155,7 +158,8 @@ class DisintegrateState(State):
 class ShutDownState(State):
     transition = {ResourceStatus.Running: lambda: ShuttingDownState(),
                   ResourceStatus.Stopped: lambda: CleanupState(),
-                  ResourceStatus.Deleted: lambda: DownState()}
+                  ResourceStatus.Deleted: lambda: DownState(),
+                  ResourceStatus.Error: lambda: CleanupState()}
 
     processing_pipeline = [resource_status]
 
@@ -174,7 +178,8 @@ class ShutDownState(State):
 class ShuttingDownState(State):
     transition = {ResourceStatus.Running: lambda: ShuttingDownState(),
                   ResourceStatus.Stopped: lambda: CleanupState(),
-                  ResourceStatus.Deleted: lambda: DownState()}
+                  ResourceStatus.Deleted: lambda: DownState(),
+                  ResourceStatus.Error: lambda: CleanupState()}
     processing_pipeline = [resource_status]
 
     @classmethod
