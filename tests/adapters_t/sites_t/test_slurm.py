@@ -216,7 +216,7 @@ class TestSlurmAdapter(TestCase):
         matrix = [(asyncio.TimeoutError(), TardisTimeout),
                   (CommandExecutionFailure(message="Test", exit_code=255, stdout="Test", stderr="Test"),
                    TardisResourceStatusUpdateFailed),
-                  (TardisResourceStatusUpdateFailed,TardisResourceStatusUpdateFailed),
+                  (TardisResourceStatusUpdateFailed, TardisResourceStatusUpdateFailed),
                   (Exception, TardisError)]
 
         for to_raise, to_catch in matrix:
