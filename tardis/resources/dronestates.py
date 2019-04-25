@@ -78,7 +78,7 @@ class IntegratingState(State):
                   ResourceStatus.Booting: lambda: defaultdict(lambda: BootingState),
                   ResourceStatus.Deleted: lambda: defaultdict(lambda: DownState),
                   ResourceStatus.Stopped: lambda: defaultdict(lambda: CleanupState),
-                  ResourceStatus.Error: lambda: CleanupState()}
+                  ResourceStatus.Error: lambda: defaultdict(lambda: CleanupState)}
 
     processing_pipeline = [resource_status, batchsystem_machine_status]
 
@@ -96,7 +96,7 @@ class AvailableState(State):
                   ResourceStatus.Booting: lambda: defaultdict(lambda: BootingState),
                   ResourceStatus.Deleted: lambda: defaultdict(lambda: DownState),
                   ResourceStatus.Stopped: lambda: defaultdict(lambda: CleanupState),
-                  ResourceStatus.Error: lambda: CleanupState()}
+                  ResourceStatus.Error: lambda: defaultdict(lambda: CleanupState)}
 
     processing_pipeline = [resource_status, batchsystem_machine_status]
 
@@ -138,7 +138,7 @@ class DrainingState(State):
                                                    },
                   ResourceStatus.Deleted: lambda: defaultdict(lambda: DownState),
                   ResourceStatus.Stopped: lambda: defaultdict(lambda: CleanupState),
-                  ResourceStatus.Error: lambda: CleanupState()}
+                  ResourceStatus.Error: lambda: defaultdict(lambda: CleanupState)}
     processing_pipeline = [resource_status, batchsystem_machine_status]
 
     @classmethod

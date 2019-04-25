@@ -97,7 +97,8 @@ class TestDroneStates(TestCase):
         matrix = [(ResourceStatus.Booting, None, BootingState),
                   (ResourceStatus.Running, None, IntegrateState),
                   (ResourceStatus.Deleted, None, DownState),
-                  (ResourceStatus.Stopped, None, CleanupState)]
+                  (ResourceStatus.Stopped, None, CleanupState),
+                  (ResourceStatus.Error, None, CleanupState)]
 
         self.run_the_matrix(matrix, initial_state=BootingState)
 
@@ -124,7 +125,9 @@ class TestDroneStates(TestCase):
                   (ResourceStatus.Booting, MachineStatus.Drained, BootingState),
                   (ResourceStatus.Booting, MachineStatus.Draining, BootingState),
                   (ResourceStatus.Deleted, MachineStatus.NotAvailable, DownState),
-                  (ResourceStatus.Stopped, MachineStatus.NotAvailable, CleanupState)]
+                  (ResourceStatus.Stopped, MachineStatus.NotAvailable, CleanupState),
+                  (ResourceStatus.Error, MachineStatus.Available, CleanupState),
+                  (ResourceStatus.Error, MachineStatus.NotAvailable, CleanupState)]
 
         self.run_the_matrix(matrix, initial_state=IntegratingState)
 
@@ -135,7 +138,9 @@ class TestDroneStates(TestCase):
                   (ResourceStatus.Running, MachineStatus.Drained, DisintegrateState),
                   (ResourceStatus.Booting, MachineStatus.NotAvailable, BootingState),
                   (ResourceStatus.Deleted, MachineStatus.NotAvailable, DownState),
-                  (ResourceStatus.Stopped, MachineStatus.NotAvailable, CleanupState)]
+                  (ResourceStatus.Stopped, MachineStatus.NotAvailable, CleanupState),
+                  (ResourceStatus.Error, MachineStatus.NotAvailable, CleanupState),
+                  (ResourceStatus.Error, MachineStatus.Available, CleanupState)]
 
         self.run_the_matrix(matrix, initial_state=AvailableState)
 
@@ -171,7 +176,8 @@ class TestDroneStates(TestCase):
     def test_shutdown_state(self):
         matrix = [(ResourceStatus.Running, None, ShuttingDownState),
                   (ResourceStatus.Stopped, None, CleanupState),
-                  (ResourceStatus.Deleted, None, DownState)]
+                  (ResourceStatus.Deleted, None, DownState),
+                  (ResourceStatus.Error, None, CleanupState)]
 
         self.run_the_matrix(matrix, initial_state=ShutDownState)
 
@@ -184,7 +190,8 @@ class TestDroneStates(TestCase):
     def test_shutting_down_state(self):
         matrix = [(ResourceStatus.Running, None, ShuttingDownState),
                   (ResourceStatus.Stopped, None, CleanupState),
-                  (ResourceStatus.Deleted, None, DownState)]
+                  (ResourceStatus.Deleted, None, DownState),
+                  (ResourceStatus.Error, None, CleanupState)]
 
         self.run_the_matrix(matrix, initial_state=ShuttingDownState)
 
