@@ -25,6 +25,9 @@ async def moab_status_updater(executor):
     cmd = "showq --xml -w user=$(whoami) && showq -c --xml -w user=$(whoami)"
     logging.debug("Moab status update is running.")
     response = await executor.run_command(cmd)
+    if response.stderr is not "":
+        if re.match(r"^ ERROR:  client timed out after 30 seconds", response.stderr, flags=re.MULTILINE):
+            raise TardisResourceStatusUpdateFailed
     # combine two XML outputs to one
     xml_output = minidom.parseString(response["stdout"].replace('\n', '').replace("</Data><Data>", ""))
     xml_jobs_list = xml_output.getElementsByTagName('queue')

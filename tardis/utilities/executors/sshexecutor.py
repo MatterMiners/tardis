@@ -14,8 +14,8 @@ class SSHExecutor(Executor):
     async def run_command(self, command, stdin_input=None):
         async with asyncssh.connect(**self._parameters) as conn:
             try:
-                response = await conn.run(command, check=True, input=stdin_input and stdin_input.encode())
-            except asyncssh.ProcessError as pe:
+                response = await conn.run(command, check=True)
+            except (asyncssh.ProcessError, ConnectionResetError) as pe:
                 raise CommandExecutionFailure(message=f"Run command {command} via SSHExecutor failed",
                                               exit_code=pe.exit_status,
                                               stdin=stdin_input,

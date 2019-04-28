@@ -70,8 +70,8 @@ job '4761849' cancelled
 
 '''
 
-TEST_TIMEOUT_RESPONSE = '''
-ERROR:  client timed out after 30 seconds (hostname:port=mg1.nemo.privat:42559)
+TEST_TIMEOUT_RESPONSE = ''' ERROR:  client timed out after 30 seconds (hostname:port=mg1.nemo.privat:42559)
+
 '''
 
 TEST_TERMINATE_DEAD_RESOURCE_RESPONSE = '''
@@ -189,6 +189,13 @@ class TestMoabAdapter(TestCase):
             raise Exception("Update time wrong!")
         del expected_resource_attributes.updated, return_resource_attributes.updated
         self.assertEqual(return_resource_attributes, expected_resource_attributes)
+
+    @mock_executor_run_command("", stderr=TEST_TIMEOUT_RESPONSE, exit_code=1)
+    def test_timeout_response(self):
+        with self.assertRaises(TardisResourceStatusUpdateFailed):
+            response = run_async(self.moab_adapter.resource_status,
+                                 AttributeDict(resource_id=123456, remote_resource_uuid=123456,
+                                               resource_state=ResourceStatus.Running))
 
     @mock_executor_run_command("", stderr=TEST_TERMINATE_DEAD_RESOURCE_RESPONSE, exit_code=1,
                                raise_exception=CommandExecutionFailure(message='Test',
