@@ -94,6 +94,13 @@ class MoabAdapter(SiteAdapter):
         return self._site_name
 
     @staticmethod
+    def check_no_timeout(response):
+        if re.match(r"^ ERROR:  client timed out after 30 seconds", response, flags=re.MULTILINE):
+            raise TardisResourceStatusUpdateFailed
+        else:
+            return True
+
+    @staticmethod
     def check_remote_resource_uuid(resource_attributes, regex, response):
         pattern = re.compile(regex, flags=re.MULTILINE)
         remote_resource_uuid = int(pattern.findall(response)[0])
@@ -123,7 +130,7 @@ class MoabAdapter(SiteAdapter):
         try:
             response = await self._executor.run_command(request_command)
         except CommandExecutionFailure as cf:
-            if cf.exit_code == 1:
+            if cf.exit_code == 1 and self.check_no_timeout(cf.stderr):
                 logging.debug(f"{self.site_name} servers terminate returned {cf.stdout}")
                 remote_resource_uuid = self.check_remote_resource_uuid(resource_attributes,
                                                                        r'ERROR:  invalid job specified \((\d*)\)',

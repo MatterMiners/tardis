@@ -197,6 +197,16 @@ class TestMoabAdapter(TestCase):
                                  AttributeDict(resource_id=123456, remote_resource_uuid=123456,
                                                resource_state=ResourceStatus.Running))
 
+    @mock_executor_run_command("", stderr=TEST_TIMEOUT_RESPONSE, exit_code=1,
+                               raise_exception=CommandExecutionFailure(message='Test',
+                                                                       stdout="",
+                                                                       stderr=TEST_TIMEOUT_RESPONSE,
+                                                                       exit_code=1))
+    def test_terminate_timeout(self):
+        with self.assertRaises(TardisResourceStatusUpdateFailed):
+            response = run_async(self.moab_adapter.terminate_resource,
+                                               resource_attributes=self.resource_attributes)
+
     @mock_executor_run_command("", stderr=TEST_TERMINATE_DEAD_RESOURCE_RESPONSE, exit_code=1,
                                raise_exception=CommandExecutionFailure(message='Test',
                                                                        stdout="",
