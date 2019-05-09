@@ -105,3 +105,17 @@ ENV/
 
 # test database
 tests/plugins_t/test.db
+
+# test scripts
+test_scripts/
+
+# Ignore drone registry
+*.db
+
+# Ignore configurations
+cobald.yml
+faketardis.yml
+tardis.yml
+
+#Ignore cloudinit files
+cloudinit/
