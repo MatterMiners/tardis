@@ -1,2 +1,6 @@
 #!/bin/bash
-sphinx-apidoc --force --module-first --separate -o source/ ../tardis
+PROJECT=tardis
+
+sphinx-apidoc --force --module-first --separate -o source/api ../${PROJECT} && \
+make html && \
+open _build/html/index.html

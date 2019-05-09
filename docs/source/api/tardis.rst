@@ -11,10 +11,12 @@ Subpackages
 
 .. toctree::
 
-    tardis.adapter
+    tardis.adapters
     tardis.agents
     tardis.configuration
+    tardis.exceptions
     tardis.interfaces
+    tardis.plugins
     tardis.resources
     tardis.utilities
 
