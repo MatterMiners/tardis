@@ -10,6 +10,9 @@ Welcome to tardis's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   api/modules
+   adapters/batchsystem
+   contribute/contribute
 
 
 Indices and tables
