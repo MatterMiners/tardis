@@ -32,7 +32,7 @@ async def htcondor_queue_updater(executor):
     else:
         for row in htcondor_csv_parser(htcondor_input=condor_queue.stdout, fieldnames=tuple(attributes.keys()),
                                        delimiter='\t', replacements=dict(undefined=None)):
-            htcondor_queue[int(row['ClusterId'])] = row
+            htcondor_queue[row['ClusterId']] = row
         return htcondor_queue
 
 
@@ -52,13 +52,12 @@ class HTCondorAdapter(SiteAdapter):
         self._site_name = site_name
         self._executor = getattr(self.configuration, 'executor', ShellExecutor())
 
-        key_translator = StaticMapping(resource_id='ClusterId', resource_status='JobStatus',
+        key_translator = StaticMapping(remote_resource_uuid='ClusterId', resource_status='JobStatus',
                                        created='created', updated='updated')
 
         # HTCondor uses digits to indicate job states and digit as variable names are not allowed in Python, therefore
         # the trick using an expanded htcondor_status_code dictionary is necessary. Somehow ugly.
-        translator_functions = StaticMapping(ClusterId=lambda x: int(x),
-                                             JobStatus=lambda x, translator=StaticMapping(**htcondor_status_codes):
+        translator_functions = StaticMapping(JobStatus=lambda x, translator=StaticMapping(**htcondor_status_codes):
                                              translator[x])
 
         self.handle_response = partial(self.handle_response, key_translator=key_translator,
@@ -74,7 +73,7 @@ class HTCondorAdapter(SiteAdapter):
         response = await self._executor.run_command(submit_command)
         pattern = re.compile(r"^.*?(?P<Jobs>\d+).*?(?P<ClusterId>\d+).$", flags=re.MULTILINE)
         response = AttributeDict(pattern.search(response.stdout).groupdict())
-        response.update(self.update_timestamps())
+        response.update(self.create_timestamps())
         return self.handle_response(response)
 
     @property
@@ -92,7 +91,7 @@ class HTCondorAdapter(SiteAdapter):
     async def resource_status(self, resource_attributes):
         await self._htcondor_queue.update_status()
         try:
-            resource_status = self._htcondor_queue[resource_attributes.resource_id]
+            resource_status = self._htcondor_queue[resource_attributes.remote_resource_uuid]
         except KeyError:
             # In case the created timestamp is after last update timestamp of the asynccachemap,
             # no decision about the current state can be given, since map is updated asynchronously.
@@ -108,15 +107,14 @@ class HTCondorAdapter(SiteAdapter):
         return await self.terminate_resource(resource_attributes)
 
     async def terminate_resource(self, resource_attributes):
-        terminate_command = f"condor_rm {resource_attributes.resource_id}"
+        terminate_command = f"condor_rm {resource_attributes.remote_resource_uuid}"
         response = await self._executor.run_command(terminate_command)
         pattern = re.compile(r"^.*?(?P<ClusterId>\d+).*$", flags=re.MULTILINE)
         response = AttributeDict(pattern.search(response.stdout).groupdict())
-        response.update(self.update_timestamps())
         return self.handle_response(response)
 
     @staticmethod
-    def update_timestamps():
+    def create_timestamps():
         now = datetime.now()
         return AttributeDict(created=now, updated=now)
 
