@@ -52,7 +52,7 @@ class HTCondorAdapter(SiteAdapter):
         self._site_name = site_name
         self._executor = getattr(self.configuration, 'executor', ShellExecutor())
 
-        key_translator = StaticMapping(resource_id='ClusterId', resource_status='JobStatus',
+        key_translator = StaticMapping(remote_resource_uuid='ClusterId', resource_status='JobStatus',
                                        created='created', updated='updated')
 
         # HTCondor uses digits to indicate job states and digit as variable names are not allowed in Python, therefore
@@ -92,7 +92,7 @@ class HTCondorAdapter(SiteAdapter):
     async def resource_status(self, resource_attributes):
         await self._htcondor_queue.update_status()
         try:
-            resource_status = self._htcondor_queue[resource_attributes.resource_id]
+            resource_status = self._htcondor_queue[resource_attributes.remote_resource_uuid]
         except KeyError:
             # In case the created timestamp is after last update timestamp of the asynccachemap,
             # no decision about the current state can be given, since map is updated asynchronously.
@@ -108,7 +108,7 @@ class HTCondorAdapter(SiteAdapter):
         return await self.terminate_resource(resource_attributes)
 
     async def terminate_resource(self, resource_attributes):
-        terminate_command = f"condor_rm {resource_attributes.resource_id}"
+        terminate_command = f"condor_rm {resource_attributes.remote_resource_uuid}"
         response = await self._executor.run_command(terminate_command)
         pattern = re.compile(r"^.*?(?P<ClusterId>\d+).*$", flags=re.MULTILINE)
         response = AttributeDict(pattern.search(response.stdout).groupdict())
