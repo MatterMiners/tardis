@@ -74,7 +74,7 @@ class HTCondorAdapter(SiteAdapter):
         response = await self._executor.run_command(submit_command)
         pattern = re.compile(r"^.*?(?P<Jobs>\d+).*?(?P<ClusterId>\d+).$", flags=re.MULTILINE)
         response = AttributeDict(pattern.search(response.stdout).groupdict())
-        response.update(self.update_timestamps())
+        response.update(self.create_timestamps())
         return self.handle_response(response)
 
     @property
@@ -112,11 +112,10 @@ class HTCondorAdapter(SiteAdapter):
         response = await self._executor.run_command(terminate_command)
         pattern = re.compile(r"^.*?(?P<ClusterId>\d+).*$", flags=re.MULTILINE)
         response = AttributeDict(pattern.search(response.stdout).groupdict())
-        response.update(self.update_timestamps())
         return self.handle_response(response)
 
     @staticmethod
-    def update_timestamps():
+    def create_timestamps():
         now = datetime.now()
         return AttributeDict(created=now, updated=now)
 

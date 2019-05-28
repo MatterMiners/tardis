@@ -137,15 +137,11 @@ class TestHTCondorSiteAdapter(TestCase):
     def test_stop_resource(self):
         response = run_async(self.adapter.stop_resource, AttributeDict(remote_resource_uuid=1351043))
         self.assertEqual(response.remote_resource_uuid, 1351043)
-        self.assertFalse(response.created - datetime.now() > timedelta(seconds=1))
-        self.assertFalse(response.updated - datetime.now() > timedelta(seconds=1))
 
     @mock_executor_run_command(stdout=CONDOR_RM_OUTPUT)
     def test_terminate_resource(self):
         response = run_async(self.adapter.terminate_resource, AttributeDict(remote_resource_uuid=1351043))
         self.assertEqual(response.remote_resource_uuid, 1351043)
-        self.assertFalse(response.created - datetime.now() > timedelta(seconds=1))
-        self.assertFalse(response.updated - datetime.now() > timedelta(seconds=1))
 
     def test_exception_handling(self):
         def test_exception_handling(raise_it, catch_it):
