@@ -32,7 +32,7 @@ async def htcondor_queue_updater(executor):
     else:
         for row in htcondor_csv_parser(htcondor_input=condor_queue.stdout, fieldnames=tuple(attributes.keys()),
                                        delimiter='\t', replacements=dict(undefined=None)):
-            htcondor_queue[int(row['ClusterId'])] = row
+            htcondor_queue[row['ClusterId']] = row
         return htcondor_queue
 
 
@@ -57,8 +57,7 @@ class HTCondorAdapter(SiteAdapter):
 
         # HTCondor uses digits to indicate job states and digit as variable names are not allowed in Python, therefore
         # the trick using an expanded htcondor_status_code dictionary is necessary. Somehow ugly.
-        translator_functions = StaticMapping(ClusterId=lambda x: int(x),
-                                             JobStatus=lambda x, translator=StaticMapping(**htcondor_status_codes):
+        translator_functions = StaticMapping(JobStatus=lambda x, translator=StaticMapping(**htcondor_status_codes):
                                              translator[x])
 
         self.handle_response = partial(self.handle_response, key_translator=key_translator,
