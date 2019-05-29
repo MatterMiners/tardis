@@ -1,19 +1,27 @@
-.. tardis documentation master file, created by
-   sphinx-quickstart on Fri Jun  8 14:53:15 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+======================================================================
+TARDIS - The Transparent Adaptive Resource Dynamic Integration System
+======================================================================
 
-Welcome to tardis's documentation!
-==================================
+Welcome to the TARDIS documentation!
+====================================
 
 .. toctree::
+   :hidden:
    :maxdepth: 2
    :caption: Contents:
 
-   api/modules
    adapters/batchsystem
+   adapters/site
+   plugins/plugins
    contribute/contribute
+   Module Index <api/modules>
 
+.. image:: ../pics/TARDIS_logo.svg
+    :alt: TARDIS Logo
+    :height: 150
+    :align: left
+
+The ``TARDIS`` package
 
 Indices and tables
 ==================
