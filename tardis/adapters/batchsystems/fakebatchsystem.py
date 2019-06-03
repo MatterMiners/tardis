@@ -5,7 +5,15 @@ from tardis.interfaces.batchsystemadapter import MachineStatus
 
 class FakeBatchSystemAdapter(BatchSystemAdapter):
     """
-    FakeBatchSystemAdapter
+    :py:class:`~tardis.adapters.batchsystems.fakebatchsystem.FakeBatchSystemAdapter` implements a batch system adapter
+    that mocks the response of hypothetical batch system. It can be used for testing purposes as well as a demonstrator
+    in workshops and tutorials.
+
+    The mocked response to the
+    :py:meth:`~tardis.adapters.batchsystems.fakebatchsystem.FakeBatchSystemAdapter.get_utilization`,
+    :py:meth:`~tardis.adapters.batchsystems.fakebatchsystem.FakeBatchSystemAdapter.get_allocation` and
+    :py:meth:`~tardis.adapters.batchsystems.fakebatchsystem.FakeBatchSystemAdapter.get_machine_status` API calls
+    is configurable statically.
     """
     def __init__(self):
         config = Configuration()
@@ -56,14 +64,14 @@ class FakeBatchSystemAdapter(BatchSystemAdapter):
         else:
             return allocation
 
-    async def get_machine_status(self, drone_uuid: str) -> str:
+    async def get_machine_status(self, drone_uuid: str) -> MachineStatus:
         """
         Returns a fake machine status according to the parameter set in the configuration of the FakeBatchSystem
 
         :param drone_uuid: Unique identifier of the drone
         :type drone_uuid: str
         :return: Machine status specified in the FakeBatchSystem configuration
-        :rtype: str
+        :rtype: MachineStatus
         """
         try:
             machine_status = self._drained_machines[drone_uuid]
