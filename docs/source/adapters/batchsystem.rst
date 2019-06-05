@@ -16,9 +16,10 @@ implements a batch system adapter that mocks the response of hypothetical batch 
 It can be used for testing purposes as well as a demonstrator in workshops and tutorials.
 
 The mocked response to the |FakeBatchSystemAdapter.get_allocation|, |FakeBatchSystemAdapter.get_utilization| and
-|FakeBatchSystemAdapter.get_machine_status| API calls is configurable statically.
+|FakeBatchSystemAdapter.get_machine_status| API calls is configurable statically in the adapter configuration.
 
-**Available configuration options:**
+Available configuration options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 +----------------+---------------------------------------------------------------------+-----------------+
 | Option         | Short Description                                                   | Optionality     |
@@ -32,7 +33,8 @@ The mocked response to the |FakeBatchSystemAdapter.get_allocation|, |FakeBatchSy
 | machine_status | Mocked response to |FakeBatchSystemAdapter.get_machine_status| call |  **Required**   |
 +----------------+---------------------------------------------------------------------+-----------------+
 
-**Example configuration:**
+Example configuration
+~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: yaml
 
@@ -44,9 +46,56 @@ The mocked response to the |FakeBatchSystemAdapter.get_allocation|, |FakeBatchSy
 
 HTCondor Batch System Adapter
 -----------------------------
+.. |HTCondorAdapter.get_utilization| replace:: :py:meth:`~tardis.adapters.batchsystems.htcondor.HTCondorAdapter.get_utilization`
 
-Blubb
-:py:class:`~tardis.adapters.batchsystems.htcondor.HTCondorAdapter`
+.. |HTCondorAdapter.get_allocation| replace:: :py:meth:`~tardis.adapters.batchsystems.htcondor.HTCondorAdapter.get_allocation`
+
+.. |HTCondorAdapter.get_machine_status| replace:: :py:meth:`~tardis.adapters.batchsystems.htcondor.HTCondorAdapter.get_machine_status`
+
+The :py:class:`~tardis.adapters.batchsystems.htcondor.HTCondorAdapter` implements the TARDIS interface to dynamically
+integrate and manage opportunistic resources with the HTCondor batch system.
+
+Information provider for the API calls |HTCondorAdapter.get_utilization|, |HTCondorAdapter.get_allocation| and
+|HTCondorAdapter.get_machine_status| is the HTCondor ``condor_status`` command, which is called asynchronously and its
+output is cached for a configurable time ``max_age``.
+
+|HTCondorAdapter.get_machine_status| returns the status of the worker node by taking into account the HTCondor
+ClassAds ``State`` and ``Activity``. It can take the states ``Available``, ``Draining``, ``Drained`` and
+``NotAvailable``.
+
+The allocation and utilization of a worker node is defined as maximum and minimum of the relative ratios of used over
+requested resources like (CPU, Memory, Disk, etc.), respectively. Which resource ratios to take into account can be
+configured by the ``ratios`` option. Any valid HTCondor expression that returns a floating point number is accepted.
+
+Additional options for the condor_status call can be added by using the ``options`` option.
+
+For example
+
+.. code-block:: yaml
+
+    options:
+      pool: htcondor.example
+
+translates into ``condor_status ... -pool htcondor.example``.
+
+Available configuration options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++----------------+-------------------------------------------------------------------------+-----------------+
+| Option         | Short Description                                                       | Optionality     |
++================+=========================================================================+=================+
+| adapter        | Name of the adapter (HTCondor)                                          |  **Required**   |
++----------------+-------------------------------------------------------------------------+-----------------+
+| max_age        | Maximum age of the cached ``condor_status`` information in minutes      |  **Required**   |
++----------------+-------------------------------------------------------------------------+-----------------+
+| ratios         | HTCondor expressions used to determine allocation and utilization       |  **Required**   |
++----------------+-------------------------------------------------------------------------+-----------------+
+| options        | Additional command line options to add to the ``condor_status`` command |  **Optional**   |
++----------------+-------------------------------------------------------------------------+-----------------+
+
+
+Example configuration
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: yaml
 
