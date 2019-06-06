@@ -70,7 +70,8 @@ class TestHTCondorSiteAdapter(TestCase):
         self.assertFalse(response.updated - datetime.now() > timedelta(seconds=1))
 
         self.mock_executor.return_value.run_command.assert_called_with(
-            'condor_submit -append "environment = TardisDroneUuid=test-123;TardisDroneCores=8;TardisDroneMemory=32" submit.jdl')
+            'condor_submit -append "environment = TardisDroneUuid=test-123;TardisDroneCores=8;TardisDroneMemory=32"'
+            ' -a "request_cpus = 8" -a "request_memory = 32" submit.jdl')
         self.mock_executor.reset()
 
     def test_machine_meta_data(self):

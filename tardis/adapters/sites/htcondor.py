@@ -44,6 +44,9 @@ htcondor_status_codes = {'0': ResourceStatus.Error,
                          '5': ResourceStatus.Error,
                          '6': ResourceStatus.Error}
 
+htcondor_translate_resources = {'Cores': 'request_cpus',
+                                'Memory': 'request_memory',
+                                'Disk': 'request_disk'}
 
 class HTCondorAdapter(SiteAdapter):
     def __init__(self, machine_type, site_name):
@@ -70,9 +73,18 @@ class HTCondorAdapter(SiteAdapter):
         submit_jdl = self.configuration.MachineTypeConfiguration[self._machine_type].jdl
         drone_resources = ";".join(
             [f'TardisDrone{resource}={self.machine_meta_data[resource]}' for resource in self.machine_meta_data])
+        submit_resources_args = ''
+        for resource in self.machine_meta_data:
+            try:
+                submit_resources_args += \
+                    f'-a "{htcondor_translate_resources[resource]} = {self.machine_meta_data[resource]}" '
+            except KeyError as e:
+                logging.error(f"deploy_resource failed: no translation known for {e}")
+                raise
         submit_command = (
             f'condor_submit '
-            f'-append "environment = TardisDroneUuid={resource_attributes.drone_uuid};{drone_resources}" {submit_jdl}')
+            f'-append "environment = TardisDroneUuid={resource_attributes.drone_uuid};{drone_resources}"'
+            f' {submit_resources_args}{submit_jdl}')
         response = await self._executor.run_command(submit_command)
         pattern = re.compile(r"^.*?(?P<Jobs>\d+).*?(?P<ClusterId>\d+).$", flags=re.MULTILINE)
         response = AttributeDict(pattern.search(response.stdout).groupdict())
