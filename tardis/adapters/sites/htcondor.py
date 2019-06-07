@@ -68,8 +68,11 @@ class HTCondorAdapter(SiteAdapter):
 
     async def deploy_resource(self, resource_attributes):
         submit_jdl = self.configuration.MachineTypeConfiguration[self._machine_type].jdl
-        submit_command = \
-            f'condor_submit -append "environment = TardisDroneUuid={resource_attributes.drone_uuid}" {submit_jdl}'
+        drone_resources = ";".join(
+            [f'TardisDrone{resource}={self.machine_meta_data[resource]}' for resource in self.machine_meta_data])
+        submit_command = (
+            f'condor_submit '
+            f'-append "environment = TardisDroneUuid={resource_attributes.drone_uuid};{drone_resources}" {submit_jdl}')
         response = await self._executor.run_command(submit_command)
         pattern = re.compile(r"^.*?(?P<Jobs>\d+).*?(?P<ClusterId>\d+).$", flags=re.MULTILINE)
         response = AttributeDict(pattern.search(response.stdout).groupdict())
