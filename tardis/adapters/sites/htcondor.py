@@ -48,6 +48,7 @@ htcondor_translate_resources = {'Cores': 'request_cpus',
                                 'Memory': 'request_memory',
                                 'Disk': 'request_disk'}
 
+
 class HTCondorAdapter(SiteAdapter):
     def __init__(self, machine_type, site_name):
         self.configuration = getattr(Configuration(), site_name)
