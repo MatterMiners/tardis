@@ -125,8 +125,8 @@ class TestHTCondorSiteAdapter(TestCase):
                                                                                   stderr="Failed", exit_code=2))
     def test_resource_status_raise_future(self):
         future_timestamp = datetime.now() + timedelta(minutes=1)
-        with self.assertRaises(TardisResourceStatusUpdateFailed):
-            with self.assertLogs(logging.getLogger(), logging.ERROR):
+        with self.assertLogs(logging.getLogger(), logging.ERROR):
+            with self.assertRaises(TardisResourceStatusUpdateFailed):
                 run_async(self.adapter.resource_status, AttributeDict(remote_resource_uuid="1351043",
                                                                       created=future_timestamp))
 
