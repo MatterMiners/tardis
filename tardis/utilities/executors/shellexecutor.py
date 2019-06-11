@@ -11,16 +11,21 @@ class ShellExecutor(Executor):
     def __init__(self, *args, **kwargs):
         pass
 
-    async def run_command(self, command):
-        sub_process = await asyncio.create_subprocess_shell(command, stdout=asyncio.subprocess.PIPE,
+    async def run_command(self, command, stdin_input=None):
+        sub_process = await asyncio.create_subprocess_shell(command,
+                                                            stdin=stdin_input and asyncio.subprocess.PIPE,
+                                                            stdout=asyncio.subprocess.PIPE,
                                                             stderr=asyncio.subprocess.PIPE)
 
-        stdout, stderr = await sub_process.communicate()
+        stdout, stderr = await sub_process.communicate(stdin_input and stdin_input.encode())
         exit_code = sub_process.returncode
 
         if exit_code:
             raise CommandExecutionFailure(message=f"Run command {command} via ShellExecutor failed",
-                                          exit_code=exit_code, stdout=stdout, stderr=stderr)
+                                          exit_code=exit_code,
+                                          stdout=stdout.decode().strip(),
+                                          stderr=stderr.decode().strip(),
+                                          stdin=stdin_input)
 
         return AttributeDict(stdout=stdout.decode().strip(), stderr=stderr.decode().strip(),
                              exit_code=exit_code)
