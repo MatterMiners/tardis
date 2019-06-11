@@ -23,6 +23,9 @@ class TestAsyncRunCommand(TestCase):
 
         self.assertEqual(run_async(self.executor.run_command, 'echo "Test" >>/dev/stderr').stderr, "Test")
 
+        self.assertEqual(run_async(self.executor.run_command, 'read test; echo $test',
+                                   stdin_input="Test").stdout, "Test")
+
     def test_construction_by_yaml(self):
         executor = yaml.safe_load("""
                       !ShellExecutor
