@@ -56,11 +56,13 @@ class TestHTCondorSiteAdapter(TestCase):
 
     @property
     def machine_meta_data(self):
-        return AttributeDict(test2large=AttributeDict(Cores=8, Memory='32'))
+        return AttributeDict(test2large=AttributeDict(Cores=8, Memory=32),
+                             testunkownresource=AttributeDict(Cores=8, Memory=32, Foo=3))
 
     @property
     def machine_type_configuration(self):
-        return AttributeDict(test2large=AttributeDict(jdl='submit.jdl'))
+        return AttributeDict(test2large=AttributeDict(jdl='submit.jdl'),
+                             testunkownresource=AttributeDict(jdl='submit.jdl'))
 
     @mock_executor_run_command(stdout=CONDOR_SUBMIT_OUTPUT)
     def test_deploy_resource(self):
@@ -70,8 +72,15 @@ class TestHTCondorSiteAdapter(TestCase):
         self.assertFalse(response.updated - datetime.now() > timedelta(seconds=1))
 
         self.mock_executor.return_value.run_command.assert_called_with(
-            'condor_submit -append "environment = TardisDroneUuid=test-123;TardisDroneCores=8;TardisDroneMemory=32" submit.jdl')
+            'condor_submit -append "environment = TardisDroneUuid=test-123;TardisDroneCores=8;TardisDroneMemory=32768"'
+            ' -a "request_cpus = 8" -a "request_memory = 32768" submit.jdl')
         self.mock_executor.reset()
+
+    def test_translate_resources_raises_logs(self):
+        self.adapter = HTCondorAdapter(machine_type='testunkownresource', site_name='TestSite')
+        with self.assertLogs(logging.getLogger(), logging.ERROR):
+            with self.assertRaises(KeyError):
+                run_async(self.adapter.deploy_resource, AttributeDict(drone_uuid='test-123'))
 
     def test_machine_meta_data(self):
         self.assertEqual(self.adapter.machine_meta_data, self.machine_meta_data.test2large)
