@@ -56,8 +56,8 @@ class TestHTCondorSiteAdapter(TestCase):
 
     @property
     def machine_meta_data(self):
-        return AttributeDict(test2large=AttributeDict(Cores=8, Memory='32'),
-                             testunkownresource=AttributeDict(Cores=8, Memory='32', Foo='3'))
+        return AttributeDict(test2large=AttributeDict(Cores=8, Memory=32),
+                             testunkownresource=AttributeDict(Cores=8, Memory=32, Foo=3))
 
     @property
     def machine_type_configuration(self):
