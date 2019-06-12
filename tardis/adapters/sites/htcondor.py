@@ -48,6 +48,10 @@ htcondor_translate_resources = {'Cores': 'request_cpus',
                                 'Memory': 'request_memory',
                                 'Disk': 'request_disk'}
 
+htcondor_translate_prefix_resources = {'Cores': 1,
+                                       'Memory': 1024,
+                                       'Disk': 1024}
+
 
 class HTCondorAdapter(SiteAdapter):
     def __init__(self, machine_type, site_name):
@@ -72,19 +76,19 @@ class HTCondorAdapter(SiteAdapter):
 
     async def deploy_resource(self, resource_attributes):
         submit_jdl = self.configuration.MachineTypeConfiguration[self._machine_type].jdl
-        drone_resources = ";".join(
-            [f'TardisDrone{resource}={self.machine_meta_data[resource]}' for resource in self.machine_meta_data])
         submit_resources_args = ''
+        drone_resources = ''
         for resource in self.machine_meta_data:
             try:
-                submit_resources_args += \
-                    f'-a "{htcondor_translate_resources[resource]} = {self.machine_meta_data[resource]}" '
+                drone_resource_value = self.machine_meta_data[resource] * htcondor_translate_prefix_resources[resource]
+                drone_resources += f';TardisDrone{resource}={drone_resource_value}'
+                submit_resources_args += f'-a "{htcondor_translate_resources[resource]} = {drone_resource_value}" '
             except KeyError as e:
                 logging.error(f"deploy_resource failed: no translation known for {e}")
                 raise
         submit_command = (
             f'condor_submit '
-            f'-append "environment = TardisDroneUuid={resource_attributes.drone_uuid};{drone_resources}"'
+            f'-append "environment = TardisDroneUuid={resource_attributes.drone_uuid}{drone_resources}"'
             f' {submit_resources_args}{submit_jdl}')
         response = await self._executor.run_command(submit_command)
         pattern = re.compile(r"^.*?(?P<Jobs>\d+).*?(?P<ClusterId>\d+).$", flags=re.MULTILINE)
