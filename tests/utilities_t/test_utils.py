@@ -1,4 +1,5 @@
 from tardis.utilities.utils import async_run_command
+from tardis.utilities.utils import htcondor_cmd_option_formatter
 from tardis.utilities.utils import htcondor_csv_parser
 from tardis.exceptions.tardisexceptions import AsyncRunCommandFailure
 
@@ -16,6 +17,15 @@ class TestAsyncRunCommand(TestCase):
             run_async(async_run_command, 'exit 1')
 
         self.assertEqual(run_async(async_run_command, 'echo "Test"'), "Test")
+
+
+class TestHTCondorCMDOptionFormatter(TestCase):
+    def test_htcondor_cmd_option_formatter(self):
+        options = {'pool': 'my-htcondor.local',
+                   'test': None}
+        options_string = htcondor_cmd_option_formatter(options)
+
+        self.assertEqual(options_string, "-pool my-htcondor.local -test")
 
 
 class TestHTCondorCSVParser(TestCase):

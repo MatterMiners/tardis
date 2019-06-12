@@ -22,6 +22,13 @@ async def async_run_command(cmd, shell_executor=ShellExecutor()):
         return response.stdout
 
 
+def htcondor_cmd_option_formatter(options):
+    options = (f"-{name} {value}" if value is not None else f"-{name}"
+               for name, value in options.items())
+
+    return " ".join(options)
+
+
 def htcondor_csv_parser(htcondor_input, fieldnames, delimiter='\t', replacements=None):
     replacements = replacements or {}
     with StringIO(htcondor_input) as csv_input:

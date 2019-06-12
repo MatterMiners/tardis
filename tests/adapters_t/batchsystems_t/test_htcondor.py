@@ -44,24 +44,30 @@ class TestHTCondorAdapter(TestCase):
                                   "exoscale-26d361290f\tUnclaimed\tIdle\tundefined\t0.125\t0.125"])
         self.mock_async_run_command.return_value = async_return(return_value=return_value)
 
-        self.config = self.mock_config.return_value
-        self.config.BatchSystem.ratios = {'cpu_ratio': 'Real(TotalSlotCpus-Cpus)/TotalSlotCpus',
-                                          'memory_ratio': 'Real(TotalSlotCpus-Cpus)/TotalSlotCpus'}
-        self.config.BatchSystem.max_age = 10
-        self.config.BatchSystem.options = {'pool': 'my-htcondor.local',
-                                           'test': None}
+        self.setup_config_mock(options={'pool': 'my-htcondor.local',
+                                        'test': None})
 
         self.htcondor_adapter = HTCondorAdapter()
 
     def tearDown(self):
         self.mock_async_run_command.reset_mock()
 
+    def setup_config_mock(self, options=None):
+        self.config = self.mock_config.return_value
+        self.config.BatchSystem.ratios = {'cpu_ratio': 'Real(TotalSlotCpus-Cpus)/TotalSlotCpus',
+                                          'memory_ratio': 'Real(TotalSlotCpus-Cpus)/TotalSlotCpus'}
+        self.config.BatchSystem.max_age = 10
+        if options:
+            self.config.BatchSystem.options = options
+        else:
+            self.config.BatchSystem.options = {}
+
     def test_disintegrate_machine(self):
         self.assertIsNone(run_async(self.htcondor_adapter.disintegrate_machine, drone_uuid='test'))
 
     def test_drain_machine(self):
         run_async(self.htcondor_adapter.drain_machine, drone_uuid='test')
-        self.mock_async_run_command.assert_called_with('condor_drain -graceful test')
+        self.mock_async_run_command.assert_called_with('condor_drain -pool my-htcondor.local -test -graceful test')
         self.assertIsNone(run_async(self.htcondor_adapter.drain_machine, drone_uuid="not_exists"))
         self.mock_async_run_command.side_effect = AsyncRunCommandFailure(message="Does not exists",
                                                                          error_code=1,
@@ -76,6 +82,13 @@ class TestHTCondorAdapter(TestCase):
 
         self.mock_async_run_command.side_effect = None
 
+    def test_drain_machine_without_options(self):
+        self.setup_config_mock()
+        self.htcondor_adapter = HTCondorAdapter()
+
+        run_async(self.htcondor_adapter.drain_machine, drone_uuid='test')
+        self.mock_async_run_command.assert_called_with('condor_drain -graceful test')
+
     def test_integrate_machine(self):
         self.assertIsNone(run_async(self.htcondor_adapter.integrate_machine, drone_uuid='test'))
 
@@ -87,10 +100,11 @@ class TestHTCondorAdapter(TestCase):
         self.assertEqual(run_async(self.htcondor_adapter.get_resource_ratios, drone_uuid='not_exists'), {})
 
     def test_get_resource_ratios_without_options(self):
+        self.setup_config_mock()
         del self.config.BatchSystem.options
-        htcondor_adapter_wo_options = HTCondorAdapter()
+        self.htcondor_adapter = HTCondorAdapter()
 
-        self.assertCountEqual(list(run_async(htcondor_adapter_wo_options.get_resource_ratios, drone_uuid='test')),
+        self.assertCountEqual(list(run_async(self.htcondor_adapter.get_resource_ratios, drone_uuid='test')),
                              [self.cpu_ratio, self.memory_ratio])
 
         self.mock_async_run_command.assert_called_with(self.command_wo_options)
