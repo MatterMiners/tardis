@@ -3,6 +3,7 @@ from ...exceptions.tardisexceptions import AsyncRunCommandFailure
 from ...interfaces.batchsystemadapter import BatchSystemAdapter
 from ...interfaces.batchsystemadapter import MachineStatus
 from ...utilities.utils import async_run_command
+from ...utilities.utils import htcondor_cmd_option_formatter
 from ...utilities.utils import htcondor_csv_parser
 from ...utilities.asynccachemap import AsyncCacheMap
 
@@ -14,10 +15,7 @@ import logging
 async def htcondor_status_updater(options, attributes):
     attributes_string = f'-af:t {" ".join(attributes.values())}'
 
-    options = (f"-{name} {value}" if value is not None else f"-{name}"
-               for name, value in options.items())
-
-    options_string = " ".join(options)
+    options_string = htcondor_cmd_option_formatter(options)
 
     cmd = f"condor_status {attributes_string} -constraint PartitionableSlot=?=True"
 
@@ -48,15 +46,16 @@ class HTCondorAdapter(BatchSystemAdapter):
         self.ratios = config.BatchSystem.ratios
 
         try:
-            options = config.BatchSystem.options
+            self.htcondor_options = config.BatchSystem.options
         except AttributeError:
-            options = {}
+            self.htcondor_options = {}
 
         attributes = dict(Machine='Machine', State='State', Activity='Activity', TardisDroneUuid='TardisDroneUuid')
         # Escape htcondor expressions and add them to attributes
         attributes.update({key: quote(value) for key, value in self.ratios.items()})
 
-        self._htcondor_status = AsyncCacheMap(update_coroutine=partial(htcondor_status_updater, options, attributes),
+        self._htcondor_status = AsyncCacheMap(update_coroutine=partial(htcondor_status_updater, self.htcondor_options,
+                                                                       attributes),
                                               max_age=config.BatchSystem.max_age * 60)
 
     async def disintegrate_machine(self, drone_uuid):
@@ -73,8 +72,15 @@ class HTCondorAdapter(BatchSystemAdapter):
             machine = self._htcondor_status[drone_uuid]['Machine']
         except KeyError:
             return
+
+        options_string = htcondor_cmd_option_formatter(self.htcondor_options)
+
+        if options_string:
+            cmd = f"condor_drain {options_string} -graceful {machine}"
+        else:
+            cmd = f"condor_drain -graceful {machine}"
+
         try:
-            cmd = f'condor_drain -graceful {machine}'
             return await async_run_command(cmd)
         except AsyncRunCommandFailure as ex:
             if ex.error_code == 1:
