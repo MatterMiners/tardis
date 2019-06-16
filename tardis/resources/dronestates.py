@@ -169,9 +169,12 @@ class ShutDownState(State):
         logging.info(f'Stopping VM with ID {drone.resource_attributes.remote_resource_uuid}')
 
         new_state = await cls.run_processing_pipeline(drone)
-
         if isinstance(new_state, ShuttingDownState):
-            await drone.site_agent.stop_resource(drone.resource_attributes)
+            try:
+                await drone.site_agent.stop_resource(drone.resource_attributes)
+            except TardisResourceStatusUpdateFailed:
+                logging.warning(f"Calling stop_resource failed for drone {drone.resource_attributes.drone_uuid}")
+                new_state = ShutDownState()
         await drone.set_state(new_state)
 
 

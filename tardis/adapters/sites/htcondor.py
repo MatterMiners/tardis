@@ -128,7 +128,14 @@ class HTCondorAdapter(SiteAdapter):
 
     async def terminate_resource(self, resource_attributes):
         terminate_command = f"condor_rm {resource_attributes.remote_resource_uuid}"
-        response = await self._executor.run_command(terminate_command)
+        try:
+            response = await self._executor.run_command(terminate_command)
+        except CommandExecutionFailure as cef:
+            if cef.exit_code == 1 and "Couldn't find/remove" in cef.stderr:
+                # Happens if condor_rm is called in the moment the drone is shutting down itself
+                # Repeat the procedure until resource has vanished from condor_status call
+                raise TardisResourceStatusUpdateFailed from cef
+            raise
         pattern = re.compile(r"^.*?(?P<ClusterId>\d+).*$", flags=re.MULTILINE)
         response = AttributeDict(pattern.search(response.stdout).groupdict())
         return self.handle_response(response)
