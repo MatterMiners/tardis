@@ -158,8 +158,16 @@ class TestHTCondorSiteAdapter(TestCase):
                                                                                   exit_code=1,
                                                                                   stderr=CONDOR_RM_FAILED_OUTPUT,
                                                                                   stdout="", stdin=""))
-    def test_terminate_resource_failed(self):
+    def test_terminate_resource_failed_redo(self):
         with self.assertRaises(TardisResourceStatusUpdateFailed):
+            run_async(self.adapter.terminate_resource, AttributeDict(remote_resource_uuid="1351043"))
+
+    @mock_executor_run_command(stdout="", raise_exception=CommandExecutionFailure(message=CONDOR_RM_FAILED_MESSAGE,
+                                                                                  exit_code=2,
+                                                                                  stderr=CONDOR_RM_FAILED_OUTPUT,
+                                                                                  stdout="", stdin=""))
+    def test_terminate_resource_failed_raise(self):
+        with self.assertRaises(CommandExecutionFailure):
             run_async(self.adapter.terminate_resource, AttributeDict(remote_resource_uuid="1351043"))
 
     def test_exception_handling(self):
