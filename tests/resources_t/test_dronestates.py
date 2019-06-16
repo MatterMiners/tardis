@@ -26,6 +26,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 import asyncio
+import logging
 
 
 class TestDroneStates(TestCase):
@@ -71,12 +72,12 @@ class TestDroneStates(TestCase):
             run_async(self.drone.state.return_value.run, self.drone)
             self.assertIsInstance(self.drone.state, new_state)
 
-    def run_side_effects(self, initial_state, api_call_to_test, exceptions, finial_state):
+    def run_side_effects(self, initial_state, api_call_to_test, exceptions, final_state):
         for exception in exceptions:
             self.drone.state.return_value = initial_state
             api_call_to_test.side_effect = exception()
             run_async(self.drone.state.return_value.run, self.drone)
-            self.assertIsInstance(self.drone.state, finial_state)
+            self.assertIsInstance(self.drone.state, final_state)
 
         api_call_to_test.side_effect = None
 
@@ -115,7 +116,6 @@ class TestDroneStates(TestCase):
         self.drone.batch_system_agent.integrate_machine.assert_called_with(drone_uuid='test-923ABF')
 
     def test_integrating_state(self):
-
         matrix = [(ResourceStatus.Running, MachineStatus.NotAvailable, IntegratingState),
                   (ResourceStatus.Running, MachineStatus.Available, AvailableState),
                   (ResourceStatus.Running, MachineStatus.Draining, DrainingState),
@@ -186,6 +186,14 @@ class TestDroneStates(TestCase):
 
         self.run_side_effects(ShutDownState, self.drone.site_agent.resource_status,
                               (TardisDroneCrashed,), CleanupState)
+
+        self.mock_drone.reset()
+        self.drone.site_agent.resource_status.return_value = async_return(
+            return_value=AttributeDict(resource_status=ResourceStatus.Running))
+        with self.assertLogs(level=logging.WARNING):
+            self.run_side_effects(ShutDownState, self.drone.site_agent.stop_resource,
+                                  (TardisResourceStatusUpdateFailed,), ShutDownState)
+        self.drone.site_agent.stop_resource.assert_called_with(self.drone.resource_attributes)
 
     def test_shutting_down_state(self):
         matrix = [(ResourceStatus.Running, None, ShuttingDownState),
