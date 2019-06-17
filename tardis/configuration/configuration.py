@@ -2,7 +2,8 @@ from ..interfaces.borg import Borg
 from ..utilities.attributedict import AttributeDict
 from ..utilities.attributedict import convert_to_attribute_dict
 # Need to import all pyyaml loadable classes (bootstrapping problem) FIX ME
-from ..utilities.executors import *  # noqa: F403, F401
+from ..utilities.executors import *   # noqa: F403, F401
+from ..utilities.simulators import *  # noqa: F403, F401
 
 from base64 import b64encode
 import os
