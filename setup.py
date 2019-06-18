@@ -7,12 +7,12 @@ with open(os.path.join(repo_base_dir, 'README.md'), 'r') as read_me:
     long_description = read_me.read()
 
 setup(
-    name='tardis',
+    name='cobald-tardis',
     version='0.0.1',
-    description='StateMachine using asyncio',
+    description='Transparent Adaptive Resource Dynamic Integration System',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/tardis-resourcemanager/tardis',
+    url='https://github.com/matterminers/tardis',
     author='Manuel Giffels',
     author_email='giffels@gmail.com',
     classifiers=[
@@ -38,7 +38,7 @@ setup(
     zip_safe=False,
     test_suite='tests',
     project_urls={
-        'Bug Reports': 'https://github.com/tardis-resourcemanager/tardis/issues',
-        'Source': 'https://github.com/tardis-resourcemanager/tardis',
+        'Bug Reports': 'https://github.com/matterminers/tardis/issues',
+        'Source': 'https://github.com/materminers/tardis',
     },
 )
