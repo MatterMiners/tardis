@@ -114,8 +114,10 @@ test_scripts/
 
 # Ignore configurations
 cobald.yml
-faketardis.yml
-tardis.yml
+*tardis.yml
 
 #Ignore cloudinit files
 cloudinit/
+
+#Ignore logs
+*.log*
