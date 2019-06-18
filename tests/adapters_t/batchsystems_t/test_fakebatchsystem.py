@@ -1,5 +1,6 @@
 from tardis.adapters.batchsystems.fakebatchsystem import FakeBatchSystemAdapter
 from tardis.interfaces.batchsystemadapter import MachineStatus
+from tardis.utilities.attributedict import AttributeDict
 
 from tests.utilities.utilities import run_async
 
@@ -19,10 +20,10 @@ class TestFakeBatchSystemAdapter(TestCase):
         cls.mock_config_patcher.stop()
 
     def setUp(self):
-        config = self.mock_config.return_value
-        config.BatchSystem.allocation = 1.0
-        config.BatchSystem.utilization = 1.0
-        config.BatchSystem.machine_status = "Available"
+        self.config = self.mock_config.return_value
+        self.config.BatchSystem.allocation = 1.0
+        self.config.BatchSystem.utilization = 1.0
+        self.config.BatchSystem.machine_status = "Available"
 
         self.fake_adapter = FakeBatchSystemAdapter()
 
@@ -38,6 +39,10 @@ class TestFakeBatchSystemAdapter(TestCase):
     def test_get_allocation(self):
         self.assertEqual(run_async(self.fake_adapter.get_allocation, 'test-123'), 1.0)
 
+        self.config.BatchSystem.allocation = AttributeDict(get_value=lambda: 0.9)
+        self.fake_adapter = FakeBatchSystemAdapter()
+        self.assertEqual(run_async(self.fake_adapter.get_allocation, 'test-123'), 0.9)
+
     def test_get_machine_status(self):
         self.assertEqual(run_async(self.fake_adapter.get_machine_status, 'test-123'), MachineStatus.Available)
 
@@ -46,3 +51,7 @@ class TestFakeBatchSystemAdapter(TestCase):
 
     def test_get_utilization(self):
         self.assertEqual(run_async(self.fake_adapter.get_utilization, 'test-123'), 1.0)
+
+        self.config.BatchSystem.utilization = AttributeDict(get_value=lambda: 0.9)
+        self.fake_adapter = FakeBatchSystemAdapter()
+        self.assertEqual(run_async(self.fake_adapter.get_utilization, 'test-123'), 0.9)

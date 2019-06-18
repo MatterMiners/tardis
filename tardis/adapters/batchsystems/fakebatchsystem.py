@@ -20,7 +20,12 @@ class FakeBatchSystemAdapter(BatchSystemAdapter):
         return
 
     async def get_allocation(self, drone_uuid):
-        return self.fake_config.allocation
+        try:
+            allocation = self.fake_config.allocation.get_value()
+        except AttributeError:
+            return self.fake_config.allocation
+        else:
+            return allocation
 
     async def get_machine_status(self, drone_uuid):
         try:
@@ -31,4 +36,9 @@ class FakeBatchSystemAdapter(BatchSystemAdapter):
             return machine_status
 
     async def get_utilization(self, drone_uuid):
-        return self.fake_config.utilization
+        try:
+            utilization = self.fake_config.utilization.get_value()
+        except AttributeError:
+            return self.fake_config.utilization
+        else:
+            return utilization
