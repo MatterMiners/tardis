@@ -28,6 +28,8 @@ class FakeSiteAdapter(SiteAdapter):
         self.handle_response = partial(self.handle_response, key_translator=key_translator,
                                        translator_functions=StaticMapping())
 
+        self._stopped_n_terminated_resources = {}
+
     async def deploy_resource(self, resource_attributes: AttributeDict) -> AttributeDict:
         await asyncio.sleep(self._api_response_delay.get_value())
         now = datetime.now()
@@ -37,6 +39,13 @@ class FakeSiteAdapter(SiteAdapter):
                                  updated=now,
                                  resource_boot_time=self._resource_boot_time.get_value())
         return self.handle_response(response)
+
+    def get_resource_boot_time(self, resource_attributes):
+        try:
+            return resource_attributes.resource_boot_time
+        except AttributeError:  # In case tardis is restarted, resource_boot_time is not set, so re-set
+            resource_boot_time = resource_attributes["resource_boot_time"] = self._resource_boot_time.get_value()
+            return resource_boot_time
 
     @property
     def machine_meta_data(self) -> AttributeDict:
@@ -52,22 +61,29 @@ class FakeSiteAdapter(SiteAdapter):
 
     async def resource_status(self, resource_attributes: AttributeDict) -> AttributeDict:
         await asyncio.sleep(self._api_response_delay.get_value())
-        created_time = resource_attributes.created
-        try:
-            resource_boot_time = resource_attributes.resource_boot_time
-        except AttributeError:
-            resource_boot_time = resource_attributes['resource_boot_time'] = self._resource_boot_time.get_value()
+        try:  # check if resource has been stopped or terminated
+            resource_status = self._stopped_n_terminated_resources[resource_attributes.drone_uuid]
+        except KeyError:
+            pass
+        else:
+            return self.handle_response(AttributeDict(resource_status=resource_status))
 
+        created_time = resource_attributes.created
+
+        resource_boot_time = self.get_resource_boot_time(resource_attributes)
+        # check if resource is already running
         if (datetime.now()-created_time) > timedelta(seconds=resource_boot_time):
             return self.handle_response(AttributeDict(resource_status=ResourceStatus.Running))
         return self.handle_response(resource_attributes)
 
     async def stop_resource(self, resource_attributes: AttributeDict):
         await asyncio.sleep(self._api_response_delay.get_value())
+        self._stopped_n_terminated_resources[resource_attributes.drone_uuid] = ResourceStatus.Stopped
         return self.handle_response(AttributeDict(resource_status=ResourceStatus.Stopped))
 
     async def terminate_resource(self, resource_attributes: AttributeDict):
         await asyncio.sleep(self._api_response_delay.get_value())
+        self._stopped_n_terminated_resources[resource_attributes.drone_uuid] = ResourceStatus.Deleted
         return self.handle_response(AttributeDict(resource_status=ResourceStatus.Deleted))
 
     @contextmanager
