@@ -53,7 +53,10 @@ class FakeSiteAdapter(SiteAdapter):
     async def resource_status(self, resource_attributes: AttributeDict) -> AttributeDict:
         await asyncio.sleep(self._api_response_delay.get_value())
         created_time = resource_attributes.created
-        resource_boot_time = resource_attributes.resource_boot_time
+        try:
+            resource_boot_time = resource_attributes.resource_boot_time
+        except AttributeError:
+            resource_boot_time = resource_attributes['resource_boot_time'] = self._resource_boot_time.get_value()
 
         if (datetime.now()-created_time) > timedelta(seconds=resource_boot_time):
             return self.handle_response(AttributeDict(resource_status=ResourceStatus.Running))

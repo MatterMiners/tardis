@@ -57,6 +57,10 @@ class TestFakeSiteAdapter(TestCase):
         self.assertEqual(self.adapter.site_name, 'TestSite')
 
     def test_resource_status(self):
+        response = run_async(self.adapter.resource_status, AttributeDict(created=datetime.now(),
+                                                                         resource_status=ResourceStatus.Booting))
+        self.assertEqual(response.resource_status, ResourceStatus.Booting)
+
         deploy_response = run_async(self.adapter.deploy_resource, AttributeDict())
         response = run_async(self.adapter.resource_status, deploy_response)
         self.assertEqual(response.resource_status, ResourceStatus.Booting)
