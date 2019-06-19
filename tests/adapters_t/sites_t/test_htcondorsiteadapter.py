@@ -29,6 +29,22 @@ CONDOR_RM_OUTPUT = """All jobs in cluster 1351043 have been marked for removal""
 CONDOR_RM_FAILED_OUTPUT = """Couldn't find/remove all jobs in cluster 1351043"""
 CONDOR_RM_FAILED_MESSAGE = """Run command condor_rm 1351043 via ShellExecutor failed"""
 
+CONDOR_SUBMIT_JDL = """executable = start_pilot.sh
+transfer_input_files = setup_pilot.sh
+output = logs/$(cluster).$(process).out
+error = logs/$(cluster).$(process).err
+log = logs/cluster.log
+
+accounting_group=tardis
+
+environment=TardisDroneCores=8;TardisDroneMemory=32768;TardisDroneDisk=163840;TardisDroneUuid=test-123
+
+request_cpus=8
+request_memory=32768
+request_disk=163840
+
+queue 1"""
+
 
 class TestHTCondorSiteAdapter(TestCase):
     mock_config_patcher = None
@@ -58,13 +74,13 @@ class TestHTCondorSiteAdapter(TestCase):
 
     @property
     def machine_meta_data(self):
-        return AttributeDict(test2large=AttributeDict(Cores=8, Memory=32),
-                             testunkownresource=AttributeDict(Cores=8, Memory=32, Foo=3))
+        return AttributeDict(test2large=AttributeDict(Cores=8, Memory=32, Disk=160),
+                             testunkownresource=AttributeDict(Cores=8, Memory=32, Disk=160, Foo=3))
 
     @property
     def machine_type_configuration(self):
-        return AttributeDict(test2large=AttributeDict(jdl='submit.jdl'),
-                             testunkownresource=AttributeDict(jdl='submit.jdl'))
+        return AttributeDict(test2large=AttributeDict(jdl='tests/data/submit.jdl'),
+                             testunkownresource=AttributeDict(jdl='tests/data/submit.jdl'))
 
     @mock_executor_run_command(stdout=CONDOR_SUBMIT_OUTPUT)
     def test_deploy_resource(self):
@@ -73,9 +89,7 @@ class TestHTCondorSiteAdapter(TestCase):
         self.assertFalse(response.created - datetime.now() > timedelta(seconds=1))
         self.assertFalse(response.updated - datetime.now() > timedelta(seconds=1))
 
-        self.mock_executor.return_value.run_command.assert_called_with(
-            'condor_submit -append "environment = TardisDroneUuid=test-123;TardisDroneCores=8;TardisDroneMemory=32768"'
-            ' -a "request_cpus = 8" -a "request_memory = 32768" submit.jdl')
+        self.mock_executor.return_value.run_command.assert_called_with("condor_submit", stdin_input=CONDOR_SUBMIT_JDL)
         self.mock_executor.reset()
 
     def test_translate_resources_raises_logs(self):
