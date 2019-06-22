@@ -21,5 +21,10 @@ class SSHExecutor(Executor):
                                               stdin=stdin_input,
                                               stdout=pe.stdout,
                                               stderr=pe.stderr) from pe
+            except (ConnectionResetError, asyncssh.misc.DisconnectError, asyncssh.misc.ConnectionLost,
+                    BrokenPipeError) as ce:
+                raise CommandExecutionFailure(message=f"Could not run command {command} due to SSH failure: {ce}",
+                                              exit_code=255, stdout="", stderr="SSH failure") from ce
+
             else:
                 return AttributeDict(stdout=response.stdout, stderr=response.stderr, exit_code=response.exit_status)
