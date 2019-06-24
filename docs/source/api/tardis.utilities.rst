@@ -12,6 +12,7 @@ Subpackages
 .. toctree::
 
     tardis.utilities.executors
+    tardis.utilities.simulators
 
 Submodules
 ----------
