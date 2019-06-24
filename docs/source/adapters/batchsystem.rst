@@ -63,8 +63,8 @@ output is cached for a configurable time ``max_age``.
 ClassAds ``State`` and ``Activity``. It can take the states ``Available``, ``Draining``, ``Drained`` and
 ``NotAvailable``.
 
-The allocation and utilization of a worker node is defined as maximum and minimum of the relative ratios of used over
-requested resources like (CPU, Memory, Disk, etc.), respectively. Which resource ratios to take into account can be
+The allocation and utilization of a worker node is defined as maximum and minimum of the relative ratios of requested
+over total resources like (CPU, Memory, Disk, etc.), respectively. Which resource ratios to take into account can be
 configured by the ``ratios`` option. Any valid HTCondor expression that returns a floating point number is accepted.
 
 Additional options for the condor_status call can be added by using the ``options`` option.

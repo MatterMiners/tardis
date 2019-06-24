@@ -128,7 +128,7 @@ class HTCondorAdapter(BatchSystemAdapter):
 
     async def get_resource_ratios(self, drone_uuid: str) -> Iterable[float]:
         """
-        Get the ratios of used over requested resources (CPU, Memory, Disk, etc. ) for of a worker node in HTCondor
+        Get the ratios of requested over total resources (CPU, Memory, Disk, etc. ) for of a worker node in HTCondor
         according to the HTCondor expressions defined in the adapter configuration.
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding to the host name of the drone.
@@ -146,8 +146,8 @@ class HTCondorAdapter(BatchSystemAdapter):
 
     async def get_allocation(self, drone_uuid: str) -> float:
         """
-        Get the allocation of a worker node in HTCondor, which is defined as maximum of the ratios of used over
-        requested resources (CPU, Memory, Disk, etc.).
+        Get the allocation of a worker node in HTCondor, which is defined as maximum of the ratios of requested over
+        total resources (CPU, Memory, Disk, etc.).
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding to the host name of the drone.
         :type drone_uuid: str
@@ -180,8 +180,8 @@ class HTCondorAdapter(BatchSystemAdapter):
 
     async def get_utilization(self, drone_uuid: str) -> float:
         """
-        Get the utilization of a worker node in HTCondor, which is defined as minimum of the ratios of used over
-        requested resources (CPU, Memory, Disk, etc.).
+        Get the utilization of a worker node in HTCondor, which is defined as minimum of the ratios of requested over
+        total resources (CPU, Memory, Disk, etc.).
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding to the host name of the drone.
         :type drone_uuid: str
