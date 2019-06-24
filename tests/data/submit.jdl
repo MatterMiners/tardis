@@ -1,0 +1,15 @@
+executable = start_pilot.sh
+transfer_input_files = setup_pilot.sh
+output = logs/$$(cluster).$$(process).out
+error = logs/$$(cluster).$$(process).err
+log = logs/cluster.log
+
+accounting_group=tardis
+
+environment=${Environment}
+
+request_cpus=${Cores}
+request_memory=${Memory}
+request_disk=${Disk}
+
+queue 1

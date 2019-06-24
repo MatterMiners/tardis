@@ -13,6 +13,7 @@ from ...utilities.utils import htcondor_csv_parser
 from contextlib import contextmanager
 from datetime import datetime
 from functools import partial
+from string import Template
 
 import logging
 import re
@@ -44,11 +45,7 @@ htcondor_status_codes = {'0': ResourceStatus.Error,
                          '5': ResourceStatus.Error,
                          '6': ResourceStatus.Error}
 
-htcondor_translate_resources = {'Cores': 'request_cpus',
-                                'Memory': 'request_memory',
-                                'Disk': 'request_disk'}
-
-htcondor_translate_prefix_resources = {'Cores': 1,
+htcondor_translate_resources_prefix = {'Cores': 1,
                                        'Memory': 1024,
                                        'Disk': 1024}
 
@@ -75,22 +72,23 @@ class HTCondorAdapter(SiteAdapter):
                                              max_age=self.configuration.max_age * 60)
 
     async def deploy_resource(self, resource_attributes):
-        submit_jdl = self.configuration.MachineTypeConfiguration[self._machine_type].jdl
-        submit_resources_args = ''
-        drone_resources = ''
-        for resource in self.machine_meta_data:
-            try:
-                drone_resource_value = self.machine_meta_data[resource] * htcondor_translate_prefix_resources[resource]
-                drone_resources += f';TardisDrone{resource}={drone_resource_value}'
-                submit_resources_args += f'-a "{htcondor_translate_resources[resource]} = {drone_resource_value}" '
-            except KeyError as e:
-                logging.error(f"deploy_resource failed: no translation known for {e}")
-                raise
-        submit_command = (
-            f'condor_submit '
-            f'-append "environment = TardisDroneUuid={resource_attributes.drone_uuid}{drone_resources}"'
-            f' {submit_resources_args}{submit_jdl}')
-        response = await self._executor.run_command(submit_command)
+        with open(self.configuration.MachineTypeConfiguration[self._machine_type].jdl, 'r') as f:
+            jdl_template = Template(f.read())
+
+        try:
+            translated_meta_data = {key: htcondor_translate_resources_prefix[key] * value for key, value in
+                                    self.machine_meta_data.items()}
+        except KeyError as ke:
+            logging.error(f"deploy_resource failed: no translation known for {ke}")
+            raise
+        else:
+            translated_meta_data['Uuid'] = resource_attributes.drone_uuid
+
+        submit_jdl = jdl_template.substitute(translated_meta_data,
+                                             Environment=";".join(f"TardisDrone{key}={value}"
+                                                                  for key, value in translated_meta_data.items()))
+
+        response = await self._executor.run_command("condor_submit", stdin_input=submit_jdl)
         pattern = re.compile(r"^.*?(?P<Jobs>\d+).*?(?P<ClusterId>\d+).$", flags=re.MULTILINE)
         response = AttributeDict(pattern.search(response.stdout).groupdict())
         response.update(self.create_timestamps())
