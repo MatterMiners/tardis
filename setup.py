@@ -8,7 +8,7 @@ with open(os.path.join(repo_base_dir, 'README.md'), 'r') as read_me:
 
 setup(
     name='cobald-tardis',
-    version='0.0.1',
+    version='0.1.0',
     description='Transparent Adaptive Resource Dynamic Integration System',
     long_description=long_description,
     long_description_content_type='text/markdown',
