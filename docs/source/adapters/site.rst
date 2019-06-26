@@ -2,6 +2,46 @@
 Site Adapter
 ============
 
+The site adapters provide interfaces to various Cloud APIs and batch systems in order to allow a on-demand provisioning
+of resources and a dynamic orchestration of pre-built VM images and containers.
+
+Sites are generally configured in the `Sites` configuration block. One has to specify a site name, the adapter to use
+and a site quota in units of cores. Negative values for the site quota are interpreted as infinity. Multiple sites are
+supported by using SequenceNodes.
+
+Generic Site Adapter Configuration
+----------------------------------
+
+Available configuration options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++---------+----------------------------------------------------------------------------------+-----------------+
+| Option  | Short Description                                                                | Optionality     |
++=========+==================================================================================+=================+
+| name    | Name of the site                                                                 |  **Required**   |
++---------+----------------------------------------------------------------------------------+-----------------+
+| adapter | Site adapter to use. Adapter will be auto-imported (class name without Adapter)  |  **Required**   |
++---------+----------------------------------------------------------------------------------+-----------------+
+| quota   | Core quota to be used for this site. Negative values are interpreted as infinity |  **Required**   |
++---------+----------------------------------------------------------------------------------+-----------------+
+
+For each site in the `Sites` configuration block. A site specific configuration block carrying the site name
+has to be added to the configuration as well.
+
+The site specific MappingNode contains site adapter specific configuration options that you can find below in
+the particular site adapter documentation.
+
+In addition, it is required to add the following MappingNodes:
+
+* `MachineTypes` containing a SequenceNode of available machine types to be supported at the given site.
+* `MachineTypeConfiguration` a MappingNode for each machine type containing machine type specific configurations,
+  details can be found below in the particular site adapter documentation.
+* `MachineTypeMetaData` containing a MappingNode for each machine type specifying the amount of Cores, Memory and Disk
+  available
+
+
+Example configuration
+~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: yaml
 
@@ -50,7 +90,30 @@ Site Adapter
 
 Cloud Stack Site Adapter
 ------------------------
-:py:class:`~tardis.adapters.sites.cloudstack.CloudStackAdapter`
+The :py:class:`~tardis.adapters.sites.cloudstack.CloudStackAdapter` implements an interface to the CloudStack API.
+The following general adapter configuration options are available.
+
+Available adapter configuration options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++----------------+---------------------------------------------------------------------+-----------------+
+| Option         | Short Description                                                   | Optionality     |
++================+=====================================================================+=================+
+| api_key        | Your CloudStack API Key to authenticate yourself.                   |  **Required**   |
++----------------+---------------------------------------------------------------------+-----------------+
+| api_secret     | Your CloudStack API secret to authenticate yourself.                |  **Required**   |
++----------------+---------------------------------------------------------------------+-----------------+
+| end_point      | The end point of the CloudStack API to contact.                     |  **Required**   |
++----------------+---------------------------------------------------------------------+-----------------+
+
+All configuration entries in the `MachineTypeConfiguration` section of the machine types are
+directly added as keyword arguments to the CloudStack API `deployVirtualMachine` call. All available options are
+described in the `CloudStack documentation`_
+
+.. _CloudStack documentation: https://cloudstack.apache.org/api/apidocs-4.12/apis/deployVirtualMachine.html
+
+Example configuration
+~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: yaml
 
@@ -86,7 +149,31 @@ Cloud Stack Site Adapter
 
 HTCondor Site Adapter
 ---------------------
-:py:class:`~tardis.adapters.sites.htcondor.HTCondorAdapter`
+The :py:class:`~tardis.adapters.sites.htcondor.HTCondorAdapter` implements an interface to the HTCondor batch system.
+Regular batch jobs are submitted that start the actual Drone, which than is integrated itself in overlay batch system
+using the chosen :ref:`BatchSystemAdapter.<ref_batch_system_adapter>`
+
+.. |executor| replace:: :ref:`executor<ref_executors>`
+
+Available adapter configuration options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++----------------+-----------------------------------------------------------------------------------+-----------------+
+| Option         | Short Description                                                                 | Optionality     |
++================+===================================================================================+=================+
+| max_age        | The result of the `condor_status` call is cached for `max_age` in minutes.        |  **Required**   |
++----------------+-----------------------------------------------------------------------------------+-----------------+
+| executor       | The |executor| used to run submission and further calls to the Moab batch system. |  **Optional**   |
++                +                                                                                   +                 +
+|                | Default: ShellExecutor is used!                                                   |                 |
++----------------+-----------------------------------------------------------------------------------+-----------------+
+
+The only available option in the `MachineTypeConfiguration` section is a template jdl used to submit drones to the
+HTCondor batch system. The template jdl is using the `Python template string`_ syntax.
+
+.. _Python template string: https://docs.python.org/3.4/library/string.html#template-strings
+
+Example configuration
+~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: yaml
 
@@ -110,7 +197,29 @@ HTCondor Site Adapter
 
 Moab Site Adapter
 -----------------
-:py:class:`~tardis.adapters.sites.moab.MoabAdapter`
+The :py:class:`~tardis.adapters.sites.moab.MoabAdapter` implements an interface to the Moab batch system. Regular batch
+jobs are submitted that start the actual Drone, which than is integrated itself in overlay batch system
+using the chosen :ref:`BatchSystemAdapter.<ref_batch_system_adapter>`.
+
+Available adapter configuration options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++----------------+-----------------------------------------------------------------------------------+-----------------+
+| Option         | Short Description                                                                 | Optionality     |
++================+===================================================================================+=================+
+| StatusUpdate   | The result of the status call is cached for `StatusUpdate` in minutes.            |  **Required**   |
++----------------+-----------------------------------------------------------------------------------+-----------------+
+| StartUpCommand | The command executed in the batch job.                                            |  **Required**   |
++----------------+-----------------------------------------------------------------------------------+-----------------+
+| executor       | The |executor| used to run submission and further calls to the Moab batch system. |  **Optional**   |
++                +                                                                                   +                 +
+|                | Default: ShellExecutor is used!                                                   |                 |
++----------------+-----------------------------------------------------------------------------------+-----------------+
+
+The available options in the `MachineTypeConfiguration` section are the expected `WallTime` of the placeholder jobs and
+the requested `NodeType`. For details see the Moab documentation.
+
+Example configuration
+~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: yaml
 
@@ -149,7 +258,35 @@ Moab Site Adapter
 
 OpenStack Site Adapter
 ----------------------
-:py:class:`~tardis.adapters.sites.openstack.OpenStackAdapter`
+The :py:class:`~tardis.adapters.sites.openstack.OpenStackAdapter` implements an interface to the OpenStack Cloud API.
+The following general adapter configuration options are available.
+
+Available adapter configuration options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++---------------------+---------------------------------------------------------------------+-----------------+
+| Option              | Short Description                                                   | Optionality     |
++=====================+=====================================================================+=================+
+| auth_url            | The end point of the OpenStack API to contact.                      |  **Required**   |
++---------------------+---------------------------------------------------------------------+-----------------+
+| username            | Your OpenStack API username to authenticate yourself.               |  **Required**   |
++---------------------+---------------------------------------------------------------------+-----------------+
+| password            | Your OpenStack API password to authenticate yourself.               |  **Required**   |
++---------------------+---------------------------------------------------------------------+-----------------+
+| user_domain_name    | The name of the OpenStack user domain.                              |  **Required**   |
++---------------------+---------------------------------------------------------------------+-----------------+
+| project_domain_name | The name of the OpenStack project domain.                           |  **Required**   |
++---------------------+---------------------------------------------------------------------+-----------------+
+
+
+All configuration entries in the `MachineTypeConfiguration` section of the machine types are
+directly added as keyword arguments to the OpenStack API `create-server` call. All available options are
+described in the `OpenStack documentation`_
+
+.. _OpenStack documentation: https://developer.openstack.org/api-ref/compute/#create-server
+
+Example configuration
+~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: yaml
 
@@ -183,7 +320,28 @@ OpenStack Site Adapter
 
 Slurm Site Adapter
 ------------------
-:py:class:`~tardis.adapters.sites.slurm.SlurmAdapter`
+The :py:class:`~tardis.adapters.sites.slurm.SlurmAdapter` implements an interface to the SLURM batch system. Regular
+batch jobs are submitted that start the actual Drone, which than is integrated itself in overlay batch system
+using the chosen :ref:`BatchSystemAdapter.<ref_batch_system_adapter>`.
+
+Available adapter configuration options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++----------------+-----------------------------------------------------------------------------------+-----------------+
+| Option         | Short Description                                                                 | Optionality     |
++================+===================================================================================+=================+
+| StatusUpdate   | The result of the status call is cached for `StatusUpdate` in minutes.            |  **Required**   |
++----------------+-----------------------------------------------------------------------------------+-----------------+
+| StartUpCommand | The command executed in the batch job.                                            |  **Required**   |
++----------------+-----------------------------------------------------------------------------------+-----------------+
+| executor       | The |executor| used to run submission and further calls to the Moab batch system. |  **Optional**   |
++                +                                                                                   +                 +
+|                | Default: ShellExecutor is used!                                                   |                 |
++----------------+-----------------------------------------------------------------------------------+-----------------+
+
+
+Example configuration
+~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: yaml
 
@@ -200,7 +358,6 @@ Slurm Site Adapter
          - /opt/tardis/ssh/tardis
       StartupCommand: pilot_clean.sh
       StatusUpdate: 2
-      UpdateDnsName: True
       MachineTypes:
         - one_day
         - twelve_hours
