@@ -2,7 +2,7 @@
 Plugins
 =======
 
-All plugins are configured within the `plugins` section of the TARDIS configuration. Using multiple plugins are
+All plugins are configured within the `plugins` section of the TARDIS configuration. Using multiple plugins is```
 supported by using a separate MappingNode per plugin.
 
 .. code-block:: yaml
@@ -13,10 +13,10 @@ supported by using a separate MappingNode per plugin.
         Plugin_2:
             option_123: my_option_123
 
-Sqlite Registry
+SQLite Registry
 ---------------
 The :py:class:`~tardis.plugins.sqliteregistry.SqliteRegistry` implements a persistent storage of all Drone states in a
-Sqlite database. The usage of this module is recommended in order to recover the last state of TARDIS in case the
+SQLite database. The usage of this module is recommended in order to recover the last state of TARDIS in case the
 service has to be restarted.
 
 Available configuration options
@@ -25,7 +25,7 @@ Available configuration options
 +----------------+-----------------------------------+-----------------+
 | Option         | Short Description                 | Requirement     |
 +================+===================================+=================+
-| db_file        | Location of the Sqlite database.  |  **Required**   |
+| db_file        | Location of the SQLite database.  |  **Required**   |
 +----------------+-----------------------------------+-----------------+
 
 Example configuration
@@ -40,15 +40,15 @@ Example configuration
 Telegraf Monitoring
 -------------------
 The :py:class:`~tardis.plugins.telegrafmonitoring.TelegrafMonitoring` implements an interface to monitor state changes
-of the Drones in a telegraf service running an UDP input module.
+of the Drones in a telegraf service running a UDP input module.
 
 Available configuration options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 +----------------+---------------------------------------------------------------------------+-----------------+
-| Option         | Short Description                                                         | Optionality     |
+| Option         | Short Description                                                         | Requirement     |
 +================+===========================================================================+=================+
-| host           | Hostname or IP address of the telegraf UDP input module is listening to.  |  **Required**   |
+| host           | Hostname or IP address the telegraf UDP input module is listening to.     |  **Required**   |
 +----------------+---------------------------------------------------------------------------+-----------------+
 | port           | Port the telegraf UDP input module is listening on.                       |  **Required**   |
 +----------------+---------------------------------------------------------------------------+-----------------+
