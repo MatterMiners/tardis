@@ -23,7 +23,7 @@ Available configuration options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 +----------------+-----------------------------------+-----------------+
-| Option         | Short Description                 | Optionality     |
+| Option         | Short Description                 | Requirement     |
 +================+===================================+=================+
 | db_file        | Location of the Sqlite database.  |  **Required**   |
 +----------------+-----------------------------------+-----------------+
