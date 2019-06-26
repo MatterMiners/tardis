@@ -12,6 +12,7 @@ Welcome to the TARDIS documentation!
 
    adapters/batchsystem
    adapters/site
+   executors/executors
    plugins/plugins
    contribute/contribute
    Module Index <api/modules>
