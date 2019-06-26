@@ -128,7 +128,7 @@ class HTCondorAdapter(BatchSystemAdapter):
 
     async def get_resource_ratios(self, drone_uuid: str) -> Iterable[float]:
         """
-        Get the ratios of requested over total resources (CPU, Memory, Disk, etc. ) for of a worker node in HTCondor
+        Get the ratio of requested over total resources (CPU, Memory, Disk, etc. ) for a worker node in HTCondor
         according to the HTCondor expressions defined in the adapter configuration.
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding to the host name of the drone.
