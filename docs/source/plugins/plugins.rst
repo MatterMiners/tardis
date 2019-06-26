@@ -52,7 +52,7 @@ Available configuration options
 +----------------+---------------------------------------------------------------------------+-----------------+
 | port           | Port the telegraf UDP input module is listening on.                       |  **Required**   |
 +----------------+---------------------------------------------------------------------------+-----------------+
-| default_tags   | Tags that should included by default for all entries send to telegraf.    |  **Optional**   |
+| default_tags   | Tags that should be included by default for all entries sent to telegraf. |  **Optional**   |
 +----------------+---------------------------------------------------------------------------+-----------------+
 
 Example configuration
