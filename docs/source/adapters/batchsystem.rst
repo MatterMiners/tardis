@@ -1,4 +1,5 @@
 .. _ref_batch_system_adapter:
+
 =====================
 Batch System Adapters
 =====================
