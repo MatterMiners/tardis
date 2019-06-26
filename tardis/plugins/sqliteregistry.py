@@ -12,7 +12,7 @@ class SqliteRegistry(Plugin):
     def __init__(self):
         """
         The :py:class:`~tardis.plugins.sqliteregistry.SqliteRegistry` implements a persistent storage of all Drone
-        states in a Sqlite database. The usage of this module is recommended in order to recover the last state of
+        states in a SQLite database. The usage of this module is recommended in order to recover the last state of
         TARDIS in case the service has to be restarted.
         """
         self.logger = logging.getLogger("sqliteregistry")
