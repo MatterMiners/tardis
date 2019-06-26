@@ -6,7 +6,7 @@ from tardis.interfaces.batchsystemadapter import MachineStatus
 class FakeBatchSystemAdapter(BatchSystemAdapter):
     """
     :py:class:`~tardis.adapters.batchsystems.fakebatchsystem.FakeBatchSystemAdapter` implements a batch system adapter
-    that mocks the response of hypothetical batch system. It can be used for testing purposes as well as a demonstrator
+    that mocks the response of a hypothetical batch system. It can be used for testing purposes and as a demonstrator
     in workshops and tutorials.
 
     The mocked response to the
