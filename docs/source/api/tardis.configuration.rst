@@ -12,4 +12,5 @@ Submodules
 .. toctree::
 
    tardis.configuration.configuration
+   tardis.configuration.utilities
 

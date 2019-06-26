@@ -11,7 +11,11 @@ Submodules
 
 .. toctree::
 
+   tardis.interfaces.batchsystemadapter
    tardis.interfaces.borg
+   tardis.interfaces.executor
+   tardis.interfaces.plugin
+   tardis.interfaces.simulator
    tardis.interfaces.siteadapter
    tardis.interfaces.state
 

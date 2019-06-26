@@ -13,4 +13,5 @@ Submodules
 
    tardis.resources.drone
    tardis.resources.dronestates
+   tardis.resources.poolfactory
 

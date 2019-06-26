@@ -10,6 +10,11 @@ import sqlite3
 
 class SqliteRegistry(Plugin):
     def __init__(self):
+        """
+        The :py:class:`~tardis.plugins.sqliteregistry.SqliteRegistry` implements a persistent storage of all Drone
+        states in a SQLite database. The usage of this module is recommended in order to recover the last state of
+        TARDIS in case the service has to be restarted.
+        """
         self.logger = logging.getLogger("sqliteregistry")
         self.logger.setLevel(logging.DEBUG)
         configuration = Configuration()
@@ -24,7 +29,7 @@ class SqliteRegistry(Plugin):
             for machine_type in getattr(configuration, site.name).MachineTypes:
                 self.add_machine_types(site.name, machine_type)
 
-    def add_machine_types(self, site_name, machine_type):
+    def add_machine_types(self, site_name: str, machine_type: str):
         sql_query = """INSERT OR IGNORE INTO MachineTypes(machine_type, site_id)
         SELECT :machine_type, Sites.site_id FROM Sites WHERE Sites.site_name = :site_name"""
         self.execute(sql_query, dict(site_name=site_name, machine_type=machine_type))
