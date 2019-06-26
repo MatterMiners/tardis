@@ -2,6 +2,7 @@
 Site Adapter
 ============
 
+
 .. code-block:: yaml
 
     Sites:
@@ -120,10 +121,10 @@ Moab Site Adapter
 
     moab-site:
       executor: !SSHExecutor
-                host: login.dorie.somewherein.de
-                username: clown
-                client_keys:
-                  - /opt/tardis/ssh/tardis
+        host: login.dorie.somewherein.de
+        username: clown
+        client_keys:
+          - /opt/tardis/ssh/tardis
       StartupCommand: startVM.py
       StatusUpdate: 2
       MachineTypes:
@@ -193,10 +194,10 @@ Slurm Site Adapter
 
     hpc2000:
       executor: !SSHExecutor
-                host: hpc2000.hpc.org
-                username: billy
-                client_keys:
-                  - /opt/tardis/ssh/tardis
+        host: hpc2000.hpc.org
+        username: billy
+        client_keys:
+         - /opt/tardis/ssh/tardis
       StartupCommand: pilot_clean.sh
       StatusUpdate: 2
       UpdateDnsName: True
