@@ -10,3 +10,5 @@
 **T**ransparent **A**daptive **R**esource **D**ynamic **I**ntegration **S**ystem 
 enables the dynamic integration of resources provided by different resource
 providers into one overlay batch system.
+
+If you want to get in touch directly, head over to our [gitter](https://gitter.im/MatterMiners/community) channel.
