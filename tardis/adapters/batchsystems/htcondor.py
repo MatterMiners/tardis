@@ -112,7 +112,8 @@ class HTCondorAdapter(BatchSystemAdapter):
             if ex.error_code == 1:
                 # exit code 1: HTCondor can't connect to StartD of Drone
                 # https://github.com/htcondor/htcondor/blob/master/src/condor_tools/drain.cpp
-                logging.debug("Drone %s is not available or already drained." % drone_uuid)
+                logging.debug(f"Draining failed with message: {ex.error_message} {ex.message}")
+                logging.debug(f"Probably drone {drone_uuid} is not available or already drained.")
                 return
             raise ex
 
