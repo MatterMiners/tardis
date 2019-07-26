@@ -2,6 +2,6 @@ tardis.resources.poolfactory module
 ===================================
 
 .. automodule:: tardis.resources.poolfactory
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

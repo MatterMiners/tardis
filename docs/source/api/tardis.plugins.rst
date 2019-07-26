@@ -2,9 +2,9 @@ tardis.plugins package
 ======================
 
 .. automodule:: tardis.plugins
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Submodules
 ----------
@@ -13,4 +13,3 @@ Submodules
 
    tardis.plugins.sqliteregistry
    tardis.plugins.telegrafmonitoring
-

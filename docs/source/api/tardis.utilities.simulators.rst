@@ -2,9 +2,9 @@ tardis.utilities.simulators package
 ===================================
 
 .. automodule:: tardis.utilities.simulators
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Submodules
 ----------
@@ -13,4 +13,3 @@ Submodules
 
    tardis.utilities.simulators.periodicvalue
    tardis.utilities.simulators.randomgauss
-

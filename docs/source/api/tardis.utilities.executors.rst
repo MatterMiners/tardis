@@ -2,9 +2,9 @@ tardis.utilities.executors package
 ==================================
 
 .. automodule:: tardis.utilities.executors
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Submodules
 ----------
@@ -13,4 +13,3 @@ Submodules
 
    tardis.utilities.executors.shellexecutor
    tardis.utilities.executors.sshexecutor
-
