@@ -109,6 +109,13 @@ class TestDroneStates(TestCase):
         self.run_side_effects(BootingState(), self.drone.site_agent.resource_status,
                               (TardisDroneCrashed,), CleanupState)
 
+        # Test draining procedure if cobald sets drone demand to zero
+        self.drone.demand = 0.0
+        self.drone.state.return_value = BootingState()
+        run_async(self.drone.state.return_value.run, self.drone)
+        self.assertIsInstance(self.drone.state, CleanupState)
+        self.assertEqual(self.drone._supply, 0.0)
+
     def test_integrate_state(self):
         self.drone.state.return_value = IntegrateState
         run_async(self.drone.state.return_value.run, self.drone)
@@ -159,7 +166,7 @@ class TestDroneStates(TestCase):
 
     def test_draining_state(self):
         matrix = [(ResourceStatus.Running, MachineStatus.Draining, DrainingState),
-                  (ResourceStatus.Running, MachineStatus.Available, DrainingState),
+                  (ResourceStatus.Running, MachineStatus.Available, DrainState),
                   (ResourceStatus.Running, MachineStatus.Drained, DisintegrateState),
                   (ResourceStatus.Running, MachineStatus.NotAvailable, ShutDownState),
                   (ResourceStatus.Deleted, MachineStatus.NotAvailable, DownState),
