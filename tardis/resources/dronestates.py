@@ -19,6 +19,16 @@ async def batchsystem_machine_status(state_transition, drone, current_state):
     return state_transition[machine_status]()
 
 
+async def check_demand(state_transition, drone, current_state):
+    if not drone.demand:
+        drone._supply = 0.0
+        if current_state in (BootingState,):
+            raise StopProcessing(last_result=CleanupState())  # static state transition
+        else:
+            raise StopProcessing(last_result=DrainState())  # static state transition
+    return state_transition
+
+
 async def resource_status(state_transition, drone, current_state):
     try:
         drone.resource_attributes.update(await drone.site_agent.resource_status(drone.resource_attributes))
@@ -54,7 +64,7 @@ class BootingState(State):
                   ResourceStatus.Stopped: lambda: CleanupState(),
                   ResourceStatus.Error: lambda: CleanupState()}
 
-    processing_pipeline = [resource_status]
+    processing_pipeline = [check_demand, resource_status]
 
     @classmethod
     async def run(cls, drone):
@@ -98,16 +108,11 @@ class AvailableState(State):
                   ResourceStatus.Stopped: lambda: defaultdict(lambda: CleanupState),
                   ResourceStatus.Error: lambda: defaultdict(lambda: CleanupState)}
 
-    processing_pipeline = [resource_status, batchsystem_machine_status]
+    processing_pipeline = [check_demand, resource_status, batchsystem_machine_status]
 
     @classmethod
     async def run(cls, drone):
         logging.info(f"Drone {drone} in AvailableState")
-
-        if not drone.demand:
-            drone._supply = 0.0
-            await drone.set_state(DrainState())  # static state transition
-            return
 
         new_state = await cls.run_processing_pipeline(drone)
 
@@ -132,7 +137,7 @@ class DrainState(State):
 
 class DrainingState(State):
     transition = {ResourceStatus.Running: lambda: {MachineStatus.Draining: lambda: DrainingState(),
-                                                   MachineStatus.Available: lambda: DrainingState(),
+                                                   MachineStatus.Available: lambda: DrainState(),
                                                    MachineStatus.Drained: lambda: DisintegrateState(),
                                                    MachineStatus.NotAvailable: lambda: ShutDownState()
                                                    },

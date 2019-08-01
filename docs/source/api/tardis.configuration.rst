@@ -2,9 +2,9 @@ tardis.configuration package
 ============================
 
 .. automodule:: tardis.configuration
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Submodules
 ----------
@@ -13,4 +13,3 @@ Submodules
 
    tardis.configuration.configuration
    tardis.configuration.utilities
-

@@ -2,9 +2,9 @@ tardis.exceptions package
 =========================
 
 .. automodule:: tardis.exceptions
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Submodules
 ----------
@@ -13,4 +13,3 @@ Submodules
 
    tardis.exceptions.executorexceptions
    tardis.exceptions.tardisexceptions
-

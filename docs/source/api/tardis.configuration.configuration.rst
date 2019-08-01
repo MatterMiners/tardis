@@ -2,6 +2,6 @@ tardis.configuration.configuration module
 =========================================
 
 .. automodule:: tardis.configuration.configuration
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

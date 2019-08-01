@@ -2,9 +2,9 @@ tardis.adapters.sites package
 =============================
 
 .. automodule:: tardis.adapters.sites
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Submodules
 ----------
@@ -17,4 +17,3 @@ Submodules
    tardis.adapters.sites.moab
    tardis.adapters.sites.openstack
    tardis.adapters.sites.slurm
-

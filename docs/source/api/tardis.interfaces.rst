@@ -2,9 +2,9 @@ tardis.interfaces package
 =========================
 
 .. automodule:: tardis.interfaces
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Submodules
 ----------
@@ -18,4 +18,3 @@ Submodules
    tardis.interfaces.simulator
    tardis.interfaces.siteadapter
    tardis.interfaces.state
-

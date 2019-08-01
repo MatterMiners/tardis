@@ -2,17 +2,17 @@ tardis.utilities package
 ========================
 
 .. automodule:: tardis.utilities
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Subpackages
 -----------
 
 .. toctree::
 
-    tardis.utilities.executors
-    tardis.utilities.simulators
+   tardis.utilities.executors
+   tardis.utilities.simulators
 
 Submodules
 ----------
@@ -24,4 +24,3 @@ Submodules
    tardis.utilities.pipeline
    tardis.utilities.staticmapping
    tardis.utilities.utils
-

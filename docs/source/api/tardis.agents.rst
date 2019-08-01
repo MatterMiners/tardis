@@ -2,9 +2,9 @@ tardis.agents package
 =====================
 
 .. automodule:: tardis.agents
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Submodules
 ----------
@@ -13,4 +13,3 @@ Submodules
 
    tardis.agents.batchsystemagent
    tardis.agents.siteagent
-
