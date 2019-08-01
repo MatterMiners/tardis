@@ -10,6 +10,8 @@ from unittest.mock import patch
 from ..utilities.utilities import async_return
 from ..utilities.utilities import run_async
 
+import platform
+
 
 class TestTelegrafMonitoring(TestCase):
     @classmethod
@@ -26,11 +28,11 @@ class TestTelegrafMonitoring(TestCase):
 
     @patch('tardis.plugins.telegrafmonitoring.logging', Mock())
     def setUp(self):
-        config = self.mock_config.return_value
-        config.Plugins.TelegrafMonitoring.host = "telegraf.test"
-        config.Plugins.TelegrafMonitoring.port = 1234
-        config.Plugins.TelegrafMonitoring.default_tags = {'test_tag': 'test'}
-        config.Plugins.TelegrafMonitoring.metric = "tardis_data"
+        self.config = self.mock_config.return_value
+        self.config.Plugins.TelegrafMonitoring.host = "telegraf.test"
+        self.config.Plugins.TelegrafMonitoring.port = 1234
+        self.config.Plugins.TelegrafMonitoring.default_tags = {'test_tag': 'test'}
+        self.config.Plugins.TelegrafMonitoring.metric = "tardis_data"
 
         telegraf_client = self.mock_aiotelegraf.Client.return_value
         telegraf_client.connect.return_value = async_return()
@@ -50,7 +52,24 @@ class TestTelegrafMonitoring(TestCase):
                            updated=datetime.timestamp(test_param.updated))
         test_tags = dict(site_name=test_param.site_name, machine_type=test_param.machine_type)
         run_async(self.plugin.notify, test_state, test_param)
-        self.mock_aiotelegraf.Client.assert_called_with(host='telegraf.test', port=1234, tags={'test_tag': 'test'})
+        self.mock_aiotelegraf.Client.assert_called_with(host='telegraf.test', port=1234,
+                                                        tags={'tardis_machine_name': platform.node(),
+                                                              'test_tag': 'test'})
+        self.mock_aiotelegraf.Client.return_value.connect.assert_called_with()
+        self.mock_aiotelegraf.Client.return_value.metric.assert_called_with('tardis_data', test_result, tags=test_tags)
+        self.mock_aiotelegraf.Client.return_value.close.assert_called_with()
+
+        self.mock_aiotelegraf.reset()
+
+        # Test to overwrite tardis_node_name in plugin configuration
+        self.config.Plugins.TelegrafMonitoring.default_tags = {'test_tag': 'test',
+                                                               'tardis_machine_name': 'my_test_node'}
+        self.plugin = TelegrafMonitoring()
+        run_async(self.plugin.notify, test_state, test_param)
+
+        self.mock_aiotelegraf.Client.assert_called_with(host='telegraf.test', port=1234,
+                                                        tags={'tardis_machine_name': 'my_test_node',
+                                                              'test_tag': 'test'})
         self.mock_aiotelegraf.Client.return_value.connect.assert_called_with()
         self.mock_aiotelegraf.Client.return_value.metric.assert_called_with('tardis_data', test_result, tags=test_tags)
         self.mock_aiotelegraf.Client.return_value.close.assert_called_with()
