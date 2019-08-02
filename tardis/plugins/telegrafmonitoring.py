@@ -6,6 +6,7 @@ from ..utilities.attributedict import AttributeDict
 import aiotelegraf
 from datetime import datetime
 import logging
+import platform
 
 
 class TelegrafMonitoring(Plugin):
@@ -20,7 +21,8 @@ class TelegrafMonitoring(Plugin):
 
         host = config.host
         port = config.port
-        default_tags = getattr(config, 'default_tags', None)
+        default_tags = dict(tardis_machine_name=platform.node())
+        default_tags.update(getattr(config, 'default_tags', {}))
         self.metric = getattr(config, 'metric', 'tardis_data')
 
         self.client = aiotelegraf.Client(host=host, port=port, tags=default_tags)

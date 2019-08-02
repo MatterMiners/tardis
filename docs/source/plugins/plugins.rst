@@ -2,7 +2,7 @@
 Plugins
 =======
 
-All plugins are configured within the `plugins` section of the TARDIS configuration. Using multiple plugins is```
+All plugins are configured within the `plugins` section of the TARDIS configuration. Using multiple plugins is
 supported by using a separate MappingNode per plugin.
 
 .. code-block:: yaml
@@ -41,6 +41,10 @@ Telegraf Monitoring
 -------------------
 The :py:class:`~tardis.plugins.telegrafmonitoring.TelegrafMonitoring` implements an interface to monitor state changes
 of the Drones in a telegraf service running a UDP input module.
+
+.. Note::
+    By default the machine name of the host running tardis is added as default tag. It can be overwritten by adding
+    `tardis_machine_name: 'something_else'` as `default_tag` in the configuration.
 
 Available configuration options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
