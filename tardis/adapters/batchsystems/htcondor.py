@@ -38,7 +38,7 @@ async def htcondor_status_updater(options: AttributeDict, attributes: AttributeD
     htcondor_status = {}
 
     try:
-        logging.debug("HTCondor status update is running.")
+        logging.debug("HTCondor status update is running. Command: {cmd}")
         condor_status = await async_run_command(cmd)
         for row in htcondor_csv_parser(htcondor_input=condor_status, fieldnames=tuple(attributes.keys()),
                                        delimiter='\t', replacements=dict(undefined=None)):
