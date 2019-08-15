@@ -69,7 +69,8 @@ class TestDroneStates(TestCase):
             self.drone.batch_system_agent.get_machine_status.return_value = async_return(
                 return_value=machine_status)
             self.drone.state.return_value = initial_state
-            run_async(self.drone.state.return_value.run, self.drone)
+            with self.assertLogs(None, level="DEBUG"):
+                run_async(self.drone.state.return_value.run, self.drone)
             self.assertIsInstance(self.drone.state, new_state)
 
     def run_side_effects(self, initial_state, api_call_to_test, exceptions, final_state):
