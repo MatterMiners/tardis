@@ -6,7 +6,7 @@ repo_base_dir = os.path.abspath(os.path.dirname(__file__))
 
 # import __about__ file from repository to avoid reading from installed package
 sys.path.insert(0, repo_base_dir)
-from tardis import __about__
+import tardis.__about__ as package_about
 sys.path.pop(0)
 
 with open(os.path.join(repo_base_dir, 'README.md'), 'r') as read_me:
@@ -15,14 +15,14 @@ with open(os.path.join(repo_base_dir, 'README.md'), 'r') as read_me:
 TESTS_REQUIRE = ['aiotools', 'flake8']
 
 setup(
-    name=__about__.__package__,
-    version=__about__.__version__,
-    description=__about__.__summary__,
+    name=package_about.__package__,
+    version=package_about.__version__,
+    description=package_about.__summary__,
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url=__about__.__url__,
-    author=__about__.__author__,
-    author_email=__about__.__email__,
+    url=package_about.__url__,
+    author=package_about.__author__,
+    author_email=package_about.__email__,
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
@@ -38,7 +38,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
     ],
-    keywords=__about__.__keywords__,
+    keywords=package_about.__keywords__,
     packages=find_packages(exclude=['tests']),
     install_requires=['aiohttp', 'CloudStackAIO', 'PyYAML', 'AsyncOpenStackClient',
                       'cobald', 'asyncssh', 'aiotelegraf'],
