@@ -115,7 +115,7 @@ class TestOpenStackAdapter(TestCase):
 
         matrix = [(asyncio.TimeoutError(), TardisTimeout),
                   (AuthError(message="Test_Error", response="Not Allowed"), TardisAuthError),
-                  (ContentTypeError(request_info="Test", history="Test"), TardisResourceStatusUpdateFailed),
+                  (ContentTypeError(request_info=AttributeDict(real_url="Test"), history="Test"), TardisResourceStatusUpdateFailed),
                   (ClientError(message="Test_Error", response="Internal Server Error"), TardisDroneCrashed),
                   (ClientConnectionError(), TardisResourceStatusUpdateFailed),
                   (Exception, TardisError)]
