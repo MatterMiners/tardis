@@ -12,25 +12,25 @@ class MachineStatus(Enum):
 
 class BatchSystemAdapter(metaclass=ABCMeta):
     @abstractmethod
-    async def disintegrate_machine(self, drone_uuid):
+    async def disintegrate_machine(self, drone_uuid: str) -> None:
         return NotImplemented
 
     @abstractmethod
-    async def drain_machine(self, drone_uuid):
+    async def drain_machine(self, drone_uuid: str) -> None:
         return NotImplemented
 
     @abstractmethod
-    async def integrate_machine(self, drone_uuid):
+    async def integrate_machine(self, drone_uuid: str) -> None:
         return NotImplemented
 
     @abstractmethod
-    async def get_allocation(self, drone_uuid):
+    async def get_allocation(self, drone_uuid: str) -> float:
         return NotImplemented
 
     @abstractmethod
-    async def get_machine_status(self, drone_uuid):
+    async def get_machine_status(self, drone_uuid: str) -> MachineStatus:
         return NotImplemented
 
     @abstractmethod
-    async def get_utilization(self, drone_uuid):
+    async def get_utilization(self, drone_uuid: str) -> float:
         return NotImplemented
