@@ -121,7 +121,7 @@ class HTCondorAdapter(SiteAdapter):
             return self.handle_response(resource_status)
 
     async def stop_resource(self, resource_attributes: AttributeDict):
-        """"Stopping machines is not supported in HTCondor, therefore terminate is called!"""
+        """Stopping machines is not supported in HTCondor, therefore terminate is called!"""
         return await self.terminate_resource(resource_attributes)
 
     async def terminate_resource(self, resource_attributes: AttributeDict):
