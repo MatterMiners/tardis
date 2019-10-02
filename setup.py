@@ -1,6 +1,5 @@
 from setuptools import setup, find_packages
 import os
-import sys
 
 repo_base_dir = os.path.abspath(os.path.dirname(__file__))
 
