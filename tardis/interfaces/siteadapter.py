@@ -17,7 +17,7 @@ class SiteAdapter(metaclass=ABCMeta):
     async def deploy_resource(self, resource_attributes: AttributeDict) -> AttributeDict:
         return NotImplemented
 
-    def drone_uuid(self, uuid):
+    def drone_uuid(self, uuid) -> str:
         return f"{self.site_name.lower()}-{uuid}"
 
     def handle_exceptions(self):
