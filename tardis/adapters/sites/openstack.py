@@ -12,6 +12,7 @@ from tardis.exceptions.tardisexceptions import TardisTimeout
 from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from tardis.interfaces.siteadapter import ResourceStatus
 from tardis.interfaces.siteadapter import SiteAdapter
+from tardis.utilities.attributedict import AttributeDict
 from tardis.utilities.staticmapping import StaticMapping
 
 from asyncio import TimeoutError
@@ -23,7 +24,7 @@ import logging
 
 
 class OpenStackAdapter(SiteAdapter):
-    def __init__(self, machine_type, site_name):
+    def __init__(self, machine_type: str, site_name: str):
         self.configuration = getattr(Configuration(), site_name)
         self._machine_type = machine_type
         self._site_name = site_name
@@ -50,7 +51,7 @@ class OpenStackAdapter(SiteAdapter):
         self.handle_response = partial(self.handle_response, key_translator=key_translator,
                                        translator_functions=translator_functions)
 
-    async def deploy_resource(self, resource_attributes):
+    async def deploy_resource(self, resource_attributes: AttributeDict) -> AttributeDict:
         specs = dict(name=resource_attributes.drone_uuid)
         specs.update(self.configuration.MachineTypeConfiguration[self._machine_type])
         await self.nova.init_api(timeout=60)
@@ -59,31 +60,31 @@ class OpenStackAdapter(SiteAdapter):
         return self.handle_response(response['server'])
 
     @property
-    def machine_meta_data(self):
+    def machine_meta_data(self) -> AttributeDict:
         return self.configuration.MachineMetaData[self._machine_type]
 
     @property
-    def machine_type(self):
+    def machine_type(self) -> str:
         return self._machine_type
 
     @property
-    def site_name(self):
+    def site_name(self) -> str:
         return self._site_name
 
-    async def resource_status(self, resource_attributes):
+    async def resource_status(self, resource_attributes: AttributeDict) -> AttributeDict:
         await self.nova.init_api(timeout=60)
         response = await self.nova.servers.get(resource_attributes.remote_resource_uuid)
         logging.debug(f"{self.site_name} servers get returned {response}")
         return self.handle_response(response['server'])
 
-    async def stop_resource(self, resource_attributes):
+    async def stop_resource(self, resource_attributes: AttributeDict):
         await self.nova.init_api(timeout=60)
         params = {'os-stop': None}
         response = await self.nova.servers.run_action(resource_attributes.remote_resource_uuid, **params)
         logging.debug(f"{self.site_name} servers stop returned {response}")
         return response
 
-    async def terminate_resource(self, resource_attributes):
+    async def terminate_resource(self, resource_attributes: AttributeDict):
         await self.nova.init_api(timeout=60)
         response = await self.nova.servers.force_delete(resource_attributes.remote_resource_uuid)
         logging.debug(f"{self.site_name} servers terminate returned {response}")

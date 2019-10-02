@@ -6,7 +6,7 @@ from ...exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from ...interfaces.siteadapter import ResourceStatus
 from ...interfaces.siteadapter import SiteAdapter
 from ...utilities.staticmapping import StaticMapping
-from ...utilities.attributedict import convert_to_attribute_dict
+from ...utilities.attributedict import convert_to_attribute_dict, AttributeDict
 from ...utilities.executors.shellexecutor import ShellExecutor
 from ...utilities.asynccachemap import AsyncCacheMap
 
@@ -40,7 +40,7 @@ async def moab_status_updater(executor):
 
 
 class MoabAdapter(SiteAdapter):
-    def __init__(self, machine_type, site_name):
+    def __init__(self, machine_type: str, site_name: str):
         self.configuration = getattr(Configuration(), site_name)
         self._machine_type = machine_type
         self._site_name = site_name
@@ -63,7 +63,7 @@ class MoabAdapter(SiteAdapter):
         self.handle_response = partial(self.handle_response, key_translator=key_translator,
                                        translator_functions=translator_functions)
 
-    async def deploy_resource(self, resource_attributes):
+    async def deploy_resource(self, resource_attributes: AttributeDict) -> AttributeDict:
         request_command = f'msub -j oe -m p -l ' \
                           f'walltime={self.configuration.MachineTypeConfiguration[self._machine_type].Walltime},' \
                           f'mem={self.machine_meta_data.Memory}gb,' \
@@ -79,15 +79,15 @@ class MoabAdapter(SiteAdapter):
         return resource_attributes
 
     @property
-    def machine_meta_data(self):
+    def machine_meta_data(self) -> AttributeDict:
         return self.configuration.MachineMetaData[self._machine_type]
 
     @property
-    def machine_type(self):
+    def machine_type(self) -> str:
         return self._machine_type
 
     @property
-    def site_name(self):
+    def site_name(self) -> str:
         return self._site_name
 
     @staticmethod
@@ -100,7 +100,7 @@ class MoabAdapter(SiteAdapter):
             resource_attributes.update(resource_status=ResourceStatus.Stopped, updated=datetime.now())
         return remote_resource_uuid
 
-    async def resource_status(self, resource_attributes):
+    async def resource_status(self, resource_attributes: AttributeDict) -> AttributeDict:
         await self._moab_status.update_status()
         # In case the created timestamp is after last update timestamp of the asynccachemap,
         # no decision about the current state can be given, since map is updated asynchronously.
@@ -115,7 +115,7 @@ class MoabAdapter(SiteAdapter):
         resource_attributes.update(updated=datetime.now())
         return convert_to_attribute_dict({**resource_attributes, **self.handle_response(resource_status)})
 
-    async def terminate_resource(self, resource_attributes):
+    async def terminate_resource(self, resource_attributes: AttributeDict):
         request_command = f"canceljob {resource_attributes.remote_resource_uuid}"
         try:
             response = await self._executor.run_command(request_command)
@@ -135,7 +135,7 @@ class MoabAdapter(SiteAdapter):
 
         return self.handle_response({'SystemJID': remote_resource_uuid}, **resource_attributes)
 
-    async def stop_resource(self, resource_attributes):
+    async def stop_resource(self, resource_attributes: AttributeDict):
         logging.debug('MOAB jobs cannot be stopped gracefully. Terminating instead.')
         return await self.terminate_resource(resource_attributes)
 

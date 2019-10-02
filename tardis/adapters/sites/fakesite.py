@@ -40,7 +40,7 @@ class FakeSiteAdapter(SiteAdapter):
                                  resource_boot_time=self._resource_boot_time.get_value())
         return self.handle_response(response)
 
-    def get_resource_boot_time(self, resource_attributes):
+    def get_resource_boot_time(self, resource_attributes: AttributeDict) -> float:
         try:
             return resource_attributes.resource_boot_time
         except AttributeError:  # In case tardis is restarted, resource_boot_time is not set, so re-set
