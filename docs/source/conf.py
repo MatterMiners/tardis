@@ -15,18 +15,19 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../..'))
+from tardis import __about__
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'tardis'
-copyright = '2019, Manuel Giffels'
-author = 'Manuel Giffels'
+project = __about__.__title__
+copyright = __about__.__copyright__
+author = __about__.__author__
 
 # The short X.Y version
-version = '0.1.0'
+version = __about__.__version__
 # The full version, including alpha/beta/rc tags
-release = '0.1.0'
+release = version
 
 
 # -- General configuration ---------------------------------------------------
@@ -45,6 +46,7 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
+    'sphinxcontrib.contentui',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -135,7 +137,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'tardis.tex', 'tardis Documentation',
-     'Manuel Giffels', 'manual'),
+     author, 'manual'),
 ]
 
 
@@ -166,4 +168,8 @@ texinfo_documents = [
 # -- Options for intersphinx extension ---------------------------------------
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+intersphinx_mapping = {
+    "python": ('https://docs.python.org/', None),
+    "cobald": ('https://cobald.readthedocs.io/en/stable', None)
+
+}
