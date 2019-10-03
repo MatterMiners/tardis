@@ -19,7 +19,8 @@ import uuid
 
 @service(flavour=asyncio)
 class Drone(Pool):
-    def __init__(self, site_agent: SiteAgent, batch_system_agent: BatchSystemAgent, plugins: Optional[List[Plugin]] = None, remote_resource_uuid=None, drone_uuid=None,
+    def __init__(self, site_agent: SiteAgent, batch_system_agent: BatchSystemAgent,
+                 plugins: Optional[List[Plugin]] = None, remote_resource_uuid=None, drone_uuid=None,
                  state: RequestState = RequestState(), created: float = None, updated: float = None):
         self._site_agent = site_agent
         self._batch_system_agent = batch_system_agent
