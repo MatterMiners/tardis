@@ -25,10 +25,10 @@ class AsyncCacheMap(Mapping):
         return self._lock
 
     @property
-    def last_update(self):
+    def last_update(self) -> float:
         return self._last_update
 
-    async def update_status(self):
+    async def update_status(self) -> None:
         current_time = datetime.now()
 
         async with self._async_lock:
