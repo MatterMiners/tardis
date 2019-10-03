@@ -1,3 +1,9 @@
+from typing import List, Union, Optional
+
+from tardis.agents.batchsystemagent import BatchSystemAgent
+from tardis.agents.siteagent import SiteAgent
+from tardis.interfaces.plugin import Plugin
+from tardis.interfaces.state import State
 from .dronestates import RequestState
 from .dronestates import DownState
 from ..utilities.attributedict import AttributeDict
@@ -13,8 +19,8 @@ import uuid
 
 @service(flavour=asyncio)
 class Drone(Pool):
-    def __init__(self, site_agent, batch_system_agent, plugins=None, remote_resource_uuid=None, drone_uuid=None,
-                 state=RequestState(), created=None, updated=None):
+    def __init__(self, site_agent: SiteAgent, batch_system_agent: BatchSystemAgent, plugins: Optional[List[Plugin]] = None, remote_resource_uuid=None, drone_uuid=None,
+                 state: RequestState = RequestState(), created: float = None, updated: float = None):
         self._site_agent = site_agent
         self._batch_system_agent = batch_system_agent
         self._plugins = plugins or []
@@ -38,15 +44,15 @@ class Drone(Pool):
         return self._allocation
 
     @property
-    def batch_system_agent(self):
+    def batch_system_agent(self) -> BatchSystemAgent:
         return self._batch_system_agent
 
     @property
-    def demand(self):
+    def demand(self) -> float:
         return self._demand
 
     @demand.setter
-    def demand(self, value):
+    def demand(self, value: float):
         self._demand = value
 
     @property
@@ -62,7 +68,7 @@ class Drone(Pool):
         return self._utilisation
 
     @property
-    def site_agent(self):
+    def site_agent(self) -> SiteAgent:
         return self._site_agent
 
     async def run(self):
@@ -74,13 +80,13 @@ class Drone(Pool):
                 self._demand = 0
                 return
 
-    def register_plugins(self, observer):
+    def register_plugins(self, observer: Union[List[Plugin], Plugin]) -> None:
         self._plugins.append(observer)
 
-    def remove_plugins(self, observer):
+    def remove_plugins(self, observer: Union[List[Plugin], Plugin]) -> None:
         self._plugins.remove(observer)
 
-    async def set_state(self, state):
+    async def set_state(self, state: State) -> None:
         """Should be replaced by asynchronous state.setter property once available"""
         if state.__class__ != self.state.__class__:
             self.resource_attributes.updated = datetime.now()
@@ -90,9 +96,9 @@ class Drone(Pool):
             self._state = state
 
     @property
-    def state(self):
+    def state(self) -> State:
         return self._state
 
-    async def notify_plugins(self):
+    async def notify_plugins(self) -> None:
         for plugin in self._plugins:
             await plugin.notify(self.state, self.resource_attributes)
