@@ -16,5 +16,6 @@ class PeriodicValue(Simulator):
         self._start_time = datetime.now()
 
     def get_value(self) -> float:
-        t = (datetime.now()-self._start_time).total_seconds()
-        return self._offset + self._amplitude * sin(((t/self._period)*2*pi)+self._phase)
+        t = (datetime.now() - self._start_time).total_seconds()
+        return self._offset + self._amplitude * sin(
+            ((t / self._period) * 2 * pi) + self._phase)

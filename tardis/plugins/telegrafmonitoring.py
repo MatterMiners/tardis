@@ -11,8 +11,9 @@ import platform
 
 class TelegrafMonitoring(Plugin):
     """
-    The :py:class:`~tardis.plugins.telegrafmonitoring.TelegrafMonitoring` implements an interface to monitor state
-    changes of the Drones in a telegraf service running a UDP input module.
+    The :py:class:`~tardis.plugins.telegrafmonitoring.TelegrafMonitoring`
+    implements an interface to monitor state changes of the Drones in a telegraf
+    service running a UDP input module.
     """
     def __init__(self):
         self.logger = logging.getLogger("telegrafmonitoring")
@@ -33,16 +34,22 @@ class TelegrafMonitoring(Plugin):
 
         :param state: New state of the Drone
         :type state: State
-        :param resource_attributes: Contains all meta-data of the Drone (created and updated timestamps, dns name, \
-        unique id, site_name, machine_type, etc.)
+        :param resource_attributes: Contains all meta-data of the Drone (created and
+            updated timestamps, dns name, unique id, site_name, machine_type, etc.)
         :type resource_attributes: AttributeDict
         :return: None
         """
-        self.logger.debug(f"Drone: {str(resource_attributes)} has changed state to {state}")
+        self.logger.debug(
+            f"Drone: {str(resource_attributes)} has changed state to {state}")
         await self.client.connect()
-        data = dict(state=str(state), created=datetime.timestamp(resource_attributes.created),
-                    updated=datetime.timestamp(resource_attributes.updated))
-        tags = dict(site_name=resource_attributes.site_name,
-                    machine_type=resource_attributes.machine_type)
+        data = dict(
+            state=str(state),
+            created=datetime.timestamp(resource_attributes.created),
+            updated=datetime.timestamp(resource_attributes.updated)
+        )
+        tags = dict(
+            site_name=resource_attributes.site_name,
+            machine_type=resource_attributes.machine_type
+        )
         self.client.metric(self.metric, data, tags=tags)
         await self.client.close()

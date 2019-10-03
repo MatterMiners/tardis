@@ -5,15 +5,13 @@ from tardis.interfaces.batchsystemadapter import MachineStatus
 
 class FakeBatchSystemAdapter(BatchSystemAdapter):
     """
-    :py:class:`~tardis.adapters.batchsystems.fakebatchsystem.FakeBatchSystemAdapter` implements a batch system adapter
-    that mocks the response of a hypothetical batch system. It can be used for testing purposes and as a demonstrator
+    :py:class:`~tardis.adapters.batchsystems.fakebatchsystem.FakeBatchSystemAdapter`
+    implements a batch system adapter that mocks the response of a hypothetical
+    batch system. It can be used for testing purposes and as a demonstrator
     in workshops and tutorials.
 
-    The mocked response to the
-    :py:meth:`~tardis.adapters.batchsystems.fakebatchsystem.FakeBatchSystemAdapter.get_utilization`,
-    :py:meth:`~tardis.adapters.batchsystems.fakebatchsystem.FakeBatchSystemAdapter.get_allocation` and
-    :py:meth:`~tardis.adapters.batchsystems.fakebatchsystem.FakeBatchSystemAdapter.get_machine_status` API calls
-    is configurable statically.
+    The mocked response to the :py:meth:`~.get_utilization`, :py:meth:`~.get_allocation`
+    and :py:meth:`~.get_machine_status` API calls is configurable statically.
     """
     def __init__(self):
         config = Configuration()
@@ -50,7 +48,8 @@ class FakeBatchSystemAdapter(BatchSystemAdapter):
 
     async def get_allocation(self, drone_uuid: str) -> float:
         """
-        Returns the fake allocation according to the configuration of the FakeBatchSystem
+        Returns the fake allocation according to the configuration of the
+        FakeBatchSystem
 
         :param drone_uuid: Unique identifier of the drone
         :type drone_uuid: str
@@ -66,7 +65,8 @@ class FakeBatchSystemAdapter(BatchSystemAdapter):
 
     async def get_machine_status(self, drone_uuid: str) -> MachineStatus:
         """
-        Returns a fake machine status according to the parameter set in the configuration of the FakeBatchSystem
+        Returns a fake machine status according to the parameter set in the
+        configuration of the FakeBatchSystem
 
         :param drone_uuid: Unique identifier of the drone
         :type drone_uuid: str
@@ -82,7 +82,8 @@ class FakeBatchSystemAdapter(BatchSystemAdapter):
 
     async def get_utilization(self, drone_uuid: str) -> float:
         """
-        Returns the fake utilization according to the configuration of the FakeBatchSystem
+        Returns the fake utilization according to the configuration of the
+        FakeBatchSystem
 
         :param drone_uuid: Unique identifier of the drone
         :type drone_uuid: str
