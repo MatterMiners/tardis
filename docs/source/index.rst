@@ -54,7 +54,7 @@ Configuration of COBalD
     managed by ``TARDIS`` are created by a factory function
     :py:func:`~tardis.resources.poolfactory.create_composite_pool`, which is registered as a
     `COBalD YAML plugin <https://cobald.readthedocs.io/en/latest/source/custom/package.html#configuration-plugins>`_
-    and therefore can be included using the ``!TardisPoolFactory`` YAML tag.
+    and, therefore, can be included using the ``!TardisPoolFactory`` YAML tag.
 
 .. content-tabs:: right-col
 
