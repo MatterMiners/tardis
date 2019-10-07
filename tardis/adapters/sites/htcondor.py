@@ -60,7 +60,7 @@ htcondor_translate_resources_prefix = {'Cores': 1,
 
 
 class HTCondorAdapter(SiteAdapter):
-    def __init__(self, machine_type, site_name):
+    def __init__(self, machine_type: str, site_name: str):
         self.configuration = getattr(Configuration(), site_name)
         self._machine_type = machine_type
         self._site_name = site_name
@@ -92,7 +92,8 @@ class HTCondorAdapter(SiteAdapter):
             max_age=self.configuration.max_age * 60
         )
 
-    async def deploy_resource(self, resource_attributes):
+    async def deploy_resource(
+            self, resource_attributes: AttributeDict) -> AttributeDict:
         jdl_file = self.configuration.MachineTypeConfiguration[self._machine_type].jdl
         with open(jdl_file, 'r') as f:
             jdl_template = Template(f.read())
@@ -125,18 +126,19 @@ class HTCondorAdapter(SiteAdapter):
         return self.handle_response(response)
 
     @property
-    def machine_meta_data(self):
+    def machine_meta_data(self) -> AttributeDict:
         return self.configuration.MachineMetaData[self._machine_type]
 
     @property
-    def machine_type(self):
+    def machine_type(self) -> str:
         return self._machine_type
 
     @property
-    def site_name(self):
+    def site_name(self) -> str:
         return self._site_name
 
-    async def resource_status(self, resource_attributes):
+    async def resource_status(
+            self, resource_attributes: AttributeDict) -> AttributeDict:
         await self._htcondor_queue.update_status()
         try:
             resource_uuid = resource_attributes.remote_resource_uuid
@@ -153,14 +155,14 @@ class HTCondorAdapter(SiteAdapter):
         else:
             return self.handle_response(resource_status)
 
-    async def stop_resource(self, resource_attributes):
+    async def stop_resource(self, resource_attributes: AttributeDict):
         """
         Stopping machines is not supported in HTCondor, therefore terminate is
         called!
         """
         return await self.terminate_resource(resource_attributes)
 
-    async def terminate_resource(self, resource_attributes):
+    async def terminate_resource(self, resource_attributes: AttributeDict):
         terminate_command = f"condor_rm {resource_attributes.remote_resource_uuid}"
         try:
             response = await self._executor.run_command(terminate_command)

@@ -14,10 +14,11 @@ class ResourceStatus(Enum):
 
 class SiteAdapter(metaclass=ABCMeta):
     @abstractmethod
-    async def deploy_resource(self, resource_attributes):
+    async def deploy_resource(
+            self, resource_attributes: AttributeDict) -> AttributeDict:
         return NotImplemented
 
-    def drone_uuid(self, uuid):
+    def drone_uuid(self, uuid) -> str:
         return f"{self.site_name.lower()}-{uuid}"
 
     def handle_exceptions(self):
@@ -41,25 +42,26 @@ class SiteAdapter(metaclass=ABCMeta):
         return translated_response
 
     @property
-    def machine_meta_data(self):
+    def machine_meta_data(self) -> AttributeDict:
         return NotImplemented
 
     @property
-    def machine_type(self):
+    def machine_type(self) -> str:
         return NotImplemented
 
     @abstractmethod
-    async def resource_status(self, resource_attributes):
+    async def resource_status(
+            self, resource_attributes: AttributeDict) -> AttributeDict:
         return NotImplemented
 
     @property
-    def site_name(self):
+    def site_name(self) -> str:
         return NotImplemented
 
     @abstractmethod
-    async def stop_resource(self, resource_attributes):
+    async def stop_resource(self, resource_attributes: AttributeDict):
         return NotImplemented
 
     @abstractmethod
-    async def terminate_resource(self, resource_attributes):
+    async def terminate_resource(self, resource_attributes: AttributeDict):
         return NotImplemented

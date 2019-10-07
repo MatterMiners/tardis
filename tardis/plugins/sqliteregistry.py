@@ -1,3 +1,4 @@
+from tardis.utilities.attributedict import AttributeDict
 from ..configuration.configuration import Configuration
 from ..interfaces.plugin import Plugin
 from ..interfaces.state import State
@@ -37,11 +38,11 @@ class SqliteRegistry(Plugin):
         WHERE Sites.site_name = :site_name"""
         self.execute(sql_query, dict(site_name=site_name, machine_type=machine_type))
 
-    def add_site(self, site_name):
+    def add_site(self, site_name: str):
         sql_query = "INSERT OR IGNORE INTO Sites(site_name) VALUES (:site_name)"
         self.execute(sql_query, dict(site_name=site_name))
 
-    async def async_execute(self, sql_query, bind_parameters):
+    async def async_execute(self, sql_query: str, bind_parameters: dict):
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
             self.thread_pool_executor, self.execute, sql_query, bind_parameters)
@@ -96,13 +97,13 @@ class SqliteRegistry(Plugin):
                 cursor.execute(
                     "INSERT OR IGNORE INTO ResourceStates(state) VALUES (?)", (state,))
 
-    async def delete_resource(self, bind_parameters):
+    async def delete_resource(self, bind_parameters: dict):
         sql_query = """DELETE FROM Resources
         WHERE drone_uuid = :drone_uuid
         AND site_id = (SELECT site_id from Sites WHERE site_name = :site_name)"""
         await self.async_execute(sql_query, bind_parameters)
 
-    def execute(self, sql_query, bind_parameters):
+    def execute(self, sql_query: str, bind_parameters: dict):
         with self.connect() as connection:
             connection.row_factory = lambda cur, row: {
                 col[0]: row[idx] for idx, col in enumerate(cur.description)}
@@ -111,7 +112,7 @@ class SqliteRegistry(Plugin):
             logging.debug(f"{sql_query},{bind_parameters} executed")
             return cursor.fetchall()
 
-    def get_resources(self, site_name, machine_type):
+    def get_resources(self, site_name: str, machine_type: str):
         sql_query = """
         SELECT R.remote_resource_uuid, R.drone_uuid, RS.state, R.created, R.updated
         FROM Resources R
@@ -122,7 +123,7 @@ class SqliteRegistry(Plugin):
         return self.execute(
             sql_query, dict(site_name=site_name, machine_type=machine_type))
 
-    async def insert_resource(self, bind_parameters):
+    async def insert_resource(self, bind_parameters: dict):
         sql_query = """
         INSERT OR IGNORE INTO
         Resources(remote_resource_uuid, drone_uuid, state_id, site_id, machine_type_id,
@@ -136,7 +137,7 @@ class SqliteRegistry(Plugin):
         WHERE RS.state = :state"""
         await self.async_execute(sql_query, bind_parameters)
 
-    async def notify(self, state, resource_attributes):
+    async def notify(self, state: State, resource_attributes: AttributeDict) -> None:
         state = str(state)
         self.logger.debug(
             f"Drone: {str(resource_attributes)} has changed state to {state}")
@@ -144,7 +145,7 @@ class SqliteRegistry(Plugin):
         bind_parameters.update(resource_attributes)
         await self._dispatch_on_state.get(state, self.update_resource)(bind_parameters)
 
-    async def update_resource(self, bind_parameters):
+    async def update_resource(self, bind_parameters: dict):
         sql_query = """UPDATE Resources SET updated = :updated,
         state_id = (SELECT state_id FROM ResourceStates WHERE state = :state)
         WHERE drone_uuid = :drone_uuid

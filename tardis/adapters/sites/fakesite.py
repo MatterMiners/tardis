@@ -51,7 +51,7 @@ class FakeSiteAdapter(SiteAdapter):
         )
         return self.handle_response(response)
 
-    def get_resource_boot_time(self, resource_attributes):
+    def get_resource_boot_time(self, resource_attributes: AttributeDict) -> float:
         try:
             return resource_attributes.resource_boot_time
         except AttributeError:

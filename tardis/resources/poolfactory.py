@@ -1,3 +1,7 @@
+from typing import List, Optional
+
+from tardis.interfaces.plugin import Plugin
+from tardis.interfaces.state import State
 from ..agents.batchsystemagent import BatchSystemAgent
 from ..agents.siteagent import SiteAgent
 from ..configuration.configuration import Configuration
@@ -22,7 +26,7 @@ def str_to_state(resources):
     return resources
 
 
-def create_composite_pool(configuration='tardis.yml'):
+def create_composite_pool(configuration: str = 'tardis.yml') -> WeightedComposite:
     configuration = Configuration(configuration)
 
     composites = []
@@ -72,15 +76,16 @@ def create_composite_pool(configuration='tardis.yml'):
     return WeightedComposite(*composites)
 
 
-def create_drone(site_agent, batch_system_agent, plugins=None,
-                 remote_resource_uuid=None, drone_uuid=None,
-                 state=RequestState(), created=None, updated=None):
+def create_drone(site_agent: SiteAgent, batch_system_agent: BatchSystemAgent,
+                 plugins: Optional[List[Plugin]] = None, remote_resource_uuid=None,
+                 drone_uuid=None, state: State = RequestState(), created: float = None,
+                 updated: float = None):
     return Drone(site_agent=site_agent, batch_system_agent=batch_system_agent,
                  plugins=plugins, remote_resource_uuid=remote_resource_uuid,
                  drone_uuid=drone_uuid, state=state, created=created, updated=updated)
 
 
-def get_drones_to_restore(plugins, site, machine_type):
+def get_drones_to_restore(plugins: dict, site, machine_type: str):
     """Restore check_pointed resources from previously running tardis instance"""
     try:
         sql_registry = plugins['SqliteRegistry']

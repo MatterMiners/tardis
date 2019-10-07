@@ -5,6 +5,7 @@ from tardis.exceptions.tardisexceptions import TardisQuotaExceeded
 from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from tardis.interfaces.siteadapter import ResourceStatus
 from tardis.interfaces.siteadapter import SiteAdapter
+from tardis.utilities.attributedict import AttributeDict
 from tardis.utilities.staticmapping import StaticMapping
 
 from aiohttp import ClientConnectionError
@@ -21,7 +22,7 @@ import logging
 
 
 class CloudStackAdapter(SiteAdapter):
-    def __init__(self, machine_type, site_name):
+    def __init__(self, machine_type: str, site_name: str):
         self.configuration = getattr(Configuration(), site_name)
         self.cloud_stack_client = CloudStack(
             end_point=self.configuration.end_point,
@@ -55,7 +56,8 @@ class CloudStackAdapter(SiteAdapter):
             translator_functions=translator_functions
         )
 
-    async def deploy_resource(self, resource_attributes):
+    async def deploy_resource(
+            self, resource_attributes: AttributeDict) -> AttributeDict:
         response = await self.cloud_stack_client.deployVirtualMachine(
             name=resource_attributes.drone_uuid,
             **self.configuration.MachineTypeConfiguration[self._machine_type]
@@ -64,30 +66,31 @@ class CloudStackAdapter(SiteAdapter):
         return self.handle_response(response['virtualmachine'])
 
     @property
-    def machine_meta_data(self):
+    def machine_meta_data(self) -> AttributeDict:
         return self.configuration.MachineMetaData[self._machine_type]
 
     @property
-    def machine_type(self):
+    def machine_type(self) -> str:
         return self._machine_type
 
     @property
-    def site_name(self):
+    def site_name(self) -> str:
         return self._site_name
 
-    async def resource_status(self, resource_attributes):
+    async def resource_status(
+            self, resource_attributes: AttributeDict) -> AttributeDict:
         response = await self.cloud_stack_client.listVirtualMachines(
             id=resource_attributes.remote_resource_uuid)
         logging.debug(f"{self.site_name} listVirtualMachines returned {response}")
         return self.handle_response(response['virtualmachine'][0])
 
-    async def stop_resource(self, resource_attributes):
+    async def stop_resource(self, resource_attributes: AttributeDict):
         response = await self.cloud_stack_client.stopVirtualMachine(
             id=resource_attributes.remote_resource_uuid)
         logging.debug(f"{self.site_name} stopVirtualMachine returned {response}")
         return response
 
-    async def terminate_resource(self, resource_attributes):
+    async def terminate_resource(self, resource_attributes: AttributeDict):
         response = await self.cloud_stack_client.destroyVirtualMachine(
             id=resource_attributes.remote_resource_uuid)
         logging.debug(f"{self.site_name} destroyVirtualMachine returned {response}")
