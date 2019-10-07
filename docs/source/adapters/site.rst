@@ -1,3 +1,5 @@
+.. _ref_site_adapter:
+
 ============
 Site Adapter
 ============
@@ -11,8 +13,11 @@ Site Adapter
     and a site quota in units of cores. Negative values for the site quota are interpreted as infinity. Multiple sites are
     supported by using SequenceNodes.
 
+
 Generic Site Adapter Configuration
 ----------------------------------
+.. _ref_generic_site_adapter_configuration:
+
 
 Available configuration options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
