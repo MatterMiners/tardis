@@ -56,7 +56,8 @@ class CloudStackAdapter(SiteAdapter):
             translator_functions=translator_functions
         )
 
-    async def deploy_resource(self, resource_attributes: AttributeDict) -> AttributeDict:
+    async def deploy_resource(
+            self, resource_attributes: AttributeDict) -> AttributeDict:
         response = await self.cloud_stack_client.deployVirtualMachine(
             name=resource_attributes.drone_uuid,
             **self.configuration.MachineTypeConfiguration[self._machine_type]
@@ -76,7 +77,8 @@ class CloudStackAdapter(SiteAdapter):
     def site_name(self) -> str:
         return self._site_name
 
-    async def resource_status(self, resource_attributes: AttributeDict) -> AttributeDict:
+    async def resource_status(
+            self, resource_attributes: AttributeDict) -> AttributeDict:
         response = await self.cloud_stack_client.listVirtualMachines(
             id=resource_attributes.remote_resource_uuid)
         logging.debug(f"{self.site_name} listVirtualMachines returned {response}")

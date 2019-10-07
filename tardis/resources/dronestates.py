@@ -18,7 +18,8 @@ if TYPE_CHECKING:
     from tardis.resources.drone import Drone
 
 
-async def batchsystem_machine_status(state_transition, drone: "Drone", current_state: State):
+async def batchsystem_machine_status(state_transition, drone: "Drone",
+                                     current_state: State):
     machine_status = await drone.batch_system_agent.get_machine_status(
         drone_uuid=drone.resource_attributes['drone_uuid'])
     return state_transition[machine_status]()

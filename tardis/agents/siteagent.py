@@ -7,7 +7,8 @@ class SiteAgent(SiteAdapter):
     def __init__(self, site_adapter: SiteAdapter):
         self._site_adapter = site_adapter
 
-    async def deploy_resource(self, resource_attributes: AttributeDict) -> AttributeDict:
+    async def deploy_resource(
+            self, resource_attributes: AttributeDict) -> AttributeDict:
         with self.handle_exceptions():
             response = await self._site_adapter.deploy_resource(
                 resource_attributes=resource_attributes)
@@ -31,7 +32,8 @@ class SiteAgent(SiteAdapter):
     def machine_type(self) -> str:
         return self._site_adapter.machine_type
 
-    async def resource_status(self, resource_attributes: AttributeDict) -> AttributeDict:
+    async def resource_status(
+            self, resource_attributes: AttributeDict) -> AttributeDict:
         with self._site_adapter.handle_exceptions():
             return await self._site_adapter.resource_status(resource_attributes)
 

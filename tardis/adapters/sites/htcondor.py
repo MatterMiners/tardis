@@ -92,7 +92,8 @@ class HTCondorAdapter(SiteAdapter):
             max_age=self.configuration.max_age * 60
         )
 
-    async def deploy_resource(self, resource_attributes: AttributeDict) -> AttributeDict:
+    async def deploy_resource(
+            self, resource_attributes: AttributeDict) -> AttributeDict:
         jdl_file = self.configuration.MachineTypeConfiguration[self._machine_type].jdl
         with open(jdl_file, 'r') as f:
             jdl_template = Template(f.read())
@@ -136,7 +137,8 @@ class HTCondorAdapter(SiteAdapter):
     def site_name(self) -> str:
         return self._site_name
 
-    async def resource_status(self, resource_attributes: AttributeDict) -> AttributeDict:
+    async def resource_status(
+            self, resource_attributes: AttributeDict) -> AttributeDict:
         await self._htcondor_queue.update_status()
         try:
             resource_uuid = resource_attributes.remote_resource_uuid

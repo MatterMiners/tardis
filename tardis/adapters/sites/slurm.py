@@ -87,7 +87,8 @@ class SlurmAdapter(SiteAdapter):
             translator_functions=translator_functions
         )
 
-    async def deploy_resource(self, resource_attributes: AttributeDict) -> AttributeDict:
+    async def deploy_resource(
+            self, resource_attributes: AttributeDict) -> AttributeDict:
         machine_configuration = self.configuration.MachineTypeConfiguration[
             self._machine_type]
         request_command = f'sbatch -p {machine_configuration.Partition} ' \
@@ -122,7 +123,8 @@ class SlurmAdapter(SiteAdapter):
     def site_name(self) -> str:
         return self._site_name
 
-    async def resource_status(self, resource_attributes: AttributeDict) -> AttributeDict:
+    async def resource_status(
+            self, resource_attributes: AttributeDict) -> AttributeDict:
         await self._slurm_status.update_status()
         # In case the created timestamp is after last update timestamp of the
         # asynccachemap, no decision about the current state can be given,

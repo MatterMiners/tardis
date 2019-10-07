@@ -61,7 +61,8 @@ class OpenStackAdapter(SiteAdapter):
             translator_functions=translator_functions
         )
 
-    async def deploy_resource(self, resource_attributes: AttributeDict) -> AttributeDict:
+    async def deploy_resource(
+            self, resource_attributes: AttributeDict) -> AttributeDict:
         specs = dict(name=resource_attributes.drone_uuid)
         specs.update(self.configuration.MachineTypeConfiguration[self._machine_type])
         await self.nova.init_api(timeout=60)
@@ -81,7 +82,8 @@ class OpenStackAdapter(SiteAdapter):
     def site_name(self) -> str:
         return self._site_name
 
-    async def resource_status(self, resource_attributes: AttributeDict) -> AttributeDict:
+    async def resource_status(
+            self, resource_attributes: AttributeDict) -> AttributeDict:
         await self.nova.init_api(timeout=60)
         response = await self.nova.servers.get(resource_attributes.remote_resource_uuid)
         logging.debug(f"{self.site_name} servers get returned {response}")

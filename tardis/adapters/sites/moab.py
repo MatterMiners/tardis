@@ -77,7 +77,8 @@ class MoabAdapter(SiteAdapter):
             translator_functions=translator_functions
         )
 
-    async def deploy_resource(self, resource_attributes: AttributeDict) -> AttributeDict:
+    async def deploy_resource(
+            self, resource_attributes: AttributeDict) -> AttributeDict:
         machine_configuration = self.configuration.MachineTypeConfiguration[
             self._machine_type]
         request_command = f'msub -j oe -m p -l ' \
@@ -124,7 +125,8 @@ class MoabAdapter(SiteAdapter):
             )
         return remote_resource_uuid
 
-    async def resource_status(self, resource_attributes: AttributeDict) -> AttributeDict:
+    async def resource_status(
+            self, resource_attributes: AttributeDict) -> AttributeDict:
         await self._moab_status.update_status()
         # In case the created timestamp is after last update timestamp of the
         # asynccachemap, no decision about the current state can be given,

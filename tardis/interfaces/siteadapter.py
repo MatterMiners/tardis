@@ -14,7 +14,8 @@ class ResourceStatus(Enum):
 
 class SiteAdapter(metaclass=ABCMeta):
     @abstractmethod
-    async def deploy_resource(self, resource_attributes: AttributeDict) -> AttributeDict:
+    async def deploy_resource(
+            self, resource_attributes: AttributeDict) -> AttributeDict:
         return NotImplemented
 
     def drone_uuid(self, uuid) -> str:
@@ -49,7 +50,8 @@ class SiteAdapter(metaclass=ABCMeta):
         return NotImplemented
 
     @abstractmethod
-    async def resource_status(self, resource_attributes: AttributeDict) -> AttributeDict:
+    async def resource_status(
+            self, resource_attributes: AttributeDict) -> AttributeDict:
         return NotImplemented
 
     @property
