@@ -37,10 +37,16 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
     ],
+    entry_points={
+        'cobald.config.yaml_constructors': [
+            'TardisPoolFactory = tardis.resources.poolfactory:create_composite_pool',
+        ],
+    },
     keywords=package_about["__keywords__"],
     packages=find_packages(exclude=['tests']),
-    install_requires=['aiohttp', 'CloudStackAIO', 'PyYAML', 'AsyncOpenStackClient',
-                      'cobald', 'asyncssh', 'aiotelegraf'],
+    install_requires=['aiohttp', 'CloudStackAIO', 'PyYAML',
+                      'AsyncOpenStackClient', 'cobald', 'asyncssh',
+                      'aiotelegraf'],
     extras_require={
         'docs': ["sphinx", "sphinx_rtd_theme", "sphinxcontrib-contentui"],
         'test': TESTS_REQUIRE,
