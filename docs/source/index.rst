@@ -81,7 +81,7 @@ Configuration of TARDIS
 =======================
 .. content-tabs:: left-col
 
-    In addition to the above mentioned ``COBalD`` configuration a ``TARDIS`` configuration  is necessary as well,
+    In addition to the above mentioned ``COBalD`` configuration a ``TARDIS`` configuration is necessary as well,
     which is provided to the factory function :py:func:`~tardis.resources.poolfactory.create_composite_pool` via
     its `configuration` parameter.
 
