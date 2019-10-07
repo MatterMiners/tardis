@@ -20,20 +20,22 @@ import uuid
 @service(flavour=asyncio)
 class Drone(Pool):
     def __init__(self, site_agent: SiteAgent, batch_system_agent: BatchSystemAgent,
-                 plugins: Optional[List[Plugin]] = None, remote_resource_uuid=None, drone_uuid=None,
-                 state: RequestState = RequestState(), created: float = None, updated: float = None):
+                 plugins: Optional[List[Plugin]] = None, remote_resource_uuid=None,
+                 drone_uuid=None, state: RequestState = RequestState(),
+                 created: float = None, updated: float = None):
         self._site_agent = site_agent
         self._batch_system_agent = batch_system_agent
         self._plugins = plugins or []
         self._state = state
 
-        self.resource_attributes = AttributeDict(site_name=self._site_agent.site_name,
-                                                 machine_type=self.site_agent.machine_type,
-                                                 remote_resource_uuid=remote_resource_uuid,
-                                                 created=created or datetime.now(),
-                                                 updated=updated or datetime.now(),
-                                                 drone_uuid=drone_uuid or self.site_agent.drone_uuid(
-                                                     uuid.uuid4().hex[:10]))
+        self.resource_attributes = AttributeDict(
+            site_name=self._site_agent.site_name,
+            machine_type=self.site_agent.machine_type,
+            remote_resource_uuid=remote_resource_uuid,
+            created=created or datetime.now(),
+            updated=updated or datetime.now(),
+            drone_uuid=drone_uuid or self.site_agent.drone_uuid(uuid.uuid4().hex[:10])
+        )
 
         self._allocation = 0.0
         self._demand = self.maximum_demand
@@ -77,7 +79,8 @@ class Drone(Pool):
             await self.state.run(self)
             await asyncio.sleep(60)
             if isinstance(self.state, DownState):
-                logging.debug(f"Garbage Collect Drone: {self.resource_attributes.drone_uuid}")
+                logging.debug(
+                    f"Garbage Collect Drone: {self.resource_attributes.drone_uuid}")
                 self._demand = 0
                 return
 

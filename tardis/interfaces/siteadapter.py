@@ -24,13 +24,14 @@ class SiteAdapter(metaclass=ABCMeta):
         return NotImplemented
 
     @staticmethod
-    def handle_response(response, key_translator: dict, translator_functions: dict, **additional_content):
+    def handle_response(response, key_translator: dict,
+                        translator_functions: dict, **additional_content):
         translated_response = AttributeDict()
 
         for translated_key, key in key_translator.items():
             try:
-                translated_response[translated_key] = translator_functions.get(key,
-                                                                               lambda x: x)(response[key])
+                translated_response[translated_key] = translator_functions.get(
+                    key, lambda x: x)(response[key])
             except KeyError:
                 continue
 
