@@ -34,7 +34,7 @@ Installation
 
 .. content-tabs:: left-col
 
-    The ``TARDIS`` resource manager is available via `PyPI <https://pypi.org/project/cobald-tardis/>`_, so ypu can use
+    The ``TARDIS`` resource manager is available via `PyPI <https://pypi.org/project/cobald-tardis/>`_, so you can use
     `pip` to install ``TARDIS`` and all its dependencies.
 
 .. code-block::
