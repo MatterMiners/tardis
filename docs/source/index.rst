@@ -17,22 +17,25 @@ Welcome to the TARDIS documentation!
    contribute/contribute
    Module Index <api/modules>
 
-.. image:: ../pics/TARDIS_logo.svg
-    :alt: TARDIS Logo
-    :height: 150
-    :align: left
+.. container:: left-col
 
+    .. image:: ../pics/TARDIS_logo.svg
+        :alt: TARDIS Logo
+        :height: 150
+        :align: left
 
-The ``TARDIS`` resource manager enables the dynamic integration of resources provided by different
-:ref:`resource providers<ref_site_adapter>` into one :ref:`overlaybatch system<ref_batch_system_adapter>`.
-``TARDIS`` relies on `COBalD - the Opportunistic Balancing Daemon <https://cobald.readthedocs.io/en/stable>`_ in order
-to balance opportunistic resources. Hence, ``TARDIS`` is implemented as a ``COBalD`` service.
+    The ``TARDIS`` resource manager enables the dynamic integration of resources provided by different
+    :ref:`resource providers<ref_site_adapter>` into one :ref:`overlaybatch system<ref_batch_system_adapter>`.
+    ``TARDIS`` relies on `COBalD - the Opportunistic Balancing Daemon <https://cobald.readthedocs.io/en/stable>`_ in order
+    to balance opportunistic resources. Hence, ``TARDIS`` is implemented as a ``COBalD`` service.
 
 Installation
 ============
 
-The ``TARDIS`` resource manager is available via `PyPI <https://pypi.org/project/cobald-tardis/>`_, so ypu can use
-`pip` to install ``TARDIS`` and all its dependencies.
+.. content-tabs:: left-col
+
+    The ``TARDIS`` resource manager is available via `PyPI <https://pypi.org/project/cobald-tardis/>`_, so ypu can use
+    `pip` to install ``TARDIS`` and all its dependencies.
 
 .. code-block::
 
@@ -140,14 +143,18 @@ Configuration of TARDIS
 Start-up your instance
 ======================
 
-To start-up your instance you can run the following command:
+.. content-tabs:: left-col
+
+    To start-up your instance you can run the following command:
 
 .. code-block::
 
     python3 -m cobald.daemon cobald.yml
 
-However, it is recommended to start ``COBalD`` using systemd as decribed in the
-`COBalD Systemd Configuration <https://cobald.readthedocs.io/en/stable/source/daemon/systemd.html>`_ documentation.
+.. content-tabs:: left-col
+
+    However, it is recommended to start ``COBalD`` using systemd as decribed in the
+    `COBalD Systemd Configuration <https://cobald.readthedocs.io/en/stable/source/daemon/systemd.html>`_ documentation.
 
 Indices and tables
 ==================
