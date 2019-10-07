@@ -16,7 +16,8 @@ from importlib import import_module
 
 def str_to_state(resources):
     for entry in resources:
-        state_class = getattr(import_module(name=f"tardis.resources.dronestates"), f"{entry['state']}")
+        state_class = getattr(import_module(
+            name=f"tardis.resources.dronestates"), f"{entry['state']}")
         entry['state'] = state_class()
     return resources
 
@@ -27,18 +28,23 @@ def create_composite_pool(configuration='tardis.yml'):
     composites = []
 
     batch_system = configuration.BatchSystem
-    batch_system_adapter = getattr(import_module(name=f"tardis.adapters.batchsystems.{batch_system.adapter.lower()}"),
-                                   f"{batch_system.adapter}Adapter")
+    batch_system_adapter = getattr(import_module(
+        name=f"tardis.adapters.batchsystems.{batch_system.adapter.lower()}"),
+        f"{batch_system.adapter}Adapter")
     batch_system_agent = BatchSystemAgent(batch_system_adapter=batch_system_adapter())
 
     plugins = load_plugins()
 
     for site in configuration.Sites:
         site_composites = []
-        site_adapter = getattr(import_module(name=f"tardis.adapters.sites.{site.adapter.lower()}"),
-                               f'{site.adapter}Adapter')
+        site_adapter = getattr(import_module(
+            name=f"tardis.adapters.sites.{site.adapter.lower()}"),
+            f'{site.adapter}Adapter')
         for machine_type in getattr(configuration, site.name).MachineTypes:
-            site_agent = SiteAgent(site_adapter(machine_type=machine_type, site_name=site.name))
+            site_agent = SiteAgent(site_adapter(
+                machine_type=machine_type,
+                site_name=site.name
+            ))
 
             check_pointed_resources = get_drones_to_restore(plugins, site, machine_type)
             check_pointed_drones = [create_drone(site_agent=site_agent,
@@ -51,23 +57,27 @@ def create_composite_pool(configuration='tardis.yml'):
             drone_factory = partial(create_drone, site_agent=site_agent,
                                     batch_system_agent=batch_system_agent,
                                     plugins=plugins.values())
-            cpu_cores = getattr(configuration, site.name).MachineMetaData[machine_type]['Cores']
-            site_composites.append(Logger(Standardiser(FactoryPool(*check_pointed_drones,
-                                                                   factory=drone_factory),
-                                                       minimum=cpu_cores,
-                                                       granularity=cpu_cores),
-                                          name=f"{site.name.lower()}_{machine_type.lower()}"))
+            cpu_cores = getattr(
+                configuration,
+                site.name
+            ).MachineMetaData[machine_type]['Cores']
+            site_composites.append(Logger(Standardiser(
+                FactoryPool(*check_pointed_drones, factory=drone_factory),
+                minimum=cpu_cores,
+                granularity=cpu_cores
+            ), name=f"{site.name.lower()}_{machine_type.lower()}"))
         composites.append(Standardiser(WeightedComposite(*site_composites),
                                        maximum=site.quota if site.quota >= 0 else inf))
 
     return WeightedComposite(*composites)
 
 
-def create_drone(site_agent, batch_system_agent, plugins=None, remote_resource_uuid=None, drone_uuid=None,
+def create_drone(site_agent, batch_system_agent, plugins=None,
+                 remote_resource_uuid=None, drone_uuid=None,
                  state=RequestState(), created=None, updated=None):
-    return Drone(site_agent=site_agent, batch_system_agent=batch_system_agent, plugins=plugins,
-                 remote_resource_uuid=remote_resource_uuid, drone_uuid=drone_uuid, state=state,
-                 created=created, updated=updated)
+    return Drone(site_agent=site_agent, batch_system_agent=batch_system_agent,
+                 plugins=plugins, remote_resource_uuid=remote_resource_uuid,
+                 drone_uuid=drone_uuid, state=state, created=created, updated=updated)
 
 
 def get_drones_to_restore(plugins, site, machine_type):
@@ -89,5 +99,8 @@ def load_plugins():
         return {}
     else:
         def create_instance(plugin):
-            return getattr(import_module(name=f"tardis.plugins.{plugin.lower()}"), f'{plugin}')()
-        return {plugin: create_instance(plugin) for plugin in plugin_configuration.keys()}
+            return getattr(import_module(
+                name=f"tardis.plugins.{plugin.lower()}"), f'{plugin}')()
+        return {
+            plugin: create_instance(plugin) for plugin in plugin_configuration.keys()
+        }

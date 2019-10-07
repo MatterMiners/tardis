@@ -36,7 +36,8 @@ class AsyncCacheMap(Mapping):
                 try:
                     data = await self._update_coroutine()
                 except json.decoder.JSONDecodeError as je:
-                    logging.error(f"AsyncMap update_status failed: Could not decode json {je}")
+                    logging.error(
+                        f"AsyncMap update_status failed: Could not decode json {je}")
                 except CommandExecutionFailure as cf:
                     logging.error(f"AsyncMap update_status failed: {cf}")
                 else:

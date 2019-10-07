@@ -8,7 +8,8 @@ class SiteAgent(SiteAdapter):
 
     async def deploy_resource(self, resource_attributes):
         with self.handle_exceptions():
-            response = await self._site_adapter.deploy_resource(resource_attributes=resource_attributes)
+            response = await self._site_adapter.deploy_resource(
+                resource_attributes=resource_attributes)
             return convert_to_attribute_dict(response)
 
     def drone_uuid(self, uuid):
@@ -17,7 +18,8 @@ class SiteAgent(SiteAdapter):
     def handle_exceptions(self):
         return self._site_adapter.handle_exceptions()
 
-    def handle_response(self, response, key_translator: dict, translator_functions: dict, **additional_content):
+    def handle_response(self, response, key_translator: dict,
+                        translator_functions: dict, **additional_content):
         return NotImplemented
 
     @property
