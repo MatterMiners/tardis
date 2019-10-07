@@ -1,5 +1,6 @@
 from ..interfaces.siteadapter import SiteAdapter
-from ..utilities.attributedict import convert_to_attribute_dict, AttributeDict
+from ..utilities.attributedict import AttributeDict
+from ..utilities.attributedict import convert_to_attribute_dict
 
 
 class SiteAgent(SiteAdapter):

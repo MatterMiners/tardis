@@ -1,4 +1,5 @@
-from ..interfaces.batchsystemadapter import BatchSystemAdapter, MachineStatus
+from ..interfaces.batchsystemadapter import BatchSystemAdapter
+from ..interfaces.batchsystemadapter import MachineStatus
 
 
 class BatchSystemAgent(BatchSystemAdapter):
