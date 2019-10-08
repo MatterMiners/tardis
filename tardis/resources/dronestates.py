@@ -3,6 +3,7 @@ import asyncio
 import logging
 
 from typing import TYPE_CHECKING
+from typing import Type
 
 from ..exceptions.tardisexceptions import TardisAuthError
 from ..exceptions.tardisexceptions import TardisDroneCrashed
@@ -19,13 +20,14 @@ if TYPE_CHECKING:
 
 
 async def batchsystem_machine_status(state_transition, drone: "Drone",
-                                     current_state: State):
+                                     current_state: Type[State]):
     machine_status = await drone.batch_system_agent.get_machine_status(
         drone_uuid=drone.resource_attributes['drone_uuid'])
     return state_transition[machine_status]()
 
 
-async def check_demand(state_transition, drone: "Drone", current_state: State):
+async def check_demand(state_transition, drone: "Drone",
+                       current_state: Type[State]):
     if not drone.demand:
         drone._supply = 0.0
         if current_state in (BootingState,):
@@ -35,7 +37,8 @@ async def check_demand(state_transition, drone: "Drone", current_state: State):
     return state_transition
 
 
-async def resource_status(state_transition, drone: "Drone", current_state: State):
+async def resource_status(state_transition, drone: "Drone",
+                          current_state: Type[State]):
     try:
         drone.resource_attributes.update(
             await drone.site_agent.resource_status(drone.resource_attributes))
