@@ -1,6 +1,5 @@
 from ...configuration.configuration import Configuration
 from ...exceptions.executorexceptions import CommandExecutionFailure
-from ...exceptions.tardisexceptions import TardisDroneCrashed
 from ...exceptions.tardisexceptions import TardisError
 from ...exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from ...interfaces.siteadapter import SiteAdapter
@@ -169,9 +168,10 @@ class HTCondorAdapter(SiteAdapter):
             response = await self._executor.run_command(terminate_command)
         except CommandExecutionFailure as cef:
             if cef.exit_code == 1 and "Couldn't find/remove" in cef.stderr:
-                # Happens if condor_rm is called once the resource has shut
-                # down itself. Consider the resource as crashed
-                raise TardisDroneCrashed from cef
+                # Happens if condor_rm is called in the moment the drone is shutting
+                # down itself. Repeat the procedure until resource has vanished
+                # from condor_status call
+                raise TardisResourceStatusUpdateFailed from cef
             raise
         pattern = re.compile(r"^.*?(?P<ClusterId>\d+).*$", flags=re.MULTILINE)
         response = AttributeDict(pattern.search(response.stdout).groupdict())
