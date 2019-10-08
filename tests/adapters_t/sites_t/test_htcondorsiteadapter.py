@@ -29,6 +29,11 @@ CONDOR_RM_OUTPUT = """All jobs in cluster 1351043 have been marked for removal""
 CONDOR_RM_FAILED_OUTPUT = """Couldn't find/remove all jobs in cluster 1351043"""
 CONDOR_RM_FAILED_MESSAGE = """Run command condor_rm 1351043 via ShellExecutor failed"""
 
+CONDOR_SUSPEND_OUTPUT = """All jobs in cluster 1351043 have been suspended"""
+CONDOR_SUSPEND_FAILED_OUTPUT = """Couldn't find/suspend all jobs in cluster 1351043"""
+CONDOR_SUSPEND_FAILED_MESSAGE = """Run command condor_suspend 1351043 via 
+ShellExecutor failed"""
+
 CONDOR_SUBMIT_JDL = """executable = start_pilot.sh
 transfer_input_files = setup_pilot.sh
 output = logs/$(cluster).$(process).out
@@ -165,10 +170,27 @@ class TestHTCondorSiteAdapter(TestCase):
                                                                              created=past_timestamp))
         self.assertEqual(response.resource_status, ResourceStatus.Deleted)
 
-    @mock_executor_run_command(stdout=CONDOR_RM_OUTPUT)
+    @mock_executor_run_command(stdout=CONDOR_SUSPEND_OUTPUT)
     def test_stop_resource(self):
         response = run_async(self.adapter.stop_resource, AttributeDict(remote_resource_uuid="1351043"))
         self.assertEqual(response.remote_resource_uuid, "1351043")
+
+    @mock_executor_run_command(stdout="", raise_exception=CommandExecutionFailure(
+        message=CONDOR_SUSPEND_FAILED_MESSAGE,
+        exit_code=1,
+        stderr=CONDOR_SUSPEND_FAILED_OUTPUT,
+        stdout="", stdin=""))
+    def test_stop_resource_failed_redo(self):
+        with self.assertRaises(TardisResourceStatusUpdateFailed):
+            run_async(self.adapter.stop_resource, AttributeDict(remote_resource_uuid="1351043"))
+
+    @mock_executor_run_command(stdout="", raise_exception=CommandExecutionFailure(message=CONDOR_SUSPEND_FAILED_MESSAGE,
+                                                                                  exit_code=2,
+                                                                                  stderr=CONDOR_SUSPEND_FAILED_OUTPUT,
+                                                                                  stdout="", stdin=""))
+    def test_stop_resource_failed_raise(self):
+        with self.assertRaises(CommandExecutionFailure):
+            run_async(self.adapter.stop_resource, AttributeDict(remote_resource_uuid="1351043"))
 
     @mock_executor_run_command(stdout=CONDOR_RM_OUTPUT)
     def test_terminate_resource(self):

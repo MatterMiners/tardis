@@ -159,10 +159,22 @@ class HTCondorAdapter(SiteAdapter):
 
     async def stop_resource(self, resource_attributes: AttributeDict):
         """
-        Stopping machines is not supported in HTCondor, therefore terminate is
-        called!
+        Stopping machines is equivalent to suspending jobs in HTCondor,
+        therefore condor_suspend is called!
         """
-        return await self.terminate_resource(resource_attributes)
+        suspend_command = f"condor_suspend {resource_attributes.remote_resource_uuid}"
+        try:
+            response = await self._executor.run_command(suspend_command)
+        except CommandExecutionFailure as cef:
+            if cef.exit_code == 1 and "Couldn't find/suspend" in cef.stderr:
+                # Happens if condor_suspend is called in the moment the drone is
+                # shutting down itself. Repeat the procedure until resource has
+                # vanished from condor_q call
+                raise TardisResourceStatusUpdateFailed from cef
+            raise
+        pattern = re.compile(r"^.*?(?P<ClusterId>\d+).*$", flags=re.MULTILINE)
+        response = AttributeDict(pattern.search(response.stdout).groupdict())
+        return self.handle_response(response)
 
     async def terminate_resource(self, resource_attributes: AttributeDict):
         terminate_command = f"condor_rm {resource_attributes.remote_resource_uuid}"
