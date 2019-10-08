@@ -226,20 +226,38 @@ class ShuttingDownState(State):
 
 
 class CleanupState(State):
+    transition = {ResourceStatus.Stopped: lambda: CleanupState(),
+                  ResourceStatus.Deleted: lambda: DownState(),
+                  ResourceStatus.Error: lambda: CleanupState()}
+    processing_pipeline = [resource_status]
+
     @classmethod
     async def run(cls, drone: "Drone"):
         logging.info(f"Drone {drone.resource_attributes} in CleanupState")
-        logging.info(
-            f'Destroying VM with ID '
-            f'{drone.resource_attributes.remote_resource_uuid}')
-        try:
-            await drone.site_agent.terminate_resource(drone.resource_attributes)
-        except TardisDroneCrashed:
-            await drone.set_state(DownState())
-        except TardisResourceStatusUpdateFailed:
-            await drone.set_state(CleanupState())
-        else:
-            await drone.set_state(DownState())  # static state transition
+
+        new_state = await cls.run_processing_pipeline(drone)
+
+        if isinstance(new_state, CleanupState):
+            try:
+                logging.info(
+                    f'Destroying VM with ID '
+                    f'{drone.resource_attributes.remote_resource_uuid}')
+                await drone.site_agent.terminate_resource(
+                    drone.resource_attributes)
+            except TardisDroneCrashed:
+                logging.warning(
+                    f"Calling terminate_resource failed for drone "
+                    f"{drone.resource_attributes.drone_uuid}. Drone crashed!")
+                new_state = DownState()
+            except TardisResourceStatusUpdateFailed:
+                logging.warning(
+                    f"Calling terminate_resource failed for drone "
+                    f"{drone.resource_attributes.drone_uuid}. Will retry later!")
+                new_state = CleanupState()
+            else:
+                new_state = CleanupState()
+
+        await drone.set_state(new_state)  # static state transition
 
 
 class DownState(State):
