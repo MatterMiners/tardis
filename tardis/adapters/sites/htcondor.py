@@ -46,13 +46,15 @@ async def htcondor_queue_updater(executor):
         return htcondor_queue
 
 
-htcondor_status_codes = {'0': ResourceStatus.Error,
-                         '1': ResourceStatus.Booting,
+# According to https://htcondor.readthedocs.io/en/latest/classad-attributes/
+# job-classad-attributes.html
+htcondor_status_codes = {'1': ResourceStatus.Booting,
                          '2': ResourceStatus.Running,
-                         '3': ResourceStatus.Stopped,
+                         '3': ResourceStatus.Running,
                          '4': ResourceStatus.Deleted,
                          '5': ResourceStatus.Error,
-                         '6': ResourceStatus.Error}
+                         '6': ResourceStatus.Running,
+                         '7': ResourceStatus.Stopped}
 
 htcondor_translate_resources_prefix = {'Cores': 1,
                                        'Memory': 1024,
