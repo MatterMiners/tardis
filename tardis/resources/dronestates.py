@@ -253,9 +253,6 @@ class CleanupState(State):
                 logging.warning(
                     f"Calling terminate_resource failed for drone "
                     f"{drone.resource_attributes.drone_uuid}. Will retry later!")
-                new_state = CleanupState()
-            else:
-                new_state = CleanupState()
 
         await drone.set_state(new_state)  # static state transition
 
