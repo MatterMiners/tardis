@@ -212,16 +212,28 @@ class TestDroneStates(TestCase):
         self.run_the_matrix(matrix, initial_state=ShuttingDownState)
 
     def test_cleanup_state(self):
-        self.drone.state.return_value = CleanupState()
-        run_async(self.drone.state.return_value.run, self.drone)
-        self.assertIsInstance(self.drone.state, DownState)
-        self.drone.site_agent.terminate_resource.assert_called_with(self.drone.resource_attributes)
+        matrix = [(ResourceStatus.Stopped, None, CleanupState),
+                  (ResourceStatus.Deleted, None, DownState),
+                  (ResourceStatus.Error, None, CleanupState)]
 
-        self.run_side_effects(CleanupState(), self.drone.site_agent.terminate_resource,
-                              (TardisDroneCrashed,), DownState)
+        self.run_the_matrix(matrix, initial_state=CleanupState)
 
-        self.run_side_effects(CleanupState(), self.drone.site_agent.terminate_resource,
-                              (TardisResourceStatusUpdateFailed,), CleanupState)
+        with self.assertLogs(level=logging.WARNING) as msg:
+            self.run_side_effects(CleanupState(),
+                                  self.drone.site_agent.terminate_resource,
+                                  (TardisDroneCrashed,), DownState)
+            self.assertEqual(msg.output,
+                             ["WARNING:root:Calling terminate_resource failed for"
+                              " drone test-923ABF. Drone crashed!"])
+
+        with self.assertLogs(level=logging.WARNING) as msg:
+            self.run_side_effects(CleanupState(),
+                                  self.drone.site_agent.terminate_resource,
+                                  (TardisResourceStatusUpdateFailed,),
+                                  CleanupState)
+            self.assertEqual(msg.output,
+                             ["WARNING:root:Calling terminate_resource failed for"
+                              " drone test-923ABF. Will retry later!"])
 
         self.drone.site_agent.terminate_resource.side_effect = None
 

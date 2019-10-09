@@ -46,13 +46,15 @@ async def htcondor_queue_updater(executor):
         return htcondor_queue
 
 
-htcondor_status_codes = {'0': ResourceStatus.Error,
-                         '1': ResourceStatus.Booting,
+# According to https://htcondor.readthedocs.io/en/latest/classad-attributes/
+# job-classad-attributes.html
+htcondor_status_codes = {'1': ResourceStatus.Booting,
                          '2': ResourceStatus.Running,
-                         '3': ResourceStatus.Stopped,
+                         '3': ResourceStatus.Running,
                          '4': ResourceStatus.Deleted,
                          '5': ResourceStatus.Error,
-                         '6': ResourceStatus.Error}
+                         '6': ResourceStatus.Running,
+                         '7': ResourceStatus.Stopped}
 
 htcondor_translate_resources_prefix = {'Cores': 1,
                                        'Memory': 1024,
@@ -155,27 +157,34 @@ class HTCondorAdapter(SiteAdapter):
         else:
             return self.handle_response(resource_status)
 
-    async def stop_resource(self, resource_attributes: AttributeDict):
-        """
-        Stopping machines is not supported in HTCondor, therefore terminate is
-        called!
-        """
-        return await self.terminate_resource(resource_attributes)
-
-    async def terminate_resource(self, resource_attributes: AttributeDict):
-        terminate_command = f"condor_rm {resource_attributes.remote_resource_uuid}"
+    async def _apply_condor_command(self, resource_attributes: AttributeDict,
+                                    condor_command: str):
+        command = \
+            f"{condor_command} {resource_attributes.remote_resource_uuid}"
         try:
-            response = await self._executor.run_command(terminate_command)
+            response = await self._executor.run_command(command)
         except CommandExecutionFailure as cef:
-            if cef.exit_code == 1 and "Couldn't find/remove" in cef.stderr:
-                # Happens if condor_rm is called in the moment the drone is shutting
-                # down itself. Repeat the procedure until resource has vanished
-                # from condor_status call
+            if cef.exit_code == 1 and "Couldn't find" in cef.stderr:
+                # Happens if condor_suspend/condor_rm is called in the moment
+                # the drone is shutting down itself. Repeat the procedure until
+                # resource has vanished from condor_q call
                 raise TardisResourceStatusUpdateFailed from cef
             raise
         pattern = re.compile(r"^.*?(?P<ClusterId>\d+).*$", flags=re.MULTILINE)
         response = AttributeDict(pattern.search(response.stdout).groupdict())
         return self.handle_response(response)
+
+    async def stop_resource(self, resource_attributes: AttributeDict):
+        """
+        Stopping machines is equivalent to suspending jobs in HTCondor,
+        therefore condor_suspend is called!
+        """
+        return await self._apply_condor_command(resource_attributes,
+                                                condor_command="condor_suspend")
+
+    async def terminate_resource(self, resource_attributes: AttributeDict):
+        return await self._apply_condor_command(resource_attributes,
+                                                condor_command="condor_rm")
 
     @staticmethod
     def create_timestamps():
