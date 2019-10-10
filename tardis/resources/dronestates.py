@@ -229,7 +229,8 @@ class ShuttingDownState(State):
 
 
 class CleanupState(State):
-    transition = {ResourceStatus.Stopped: lambda: CleanupState(),
+    transition = {ResourceStatus.Booting: lambda: CleanupState(),
+                  ResourceStatus.Stopped: lambda: CleanupState(),
                   ResourceStatus.Deleted: lambda: DownState(),
                   ResourceStatus.Error: lambda: CleanupState()}
     processing_pipeline = [resource_status]
