@@ -230,6 +230,7 @@ class ShuttingDownState(State):
 
 class CleanupState(State):
     transition = {ResourceStatus.Booting: lambda: CleanupState(),
+                  ResourceStatus.Running: lambda: DrainState(),
                   ResourceStatus.Stopped: lambda: CleanupState(),
                   ResourceStatus.Deleted: lambda: DownState(),
                   ResourceStatus.Error: lambda: CleanupState()}

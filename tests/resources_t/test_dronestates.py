@@ -213,6 +213,7 @@ class TestDroneStates(TestCase):
 
     def test_cleanup_state(self):
         matrix = [(ResourceStatus.Booting, None, CleanupState),
+                  (ResourceStatus.Running, None, DrainState),
                   (ResourceStatus.Stopped, None, CleanupState),
                   (ResourceStatus.Deleted, None, DownState),
                   (ResourceStatus.Error, None, CleanupState)]
