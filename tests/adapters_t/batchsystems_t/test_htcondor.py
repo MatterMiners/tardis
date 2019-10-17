@@ -29,12 +29,12 @@ class TestHTCondorAdapter(TestCase):
         self.memory_ratio = 0.8
         self.command = "condor_status -af:t Machine State Activity TardisDroneUuid " \
                        "'Real(TotalSlotCpus-Cpus)/TotalSlotCpus' " \
-                       "'Real(TotalSlotCpus-Cpus)/TotalSlotCpus' -constraint PartitionableSlot=?=True" \
+                       "'Real(TotalSlotMemory-Memory)/TotalSlotMemory' -constraint PartitionableSlot=?=True" \
                        " -pool my-htcondor.local -test"
 
         self.command_wo_options = "condor_status -af:t Machine State Activity TardisDroneUuid " \
                                   "'Real(TotalSlotCpus-Cpus)/TotalSlotCpus' " \
-                                  "'Real(TotalSlotCpus-Cpus)/TotalSlotCpus' -constraint PartitionableSlot=?=True"
+                                  "'Real(TotalSlotMemory-Memory)/TotalSlotMemory' -constraint PartitionableSlot=?=True"
 
         return_value = "\n".join([f"test\tUnclaimed\tIdle\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",
                                   f"test_drain\tDrained\tRetiring\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",
@@ -55,7 +55,7 @@ class TestHTCondorAdapter(TestCase):
     def setup_config_mock(self, options=None):
         self.config = self.mock_config.return_value
         self.config.BatchSystem.ratios = {'cpu_ratio': 'Real(TotalSlotCpus-Cpus)/TotalSlotCpus',
-                                          'memory_ratio': 'Real(TotalSlotCpus-Cpus)/TotalSlotCpus'}
+                                          'memory_ratio': 'Real(TotalSlotMemory-Memory)/TotalSlotMemory'}
         self.config.BatchSystem.max_age = 10
         if options:
             self.config.BatchSystem.options = options
