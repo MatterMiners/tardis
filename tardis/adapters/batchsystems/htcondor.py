@@ -1,5 +1,5 @@
 from ...configuration.configuration import Configuration
-from ...exceptions.tardisexceptions import AsyncRunCommandFailure
+from ...exceptions.executorexceptions import CommandExecutionFailure
 from ...interfaces.batchsystemadapter import BatchSystemAdapter
 from ...interfaces.batchsystemadapter import MachineStatus
 from ...utilities.utils import async_run_command
@@ -53,9 +53,10 @@ async def htcondor_status_updater(options: AttributeDict,
             status_key = row['TardisDroneUuid'] or row['Machine'].split('.')[0]
             htcondor_status[status_key] = row
 
-    except AsyncRunCommandFailure as ex:
+    except CommandExecutionFailure as cef:
         logging.error("condor_status could not be executed!")
-        logging.error(str(ex))
+        logging.error(str(cef))
+        raise
     else:
         logging.debug("HTCondor status update finished.")
         return htcondor_status
@@ -125,16 +126,16 @@ class HTCondorAdapter(BatchSystemAdapter):
 
         try:
             return await async_run_command(cmd)
-        except AsyncRunCommandFailure as ex:
-            if ex.error_code == 1:
+        except CommandExecutionFailure as cef:
+            if cef.exit_code == 1:
                 # exit code 1: HTCondor can't connect to StartD of Drone
                 # https://github.com/htcondor/htcondor/blob/master/src/condor_tools/drain.cpp  # noqa: B950
                 logging.debug(
-                    f"Draining failed with message: {ex.error_message} {str(ex)}")
+                    f"Draining failed with: {str(cef)}")
                 logging.debug(
                     f"Probably drone {drone_uuid} is not available or already drained.")
                 return
-            raise ex
+            raise cef
 
     async def integrate_machine(self, drone_uuid: str) -> None:
         """

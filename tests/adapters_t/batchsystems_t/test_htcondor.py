@@ -3,7 +3,7 @@ from tests.utilities.utilities import run_async
 from tardis.adapters.batchsystems.htcondor import HTCondorAdapter
 from tardis.adapters.batchsystems.htcondor import htcondor_status_updater
 from tardis.interfaces.batchsystemadapter import MachineStatus
-from tardis.exceptions.tardisexceptions import AsyncRunCommandFailure
+from tardis.exceptions.executorexceptions import CommandExecutionFailure
 
 from functools import partial
 from shlex import quote
@@ -69,15 +69,15 @@ class TestHTCondorAdapter(TestCase):
         run_async(self.htcondor_adapter.drain_machine, drone_uuid='test')
         self.mock_async_run_command.assert_called_with('condor_drain -pool my-htcondor.local -test -graceful test')
         self.assertIsNone(run_async(self.htcondor_adapter.drain_machine, drone_uuid="not_exists"))
-        self.mock_async_run_command.side_effect = AsyncRunCommandFailure(message="Does not exists",
-                                                                         error_code=1,
-                                                                         error_message="Does not exists")
+        self.mock_async_run_command.side_effect = CommandExecutionFailure(message="Does not exists",
+                                                                          exit_code=1,
+                                                                          stderr="Does not exists")
         self.assertIsNone(run_async(self.htcondor_adapter.drain_machine, drone_uuid="test"))
 
-        self.mock_async_run_command.side_effect = AsyncRunCommandFailure(message="Unhandled error",
-                                                                         error_code=2,
-                                                                         error_message="Unhandled error")
-        with self.assertRaises(AsyncRunCommandFailure):
+        self.mock_async_run_command.side_effect = CommandExecutionFailure(message="Unhandled error",
+                                                                          exit_code=2,
+                                                                          stderr="Unhandled error")
+        with self.assertRaises(CommandExecutionFailure):
             self.assertIsNone(run_async(self.htcondor_adapter.drain_machine, drone_uuid="test"))
 
         self.mock_async_run_command.side_effect = None
@@ -136,15 +136,20 @@ class TestHTCondorAdapter(TestCase):
                          MachineStatus.Available)
         self.mock_async_run_command.reset_mock()
 
-        self.mock_async_run_command.side_effect = AsyncRunCommandFailure(message="Test", error_code=123,
-                                                                         error_message="Test")
+        self.mock_async_run_command.side_effect = CommandExecutionFailure(message="Test", exit_code=123,
+                                                                          stderr="Test")
         with self.assertLogs(level='ERROR'):
-            attributes = dict(Machine='Machine', State='State', Activity='Activity', TardisDroneUuid='TardisDroneUuid')
-            # Escape htcondor expressions and add them to attributes
-            attributes.update({key: quote(value) for key, value in self.config.BatchSystem.ratios.items()})
-
-            run_async(partial(htcondor_status_updater, self.config.BatchSystem.options, attributes))
-            self.mock_async_run_command.assert_called_with(self.command)
+            with self.assertRaises(CommandExecutionFailure):
+                attributes = {"Machine": "Machine", "State": "State",
+                              "Activity": "Activity",
+                              "TardisDroneUuid": "TardisDroneUuid"}
+                # Escape htcondor expressions and add them to attributes
+                attributes.update({key: quote(value) for key, value in
+                                   self.config.BatchSystem.ratios.items()})
+                run_async(
+                    partial(htcondor_status_updater, self.config.BatchSystem.options,
+                            attributes))
+                self.mock_async_run_command.assert_called_with(self.command)
         self.mock_async_run_command.side_effect = None
 
     def test_get_utilization(self):
