@@ -131,7 +131,7 @@ class HTCondorAdapter(BatchSystemAdapter):
                 # exit code 1: HTCondor can't connect to StartD of Drone
                 # https://github.com/htcondor/htcondor/blob/master/src/condor_tools/drain.cpp  # noqa: B950
                 logging.debug(
-                    f"Draining failed with message: {cef.message} {str(cef)}")
+                    f"Draining failed with: {str(cef)}")
                 logging.debug(
                     f"Probably drone {drone_uuid} is not available or already drained.")
                 return
