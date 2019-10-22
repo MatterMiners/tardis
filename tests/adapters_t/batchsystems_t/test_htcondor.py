@@ -139,12 +139,16 @@ class TestHTCondorAdapter(TestCase):
         self.mock_async_run_command.side_effect = CommandExecutionFailure(message="Test", exit_code=123,
                                                                           stderr="Test")
         with self.assertLogs(level='ERROR'):
-            attributes = dict(Machine='Machine', State='State', Activity='Activity', TardisDroneUuid='TardisDroneUuid')
-            # Escape htcondor expressions and add them to attributes
-            attributes.update({key: quote(value) for key, value in self.config.BatchSystem.ratios.items()})
-
-            run_async(partial(htcondor_status_updater, self.config.BatchSystem.options, attributes))
-            self.mock_async_run_command.assert_called_with(self.command)
+            with self.assertRaises(CommandExecutionFailure):
+                attributes = dict(Machine='Machine', State='State', Activity='Activity',
+                                  TardisDroneUuid='TardisDroneUuid')
+                # Escape htcondor expressions and add them to attributes
+                attributes.update({key: quote(value) for key, value in
+                                   self.config.BatchSystem.ratios.items()})
+                run_async(
+                    partial(htcondor_status_updater, self.config.BatchSystem.options,
+                            attributes))
+                self.mock_async_run_command.assert_called_with(self.command)
         self.mock_async_run_command.side_effect = None
 
     def test_get_utilization(self):

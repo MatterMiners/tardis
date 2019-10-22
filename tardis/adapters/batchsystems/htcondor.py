@@ -56,6 +56,7 @@ async def htcondor_status_updater(options: AttributeDict,
     except CommandExecutionFailure as cef:
         logging.error("condor_status could not be executed!")
         logging.error(str(cef))
+        raise
     else:
         logging.debug("HTCondor status update finished.")
         return htcondor_status
