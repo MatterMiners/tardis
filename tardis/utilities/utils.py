@@ -1,5 +1,4 @@
 from .executors.shellexecutor import ShellExecutor
-from ..exceptions.tardisexceptions import AsyncRunCommandFailure
 from ..exceptions.executorexceptions import CommandExecutionFailure
 
 from io import StringIO
@@ -18,11 +17,7 @@ async def async_run_command(cmd, shell_executor=ShellExecutor()):
 
         if ef.exit_code == 255:
             return ef.stdout
-        raise AsyncRunCommandFailure(
-            message=ef.stdout,
-            error_code=ef.exit_code,
-            error_message=ef.stderr
-        ) from ef
+        raise
     else:
         return response.stdout
 
