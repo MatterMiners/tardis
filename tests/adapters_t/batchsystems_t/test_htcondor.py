@@ -140,8 +140,9 @@ class TestHTCondorAdapter(TestCase):
                                                                           stderr="Test")
         with self.assertLogs(level='ERROR'):
             with self.assertRaises(CommandExecutionFailure):
-                attributes = dict(Machine='Machine', State='State', Activity='Activity',
-                                  TardisDroneUuid='TardisDroneUuid')
+                attributes = {"Machine": "Machine", "State": "State",
+                              "Activity": "Activity",
+                              "TardisDroneUuid": "TardisDroneUuid"}
                 # Escape htcondor expressions and add them to attributes
                 attributes.update({key: quote(value) for key, value in
                                    self.config.BatchSystem.ratios.items()})
