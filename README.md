@@ -6,6 +6,7 @@
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/cobald-tardis.svg?style=flat-square)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/MatterMiners/tardis/blob/master/LICENSE.txt)
 [![DOI](https://zenodo.org/badge/132791417.svg)](https://zenodo.org/badge/latestdoi/132791417)
+[![Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 # TARDIS Resourcemanager
 
