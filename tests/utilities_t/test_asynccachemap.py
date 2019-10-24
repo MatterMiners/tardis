@@ -13,16 +13,22 @@ import logging
 
 class TestAsyncCacheMap(TestCase):
     def setUp(self):
-        self.test_data = {'testA': 123, 'testB': 'Random String'}
+        self.test_data = {"testA": 123, "testB": "Random String"}
         self.async_cache_map = AsyncCacheMap(update_coroutine=self.update_function)
-        self.json_failing_async_cache_map = AsyncCacheMap(update_coroutine=self.json_failing_update_function)
-        self.command_failing_async_cache_map = AsyncCacheMap(update_coroutine=self.command_failing_update_function)
+        self.json_failing_async_cache_map = AsyncCacheMap(
+            update_coroutine=self.json_failing_update_function
+        )
+        self.command_failing_async_cache_map = AsyncCacheMap(
+            update_coroutine=self.command_failing_update_function
+        )
 
     async def json_failing_update_function(self):
-        raise JSONDecodeError(msg='Bla', doc='Blubb', pos=99)
+        raise JSONDecodeError(msg="Bla", doc="Blubb", pos=99)
 
     async def command_failing_update_function(self):
-        raise CommandExecutionFailure(message='Failure', stdout='Failure', stderr='Failure', exit_code=2)
+        raise CommandExecutionFailure(
+            message="Failure", stdout="Failure", stderr="Failure", exit_code=2
+        )
 
     async def update_function(self):
         return self.test_data
@@ -39,8 +45,8 @@ class TestAsyncCacheMap(TestCase):
 
     def test_get_async_cache_map(self):
         self.update_status()
-        self.assertEqual(self.async_cache_map.get('testA'), self.test_data.get('testA'))
-        self.assertEqual(self.async_cache_map['testB'], self.test_data['testB'])
+        self.assertEqual(self.async_cache_map.get("testA"), self.test_data.get("testA"))
+        self.assertEqual(self.async_cache_map["testB"], self.test_data["testB"])
 
     def test_iter_async_cache_map(self):
         self.update_status()
@@ -61,4 +67,6 @@ class TestAsyncCacheMap(TestCase):
     def test_last_update(self):
         self.assertEqual(self.async_cache_map.last_update, datetime.fromtimestamp(0))
         run_async(self.async_cache_map.update_status)
-        self.assertTrue(datetime.now()-self.async_cache_map.last_update < timedelta(seconds=1))
+        self.assertTrue(
+            datetime.now() - self.async_cache_map.last_update < timedelta(seconds=1)
+        )

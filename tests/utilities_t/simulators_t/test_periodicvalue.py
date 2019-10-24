@@ -13,9 +13,11 @@ class TestPeriodicValue(TestCase):
         self.assertLessEqual(self.simulator.get_value(), 1.0)
 
     def test_construction_by_yaml(self):
-        periodic_value = yaml.safe_load("""!PeriodicValue
+        periodic_value = yaml.safe_load(
+            """!PeriodicValue
                                            period: 3600
                                            amplitude: 0.5
                                            offset: 0.5
-                                           phase: 0""")
+                                           phase: 0"""
+        )
         self.assertIsInstance(periodic_value.get_value(), float)

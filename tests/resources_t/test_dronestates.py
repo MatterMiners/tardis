@@ -32,7 +32,7 @@ import logging
 class TestDroneStates(TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.mock_drone_patcher = patch('tardis.resources.drone.Drone')
+        cls.mock_drone_patcher = patch("tardis.resources.drone.Drone")
         cls.mock_drone = cls.mock_drone_patcher.start()
 
     @classmethod
@@ -47,33 +47,59 @@ class TestDroneStates(TestCase):
             return f
 
         self.drone = self.mock_drone.return_value
-        self.drone.resource_attributes = AttributeDict(drone_uuid='test-923ABF', remote_resource_uuid='0815')
+        self.drone.resource_attributes = AttributeDict(
+            drone_uuid="test-923ABF", remote_resource_uuid="0815"
+        )
         self.drone.demand = 8.0
         self.drone._supply = 8.0
         self.drone.set_state.side_effect = partial(mock_set_state, self.drone)
-        self.drone.site_agent.deploy_resource.return_value = async_return(return_value=AttributeDict())
-        self.drone.site_agent.resource_status.return_value = async_return(return_value=AttributeDict())
-        self.drone.site_agent.stop_resource.return_value = async_return(return_value=AttributeDict())
-        self.drone.site_agent.terminate_resource.return_value = async_return(return_value=AttributeDict())
-        self.drone.batch_system_agent.integrate_machine.return_value = async_return(return_value=None)
-        self.drone.batch_system_agent.disintegrate_machine.return_value = async_return(return_value=None)
-        self.drone.batch_system_agent.drain_machine.return_value = async_return(return_value=None)
-        self.drone.batch_system_agent.get_machine_status.return_value = async_return(return_value=None)
-        self.drone.batch_system_agent.get_allocation.return_value = async_return(return_value=None)
-        self.drone.batch_system_agent.get_utilization.return_value = async_return(return_value=None)
+        self.drone.site_agent.deploy_resource.return_value = async_return(
+            return_value=AttributeDict()
+        )
+        self.drone.site_agent.resource_status.return_value = async_return(
+            return_value=AttributeDict()
+        )
+        self.drone.site_agent.stop_resource.return_value = async_return(
+            return_value=AttributeDict()
+        )
+        self.drone.site_agent.terminate_resource.return_value = async_return(
+            return_value=AttributeDict()
+        )
+        self.drone.batch_system_agent.integrate_machine.return_value = async_return(
+            return_value=None
+        )
+        self.drone.batch_system_agent.disintegrate_machine.return_value = async_return(
+            return_value=None
+        )
+        self.drone.batch_system_agent.drain_machine.return_value = async_return(
+            return_value=None
+        )
+        self.drone.batch_system_agent.get_machine_status.return_value = async_return(
+            return_value=None
+        )
+        self.drone.batch_system_agent.get_allocation.return_value = async_return(
+            return_value=None
+        )
+        self.drone.batch_system_agent.get_utilization.return_value = async_return(
+            return_value=None
+        )
 
     def run_the_matrix(self, matrix, initial_state):
         for resource_status, machine_status, new_state in matrix:
             self.drone.site_agent.resource_status.return_value = async_return(
-                return_value=AttributeDict(resource_status=resource_status))
+                return_value=AttributeDict(resource_status=resource_status)
+            )
             self.drone.batch_system_agent.get_machine_status.return_value = async_return(
-                return_value=machine_status)
+                return_value=machine_status
+            )
             self.drone.state.return_value = initial_state
             with self.assertLogs(None, level="DEBUG"):
                 run_async(self.drone.state.return_value.run, self.drone)
             self.assertIsInstance(self.drone.state, new_state)
 
-    def run_side_effects(self, initial_state, api_call_to_test, exceptions, final_state):
+    def run_side_effects(
+        self, initial_state, api_call_to_test, exceptions, final_state
+    ):
         for exception in exceptions:
             self.drone.state.return_value = initial_state
             api_call_to_test.side_effect = exception()
@@ -87,28 +113,49 @@ class TestDroneStates(TestCase):
         run_async(self.drone.state.return_value.run, self.drone)
         self.assertIsInstance(self.drone.state, BootingState)
 
-        self.run_side_effects(RequestState(), self.drone.site_agent.deploy_resource,
-                              (TardisAuthError, TardisTimeout, TardisQuotaExceeded, TardisResourceStatusUpdateFailed),
-                              DownState)
+        self.run_side_effects(
+            RequestState(),
+            self.drone.site_agent.deploy_resource,
+            (
+                TardisAuthError,
+                TardisTimeout,
+                TardisQuotaExceeded,
+                TardisResourceStatusUpdateFailed,
+            ),
+            DownState,
+        )
 
-        self.run_side_effects(RequestState(), self.drone.site_agent.deploy_resource,
-                              (TardisDroneCrashed,),
-                              CleanupState)
+        self.run_side_effects(
+            RequestState(),
+            self.drone.site_agent.deploy_resource,
+            (TardisDroneCrashed,),
+            CleanupState,
+        )
 
     def test_booting_state(self):
-        matrix = [(ResourceStatus.Booting, None, BootingState),
-                  (ResourceStatus.Running, None, IntegrateState),
-                  (ResourceStatus.Deleted, None, DownState),
-                  (ResourceStatus.Stopped, None, CleanupState),
-                  (ResourceStatus.Error, None, CleanupState)]
+        matrix = [
+            (ResourceStatus.Booting, None, BootingState),
+            (ResourceStatus.Running, None, IntegrateState),
+            (ResourceStatus.Deleted, None, DownState),
+            (ResourceStatus.Stopped, None, CleanupState),
+            (ResourceStatus.Error, None, CleanupState),
+        ]
 
         self.run_the_matrix(matrix, initial_state=BootingState)
 
-        self.run_side_effects(BootingState(), self.drone.site_agent.resource_status,
-                              (TardisAuthError, TardisTimeout, TardisResourceStatusUpdateFailed), BootingState)
+        self.run_side_effects(
+            BootingState(),
+            self.drone.site_agent.resource_status,
+            (TardisAuthError, TardisTimeout, TardisResourceStatusUpdateFailed),
+            BootingState,
+        )
 
-        self.run_side_effects(BootingState(), self.drone.site_agent.resource_status,
-                              (TardisDroneCrashed,), CleanupState)
+        self.run_side_effects(
+            BootingState(),
+            self.drone.site_agent.resource_status,
+            (TardisDroneCrashed,),
+            CleanupState,
+        )
 
         # Test draining procedure if cobald sets drone demand to zero
         self.drone.demand = 0.0
@@ -121,34 +168,40 @@ class TestDroneStates(TestCase):
         self.drone.state.return_value = IntegrateState
         run_async(self.drone.state.return_value.run, self.drone)
         self.assertIsInstance(self.drone.state, IntegratingState)
-        self.drone.batch_system_agent.integrate_machine.assert_called_with(drone_uuid='test-923ABF')
+        self.drone.batch_system_agent.integrate_machine.assert_called_with(
+            drone_uuid="test-923ABF"
+        )
 
     def test_integrating_state(self):
-        matrix = [(ResourceStatus.Running, MachineStatus.NotAvailable, IntegratingState),
-                  (ResourceStatus.Running, MachineStatus.Available, AvailableState),
-                  (ResourceStatus.Running, MachineStatus.Draining, DrainingState),
-                  (ResourceStatus.Running, MachineStatus.Drained, DisintegrateState),
-                  (ResourceStatus.Booting, MachineStatus.NotAvailable, BootingState),
-                  (ResourceStatus.Booting, MachineStatus.Available, BootingState),
-                  (ResourceStatus.Booting, MachineStatus.Drained, BootingState),
-                  (ResourceStatus.Booting, MachineStatus.Draining, BootingState),
-                  (ResourceStatus.Deleted, MachineStatus.NotAvailable, DownState),
-                  (ResourceStatus.Stopped, MachineStatus.NotAvailable, CleanupState),
-                  (ResourceStatus.Error, MachineStatus.Available, CleanupState),
-                  (ResourceStatus.Error, MachineStatus.NotAvailable, CleanupState)]
+        matrix = [
+            (ResourceStatus.Running, MachineStatus.NotAvailable, IntegratingState),
+            (ResourceStatus.Running, MachineStatus.Available, AvailableState),
+            (ResourceStatus.Running, MachineStatus.Draining, DrainingState),
+            (ResourceStatus.Running, MachineStatus.Drained, DisintegrateState),
+            (ResourceStatus.Booting, MachineStatus.NotAvailable, BootingState),
+            (ResourceStatus.Booting, MachineStatus.Available, BootingState),
+            (ResourceStatus.Booting, MachineStatus.Drained, BootingState),
+            (ResourceStatus.Booting, MachineStatus.Draining, BootingState),
+            (ResourceStatus.Deleted, MachineStatus.NotAvailable, DownState),
+            (ResourceStatus.Stopped, MachineStatus.NotAvailable, CleanupState),
+            (ResourceStatus.Error, MachineStatus.Available, CleanupState),
+            (ResourceStatus.Error, MachineStatus.NotAvailable, CleanupState),
+        ]
 
         self.run_the_matrix(matrix, initial_state=IntegratingState)
 
     def test_available_state(self):
-        matrix = [(ResourceStatus.Running, MachineStatus.Available, AvailableState),
-                  (ResourceStatus.Running, MachineStatus.NotAvailable, IntegratingState),
-                  (ResourceStatus.Running, MachineStatus.Draining, DrainingState),
-                  (ResourceStatus.Running, MachineStatus.Drained, DisintegrateState),
-                  (ResourceStatus.Booting, MachineStatus.NotAvailable, BootingState),
-                  (ResourceStatus.Deleted, MachineStatus.NotAvailable, DownState),
-                  (ResourceStatus.Stopped, MachineStatus.NotAvailable, CleanupState),
-                  (ResourceStatus.Error, MachineStatus.NotAvailable, CleanupState),
-                  (ResourceStatus.Error, MachineStatus.Available, CleanupState)]
+        matrix = [
+            (ResourceStatus.Running, MachineStatus.Available, AvailableState),
+            (ResourceStatus.Running, MachineStatus.NotAvailable, IntegratingState),
+            (ResourceStatus.Running, MachineStatus.Draining, DrainingState),
+            (ResourceStatus.Running, MachineStatus.Drained, DisintegrateState),
+            (ResourceStatus.Booting, MachineStatus.NotAvailable, BootingState),
+            (ResourceStatus.Deleted, MachineStatus.NotAvailable, DownState),
+            (ResourceStatus.Stopped, MachineStatus.NotAvailable, CleanupState),
+            (ResourceStatus.Error, MachineStatus.NotAvailable, CleanupState),
+            (ResourceStatus.Error, MachineStatus.Available, CleanupState),
+        ]
 
         self.run_the_matrix(matrix, initial_state=AvailableState)
 
@@ -163,15 +216,19 @@ class TestDroneStates(TestCase):
         self.drone.state.return_value = DrainState
         run_async(self.drone.state.return_value.run, self.drone)
         self.assertIsInstance(self.drone.state, DrainingState)
-        self.drone.batch_system_agent.drain_machine.assert_called_with(drone_uuid='test-923ABF')
+        self.drone.batch_system_agent.drain_machine.assert_called_with(
+            drone_uuid="test-923ABF"
+        )
 
     def test_draining_state(self):
-        matrix = [(ResourceStatus.Running, MachineStatus.Draining, DrainingState),
-                  (ResourceStatus.Running, MachineStatus.Available, DrainState),
-                  (ResourceStatus.Running, MachineStatus.Drained, DisintegrateState),
-                  (ResourceStatus.Running, MachineStatus.NotAvailable, ShutDownState),
-                  (ResourceStatus.Deleted, MachineStatus.NotAvailable, DownState),
-                  (ResourceStatus.Stopped, MachineStatus.NotAvailable, CleanupState)]
+        matrix = [
+            (ResourceStatus.Running, MachineStatus.Draining, DrainingState),
+            (ResourceStatus.Running, MachineStatus.Available, DrainState),
+            (ResourceStatus.Running, MachineStatus.Drained, DisintegrateState),
+            (ResourceStatus.Running, MachineStatus.NotAvailable, ShutDownState),
+            (ResourceStatus.Deleted, MachineStatus.NotAvailable, DownState),
+            (ResourceStatus.Stopped, MachineStatus.NotAvailable, CleanupState),
+        ]
 
         self.run_the_matrix(matrix, initial_state=DrainingState)
 
@@ -179,63 +236,99 @@ class TestDroneStates(TestCase):
         self.drone.state.return_value = DisintegrateState
         run_async(self.drone.state.return_value.run, self.drone)
         self.assertIsInstance(self.drone.state, ShutDownState)
-        self.drone.batch_system_agent.disintegrate_machine.assert_called_with(drone_uuid='test-923ABF')
+        self.drone.batch_system_agent.disintegrate_machine.assert_called_with(
+            drone_uuid="test-923ABF"
+        )
 
     def test_shutdown_state(self):
-        matrix = [(ResourceStatus.Running, None, ShuttingDownState),
-                  (ResourceStatus.Stopped, None, CleanupState),
-                  (ResourceStatus.Deleted, None, DownState),
-                  (ResourceStatus.Error, None, CleanupState)]
+        matrix = [
+            (ResourceStatus.Running, None, ShuttingDownState),
+            (ResourceStatus.Stopped, None, CleanupState),
+            (ResourceStatus.Deleted, None, DownState),
+            (ResourceStatus.Error, None, CleanupState),
+        ]
 
         self.run_the_matrix(matrix, initial_state=ShutDownState)
 
-        self.run_side_effects(ShutDownState, self.drone.site_agent.resource_status,
-                              (TardisAuthError, TardisTimeout, TardisResourceStatusUpdateFailed), ShutDownState)
+        self.run_side_effects(
+            ShutDownState,
+            self.drone.site_agent.resource_status,
+            (TardisAuthError, TardisTimeout, TardisResourceStatusUpdateFailed),
+            ShutDownState,
+        )
 
-        self.run_side_effects(ShutDownState, self.drone.site_agent.resource_status,
-                              (TardisDroneCrashed,), CleanupState)
+        self.run_side_effects(
+            ShutDownState,
+            self.drone.site_agent.resource_status,
+            (TardisDroneCrashed,),
+            CleanupState,
+        )
 
         self.mock_drone.reset()
         self.drone.site_agent.resource_status.return_value = async_return(
-            return_value=AttributeDict(resource_status=ResourceStatus.Running))
+            return_value=AttributeDict(resource_status=ResourceStatus.Running)
+        )
         with self.assertLogs(level=logging.WARNING):
-            self.run_side_effects(ShutDownState, self.drone.site_agent.stop_resource,
-                                  (TardisResourceStatusUpdateFailed,), ShutDownState)
-        self.drone.site_agent.stop_resource.assert_called_with(self.drone.resource_attributes)
+            self.run_side_effects(
+                ShutDownState,
+                self.drone.site_agent.stop_resource,
+                (TardisResourceStatusUpdateFailed,),
+                ShutDownState,
+            )
+        self.drone.site_agent.stop_resource.assert_called_with(
+            self.drone.resource_attributes
+        )
 
     def test_shutting_down_state(self):
-        matrix = [(ResourceStatus.Running, None, ShuttingDownState),
-                  (ResourceStatus.Stopped, None, CleanupState),
-                  (ResourceStatus.Deleted, None, DownState),
-                  (ResourceStatus.Error, None, CleanupState)]
+        matrix = [
+            (ResourceStatus.Running, None, ShuttingDownState),
+            (ResourceStatus.Stopped, None, CleanupState),
+            (ResourceStatus.Deleted, None, DownState),
+            (ResourceStatus.Error, None, CleanupState),
+        ]
 
         self.run_the_matrix(matrix, initial_state=ShuttingDownState)
 
     def test_cleanup_state(self):
-        matrix = [(ResourceStatus.Booting, None, CleanupState),
-                  (ResourceStatus.Running, None, DrainState),
-                  (ResourceStatus.Stopped, None, CleanupState),
-                  (ResourceStatus.Deleted, None, DownState),
-                  (ResourceStatus.Error, None, CleanupState)]
+        matrix = [
+            (ResourceStatus.Booting, None, CleanupState),
+            (ResourceStatus.Running, None, DrainState),
+            (ResourceStatus.Stopped, None, CleanupState),
+            (ResourceStatus.Deleted, None, DownState),
+            (ResourceStatus.Error, None, CleanupState),
+        ]
 
         self.run_the_matrix(matrix, initial_state=CleanupState)
 
         with self.assertLogs(level=logging.WARNING) as msg:
-            self.run_side_effects(CleanupState(),
-                                  self.drone.site_agent.terminate_resource,
-                                  (TardisDroneCrashed,), DownState)
-            self.assertEqual(msg.output,
-                             ["WARNING:root:Calling terminate_resource failed for"
-                              " drone test-923ABF. Drone crashed!"])
+            self.run_side_effects(
+                CleanupState(),
+                self.drone.site_agent.terminate_resource,
+                (TardisDroneCrashed,),
+                DownState,
+            )
+            self.assertEqual(
+                msg.output,
+                [
+                    "WARNING:root:Calling terminate_resource failed for"
+                    " drone test-923ABF. Drone crashed!"
+                ],
+            )
 
         with self.assertLogs(level=logging.WARNING) as msg:
-            self.run_side_effects(CleanupState(),
-                                  self.drone.site_agent.terminate_resource,
-                                  (TardisResourceStatusUpdateFailed,),
-                                  CleanupState)
-            self.assertEqual(msg.output,
-                             ["WARNING:root:Calling terminate_resource failed for"
-                              " drone test-923ABF. Will retry later!"])
+            self.run_side_effects(
+                CleanupState(),
+                self.drone.site_agent.terminate_resource,
+                (TardisResourceStatusUpdateFailed,),
+                CleanupState,
+            )
+            self.assertEqual(
+                msg.output,
+                [
+                    "WARNING:root:Calling terminate_resource failed for"
+                    " drone test-923ABF. Will retry later!"
+                ],
+            )
 
         self.drone.site_agent.terminate_resource.side_effect = None
 
