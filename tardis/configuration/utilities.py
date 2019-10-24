@@ -14,6 +14,8 @@ def enable_yaml_load(tag):
                 parameters = loader.construct_sequence(node)
                 new_cls = cls(*parameters)
             return new_cls
+
         yaml.add_constructor(tag, class_factory, Loader=yaml.SafeLoader)
         return cls
+
     return yaml_load_decorator

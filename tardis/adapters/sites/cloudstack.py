@@ -28,15 +28,13 @@ class CloudStackAdapter(SiteAdapter):
             end_point=self.configuration.end_point,
             api_key=self.configuration.api_key,
             api_secret=self.configuration.api_secret,
-            event_loop=runtime._meta_runner.runners[asyncio].event_loop
+            event_loop=runtime._meta_runner.runners[asyncio].event_loop,
         )
         self._machine_type = machine_type
         self._site_name = site_name
 
         key_translator = StaticMapping(
-            remote_resource_uuid='id',
-            drone_uuid='name',
-            resource_status='state'
+            remote_resource_uuid="id", drone_uuid="name", resource_status="state"
         )
 
         translator_functions = StaticMapping(
@@ -47,23 +45,25 @@ class CloudStackAdapter(SiteAdapter):
                 Running=ResourceStatus.Running,
                 Stopped=ResourceStatus.Stopped,
                 Expunged=ResourceStatus.Deleted,
-                Destroyed=ResourceStatus.Deleted
-            ): translator[x])
+                Destroyed=ResourceStatus.Deleted,
+            ): translator[x],
+        )
 
         self.handle_response = partial(
             self.handle_response,
             key_translator=key_translator,
-            translator_functions=translator_functions
+            translator_functions=translator_functions,
         )
 
     async def deploy_resource(
-            self, resource_attributes: AttributeDict) -> AttributeDict:
+        self, resource_attributes: AttributeDict
+    ) -> AttributeDict:
         response = await self.cloud_stack_client.deployVirtualMachine(
             name=resource_attributes.drone_uuid,
-            **self.configuration.MachineTypeConfiguration[self._machine_type]
+            **self.configuration.MachineTypeConfiguration[self._machine_type],
         )
         logging.debug(f"{self.site_name} deployVirtualMachine returned {response}")
-        return self.handle_response(response['virtualmachine'])
+        return self.handle_response(response["virtualmachine"])
 
     @property
     def machine_meta_data(self) -> AttributeDict:
@@ -78,21 +78,25 @@ class CloudStackAdapter(SiteAdapter):
         return self._site_name
 
     async def resource_status(
-            self, resource_attributes: AttributeDict) -> AttributeDict:
+        self, resource_attributes: AttributeDict
+    ) -> AttributeDict:
         response = await self.cloud_stack_client.listVirtualMachines(
-            id=resource_attributes.remote_resource_uuid)
+            id=resource_attributes.remote_resource_uuid
+        )
         logging.debug(f"{self.site_name} listVirtualMachines returned {response}")
-        return self.handle_response(response['virtualmachine'][0])
+        return self.handle_response(response["virtualmachine"][0])
 
     async def stop_resource(self, resource_attributes: AttributeDict):
         response = await self.cloud_stack_client.stopVirtualMachine(
-            id=resource_attributes.remote_resource_uuid)
+            id=resource_attributes.remote_resource_uuid
+        )
         logging.debug(f"{self.site_name} stopVirtualMachine returned {response}")
         return response
 
     async def terminate_resource(self, resource_attributes: AttributeDict):
         response = await self.cloud_stack_client.destroyVirtualMachine(
-            id=resource_attributes.remote_resource_uuid)
+            id=resource_attributes.remote_resource_uuid
+        )
         logging.debug(f"{self.site_name} destroyVirtualMachine returned {response}")
         return response
 
@@ -113,11 +117,12 @@ class CloudStackAdapter(SiteAdapter):
             elif ce.error_code == 500:
                 logging.info(
                     f"Error code: {ce.error_code}, error text: {ce.error_text}, "
-                    f"response: {ce.response}")
-                if 'timed out' in ce.response['message']:
+                    f"response: {ce.response}"
+                )
+                if "timed out" in ce.response["message"]:
                     logging.debug(f"Timed out: {ce.response}")
                     raise TardisTimeout from ce
-                elif 'connection was closed' in ce.response['message']:
+                elif "connection was closed" in ce.response["message"]:
                     logging.debug(f"Connection was closed: {ce.response}")
                     raise TardisResourceStatusUpdateFailed from ce
                 else:
@@ -126,5 +131,6 @@ class CloudStackAdapter(SiteAdapter):
             else:
                 logging.info(
                     f"Error code: {ce.error_code}, error text: {ce.error_text}, "
-                    f"response: {ce.response}")
+                    f"response: {ce.response}"
+                )
                 raise TardisError from ce

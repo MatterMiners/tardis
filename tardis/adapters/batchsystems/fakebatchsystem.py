@@ -13,6 +13,7 @@ class FakeBatchSystemAdapter(BatchSystemAdapter):
     The mocked response to the :py:meth:`~.get_utilization`, :py:meth:`~.get_allocation`
     and :py:meth:`~.get_machine_status` API calls is configurable statically.
     """
+
     def __init__(self):
         config = Configuration()
         self.fake_config = config.BatchSystem

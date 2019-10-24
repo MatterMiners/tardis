@@ -16,11 +16,12 @@ class ShellExecutor(Executor):
             command,
             stdin=stdin_input and asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
+            stderr=asyncio.subprocess.PIPE,
         )
 
         stdout, stderr = await sub_process.communicate(
-            stdin_input and stdin_input.encode())
+            stdin_input and stdin_input.encode()
+        )
         exit_code = sub_process.returncode
 
         if exit_code:
@@ -29,10 +30,11 @@ class ShellExecutor(Executor):
                 exit_code=exit_code,
                 stdout=stdout.decode().strip(),
                 stderr=stderr.decode().strip(),
-                stdin=stdin_input
+                stdin=stdin_input,
             )
 
         return AttributeDict(
             stdout=stdout.decode().strip(),
             stderr=stderr.decode().strip(),
-            exit_code=exit_code)
+            exit_code=exit_code,
+        )

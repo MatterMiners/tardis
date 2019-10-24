@@ -15,6 +15,7 @@ class TelegrafMonitoring(Plugin):
     implements an interface to monitor state changes of the Drones in a telegraf
     service running a UDP input module.
     """
+
     def __init__(self):
         self.logger = logging.getLogger("telegrafmonitoring")
         self.logger.setLevel(logging.DEBUG)
@@ -23,8 +24,8 @@ class TelegrafMonitoring(Plugin):
         host = config.host
         port = config.port
         default_tags = dict(tardis_machine_name=platform.node())
-        default_tags.update(getattr(config, 'default_tags', {}))
-        self.metric = getattr(config, 'metric', 'tardis_data')
+        default_tags.update(getattr(config, "default_tags", {}))
+        self.metric = getattr(config, "metric", "tardis_data")
 
         self.client = aiotelegraf.Client(host=host, port=port, tags=default_tags)
 
@@ -40,16 +41,17 @@ class TelegrafMonitoring(Plugin):
         :return: None
         """
         self.logger.debug(
-            f"Drone: {str(resource_attributes)} has changed state to {state}")
+            f"Drone: {str(resource_attributes)} has changed state to {state}"
+        )
         await self.client.connect()
         data = dict(
             state=str(state),
             created=datetime.timestamp(resource_attributes.created),
-            updated=datetime.timestamp(resource_attributes.updated)
+            updated=datetime.timestamp(resource_attributes.updated),
         )
         tags = dict(
             site_name=resource_attributes.site_name,
-            machine_type=resource_attributes.machine_type
+            machine_type=resource_attributes.machine_type,
         )
         self.client.metric(self.metric, data, tags=tags)
         await self.client.close()

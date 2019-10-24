@@ -14,6 +14,7 @@ class Borg(metaclass=ABCMeta):
         :return: item
         """
         if item not in self._shared_state:
-            raise AttributeError("Type object %r has no attribute %r)" %
-                                 (self.__class__.__name__, item))
+            raise AttributeError(
+                "Type object %r has no attribute %r)" % (self.__class__.__name__, item)
+            )
         return getattr(self, item)

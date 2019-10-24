@@ -29,19 +29,19 @@ class OpenStackAdapter(SiteAdapter):
         self._machine_type = machine_type
         self._site_name = site_name
 
-        auth = AuthPassword(auth_url=self.configuration.auth_url,
-                            username=self.configuration.username,
-                            password=self.configuration.password,
-                            project_name=self.configuration.project_name,
-                            user_domain_name=self.configuration.user_domain_name,
-                            project_domain_name=self.configuration.project_domain_name)
+        auth = AuthPassword(
+            auth_url=self.configuration.auth_url,
+            username=self.configuration.username,
+            password=self.configuration.password,
+            project_name=self.configuration.project_name,
+            user_domain_name=self.configuration.user_domain_name,
+            project_domain_name=self.configuration.project_domain_name,
+        )
 
         self.nova = NovaClient(session=auth)
 
         key_translator = StaticMapping(
-            remote_resource_uuid='id',
-            drone_uuid='name',
-            resource_status='status'
+            remote_resource_uuid="id", drone_uuid="name", resource_status="status"
         )
 
         translator_functions = StaticMapping(
@@ -51,24 +51,25 @@ class OpenStackAdapter(SiteAdapter):
                 BUILD=ResourceStatus.Booting,
                 ACTIVE=ResourceStatus.Running,
                 SHUTOFF=ResourceStatus.Stopped,
-                ERROR=ResourceStatus.Error):
-            translator[x]
+                ERROR=ResourceStatus.Error,
+            ): translator[x],
         )
 
         self.handle_response = partial(
             self.handle_response,
             key_translator=key_translator,
-            translator_functions=translator_functions
+            translator_functions=translator_functions,
         )
 
     async def deploy_resource(
-            self, resource_attributes: AttributeDict) -> AttributeDict:
+        self, resource_attributes: AttributeDict
+    ) -> AttributeDict:
         specs = dict(name=resource_attributes.drone_uuid)
         specs.update(self.configuration.MachineTypeConfiguration[self._machine_type])
         await self.nova.init_api(timeout=60)
         response = await self.nova.servers.create(server=specs)
         logging.debug(f"{self.site_name} servers create returned {response}")
-        return self.handle_response(response['server'])
+        return self.handle_response(response["server"])
 
     @property
     def machine_meta_data(self) -> AttributeDict:
@@ -83,24 +84,27 @@ class OpenStackAdapter(SiteAdapter):
         return self._site_name
 
     async def resource_status(
-            self, resource_attributes: AttributeDict) -> AttributeDict:
+        self, resource_attributes: AttributeDict
+    ) -> AttributeDict:
         await self.nova.init_api(timeout=60)
         response = await self.nova.servers.get(resource_attributes.remote_resource_uuid)
         logging.debug(f"{self.site_name} servers get returned {response}")
-        return self.handle_response(response['server'])
+        return self.handle_response(response["server"])
 
     async def stop_resource(self, resource_attributes: AttributeDict):
         await self.nova.init_api(timeout=60)
-        params = {'os-stop': None}
+        params = {"os-stop": None}
         response = await self.nova.servers.run_action(
-            resource_attributes.remote_resource_uuid, **params)
+            resource_attributes.remote_resource_uuid, **params
+        )
         logging.debug(f"{self.site_name} servers stop returned {response}")
         return response
 
     async def terminate_resource(self, resource_attributes: AttributeDict):
         await self.nova.init_api(timeout=60)
         response = await self.nova.servers.force_delete(
-            resource_attributes.remote_resource_uuid)
+            resource_attributes.remote_resource_uuid
+        )
         logging.debug(f"{self.site_name} servers terminate returned {response}")
         return response
 

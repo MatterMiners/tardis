@@ -14,8 +14,9 @@ from typing import Iterable
 import logging
 
 
-async def htcondor_status_updater(options: AttributeDict,
-                                  attributes: AttributeDict) -> dict:
+async def htcondor_status_updater(
+    options: AttributeDict, attributes: AttributeDict
+) -> dict:
     """
     Helper function to call ``condor_status -af`` asynchronously and to translate
     the output into a dictionary
@@ -45,12 +46,12 @@ async def htcondor_status_updater(options: AttributeDict,
         logging.debug(f"HTCondor status update is running. Command: {cmd}")
         condor_status = await async_run_command(cmd)
         for row in htcondor_csv_parser(
-                htcondor_input=condor_status,
-                fieldnames=tuple(attributes.keys()),
-                delimiter='\t',
-                replacements=dict(undefined=None)
+            htcondor_input=condor_status,
+            fieldnames=tuple(attributes.keys()),
+            delimiter="\t",
+            replacements=dict(undefined=None),
         ):
-            status_key = row['TardisDroneUuid'] or row['Machine'].split('.')[0]
+            status_key = row["TardisDroneUuid"] or row["Machine"].split(".")[0]
             htcondor_status[status_key] = row
 
     except CommandExecutionFailure as cef:
@@ -68,6 +69,7 @@ class HTCondorAdapter(BatchSystemAdapter):
     the TARDIS interface to dynamically integrate and manage opportunistic resources
     with the HTCondor Batch System.
     """
+
     def __init__(self):
         config = Configuration()
         self.ratios = config.BatchSystem.ratios
@@ -78,17 +80,20 @@ class HTCondorAdapter(BatchSystemAdapter):
             self.htcondor_options = {}
 
         attributes = dict(
-            Machine='Machine',
-            State='State',
-            Activity='Activity',
-            TardisDroneUuid='TardisDroneUuid')
+            Machine="Machine",
+            State="State",
+            Activity="Activity",
+            TardisDroneUuid="TardisDroneUuid",
+        )
         # Escape htcondor expressions and add them to attributes
         attributes.update({key: quote(value) for key, value in self.ratios.items()})
 
         self._htcondor_status = AsyncCacheMap(
             update_coroutine=partial(
-                htcondor_status_updater, self.htcondor_options, attributes),
-            max_age=config.BatchSystem.max_age * 60)
+                htcondor_status_updater, self.htcondor_options, attributes
+            ),
+            max_age=config.BatchSystem.max_age * 60,
+        )
 
     async def disintegrate_machine(self, drone_uuid: str) -> None:
         """
@@ -113,7 +118,7 @@ class HTCondorAdapter(BatchSystemAdapter):
         """
         await self._htcondor_status.update_status()
         try:
-            machine = self._htcondor_status[drone_uuid]['Machine']
+            machine = self._htcondor_status[drone_uuid]["Machine"]
         except KeyError:
             return
 
@@ -130,10 +135,10 @@ class HTCondorAdapter(BatchSystemAdapter):
             if cef.exit_code == 1:
                 # exit code 1: HTCondor can't connect to StartD of Drone
                 # https://github.com/htcondor/htcondor/blob/master/src/condor_tools/drain.cpp  # noqa: B950
+                logging.debug(f"Draining failed with: {str(cef)}")
                 logging.debug(
-                    f"Draining failed with: {str(cef)}")
-                logging.debug(
-                    f"Probably drone {drone_uuid} is not available or already drained.")
+                    f"Probably drone {drone_uuid} is not available or already drained."
+                )
                 return
             raise cef
 
@@ -166,8 +171,11 @@ class HTCondorAdapter(BatchSystemAdapter):
         except KeyError:
             return {}
         else:
-            return (float(value) for key, value in htcondor_status.items()
-                    if key in self.ratios.keys())
+            return (
+                float(value)
+                for key, value in htcondor_status.items()
+                if key in self.ratios.keys()
+            )
 
     async def get_allocation(self, drone_uuid: str) -> float:
         """
@@ -180,7 +188,7 @@ class HTCondorAdapter(BatchSystemAdapter):
         :return: The allocation of a worker node as described above.
         :rtype: float
         """
-        return max(await self.get_resource_ratios(drone_uuid), default=0.)
+        return max(await self.get_resource_ratios(drone_uuid), default=0.0)
 
     async def get_machine_status(self, drone_uuid: str) -> MachineStatus:
         """
@@ -194,10 +202,12 @@ class HTCondorAdapter(BatchSystemAdapter):
             NotAvailable)
         :rtype: MachineStatus
         """
-        status_mapping = {('Unclaimed', 'Idle'): MachineStatus.Available,
-                          ('Drained', 'Retiring'): MachineStatus.Draining,
-                          ('Drained', 'Idle'): MachineStatus.Drained,
-                          ('Owner', 'Idle'): MachineStatus.NotAvailable}
+        status_mapping = {
+            ("Unclaimed", "Idle"): MachineStatus.Available,
+            ("Drained", "Retiring"): MachineStatus.Draining,
+            ("Drained", "Idle"): MachineStatus.Drained,
+            ("Owner", "Idle"): MachineStatus.NotAvailable,
+        }
 
         await self._htcondor_status.update_status()
         try:
@@ -206,8 +216,9 @@ class HTCondorAdapter(BatchSystemAdapter):
             return MachineStatus.NotAvailable
         else:
             return status_mapping.get(
-                (machine_status['State'], machine_status['Activity']),
-                MachineStatus.NotAvailable)
+                (machine_status["State"], machine_status["Activity"]),
+                MachineStatus.NotAvailable,
+            )
 
     async def get_utilization(self, drone_uuid: str) -> float:
         """
@@ -221,4 +232,4 @@ class HTCondorAdapter(BatchSystemAdapter):
         :return: The utilization of a worker node as described above.
         :rtype: float
         """
-        return min(await self.get_resource_ratios(drone_uuid), default=0.)
+        return min(await self.get_resource_ratios(drone_uuid), default=0.0)
