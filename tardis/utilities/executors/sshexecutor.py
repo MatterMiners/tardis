@@ -6,7 +6,7 @@ from ..attributedict import AttributeDict
 import asyncssh
 
 
-@enable_yaml_load('!SSHExecutor')
+@enable_yaml_load("!SSHExecutor")
 class SSHExecutor(Executor):
     def __init__(self, **parameters):
         self._parameters = parameters
@@ -15,9 +15,7 @@ class SSHExecutor(Executor):
         async with asyncssh.connect(**self._parameters) as conn:
             try:
                 response = await conn.run(
-                    command,
-                    check=True,
-                    input=stdin_input and stdin_input.encode()
+                    command, check=True, input=stdin_input and stdin_input.encode()
                 )
             except asyncssh.ProcessError as pe:
                 raise CommandExecutionFailure(
@@ -25,20 +23,24 @@ class SSHExecutor(Executor):
                     exit_code=pe.exit_status,
                     stdin=stdin_input,
                     stdout=pe.stdout,
-                    stderr=pe.stderr
+                    stderr=pe.stderr,
                 ) from pe
-            except (ConnectionResetError, asyncssh.misc.DisconnectError,
-                    asyncssh.misc.ConnectionLost, BrokenPipeError) as ce:
+            except (
+                ConnectionResetError,
+                asyncssh.misc.DisconnectError,
+                asyncssh.misc.ConnectionLost,
+                BrokenPipeError,
+            ) as ce:
                 raise CommandExecutionFailure(
                     message=f"Could not run command {command} due to SSH failure: {ce}",
                     exit_code=255,
                     stdout="",
-                    stderr="SSH failure"
+                    stderr="SSH failure",
                 ) from ce
 
             else:
                 return AttributeDict(
                     stdout=response.stdout,
                     stderr=response.stderr,
-                    exit_code=response.exit_status
+                    exit_code=response.exit_status,
                 )

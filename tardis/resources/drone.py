@@ -19,10 +19,17 @@ import uuid
 
 @service(flavour=asyncio)
 class Drone(Pool):
-    def __init__(self, site_agent: SiteAgent, batch_system_agent: BatchSystemAgent,
-                 plugins: Optional[List[Plugin]] = None, remote_resource_uuid=None,
-                 drone_uuid=None, state: RequestState = RequestState(),
-                 created: float = None, updated: float = None):
+    def __init__(
+        self,
+        site_agent: SiteAgent,
+        batch_system_agent: BatchSystemAgent,
+        plugins: Optional[List[Plugin]] = None,
+        remote_resource_uuid=None,
+        drone_uuid=None,
+        state: RequestState = RequestState(),
+        created: float = None,
+        updated: float = None,
+    ):
         self._site_agent = site_agent
         self._batch_system_agent = batch_system_agent
         self._plugins = plugins or []
@@ -34,7 +41,7 @@ class Drone(Pool):
             remote_resource_uuid=remote_resource_uuid,
             created=created or datetime.now(),
             updated=updated or datetime.now(),
-            drone_uuid=drone_uuid or self.site_agent.drone_uuid(uuid.uuid4().hex[:10])
+            drone_uuid=drone_uuid or self.site_agent.drone_uuid(uuid.uuid4().hex[:10]),
         )
 
         self._allocation = 0.0
@@ -60,7 +67,7 @@ class Drone(Pool):
 
     @property
     def maximum_demand(self) -> float:
-        return self.site_agent.machine_meta_data['Cores']
+        return self.site_agent.machine_meta_data["Cores"]
 
     @property
     def supply(self) -> float:
@@ -80,7 +87,8 @@ class Drone(Pool):
             await asyncio.sleep(60)
             if isinstance(self.state, DownState):
                 logging.debug(
-                    f"Garbage Collect Drone: {self.resource_attributes.drone_uuid}")
+                    f"Garbage Collect Drone: {self.resource_attributes.drone_uuid}"
+                )
                 self._demand = 0
                 return
 

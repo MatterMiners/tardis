@@ -16,9 +16,11 @@ class TestRandomGauss(TestCase):
         self.assertGreater(value, -10)
 
     def test_construction_by_yaml(self):
-        random_gauss = yaml.safe_load("""
+        random_gauss = yaml.safe_load(
+            """
                               !RandomGauss
                               mu: 0
                               sigma: 1
-                              """)
+                              """
+        )
         self.assertIsInstance(random_gauss.get_value(), float)

@@ -21,10 +21,7 @@ import re
 
 async def htcondor_queue_updater(executor):
     attributes = dict(
-        Owner="Owner",
-        JobStatus="JobStatus",
-        ClusterId="ClusterId",
-        ProcId="ProcId"
+        Owner="Owner", JobStatus="JobStatus", ClusterId="ClusterId", ProcId="ProcId"
     )
     attributes_string = " ".join(attributes.values())
     queue_command = f"condor_q -af:t {attributes_string}"
@@ -37,28 +34,28 @@ async def htcondor_queue_updater(executor):
         raise
     else:
         for row in htcondor_csv_parser(
-                htcondor_input=condor_queue.stdout,
-                fieldnames=tuple(attributes.keys()),
-                delimiter='\t',
-                replacements=dict(undefined=None)
+            htcondor_input=condor_queue.stdout,
+            fieldnames=tuple(attributes.keys()),
+            delimiter="\t",
+            replacements=dict(undefined=None),
         ):
-            htcondor_queue[row['ClusterId']] = row
+            htcondor_queue[row["ClusterId"]] = row
         return htcondor_queue
 
 
 # According to https://htcondor.readthedocs.io/en/latest/classad-attributes/
 # job-classad-attributes.html
-htcondor_status_codes = {'1': ResourceStatus.Booting,
-                         '2': ResourceStatus.Running,
-                         '3': ResourceStatus.Running,
-                         '4': ResourceStatus.Deleted,
-                         '5': ResourceStatus.Error,
-                         '6': ResourceStatus.Running,
-                         '7': ResourceStatus.Stopped}
+htcondor_status_codes = {
+    "1": ResourceStatus.Booting,
+    "2": ResourceStatus.Running,
+    "3": ResourceStatus.Running,
+    "4": ResourceStatus.Deleted,
+    "5": ResourceStatus.Error,
+    "6": ResourceStatus.Running,
+    "7": ResourceStatus.Stopped,
+}
 
-htcondor_translate_resources_prefix = {'Cores': 1,
-                                       'Memory': 1024,
-                                       'Disk': 1024}
+htcondor_translate_resources_prefix = {"Cores": 1, "Memory": 1024, "Disk": 1024}
 
 
 class HTCondorAdapter(SiteAdapter):
@@ -66,13 +63,13 @@ class HTCondorAdapter(SiteAdapter):
         self.configuration = getattr(Configuration(), site_name)
         self._machine_type = machine_type
         self._site_name = site_name
-        self._executor = getattr(self.configuration, 'executor', ShellExecutor())
+        self._executor = getattr(self.configuration, "executor", ShellExecutor())
 
         key_translator = StaticMapping(
-            remote_resource_uuid='ClusterId',
-            resource_status='JobStatus',
-            created='created',
-            updated='updated'
+            remote_resource_uuid="ClusterId",
+            resource_status="JobStatus",
+            created="created",
+            updated="updated",
         )
 
         # HTCondor uses digits to indicate job states and digit as variable names
@@ -80,49 +77,53 @@ class HTCondorAdapter(SiteAdapter):
         # htcondor_status_code dictionary is necessary. Somehow ugly.
         translator_functions = StaticMapping(
             JobStatus=lambda x, translator=StaticMapping(
-                **htcondor_status_codes): translator[x]
+                **htcondor_status_codes
+            ): translator[x]
         )
 
         self.handle_response = partial(
             self.handle_response,
             key_translator=key_translator,
-            translator_functions=translator_functions
+            translator_functions=translator_functions,
         )
 
         self._htcondor_queue = AsyncCacheMap(
             update_coroutine=partial(htcondor_queue_updater, self._executor),
-            max_age=self.configuration.max_age * 60
+            max_age=self.configuration.max_age * 60,
         )
 
     async def deploy_resource(
-            self, resource_attributes: AttributeDict) -> AttributeDict:
+        self, resource_attributes: AttributeDict
+    ) -> AttributeDict:
         jdl_file = self.configuration.MachineTypeConfiguration[self._machine_type].jdl
-        with open(jdl_file, 'r') as f:
+        with open(jdl_file, "r") as f:
             jdl_template = Template(f.read())
 
         try:
             translated_meta_data = {
-                key: htcondor_translate_resources_prefix[key] * value for key, value in
-                self.machine_meta_data.items()
+                key: htcondor_translate_resources_prefix[key] * value
+                for key, value in self.machine_meta_data.items()
             }
         except KeyError as ke:
             logging.error(f"deploy_resource failed: no translation known for {ke}")
             raise
         else:
-            translated_meta_data['Uuid'] = resource_attributes.drone_uuid
+            translated_meta_data["Uuid"] = resource_attributes.drone_uuid
 
         submit_jdl = jdl_template.substitute(
             translated_meta_data,
-            Environment=";".join(f"TardisDrone{key}={value}" for key, value in
-                                 translated_meta_data.items())
+            Environment=";".join(
+                f"TardisDrone{key}={value}"
+                for key, value in translated_meta_data.items()
+            ),
         )
 
         response = await self._executor.run_command(
-            "condor_submit",
-            stdin_input=submit_jdl
+            "condor_submit", stdin_input=submit_jdl
         )
         pattern = re.compile(
-            r"^.*?(?P<Jobs>\d+).*?(?P<ClusterId>\d+).$", flags=re.MULTILINE)
+            r"^.*?(?P<Jobs>\d+).*?(?P<ClusterId>\d+).$", flags=re.MULTILINE
+        )
         response = AttributeDict(pattern.search(response.stdout).groupdict())
         response.update(self.create_timestamps())
         return self.handle_response(response)
@@ -140,7 +141,8 @@ class HTCondorAdapter(SiteAdapter):
         return self._site_name
 
     async def resource_status(
-            self, resource_attributes: AttributeDict) -> AttributeDict:
+        self, resource_attributes: AttributeDict
+    ) -> AttributeDict:
         await self._htcondor_queue.update_status()
         try:
             resource_uuid = resource_attributes.remote_resource_uuid
@@ -149,18 +151,19 @@ class HTCondorAdapter(SiteAdapter):
             # In case the created timestamp is after last update timestamp of the
             # asynccachemap, no decision about the current state can be given,
             # since map is updated asynchronously.
-            if (self._htcondor_queue.last_update - resource_attributes.created)\
-                    .total_seconds() < 0:
+            if (
+                self._htcondor_queue.last_update - resource_attributes.created
+            ).total_seconds() < 0:
                 raise TardisResourceStatusUpdateFailed
             else:
                 return AttributeDict(resource_status=ResourceStatus.Deleted)
         else:
             return self.handle_response(resource_status)
 
-    async def _apply_condor_command(self, resource_attributes: AttributeDict,
-                                    condor_command: str):
-        command = \
-            f"{condor_command} {resource_attributes.remote_resource_uuid}"
+    async def _apply_condor_command(
+        self, resource_attributes: AttributeDict, condor_command: str
+    ):
+        command = f"{condor_command} {resource_attributes.remote_resource_uuid}"
         try:
             response = await self._executor.run_command(command)
         except CommandExecutionFailure as cef:
@@ -179,12 +182,14 @@ class HTCondorAdapter(SiteAdapter):
         Stopping machines is equivalent to suspending jobs in HTCondor,
         therefore condor_suspend is called!
         """
-        return await self._apply_condor_command(resource_attributes,
-                                                condor_command="condor_suspend")
+        return await self._apply_condor_command(
+            resource_attributes, condor_command="condor_suspend"
+        )
 
     async def terminate_resource(self, resource_attributes: AttributeDict):
-        return await self._apply_condor_command(resource_attributes,
-                                                condor_command="condor_rm")
+        return await self._apply_condor_command(
+            resource_attributes, condor_command="condor_rm"
+        )
 
     @staticmethod
     def create_timestamps():

@@ -5,7 +5,7 @@ from unittest import TestCase
 import yaml
 
 
-@enable_yaml_load('!TestDummy')
+@enable_yaml_load("!TestDummy")
 class TestDummy(object):
     def __init__(self, *args, **kwargs):
         self.args = args
@@ -24,7 +24,7 @@ class TestEnableYAMLLoad(TestCase):
         - test
         """
         instance = yaml.safe_load(args_yml)
-        self.assertEqual(instance.args, ('test',))
+        self.assertEqual(instance.args, ("test",))
         self.assertEqual(instance.kwargs, {})
 
         kwargs_yml = """
@@ -33,4 +33,4 @@ class TestEnableYAMLLoad(TestCase):
         """
         instance = yaml.safe_load(kwargs_yml)
         self.assertEqual(instance.args, ())
-        self.assertEqual(instance.kwargs, {'test': 'test'})
+        self.assertEqual(instance.kwargs, {"test": "test"})

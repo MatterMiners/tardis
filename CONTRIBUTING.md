@@ -51,17 +51,11 @@ the more likely and faster we can include your contribution.
     Include references to all related issues and pull requests.
 * Stand by while we review and inspect your contribution
   * A contribution MUST pass the continuous integration inspection.
-    This runs ``flake8`` on the code and unit tests.
+    This runs ``flake8`` and ``black`` on the code and unit tests.
   * A contribution MUST include unit tests if it adds new features.
     It SHOULD NOT decrease the unit test coverage.
 
 ## Code Style
 * The TARDIS code base is following the [PEP8](https://pep8.org/) code style.
-* Departing from the standards outlined in the [PEP8](https://pep8.org/) guide line, 
-  we have the following additional code styles:
-  * Line lengths should stay within 80 characters, however can be exceeded by 10% if needed.
-  * Each `import`should be written in a single line:
-  ```python
-  from tardis.resources.dronestates import RequestState
-  from tardis.resources.dronestates import BootingState
-  ```
+* To ensure a uniform code style and line breaking we enforce to use the 
+  [``black``](https://black.readthedocs.io/en/stable/) code formatter

@@ -16,7 +16,7 @@ class TestFakeSiteAdapter(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.mock_config_patcher = patch('tardis.adapters.sites.fakesite.Configuration')
+        cls.mock_config_patcher = patch("tardis.adapters.sites.fakesite.Configuration")
         cls.mock_config = cls.mock_config_patcher.start()
 
     @classmethod
@@ -31,7 +31,7 @@ class TestFakeSiteAdapter(TestCase):
         test_site_config.api_response_delay = AttributeDict(get_value=lambda: 0)
         test_site_config.resource_boot_time = AttributeDict(get_value=lambda: 100)
 
-        self.adapter = FakeSiteAdapter(machine_type='test2large', site_name='TestSite')
+        self.adapter = FakeSiteAdapter(machine_type="test2large", site_name="TestSite")
 
     @property
     def machine_meta_data(self):
@@ -39,7 +39,7 @@ class TestFakeSiteAdapter(TestCase):
 
     @property
     def machine_type_configuration(self):
-        return AttributeDict(test2large=AttributeDict(jdl='submit.jdl'))
+        return AttributeDict(test2large=AttributeDict(jdl="submit.jdl"))
 
     def test_deploy_resource(self):
         response = run_async(self.adapter.deploy_resource, AttributeDict())
@@ -48,19 +48,26 @@ class TestFakeSiteAdapter(TestCase):
         self.assertFalse(response.updated - datetime.now() > timedelta(seconds=1))
 
     def test_machine_meta_data(self):
-        self.assertEqual(self.adapter.machine_meta_data, self.machine_meta_data.test2large)
+        self.assertEqual(
+            self.adapter.machine_meta_data, self.machine_meta_data.test2large
+        )
 
     def test_machine_type(self):
-        self.assertEqual(self.adapter.machine_type, 'test2large')
+        self.assertEqual(self.adapter.machine_type, "test2large")
 
     def test_site_name(self):
-        self.assertEqual(self.adapter.site_name, 'TestSite')
+        self.assertEqual(self.adapter.site_name, "TestSite")
 
     def test_resource_status(self):
         # test tardis restart, where resource_boot_time is not set
-        response = run_async(self.adapter.resource_status, AttributeDict(created=datetime.now(),
-                                                                         resource_status=ResourceStatus.Booting,
-                                                                         drone_uuid="test-123"))
+        response = run_async(
+            self.adapter.resource_status,
+            AttributeDict(
+                created=datetime.now(),
+                resource_status=ResourceStatus.Booting,
+                drone_uuid="test-123",
+            ),
+        )
         self.assertEqual(response.resource_status, ResourceStatus.Booting)
 
         deploy_response = run_async(self.adapter.deploy_resource, AttributeDict())
@@ -69,7 +76,9 @@ class TestFakeSiteAdapter(TestCase):
         self.assertEqual(response.resource_status, ResourceStatus.Booting)
 
         past_timestamp = datetime.now() - timedelta(seconds=100)
-        deploy_response.update(AttributeDict(created=past_timestamp, drone_uuid="test-123"))
+        deploy_response.update(
+            AttributeDict(created=past_timestamp, drone_uuid="test-123")
+        )
         response = run_async(self.adapter.resource_status, deploy_response)
         self.assertEqual(response.resource_status, ResourceStatus.Running)
 

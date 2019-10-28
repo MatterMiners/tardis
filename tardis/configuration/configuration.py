@@ -1,8 +1,9 @@
 from ..interfaces.borg import Borg
 from ..utilities.attributedict import AttributeDict
 from ..utilities.attributedict import convert_to_attribute_dict
+
 # Need to import all pyyaml loadable classes (bootstrapping problem) FIX ME
-from ..utilities.executors import *   # noqa: F403, F401
+from ..utilities.executors import *  # noqa: F403, F401
 from ..utilities.simulators import *  # noqa: F403, F401
 
 from base64 import b64encode
@@ -13,8 +14,8 @@ import yaml
 def encode_user_data(obj):
     if isinstance(obj, AttributeDict):
         for key, value in obj.items():
-            if key == 'user_data':
-                with open(os.path.join(os.getcwd(), obj[key]), 'rb') as f:
+            if key == "user_data":
+                with open(os.path.join(os.getcwd(), obj[key]), "rb") as f:
                     obj[key] = b64encode(f.read())
             else:
                 obj[key] = encode_user_data(value)
@@ -39,6 +40,7 @@ class Configuration(Borg):
         :param config_file: The name of the configuration file to be loaded
         :type config_file: str
         """
-        with open(config_file, 'r') as config_file:
-            self._shared_state.update(encode_user_data(
-                convert_to_attribute_dict(yaml.safe_load(config_file))))
+        with open(config_file, "r") as config_file:
+            self._shared_state.update(
+                encode_user_data(convert_to_attribute_dict(yaml.safe_load(config_file)))
+            )

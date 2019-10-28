@@ -12,8 +12,10 @@ from unittest.mock import patch
 class TestPoolFactory(TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.mock_config_patcher = patch('tardis.resources.poolfactory.Configuration')
-        cls.mock_sqliteregistry_patcher = patch('tardis.plugins.sqliteregistry.SqliteRegistry')
+        cls.mock_config_patcher = patch("tardis.resources.poolfactory.Configuration")
+        cls.mock_sqliteregistry_patcher = patch(
+            "tardis.plugins.sqliteregistry.SqliteRegistry"
+        )
         cls.mock_config = cls.mock_config_patcher.start()
         cls.mock_sqliteregistry = cls.mock_sqliteregistry_patcher.start()
 
@@ -24,27 +26,39 @@ class TestPoolFactory(TestCase):
 
     def setUp(self):
         self.config = self.mock_config.return_value
-        self.config.Sites.name = 'TestSite'
-        self.config.Plugins = AttributeDict(SqliteRegistry=AttributeDict(db_file='test.db'))
+        self.config.Sites.name = "TestSite"
+        self.config.Plugins = AttributeDict(
+            SqliteRegistry=AttributeDict(db_file="test.db")
+        )
         sqlite_registry = self.mock_sqliteregistry.return_value
-        sqlite_registry.get_resources.return_value = [{'state': 'RequestState'}]
+        sqlite_registry.get_resources.return_value = [{"state": "RequestState"}]
 
     def test_str_to_state(self):
-        test = [{'state': 'RequestState', 'drone_uuid': 'test-abc123'}]
+        test = [{"state": "RequestState", "drone_uuid": "test-abc123"}]
         converted_test = str_to_state(test)
-        self.assertTrue(converted_test[0]['state'], RequestState)
-        self.assertEqual(converted_test[0]['drone_uuid'], 'test-abc123')
+        self.assertTrue(converted_test[0]["state"], RequestState)
+        self.assertEqual(converted_test[0]["drone_uuid"], "test-abc123")
 
     def test_load_plugins(self):
-        self.assertEqual(load_plugins(), {'SqliteRegistry': self.mock_sqliteregistry()})
+        self.assertEqual(load_plugins(), {"SqliteRegistry": self.mock_sqliteregistry()})
 
         self.mock_config.side_effect = AttributeError
         self.assertEqual(load_plugins(), {})
         self.mock_config.side_effect = None
 
     def test_get_drones_to_restore(self):
-        self.assertEqual(get_drones_to_restore(plugins={}, site=self.config.Sites, machine_type='TestMachineType'), [])
+        self.assertEqual(
+            get_drones_to_restore(
+                plugins={}, site=self.config.Sites, machine_type="TestMachineType"
+            ),
+            [],
+        )
 
-        self.assertIsInstance(get_drones_to_restore(plugins={'SqliteRegistry': self.mock_sqliteregistry()},
-                                                    site=self.config.Sites,
-                                                    machine_type='TestMachineType')[0]['state'], RequestState)
+        self.assertIsInstance(
+            get_drones_to_restore(
+                plugins={"SqliteRegistry": self.mock_sqliteregistry()},
+                site=self.config.Sites,
+                machine_type="TestMachineType",
+            )[0]["state"],
+            RequestState,
+        )

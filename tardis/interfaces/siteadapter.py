@@ -15,7 +15,8 @@ class ResourceStatus(Enum):
 class SiteAdapter(metaclass=ABCMeta):
     @abstractmethod
     async def deploy_resource(
-            self, resource_attributes: AttributeDict) -> AttributeDict:
+        self, resource_attributes: AttributeDict
+    ) -> AttributeDict:
         return NotImplemented
 
     def drone_uuid(self, uuid) -> str:
@@ -25,14 +26,16 @@ class SiteAdapter(metaclass=ABCMeta):
         return NotImplemented
 
     @staticmethod
-    def handle_response(response, key_translator: dict,
-                        translator_functions: dict, **additional_content):
+    def handle_response(
+        response, key_translator: dict, translator_functions: dict, **additional_content
+    ):
         translated_response = AttributeDict()
 
         for translated_key, key in key_translator.items():
             try:
                 translated_response[translated_key] = translator_functions.get(
-                    key, lambda x: x)(response[key])
+                    key, lambda x: x
+                )(response[key])
             except KeyError:
                 continue
 
@@ -51,7 +54,8 @@ class SiteAdapter(metaclass=ABCMeta):
 
     @abstractmethod
     async def resource_status(
-            self, resource_attributes: AttributeDict) -> AttributeDict:
+        self, resource_attributes: AttributeDict
+    ) -> AttributeDict:
         return NotImplemented
 
     @property

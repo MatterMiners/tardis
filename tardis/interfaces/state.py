@@ -31,7 +31,5 @@ class State(metaclass=ABCMeta):
     async def run_processing_pipeline(cls, drone: "Drone"):
         pipeline_processor = PipelineProcessor(cls.processing_pipeline)
         return await pipeline_processor.run_pipeline(
-            pipeline_input=cls.transition,
-            drone=drone,
-            current_state=cls
+            pipeline_input=cls.transition, drone=drone, current_state=cls
         )
