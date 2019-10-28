@@ -59,10 +59,3 @@ the more likely and faster we can include your contribution.
 * The TARDIS code base is following the [PEP8](https://pep8.org/) code style.
 * To ensure a uniform code style and line breaking we enforce to use the 
   [``black``](https://black.readthedocs.io/en/stable/) code formatter
-* Departing from the standards outlined in the [PEP8](https://pep8.org/) guide line, 
-  we have the following additional code style:
-  * Each `import`should be written in a single line:
-  ```python
-  from tardis.resources.dronestates import RequestState
-  from tardis.resources.dronestates import BootingState
-  ```
