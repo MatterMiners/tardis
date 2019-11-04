@@ -33,6 +33,9 @@ class PeriodicValue(Simulator):
     def get_value(self) -> float:
         """
         Returns the current value relative to the time of initialization.
+
+        :return: current value of sine wave
+        :rtype: float
         """
         t = (datetime.now() - self._start_time).total_seconds()
         return self._offset + self._amplitude * sin(
