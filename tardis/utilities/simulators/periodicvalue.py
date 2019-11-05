@@ -13,7 +13,7 @@ class PeriodicValue(Simulator):
     was created.
     """
 
-    def __init__(self, period, amplitude, offset=0, phase=0):
+    def __init__(self, period: float, amplitude: float, offset: float = 0, phase: float = 0):
         """
         :param period: period of the sine wave in seconds
         :type period: float
