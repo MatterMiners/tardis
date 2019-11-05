@@ -25,7 +25,7 @@ class TestFakeBatchSystemAdapter(TestCase):
     def setUp(self):
         self.config = self.mock_config.return_value
         self.config.BatchSystem.allocation = 1.0
-        self.config.BatchSystem.utilization = 1.0
+        self.config.BatchSystem.utilisation = 1.0
         self.config.BatchSystem.machine_status = "Available"
 
         self.fake_adapter = FakeBatchSystemAdapter()
@@ -58,9 +58,9 @@ class TestFakeBatchSystemAdapter(TestCase):
             MachineStatus.Drained,
         )
 
-    def test_get_utilization(self):
-        self.assertEqual(run_async(self.fake_adapter.get_utilization, "test-123"), 1.0)
+    def test_get_utilisation(self):
+        self.assertEqual(run_async(self.fake_adapter.get_utilisation, "test-123"), 1.0)
 
-        self.config.BatchSystem.utilization = AttributeDict(get_value=lambda: 0.9)
+        self.config.BatchSystem.utilisation = AttributeDict(get_value=lambda: 0.9)
         self.fake_adapter = FakeBatchSystemAdapter()
-        self.assertEqual(run_async(self.fake_adapter.get_utilization, "test-123"), 0.9)
+        self.assertEqual(run_async(self.fake_adapter.get_utilisation, "test-123"), 0.9)

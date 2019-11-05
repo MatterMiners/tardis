@@ -150,7 +150,7 @@ class AvailableState(State):
             drone._allocation = await drone.batch_system_agent.get_allocation(
                 drone_uuid=drone.resource_attributes["drone_uuid"]
             )
-            drone._utilisation = await drone.batch_system_agent.get_utilization(
+            drone._utilisation = await drone.batch_system_agent.get_utilisation(
                 drone_uuid=drone.resource_attributes["drone_uuid"]
             )
             drone._supply = drone.maximum_demand

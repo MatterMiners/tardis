@@ -111,7 +111,7 @@ Configuration of TARDIS
         BatchSystem:
           adapter: FakeBatchSystem
           allocation: 1.0
-          utilization: !PeriodicValue
+          utilisation: !PeriodicValue
                        period: 3600
                        amplitude: 0.5
                        offset: 0.5

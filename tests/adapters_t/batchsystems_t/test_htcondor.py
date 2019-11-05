@@ -226,9 +226,9 @@ class TestHTCondorAdapter(TestCase):
                 self.mock_async_run_command.assert_called_with(self.command)
         self.mock_async_run_command.side_effect = None
 
-    def test_get_utilization(self):
+    def test_get_utilisation(self):
         self.assertEqual(
-            run_async(self.htcondor_adapter.get_utilization, drone_uuid="test"),
+            run_async(self.htcondor_adapter.get_utilisation, drone_uuid="test"),
             min([self.cpu_ratio, self.memory_ratio]),
         )
         self.mock_async_run_command.assert_called_with(self.command)
