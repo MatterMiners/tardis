@@ -10,7 +10,7 @@ class RandomGauss(Simulator):
     Returns a random number drawn from a Gaussian distribution
     """
 
-    def __init__(self, mu, sigma, seed=None):
+    def __init__(self, mu: float, sigma: float, seed: int = None):
         """
         :param mu: mean
         :type mu: float
