@@ -31,7 +31,7 @@ CONDOR_RM_FAILED_MESSAGE = """Run command condor_rm 1351043 via ShellExecutor fa
 
 CONDOR_SUSPEND_OUTPUT = """All jobs in cluster 1351043 have been suspended"""
 CONDOR_SUSPEND_FAILED_OUTPUT = """Couldn't find/suspend all jobs in cluster 1351043"""
-CONDOR_SUSPEND_FAILED_MESSAGE = """Run command condor_suspend 1351043 via 
+CONDOR_SUSPEND_FAILED_MESSAGE = """Run command condor_suspend 1351043 via
 ShellExecutor failed"""
 
 CONDOR_SUBMIT_JDL = """executable = start_pilot.sh
@@ -143,28 +143,28 @@ class TestHTCondorSiteAdapter(TestCase):
         self.assertEqual(response.resource_status, ResourceStatus.Running)
 
     @mock_executor_run_command(stdout=CONDOR_Q_OUTPUT_REMOVING)
-    def test_resource_status_idle(self):
+    def test_resource_status_removing(self):
         response = run_async(
             self.adapter.resource_status, AttributeDict(remote_resource_uuid="1351043")
         )
         self.assertEqual(response.resource_status, ResourceStatus.Running)
 
     @mock_executor_run_command(stdout=CONDOR_Q_OUTPUT_COMPLETED)
-    def test_resource_status_idle(self):
+    def test_resource_status_completed(self):
         response = run_async(
             self.adapter.resource_status, AttributeDict(remote_resource_uuid="1351043")
         )
-        self.assertEqual(response.resource_status, ResourceStatus.Stopped)
+        self.assertEqual(response.resource_status, ResourceStatus.Deleted)
 
     @mock_executor_run_command(stdout=CONDOR_Q_OUTPUT_HELD)
-    def test_resource_status_idle(self):
+    def test_resource_status_held(self):
         response = run_async(
             self.adapter.resource_status, AttributeDict(remote_resource_uuid="1351043")
         )
         self.assertEqual(response.resource_status, ResourceStatus.Error)
 
     @mock_executor_run_command(stdout=CONDOR_Q_OUTPUT_TRANSFERING_OUTPUT)
-    def test_resource_status_idle(self):
+    def test_resource_status_transfering_output(self):
         response = run_async(
             self.adapter.resource_status, AttributeDict(remote_resource_uuid="1351043")
         )
