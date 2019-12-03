@@ -61,6 +61,7 @@ htcondor_translate_resources_prefix = {"Cores": 1, "Memory": 1024, "Disk": 1024}
 class HTCondorAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
         self.configuration = getattr(Configuration(), site_name)
+        self._machine_meta_data = self.configuration.MachineMetaData[machine_type]
         self._machine_type = machine_type
         self._site_name = site_name
         self._executor = getattr(self.configuration, "executor", ShellExecutor())
@@ -127,10 +128,6 @@ class HTCondorAdapter(SiteAdapter):
         response = AttributeDict(pattern.search(response.stdout).groupdict())
         response.update(self.create_timestamps())
         return self.handle_response(response)
-
-    @property
-    def machine_meta_data(self) -> AttributeDict:
-        return self.configuration.MachineMetaData[self._machine_type]
 
     async def resource_status(
         self, resource_attributes: AttributeDict

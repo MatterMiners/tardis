@@ -26,6 +26,7 @@ import logging
 class OpenStackAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
         self.configuration = getattr(Configuration(), site_name)
+        self._machine_meta_data = self.configuration.MachineMetaData[machine_type]
         self._machine_type = machine_type
         self._site_name = site_name
 
@@ -70,10 +71,6 @@ class OpenStackAdapter(SiteAdapter):
         response = await self.nova.servers.create(server=specs)
         logging.debug(f"{self.site_name} servers create returned {response}")
         return self.handle_response(response["server"])
-
-    @property
-    def machine_meta_data(self) -> AttributeDict:
-        return self.configuration.MachineMetaData[self._machine_type]
 
     async def resource_status(
         self, resource_attributes: AttributeDict

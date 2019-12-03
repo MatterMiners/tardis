@@ -43,6 +43,7 @@ async def slurm_status_updater(executor):
 class SlurmAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
         self.configuration = getattr(Configuration(), site_name)
+        self._machine_meta_data = self.configuration.MachineMetaData[machine_type]
         self._machine_type = machine_type
         self._site_name = site_name
         self._startup_command = self.configuration.StartupCommand
@@ -112,10 +113,6 @@ class SlurmAdapter(SiteAdapter):
             resource_status=ResourceStatus.Booting,
         )
         return resource_attributes
-
-    @property
-    def machine_meta_data(self) -> AttributeDict:
-        return self.configuration.MachineMetaData[self._machine_type]
 
     async def resource_status(
         self, resource_attributes: AttributeDict

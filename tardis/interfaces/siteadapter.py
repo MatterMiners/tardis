@@ -46,7 +46,13 @@ class SiteAdapter(metaclass=ABCMeta):
 
     @property
     def machine_meta_data(self) -> AttributeDict:
-        return NotImplemented
+        try:
+            # noinspection PyUnresolvedReferences
+            return self._machine_meta_data
+        except AttributeError as ae:
+            raise AttributeError(
+                f"Class {self.__class__.__name__} must have an '_machine_meta_data' instance variable"
+            ) from ae
 
     @property
     def machine_type(self) -> str:

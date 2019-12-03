@@ -30,6 +30,7 @@ class CloudStackAdapter(SiteAdapter):
             api_secret=self.configuration.api_secret,
             event_loop=runtime._meta_runner.runners[asyncio].event_loop,
         )
+        self._machine_meta_data = self.configuration.MachineMetaData[machine_type]
         self._machine_type = machine_type
         self._site_name = site_name
 
@@ -64,10 +65,6 @@ class CloudStackAdapter(SiteAdapter):
         )
         logging.debug(f"{self.site_name} deployVirtualMachine returned {response}")
         return self.handle_response(response["virtualmachine"])
-
-    @property
-    def machine_meta_data(self) -> AttributeDict:
-        return self.configuration.MachineMetaData[self._machine_type]
 
     async def resource_status(
         self, resource_attributes: AttributeDict
