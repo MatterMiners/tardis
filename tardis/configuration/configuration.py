@@ -33,10 +33,13 @@ def translate_config(obj):
 class Configuration(Borg):
     _shared_state = AttributeDict()
 
-    def __init__(self, config_file: str = None):
+    def __init__(self, configuration: [str, dict] = None):
         super(Configuration, self).__init__()
-        if config_file:
-            self.load_config(config_file)
+        if configuration:
+            if isinstance(configuration, str):  # interpret string as file name
+                self.load_config(configuration)
+            else:
+                self.update_config(configuration)
 
     def load_config(self, config_file: str) -> None:
         """
@@ -45,6 +48,14 @@ class Configuration(Borg):
         :type config_file: str
         """
         with open(config_file, "r") as config_file:
-            self._shared_state.update(
-                translate_config(convert_to_attribute_dict(yaml.safe_load(config_file)))
-            )
+            self.update_config(yaml.safe_load(config_file))
+
+    def update_config(self, configuration: dict):
+        """
+        Updates the shared state of the configuration borg
+        :param configuration: Dictionary containing the configuration
+        :type configuration: dict
+        """
+        self._shared_state.update(
+            translate_config(convert_to_attribute_dict(configuration))
+        )
