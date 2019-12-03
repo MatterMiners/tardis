@@ -132,10 +132,6 @@ class HTCondorAdapter(SiteAdapter):
     def machine_meta_data(self) -> AttributeDict:
         return self.configuration.MachineMetaData[self._machine_type]
 
-    @property
-    def machine_type(self) -> str:
-        return self._machine_type
-
     async def resource_status(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:

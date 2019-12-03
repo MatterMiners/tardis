@@ -50,7 +50,13 @@ class SiteAdapter(metaclass=ABCMeta):
 
     @property
     def machine_type(self) -> str:
-        return NotImplemented
+        try:
+            # noinspection PyUnresolvedReferences
+            return self._machine_type
+        except AttributeError as ae:
+            raise AttributeError(
+                f"Class {self.__class__.__name__} must have an '_machine_type' instance variable"
+            ) from ae
 
     @abstractmethod
     async def resource_status(
