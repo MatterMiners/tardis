@@ -20,7 +20,7 @@ class SiteAdapter(metaclass=ABCMeta):
             return self._configuration
         except AttributeError as ae:
             raise AttributeError(
-                f"Class {self.__class__.__name__} must have an '_configuration' instance variable"
+                f"Class {self.__class__.__name__} must have an '_configuration' instance variable"  # noqa
             ) from ae
 
     @abstractmethod
@@ -65,7 +65,7 @@ class SiteAdapter(metaclass=ABCMeta):
             return self._machine_type
         except AttributeError as ae:
             raise AttributeError(
-                f"Class {self.__class__.__name__} must have an '_machine_type' instance variable"
+                f"Class {self.__class__.__name__} must have an '_machine_type' instance variable"  # noqa
             ) from ae
 
     @abstractmethod
@@ -81,7 +81,7 @@ class SiteAdapter(metaclass=ABCMeta):
             return self._site_name
         except AttributeError as ae:
             raise AttributeError(
-                f"Class {self.__class__.__name__} must have an '_site_name' instance variable"
+                f"Class {self.__class__.__name__} must have an '_site_name' instance variable"  # noqa
             ) from ae
 
     @abstractmethod
