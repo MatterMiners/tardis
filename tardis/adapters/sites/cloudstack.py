@@ -73,10 +73,6 @@ class CloudStackAdapter(SiteAdapter):
     def machine_type(self) -> str:
         return self._machine_type
 
-    @property
-    def site_name(self) -> str:
-        return self._site_name
-
     async def resource_status(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:

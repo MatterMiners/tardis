@@ -112,10 +112,6 @@ class MoabAdapter(SiteAdapter):
     def machine_type(self) -> str:
         return self._machine_type
 
-    @property
-    def site_name(self) -> str:
-        return self._site_name
-
     @staticmethod
     def check_remote_resource_uuid(resource_attributes, regex, response):
         pattern = re.compile(regex, flags=re.MULTILINE)

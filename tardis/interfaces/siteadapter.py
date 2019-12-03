@@ -60,7 +60,13 @@ class SiteAdapter(metaclass=ABCMeta):
 
     @property
     def site_name(self) -> str:
-        return NotImplemented
+        try:
+            # noinspection PyUnresolvedReferences
+            return self._site_name
+        except AttributeError as ae:
+            raise AttributeError(
+                f"Class {self.__class__.__name__} must have an '_site_name' instance variable"
+            ) from ae
 
     @abstractmethod
     async def stop_resource(self, resource_attributes: AttributeDict):
