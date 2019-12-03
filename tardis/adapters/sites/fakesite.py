@@ -16,11 +16,11 @@ import asyncio
 
 class FakeSiteAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str) -> None:
-        self.configuration = getattr(Configuration(), site_name)
+        self._configuration = getattr(Configuration(), site_name)
         self._machine_type = machine_type
         self._site_name = site_name
-        self._api_response_delay = self.configuration.api_response_delay
-        self._resource_boot_time = self.configuration.resource_boot_time
+        self._api_response_delay = self._configuration.api_response_delay
+        self._resource_boot_time = self._configuration.resource_boot_time
 
         key_translator = StaticMapping(
             remote_resource_uuid="remote_resource_uuid",
@@ -64,7 +64,7 @@ class FakeSiteAdapter(SiteAdapter):
 
     @property
     def machine_meta_data(self) -> AttributeDict:
-        return self.configuration.MachineMetaData[self._machine_type]
+        return self._configuration.MachineMetaData[self._machine_type]
 
     async def resource_status(
         self, resource_attributes: AttributeDict

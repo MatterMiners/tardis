@@ -13,6 +13,16 @@ class ResourceStatus(Enum):
 
 
 class SiteAdapter(metaclass=ABCMeta):
+    @property
+    def configuration(self) -> AttributeDict:
+        try:
+            # noinspection PyUnresolvedReferences
+            return self._configuration
+        except AttributeError as ae:
+            raise AttributeError(
+                f"Class {self.__class__.__name__} must have an '_configuration' instance variable"
+            ) from ae
+
     @abstractmethod
     async def deploy_resource(
         self, resource_attributes: AttributeDict
@@ -46,13 +56,7 @@ class SiteAdapter(metaclass=ABCMeta):
 
     @property
     def machine_meta_data(self) -> AttributeDict:
-        try:
-            # noinspection PyUnresolvedReferences
-            return self._machine_meta_data
-        except AttributeError as ae:
-            raise AttributeError(
-                f"Class {self.__class__.__name__} must have an '_machine_meta_data' instance variable"
-            ) from ae
+        return self.configuration.MachineMetaData[self.machine_type]
 
     @property
     def machine_type(self) -> str:

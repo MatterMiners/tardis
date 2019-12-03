@@ -46,17 +46,16 @@ async def moab_status_updater(executor):
 
 class MoabAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
-        self.configuration = getattr(Configuration(), site_name)
-        self._machine_meta_data = self.configuration.MachineMetaData[machine_type]
+        self._configuration = getattr(Configuration(), site_name)
         self._machine_type = machine_type
         self._site_name = site_name
-        self._startup_command = self.configuration.StartupCommand
+        self._startup_command = self._configuration.StartupCommand
 
-        self._executor = getattr(self.configuration, "executor", ShellExecutor())
+        self._executor = getattr(self._configuration, "executor", ShellExecutor())
 
         self._moab_status = AsyncCacheMap(
             update_coroutine=partial(moab_status_updater, self._executor),
-            max_age=self.configuration.StatusUpdate * 60,
+            max_age=self._configuration.StatusUpdate * 60,
         )
         key_translator = StaticMapping(
             remote_resource_uuid="JobID", resource_status="State"
@@ -82,7 +81,7 @@ class MoabAdapter(SiteAdapter):
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
-        machine_configuration = self.configuration.MachineTypeConfiguration[
+        machine_configuration = self._configuration.MachineTypeConfiguration[
             self._machine_type
         ]
         request_command = (
