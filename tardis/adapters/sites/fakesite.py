@@ -62,10 +62,6 @@ class FakeSiteAdapter(SiteAdapter):
             ] = self._resource_boot_time.get_value()
             return resource_boot_time
 
-    @property
-    def machine_meta_data(self) -> AttributeDict:
-        return self._configuration.MachineMetaData[self._machine_type]
-
     async def resource_status(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
