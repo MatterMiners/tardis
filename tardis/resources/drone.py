@@ -66,6 +66,10 @@ class Drone(Pool):
         self._demand = value
 
     @property
+    def drone_life_time(self) -> [int, None]:
+        return self.site_agent.drone_life_time
+
+    @property
     def maximum_demand(self) -> float:
         return self.site_agent.machine_meta_data["Cores"]
 

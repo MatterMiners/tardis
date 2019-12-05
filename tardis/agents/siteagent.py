@@ -32,6 +32,10 @@ class SiteAgent(SiteAdapter):
         return NotImplemented
 
     @property
+    def drone_life_time(self) -> int:
+        return self._site_adapter.drone_life_time
+
+    @property
     def machine_meta_data(self) -> AttributeDict:
         return self._site_adapter.machine_meta_data
 
