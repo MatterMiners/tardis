@@ -17,12 +17,12 @@ class TestSiteAdapter(TestCase):
             self.site_adapter.configuration
 
     def test_deploy_resource(self):
-        self.assertEqual(
-            run_async(self.site_adapter.deploy_resource, dict()), NotImplemented
-        )
+        with self.assertRaises(NotImplementedError):
+            run_async(self.site_adapter.deploy_resource, dict())
 
     def test_handle_exception(self):
-        self.assertEqual(self.site_adapter.handle_exceptions(), NotImplemented)
+        with self.assertRaises(NotImplementedError):
+            self.site_adapter.handle_exceptions()
 
     def test_handle_response_matching(self):
         test_response = {"test": 123}
@@ -70,20 +70,17 @@ class TestSiteAdapter(TestCase):
             self.site_adapter.machine_type
 
     def test_resource_status(self):
-        self.assertEqual(
-            run_async(self.site_adapter.resource_status, dict()), NotImplemented
-        )
+        with self.assertRaises(NotImplementedError):
+            run_async(self.site_adapter.resource_status, dict())
 
     def test_site_name(self):
         with self.assertRaises(AttributeError):
             self.site_adapter.site_name
 
     def test_stop_resource(self):
-        self.assertEqual(
-            run_async(self.site_adapter.stop_resource, dict()), NotImplemented
-        )
+        with self.assertRaises(NotImplementedError):
+            run_async(self.site_adapter.stop_resource, dict())
 
     def test_terminate_resource(self):
-        self.assertEqual(
-            run_async(self.site_adapter.terminate_resource, dict()), NotImplemented
-        )
+        with self.assertRaises(NotImplementedError):
+            run_async(self.site_adapter.terminate_resource, dict())

@@ -27,13 +27,13 @@ class SiteAdapter(metaclass=ABCMeta):
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
-        return NotImplemented
+        raise NotImplementedError
 
     def drone_uuid(self, uuid) -> str:
         return f"{self.site_name.lower()}-{uuid}"
 
     def handle_exceptions(self):
-        return NotImplemented
+        raise NotImplementedError
 
     @staticmethod
     def handle_response(
@@ -72,7 +72,7 @@ class SiteAdapter(metaclass=ABCMeta):
     async def resource_status(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
-        return NotImplemented
+        raise NotImplementedError
 
     @property
     def site_name(self) -> str:
@@ -86,8 +86,8 @@ class SiteAdapter(metaclass=ABCMeta):
 
     @abstractmethod
     async def stop_resource(self, resource_attributes: AttributeDict):
-        return NotImplemented
+        raise NotImplementedError
 
     @abstractmethod
     async def terminate_resource(self, resource_attributes: AttributeDict):
-        return NotImplemented
+        raise NotImplementedError
