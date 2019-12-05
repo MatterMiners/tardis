@@ -16,6 +16,9 @@ class TestSiteAdapter(TestCase):
         with self.assertRaises(AttributeError):
             self.site_adapter.configuration
 
+        self.site_adapter._configuration = "Test"
+        self.assertEqual(self.site_adapter.configuration, "Test")
+
     def test_deploy_resource(self):
         with self.assertRaises(NotImplementedError):
             run_async(self.site_adapter.deploy_resource, dict())
@@ -65,9 +68,22 @@ class TestSiteAdapter(TestCase):
             AttributeDict(),
         )
 
+    def test_machine_meta_data(self):
+        with self.assertRaises(AttributeError):
+            self.site_adapter.machine_meta_data
+
+        self.site_adapter._configuration = AttributeDict(
+            MachineMetaData=AttributeDict(TestFlavour="Test")
+        )
+        self.site_adapter._machine_type = "TestFlavour"
+        self.assertEqual(self.site_adapter.machine_meta_data, "Test")
+
     def test_machine_type(self):
         with self.assertRaises(AttributeError):
             self.site_adapter.machine_type
+
+        self.site_adapter._machine_type = "TestFlavour"
+        self.assertEqual(self.site_adapter.machine_type, "TestFlavour")
 
     def test_resource_status(self):
         with self.assertRaises(NotImplementedError):
