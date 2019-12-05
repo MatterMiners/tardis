@@ -32,6 +32,7 @@ class SiteAdapter(metaclass=ABCMeta):
     def drone_uuid(self, uuid) -> str:
         return f"{self.site_name.lower()}-{uuid}"
 
+    @abstractmethod
     def handle_exceptions(self):
         raise NotImplementedError
 
