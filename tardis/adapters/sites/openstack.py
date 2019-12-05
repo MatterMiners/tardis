@@ -26,7 +26,6 @@ import logging
 class OpenStackAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
         self._configuration = getattr(Configuration(), site_name)
-        self._machine_meta_data = self._configuration.MachineMetaData[machine_type]
         self._machine_type = machine_type
         self._site_name = site_name
 

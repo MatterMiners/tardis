@@ -61,7 +61,6 @@ htcondor_translate_resources_prefix = {"Cores": 1, "Memory": 1024, "Disk": 1024}
 class HTCondorAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
         self._configuration = getattr(Configuration(), site_name)
-        self._machine_meta_data = self._configuration.MachineMetaData[machine_type]
         self._machine_type = machine_type
         self._site_name = site_name
         self._executor = getattr(self._configuration, "executor", ShellExecutor())

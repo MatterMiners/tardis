@@ -30,7 +30,6 @@ class CloudStackAdapter(SiteAdapter):
             api_secret=self._configuration.api_secret,
             event_loop=runtime._meta_runner.runners[asyncio].event_loop,
         )
-        self._machine_meta_data = self._configuration.MachineMetaData[machine_type]
         self._machine_type = machine_type
         self._site_name = site_name
 
