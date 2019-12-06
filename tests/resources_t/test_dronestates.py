@@ -22,6 +22,7 @@ from ..utilities.utilities import async_return
 from ..utilities.utilities import run_async
 
 from functools import partial
+from datetime import datetime, timedelta
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -48,10 +49,13 @@ class TestDroneStates(TestCase):
 
         self.drone = self.mock_drone.return_value
         self.drone.resource_attributes = AttributeDict(
-            drone_uuid="test-923ABF", remote_resource_uuid="0815"
+            drone_uuid="test-923ABF",
+            remote_resource_uuid="0815",
+            updated=datetime.now() - timedelta(minutes=10),
         )
         self.drone.demand = 8.0
         self.drone._supply = 8.0
+        self.drone.drone_life_time = 3600
         self.drone.set_state.side_effect = partial(mock_set_state, self.drone)
         self.drone.site_agent.deploy_resource.return_value = async_return(
             return_value=AttributeDict()
@@ -211,6 +215,12 @@ class TestDroneStates(TestCase):
         run_async(self.drone.state.return_value.run, self.drone)
         self.assertIsInstance(self.drone.state, DrainState)
         self.assertEqual(self.drone._supply, 0.0)
+
+        # Test draining procedure due to exceeding life time of the drone
+        self.drone.drone_life_time = 1
+        self.drone.state.return_value = AvailableState()
+        run_async(self.drone.state.return_value.run, self.drone)
+        self.assertIsInstance(self.drone.state, DrainState)
 
     def test_drain_state(self):
         self.drone.state.return_value = DrainState

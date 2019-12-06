@@ -1,4 +1,5 @@
 from collections import defaultdict
+from datetime import datetime
 import asyncio
 import logging
 
@@ -35,6 +36,16 @@ async def check_demand(state_transition, drone: "Drone", current_state: Type[Sta
             raise StopProcessing(last_result=CleanupState())  # static state transition
         else:
             raise StopProcessing(last_result=DrainState())  # static state transition
+    return state_transition
+
+
+async def check_lifetime(state_transition, drone: "Drone", current_state: Type[State]):
+    if (
+        drone.drone_life_time
+        and (datetime.now() - drone.resource_attributes.updated).total_seconds()
+        > drone.drone_life_time
+    ):
+        raise StopProcessing(last_result=DrainState())
     return state_transition
 
 
@@ -138,7 +149,12 @@ class AvailableState(State):
         ResourceStatus.Error: lambda: defaultdict(lambda: CleanupState),
     }
 
-    processing_pipeline = [check_demand, resource_status, batchsystem_machine_status]
+    processing_pipeline = [
+        check_demand,
+        check_lifetime,
+        resource_status,
+        batchsystem_machine_status,
+    ]
 
     @classmethod
     async def run(cls, drone: "Drone"):
