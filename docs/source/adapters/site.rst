@@ -10,8 +10,11 @@ Site Adapter
     of resources and a dynamic orchestration of pre-built VM images and containers.
 
     Sites are generally configured in the `Sites` configuration block. One has to specify a site name, the adapter to use
-    and a site quota in units of cores. Negative values for the site quota are interpreted as infinity. Multiple sites are
-    supported by using SequenceNodes.
+    and a site quota in units of cores. Negative values for the site quota are interpreted as infinity. Optionally a
+    life time in seconds of the :py:class:`~tardis.resources.drone.Drone` can be specified. This is defined as the time
+    the :py:class:`~tardis.resources.drone.Drone` remains in :py:class:`~tardis.resources.dronestates.AvailableState`
+    before draining it. If no value is given, infinite life time is assumed. Multiple sites are supported by using
+    SequenceNodes.
 
 
 Generic Site Adapter Configuration
@@ -24,15 +27,17 @@ Available configuration options
 
 .. container:: left-col
 
-    +---------+----------------------------------------------------------------------------------+-----------------+
-    | Option  | Short Description                                                                | Requirement     |
-    +=========+==================================================================================+=================+
-    | name    | Name of the site                                                                 |  **Required**   |
-    +---------+----------------------------------------------------------------------------------+-----------------+
-    | adapter | Site adapter to use. Adapter will be auto-imported (class name without Adapter)  |  **Required**   |
-    +---------+----------------------------------------------------------------------------------+-----------------+
-    | quota   | Core quota to be used for this site. Negative values are interpreted as infinity |  **Required**   |
-    +---------+----------------------------------------------------------------------------------+-----------------+
+    +-----------------+-----------------------------------------------------------------------------------------------------------------------+---------------+
+    | Option          | Short Description                                                                                                     |  Requirement  |
+    +=================+=======================================================================================================================+===============+
+    | name            | Name of the site                                                                                                      |  **Required** |
+    +-----------------+-----------------------------------------------------------------------------------------------------------------------+---------------+
+    | adapter         | Site adapter to use. Adapter will be auto-imported (class name without Adapter)                                       |  **Required** |
+    +-----------------+-----------------------------------------------------------------------------------------------------------------------+---------------+
+    | quota           | Core quota to be used for this site. Negative values are interpreted as infinity                                      |  **Required** |
+    +-----------------+-----------------------------------------------------------------------------------------------------------------------+---------------+
+    | drone_life_time | Time in seconds the drone will remain in :py:class:`~tardis.resources.dronestates.AvailableState` before draining it. |  **Optional** |
+    +-----------------+-----------------------------------------------------------------------------------------------------------------------+---------------+
 
     For each site in the `Sites` configuration block. A site specific configuration block carrying the site name
     has to be added to the configuration as well.
@@ -58,6 +63,7 @@ Available configuration options
           - name: MySiteName_1
             adapter: MyAdapter2Use
             quota: 123
+            drone_life_time: 3600
           - name: MySiteName_2
             adapter: OtherAdapter2Use
             quota: 987
