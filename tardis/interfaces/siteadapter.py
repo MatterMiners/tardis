@@ -140,6 +140,16 @@ class SiteAdapter(metaclass=ABCMeta):
                 f"Class {self.__class__.__name__} must have an '_machine_type' instance variable"  # noqa
             ) from ae
 
+    @property
+    def machine_type_configuration(self) -> AttributeDict:
+        """
+        Property to access the machine_type_configuration (arguments of the API
+        calls to the provider) of a resource.
+        :return: The machine_type_configuration of a resource.
+        :rtype: AttributeDict
+        """
+        return self.configuration.MachineTypeConfiguration[self.machine_type]
+
     @abstractmethod
     async def resource_status(
         self, resource_attributes: AttributeDict

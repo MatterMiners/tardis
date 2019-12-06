@@ -88,16 +88,13 @@ class SlurmAdapter(SiteAdapter):
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
-        machine_configuration = self._configuration.MachineTypeConfiguration[
-            self._machine_type
-        ]
         request_command = (
-            f"sbatch -p {machine_configuration.Partition} "
+            f"sbatch -p {self.machine_type_configuration.Partition} "
             f"-N 1 -n {self.machine_meta_data.Cores} "
             f"--mem={self.machine_meta_data.Memory}gb "
-            f"-t {machine_configuration.Walltime} "
+            f"-t {self.machine_type_configuration.Walltime} "
             f"--export=SLURM_Walltime="
-            f"{machine_configuration.Walltime} "
+            f"{self.machine_type_configuration.Walltime} "
             f"{self._startup_command}"
         )
         result = await self._executor.run_command(request_command)

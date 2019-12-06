@@ -81,14 +81,11 @@ class MoabAdapter(SiteAdapter):
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
-        machine_configuration = self._configuration.MachineTypeConfiguration[
-            self._machine_type
-        ]
         request_command = (
             f"msub -j oe -m p -l "
-            f"walltime={machine_configuration.Walltime},"
+            f"walltime={self.machine_type_configuration.Walltime},"
             f"mem={self.machine_meta_data.Memory}gb,"
-            f"nodes={machine_configuration.NodeType} "
+            f"nodes={self.machine_type_configuration.NodeType} "
             f"{self._startup_command}"
         )
         result = await self._executor.run_command(request_command)

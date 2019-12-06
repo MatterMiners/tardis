@@ -65,7 +65,7 @@ class OpenStackAdapter(SiteAdapter):
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
         specs = dict(name=resource_attributes.drone_uuid)
-        specs.update(self._configuration.MachineTypeConfiguration[self._machine_type])
+        specs.update(self.machine_type_configuration)
         await self.nova.init_api(timeout=60)
         response = await self.nova.servers.create(server=specs)
         logging.debug(f"{self.site_name} servers create returned {response}")

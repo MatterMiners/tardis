@@ -95,7 +95,7 @@ class HTCondorAdapter(SiteAdapter):
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
-        jdl_file = self._configuration.MachineTypeConfiguration[self._machine_type].jdl
+        jdl_file = self.machine_type_configuration.jdl
         with open(jdl_file, "r") as f:
             jdl_template = Template(f.read())
 

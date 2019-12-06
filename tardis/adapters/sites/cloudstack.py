@@ -59,8 +59,7 @@ class CloudStackAdapter(SiteAdapter):
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
         response = await self.cloud_stack_client.deployVirtualMachine(
-            name=resource_attributes.drone_uuid,
-            **self._configuration.MachineTypeConfiguration[self._machine_type],
+            name=resource_attributes.drone_uuid, **self.machine_type_configuration
         )
         logging.debug(f"{self.site_name} deployVirtualMachine returned {response}")
         return self.handle_response(response["virtualmachine"])
