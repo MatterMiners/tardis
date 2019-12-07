@@ -26,7 +26,7 @@ class SiteAdapter(metaclass=ABCMeta):
     @property
     def configuration(self) -> AttributeDict:
         """
-        Property to provides access to configuration of the actual
+        Property to provide access to configuration of the actual
         implementation of the SiteAdapter.
         :return: returns the configuration of the Site Adapter
         :rtype: AttributeDict
