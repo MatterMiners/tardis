@@ -127,7 +127,7 @@ class SiteAdapter(metaclass=ABCMeta):
     def machine_type(self) -> str:
         """
         Property to access the machine_type (flavour) of a resource and ensuring
-        that the all sub-classes of the SiteAdapter have a _machine_type
+        that all sub-classes of the SiteAdapter have a _machine_type
         class variable .
         :return: The machine_type of a resource.
         :rtype: str
