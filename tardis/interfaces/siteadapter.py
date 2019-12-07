@@ -83,7 +83,7 @@ class SiteAdapter(metaclass=ABCMeta):
         """
         Method to handle the responses of the resource provider and translating
         it to a uniform format.
-        :param response: A dictionary containing with the response of the
+        :param response: A dictionary containing the response of the
         resource provider.
         :type response: dict
         :param key_translator: A dictionary containing the translation of keys
