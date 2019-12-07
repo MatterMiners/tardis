@@ -169,7 +169,7 @@ class SiteAdapter(metaclass=ABCMeta):
     def site_name(self) -> str:
         """
         Property to access the site_name of a resource and ensuring
-        that the all sub-classes of the SiteAdapter have a _site_name
+        that all sub-classes of the SiteAdapter have a _site_name
         class variable.
         :return: The site_name of a resource.
         :rtype: str
