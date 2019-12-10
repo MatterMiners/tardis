@@ -46,16 +46,16 @@ async def moab_status_updater(executor):
 
 class MoabAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
-        self.configuration = getattr(Configuration(), site_name)
+        self._configuration = getattr(Configuration(), site_name)
         self._machine_type = machine_type
         self._site_name = site_name
-        self._startup_command = self.configuration.StartupCommand
+        self._startup_command = self._configuration.StartupCommand
 
-        self._executor = getattr(self.configuration, "executor", ShellExecutor())
+        self._executor = getattr(self._configuration, "executor", ShellExecutor())
 
         self._moab_status = AsyncCacheMap(
             update_coroutine=partial(moab_status_updater, self._executor),
-            max_age=self.configuration.StatusUpdate * 60,
+            max_age=self._configuration.StatusUpdate * 60,
         )
         key_translator = StaticMapping(
             remote_resource_uuid="JobID", resource_status="State"
@@ -81,14 +81,11 @@ class MoabAdapter(SiteAdapter):
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
-        machine_configuration = self.configuration.MachineTypeConfiguration[
-            self._machine_type
-        ]
         request_command = (
             f"msub -j oe -m p -l "
-            f"walltime={machine_configuration.Walltime},"
+            f"walltime={self.machine_type_configuration.Walltime},"
             f"mem={self.machine_meta_data.Memory}gb,"
-            f"nodes={machine_configuration.NodeType} "
+            f"nodes={self.machine_type_configuration.NodeType} "
             f"{self._startup_command}"
         )
         result = await self._executor.run_command(request_command)
@@ -103,18 +100,6 @@ class MoabAdapter(SiteAdapter):
             resource_status=ResourceStatus.Booting,
         )
         return resource_attributes
-
-    @property
-    def machine_meta_data(self) -> AttributeDict:
-        return self.configuration.MachineMetaData[self._machine_type]
-
-    @property
-    def machine_type(self) -> str:
-        return self._machine_type
-
-    @property
-    def site_name(self) -> str:
-        return self._site_name
 
     @staticmethod
     def check_remote_resource_uuid(resource_attributes, regex, response):

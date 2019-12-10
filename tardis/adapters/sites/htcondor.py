@@ -60,10 +60,10 @@ htcondor_translate_resources_prefix = {"Cores": 1, "Memory": 1024, "Disk": 1024}
 
 class HTCondorAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
-        self.configuration = getattr(Configuration(), site_name)
+        self._configuration = getattr(Configuration(), site_name)
         self._machine_type = machine_type
         self._site_name = site_name
-        self._executor = getattr(self.configuration, "executor", ShellExecutor())
+        self._executor = getattr(self._configuration, "executor", ShellExecutor())
 
         key_translator = StaticMapping(
             remote_resource_uuid="ClusterId",
@@ -89,13 +89,13 @@ class HTCondorAdapter(SiteAdapter):
 
         self._htcondor_queue = AsyncCacheMap(
             update_coroutine=partial(htcondor_queue_updater, self._executor),
-            max_age=self.configuration.max_age * 60,
+            max_age=self._configuration.max_age * 60,
         )
 
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
-        jdl_file = self.configuration.MachineTypeConfiguration[self._machine_type].jdl
+        jdl_file = self.machine_type_configuration.jdl
         with open(jdl_file, "r") as f:
             jdl_template = Template(f.read())
 
@@ -127,18 +127,6 @@ class HTCondorAdapter(SiteAdapter):
         response = AttributeDict(pattern.search(response.stdout).groupdict())
         response.update(self.create_timestamps())
         return self.handle_response(response)
-
-    @property
-    def machine_meta_data(self) -> AttributeDict:
-        return self.configuration.MachineMetaData[self._machine_type]
-
-    @property
-    def machine_type(self) -> str:
-        return self._machine_type
-
-    @property
-    def site_name(self) -> str:
-        return self._site_name
 
     async def resource_status(
         self, resource_attributes: AttributeDict

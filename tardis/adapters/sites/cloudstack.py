@@ -23,11 +23,11 @@ import logging
 
 class CloudStackAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
-        self.configuration = getattr(Configuration(), site_name)
+        self._configuration = getattr(Configuration(), site_name)
         self.cloud_stack_client = CloudStack(
-            end_point=self.configuration.end_point,
-            api_key=self.configuration.api_key,
-            api_secret=self.configuration.api_secret,
+            end_point=self._configuration.end_point,
+            api_key=self._configuration.api_key,
+            api_secret=self._configuration.api_secret,
             event_loop=runtime._meta_runner.runners[asyncio].event_loop,
         )
         self._machine_type = machine_type
@@ -59,23 +59,10 @@ class CloudStackAdapter(SiteAdapter):
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
         response = await self.cloud_stack_client.deployVirtualMachine(
-            name=resource_attributes.drone_uuid,
-            **self.configuration.MachineTypeConfiguration[self._machine_type],
+            name=resource_attributes.drone_uuid, **self.machine_type_configuration
         )
         logging.debug(f"{self.site_name} deployVirtualMachine returned {response}")
         return self.handle_response(response["virtualmachine"])
-
-    @property
-    def machine_meta_data(self) -> AttributeDict:
-        return self.configuration.MachineMetaData[self._machine_type]
-
-    @property
-    def machine_type(self) -> str:
-        return self._machine_type
-
-    @property
-    def site_name(self) -> str:
-        return self._site_name
 
     async def resource_status(
         self, resource_attributes: AttributeDict

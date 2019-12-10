@@ -42,16 +42,16 @@ async def slurm_status_updater(executor):
 
 class SlurmAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
-        self.configuration = getattr(Configuration(), site_name)
+        self._configuration = getattr(Configuration(), site_name)
         self._machine_type = machine_type
         self._site_name = site_name
-        self._startup_command = self.configuration.StartupCommand
+        self._startup_command = self._configuration.StartupCommand
 
-        self._executor = getattr(self.configuration, "executor", ShellExecutor())
+        self._executor = getattr(self._configuration, "executor", ShellExecutor())
 
         self._slurm_status = AsyncCacheMap(
             update_coroutine=partial(slurm_status_updater, self._executor),
-            max_age=self.configuration.StatusUpdate * 60,
+            max_age=self._configuration.StatusUpdate * 60,
         )
 
         key_translator = StaticMapping(
@@ -88,16 +88,13 @@ class SlurmAdapter(SiteAdapter):
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
-        machine_configuration = self.configuration.MachineTypeConfiguration[
-            self._machine_type
-        ]
         request_command = (
-            f"sbatch -p {machine_configuration.Partition} "
+            f"sbatch -p {self.machine_type_configuration.Partition} "
             f"-N 1 -n {self.machine_meta_data.Cores} "
             f"--mem={self.machine_meta_data.Memory}gb "
-            f"-t {machine_configuration.Walltime} "
+            f"-t {self.machine_type_configuration.Walltime} "
             f"--export=SLURM_Walltime="
-            f"{machine_configuration.Walltime} "
+            f"{self.machine_type_configuration.Walltime} "
             f"{self._startup_command}"
         )
         result = await self._executor.run_command(request_command)
@@ -112,18 +109,6 @@ class SlurmAdapter(SiteAdapter):
             resource_status=ResourceStatus.Booting,
         )
         return resource_attributes
-
-    @property
-    def machine_meta_data(self) -> AttributeDict:
-        return self.configuration.MachineMetaData[self._machine_type]
-
-    @property
-    def machine_type(self) -> str:
-        return self._machine_type
-
-    @property
-    def site_name(self) -> str:
-        return self._site_name
 
     async def resource_status(
         self, resource_attributes: AttributeDict
