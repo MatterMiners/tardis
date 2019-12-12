@@ -55,7 +55,7 @@ class TestDroneStates(TestCase):
         )
         self.drone.demand = 8.0
         self.drone._supply = 8.0
-        self.drone.drone_life_time = 3600
+        self.drone.drone_minimum_lifetime = 3600
         self.drone.set_state.side_effect = partial(mock_set_state, self.drone)
         self.drone.site_agent.deploy_resource.return_value = async_return(
             return_value=AttributeDict()
@@ -217,7 +217,7 @@ class TestDroneStates(TestCase):
         self.assertEqual(self.drone._supply, 0.0)
 
         # Test draining procedure due to exceeding life time of the drone
-        self.drone.drone_life_time = 1
+        self.drone.drone_minimum_lifetime = 1
         self.drone.state.return_value = AvailableState()
         run_async(self.drone.state.return_value.run, self.drone)
         self.assertIsInstance(self.drone.state, DrainState)

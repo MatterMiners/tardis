@@ -39,11 +39,13 @@ async def check_demand(state_transition, drone: "Drone", current_state: Type[Sta
     return state_transition
 
 
-async def check_lifetime(state_transition, drone: "Drone", current_state: Type[State]):
+async def check_minimum_lifetime(
+    state_transition, drone: "Drone", current_state: Type[State]
+):
     if (
-        drone.drone_life_time
+        drone.drone_minimum_lifetime
         and (datetime.now() - drone.resource_attributes.updated).total_seconds()
-        > drone.drone_life_time
+        > drone.drone_minimum_lifetime
     ):
         raise StopProcessing(last_result=DrainState())
     return state_transition
@@ -151,7 +153,7 @@ class AvailableState(State):
 
     processing_pipeline = [
         check_demand,
-        check_lifetime,
+        check_minimum_lifetime,
         resource_status,
         batchsystem_machine_status,
     ]

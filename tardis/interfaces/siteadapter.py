@@ -114,9 +114,9 @@ class SiteAdapter(metaclass=ABCMeta):
         return translated_response
 
     @property
-    def drone_life_time(self) -> [int, None]:
+    def drone_minimum_lifetime(self) -> [int, None]:
         try:
-            return self.configuration.drone_life_time
+            return self.configuration.drone_minimum_lifetime
         except AttributeError:
             return None
 

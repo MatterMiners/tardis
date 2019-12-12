@@ -66,8 +66,8 @@ class Drone(Pool):
         self._demand = value
 
     @property
-    def drone_life_time(self) -> [int, None]:
-        return self.site_agent.drone_life_time
+    def drone_minimum_lifetime(self) -> [int, None]:
+        return self.site_agent.drone_minimum_lifetime
 
     @property
     def maximum_demand(self) -> float:

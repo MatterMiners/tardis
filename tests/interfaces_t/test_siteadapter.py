@@ -78,11 +78,11 @@ class TestSiteAdapter(TestCase):
         self.site_adapter._machine_type = "TestFlavour"
         self.assertEqual(self.site_adapter.machine_meta_data, "Test")
 
-    def test_drone_life_time(self):
-        self.assertEqual(self.site_adapter.drone_life_time, None)
+    def test_drone_minimum_lifetime(self):
+        self.assertEqual(self.site_adapter.drone_minimum_lifetime, None)
 
-        self.site_adapter._configuration = AttributeDict(drone_life_time=10)
-        self.assertEqual(self.site_adapter.drone_life_time, 10)
+        self.site_adapter._configuration = AttributeDict(drone_minimum_lifetime=10)
+        self.assertEqual(self.site_adapter.drone_minimum_lifetime, 10)
 
     def test_machine_type(self):
         with self.assertRaises(AttributeError):
