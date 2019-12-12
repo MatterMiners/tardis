@@ -23,6 +23,11 @@ class TestSiteAgent(TestCase):
         self.site_agent.drone_uuid(uuid="test")
         self.site_adapter.drone_uuid.assert_called_with(uuid="test")
 
+    def test_drone_minimum_lifetime(self):
+        self.site_adapter.drone_minimum_lifetime.return_value = None
+        self.assertIsNone(self.site_agent.drone_minimum_lifetime())
+        self.site_adapter.drone_minimum_lifetime.assert_called_with()
+
     def test_handle_exceptions(self):
         self.site_adapter.handle_exceptions.return_value = None
         self.site_agent.handle_exceptions()

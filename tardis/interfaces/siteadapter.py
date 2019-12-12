@@ -114,6 +114,13 @@ class SiteAdapter(metaclass=ABCMeta):
         return translated_response
 
     @property
+    def drone_minimum_lifetime(self) -> [int, None]:
+        try:
+            return self.configuration.drone_minimum_lifetime
+        except AttributeError:
+            return None
+
+    @property
     def machine_meta_data(self) -> AttributeDict:
         """
         Property to access the machine_meta_data (like cores, memory and disk)

@@ -66,6 +66,10 @@ class Drone(Pool):
         self._demand = value
 
     @property
+    def drone_minimum_lifetime(self) -> [int, None]:
+        return self.site_agent.drone_minimum_lifetime
+
+    @property
     def maximum_demand(self) -> float:
         return self.site_agent.machine_meta_data["Cores"]
 
@@ -83,14 +87,15 @@ class Drone(Pool):
 
     async def run(self):
         while True:
-            await self.state.run(self)
-            await asyncio.sleep(60)
-            if isinstance(self.state, DownState):
+            current_state = self.state
+            await current_state.run(self)
+            if isinstance(current_state, DownState):
                 logging.debug(
                     f"Garbage Collect Drone: {self.resource_attributes.drone_uuid}"
                 )
                 self._demand = 0
                 return
+            await asyncio.sleep(60)
 
     def register_plugins(self, observer: Union[List[Plugin], Plugin]) -> None:
         self._plugins.append(observer)
