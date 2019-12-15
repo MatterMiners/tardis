@@ -246,7 +246,7 @@ Available adapter configuration options
     +================+===================================================================================+=================+
     | StatusUpdate   | The result of the status call is cached for `StatusUpdate` in minutes.            |  **Required**   |
     +----------------+-----------------------------------------------------------------------------------+-----------------+
-    | StartUpCommand | The command executed in the batch job.                                            |  **Required**   |
+    | StartupCommand | The command executed in the batch job.                                            |  **Required**   |
     +----------------+-----------------------------------------------------------------------------------+-----------------+
     | executor       | The |executor| used to run submission and further calls to the Moab batch system. |  **Optional**   |
     +                +                                                                                   +                 +
@@ -415,7 +415,7 @@ Available adapter configuration options
               Walltime: '1440'
               Partition: normal
             twelve_hours:
-              Walltime: '600'
+              Walltime: '720'
               Partition: normal
           MachineMetaData:
             one_day:
