@@ -7,9 +7,13 @@ Executors
 .. container:: left-col
 
     All executors can be loaded using YAML tags using the (`!Tag`) syntax. More details are available in the
-    `PyYAML documentation`_
+    `PyYAML documentation`_.
+
+    Alternatively you can also use the legacy `COBalD object initialisation syntax`_ to construct executors.
+    But it is discouraged.
 
     .. _PyYAML documentation: https://pyyaml.org/wiki/PyYAMLDocumentation
+    .. _COBalD object initialisation syntax: https://cobald.readthedocs.io/en/latest/source/daemon/config.html#object-references
 
 Shell Executor
 --------------
@@ -25,6 +29,12 @@ Shell Executor
     .. code-block:: yaml
 
       !ShellExecutor
+
+    .. rubric:: Example configuration (`COBalD` legacy object initialisation)
+
+    .. code-block:: yaml
+
+        __type__: tardis.utilities.executors.shellexecutor.ShellExecutor
 
 SSH Executor
 ------------
@@ -49,3 +59,12 @@ SSH Executor
         client_keys:
           - /opt/tardis/ssh/tardis
 
+    .. rubric:: Example configuration (`COBalD` legacy object initialisation)
+
+    .. code-block:: yaml
+
+        __type__: tardis.utilities.executors.sshexecutor.SSHExecutor
+        host: login.dorie.somewherein.de
+        username: clown
+        client_keys:
+          - /opt/tardis/ssh/tardis
