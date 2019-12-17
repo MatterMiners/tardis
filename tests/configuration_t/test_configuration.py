@@ -1,4 +1,5 @@
 from tardis.configuration.configuration import Configuration
+from tardis.utilities.executors.sshexecutor import SSHExecutor
 
 from unittest import TestCase
 import os
@@ -24,22 +25,37 @@ class TestConfiguration(TestCase):
         self.configuration1.load_config(os.path.join(self.test_path, "Sites.yml"))
         self.assertEqual(id(self.configuration1.Sites), id(self.configuration2.Sites))
         self.assertEqual(
-            self.configuration1.Sites, [dict(name="EXOSCALE", adapter="CloudStack")]
+            self.configuration1.Sites,
+            [
+                dict(name="EXOSCALE", adapter="CloudStack"),
+                dict(name="SLURM", adapter="Slurm"),
+            ],
         )
         self.assertEqual(
             self.configuration2.CloudStackAIO,
             {"api_key": "asdfghjkl", "api_secret": "qwertzuiop"},
         )
 
-    def test_base64_encoded_user_data(self):
-        result = (
+    def test_translate_config(self):
+        b64_result = (
             b"I2Nsb3VkLWNvbmZpZwoKd3JpdGVfZmlsZXM6CiAgLSBwYXRoOiAvZXRjL2huc2NpY2xvdWQvc2l0ZS1pZC5jZmcKICAgIGNvbn",
             b"RlbnQ6IHwKICAgICAgRXhvc2NhbGUKICAgIHBlcm1pc3Npb25zOiAnMDY0NCcK",
         )
         self.configuration1.load_config(os.path.join(self.test_path, "Sites.yml"))
         self.assertEqual(
             self.configuration1.EXOSCALE.MachineTypeConfiguration.Micro.user_data,
-            b"".join(result),
+            b"".join(b64_result),
+        )
+
+        executor = self.configuration1.SLURM.executor
+        self.assertIsInstance(executor, SSHExecutor)
+        self.assertEqual(
+            executor._parameters,
+            dict(
+                host="somehost.de",
+                username="someuser",
+                client_keys=["where the private key is"],
+            ),
         )
 
     def test_access_missing_attribute(self):

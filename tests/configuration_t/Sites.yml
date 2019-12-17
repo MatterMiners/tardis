@@ -1,8 +1,17 @@
 Sites:
   - name: EXOSCALE
     adapter: CloudStack
+  - name: SLURM
+    adapter: Slurm
 
 EXOSCALE:
   MachineTypeConfiguration:
     Micro:
       user_data: tests/data/exoscale.ini
+SLURM:
+  executor:
+    __type__: tardis.utilities.executors.sshexecutor.SSHExecutor
+    host: somehost.de
+    username: someuser
+    client_keys:
+      - "where the private key is"
