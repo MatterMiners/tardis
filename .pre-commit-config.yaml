@@ -11,3 +11,7 @@ repos:
     -   id: black
         args:
         -   --py36
+-   repo: https://github.com/Matterminers/dev-tools
+    rev: 4627d34
+    hooks:
+      -  id: contributors
