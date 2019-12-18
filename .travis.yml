@@ -2,21 +2,19 @@ language: python
 
 python:
   - "3.6"
-  - "3.6-dev" # 3.6 development branch
-  - "nightly" # currently points to 3.7-dev
-  - "pypy3.5"
+  - "3.7"
+  - "3.8"
+  - "nightly" # currently points to 3.8-dev
+  - "pypy3"
 
 os:
   - linux
 
 matrix:
   allow_failures:
-  - python: "3.6-dev"
   - python: "nightly"
-  - python: "pypy3.5"
+  - python: "pypy3"
   include:
-    - python: 3.7
-      dist: xenial
     - python: 3.7
       name: Style
       dist: xenial
