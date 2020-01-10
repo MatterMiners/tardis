@@ -81,6 +81,7 @@ class HTCondorAdapter(BatchSystemAdapter):
 
         attributes = dict(
             Machine="Machine",
+            Name="Name",
             State="State",
             Activity="Activity",
             TardisDroneUuid="TardisDroneUuid",
@@ -118,16 +119,16 @@ class HTCondorAdapter(BatchSystemAdapter):
         """
         await self._htcondor_status.update_status()
         try:
-            machine = self._htcondor_status[drone_uuid]["Machine"]
+            slot_name = self._htcondor_status[drone_uuid]["Name"]
         except KeyError:
             return
 
         options_string = htcondor_cmd_option_formatter(self.htcondor_options)
 
         if options_string:
-            cmd = f"condor_drain {options_string} -graceful {machine}"
+            cmd = f"condor_drain {options_string} -graceful {slot_name}"
         else:
-            cmd = f"condor_drain -graceful {machine}"
+            cmd = f"condor_drain -graceful {slot_name}"
 
         try:
             return await async_run_command(cmd)

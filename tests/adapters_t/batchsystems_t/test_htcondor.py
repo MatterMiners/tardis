@@ -32,26 +32,26 @@ class TestHTCondorAdapter(TestCase):
         self.cpu_ratio = 0.9
         self.memory_ratio = 0.8
         self.command = (
-            "condor_status -af:t Machine State Activity TardisDroneUuid "
+            "condor_status -af:t Machine Name State Activity TardisDroneUuid "
             "'Real(TotalSlotCpus-Cpus)/TotalSlotCpus' "
             "'Real(TotalSlotMemory-Memory)/TotalSlotMemory' -constraint PartitionableSlot=?=True"
             " -pool my-htcondor.local -test"
         )
 
         self.command_wo_options = (
-            "condor_status -af:t Machine State Activity TardisDroneUuid "
+            "condor_status -af:t Machine Name State Activity TardisDroneUuid "
             "'Real(TotalSlotCpus-Cpus)/TotalSlotCpus' "
             "'Real(TotalSlotMemory-Memory)/TotalSlotMemory' -constraint PartitionableSlot=?=True"
         )
 
         return_value = "\n".join(
             [
-                f"test\tUnclaimed\tIdle\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",
-                f"test_drain\tDrained\tRetiring\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",
-                f"test_drained\tDrained\tIdle\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",
-                f"test_owner\tOwner\tIdle\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",
-                f"test_uuid_plus\tUnclaimed\tIdle\ttest_uuid\t{self.cpu_ratio}\t{self.memory_ratio}",
-                "exoscale-26d361290f\tUnclaimed\tIdle\tundefined\t0.125\t0.125",
+                f"test\tslot1@test\tUnclaimed\tIdle\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",
+                f"test_drain\tslot1@test\tDrained\tRetiring\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",
+                f"test_drained\tslot1@test\tDrained\tIdle\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",
+                f"test_owner\tslot1@test\tOwner\tIdle\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",
+                f"test_uuid_plus\tslot1@test_uuid@test\tUnclaimed\tIdle\ttest_uuid\t{self.cpu_ratio}\t{self.memory_ratio}",
+                "exoscale-26d361290f\tslot1@exoscale-26d361290f\tUnclaimed\tIdle\tundefined\t0.125\t0.125",
             ]
         )
         self.mock_async_run_command.return_value = async_return(
@@ -85,7 +85,14 @@ class TestHTCondorAdapter(TestCase):
     def test_drain_machine(self):
         run_async(self.htcondor_adapter.drain_machine, drone_uuid="test")
         self.mock_async_run_command.assert_called_with(
-            "condor_drain -pool my-htcondor.local -test -graceful test"
+            "condor_drain -pool my-htcondor.local -test -graceful slot1@test"
+        )
+
+        self.mock_async_run_command.reset_mock()
+
+        run_async(self.htcondor_adapter.drain_machine, drone_uuid="test_uuid")
+        self.mock_async_run_command.assert_called_with(
+            "condor_drain -pool my-htcondor.local -test -graceful slot1@test_uuid@test"
         )
         self.assertIsNone(
             run_async(self.htcondor_adapter.drain_machine, drone_uuid="not_exists")
@@ -112,7 +119,16 @@ class TestHTCondorAdapter(TestCase):
         self.htcondor_adapter = HTCondorAdapter()
 
         run_async(self.htcondor_adapter.drain_machine, drone_uuid="test")
-        self.mock_async_run_command.assert_called_with("condor_drain -graceful test")
+        self.mock_async_run_command.assert_called_with(
+            "condor_drain -graceful slot1@test"
+        )
+
+        self.mock_async_run_command.reset_mock()
+
+        run_async(self.htcondor_adapter.drain_machine, drone_uuid="test_uuid")
+        self.mock_async_run_command.assert_called_with(
+            "condor_drain -graceful slot1@test_uuid@test"
+        )
 
     def test_integrate_machine(self):
         self.assertIsNone(
