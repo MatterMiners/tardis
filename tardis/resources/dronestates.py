@@ -195,6 +195,9 @@ class DrainingState(State):
             MachineStatus.Drained: lambda: DisintegrateState(),
             MachineStatus.NotAvailable: lambda: ShutDownState(),
         },
+        # In case the job is retried by HTCondor, resources can transition to
+        # BootingState again. In this case the job should be removed.
+        ResourceStatus.Booting: lambda: defaultdict(lambda: CleanupState),
         ResourceStatus.Deleted: lambda: defaultdict(lambda: DownState),
         ResourceStatus.Stopped: lambda: defaultdict(lambda: CleanupState),
         ResourceStatus.Error: lambda: defaultdict(lambda: CleanupState),
@@ -219,6 +222,9 @@ class DisintegrateState(State):
 
 class ShutDownState(State):
     transition = {
+        # In case the job is retried by HTCondor, resources can transition to
+        # BootingState again. In this case the job should be removed.
+        ResourceStatus.Booting: lambda: CleanupState(),
         ResourceStatus.Running: lambda: ShuttingDownState(),
         ResourceStatus.Stopped: lambda: CleanupState(),
         ResourceStatus.Deleted: lambda: DownState(),
@@ -249,6 +255,9 @@ class ShutDownState(State):
 
 class ShuttingDownState(State):
     transition = {
+        # In case the job is retried by HTCondor, resources can transition to
+        # BootingState again. In this case the job should be removed.
+        ResourceStatus.Booting: lambda: CleanupState(),
         ResourceStatus.Running: lambda: ShuttingDownState(),
         ResourceStatus.Stopped: lambda: CleanupState(),
         ResourceStatus.Deleted: lambda: DownState(),

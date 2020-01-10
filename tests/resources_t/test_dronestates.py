@@ -217,6 +217,7 @@ class TestDroneStates(TestCase):
         self.assertEqual(self.drone._supply, 0.0)
 
         # Test draining procedure due to exceeding life time of the drone
+        self.drone.demand = 8.0
         self.drone.drone_minimum_lifetime = 1
         self.drone.state.return_value = AvailableState()
         run_async(self.drone.state.return_value.run, self.drone)
@@ -236,6 +237,7 @@ class TestDroneStates(TestCase):
             (ResourceStatus.Running, MachineStatus.Available, DrainState),
             (ResourceStatus.Running, MachineStatus.Drained, DisintegrateState),
             (ResourceStatus.Running, MachineStatus.NotAvailable, ShutDownState),
+            (ResourceStatus.Booting, MachineStatus.NotAvailable, CleanupState),
             (ResourceStatus.Deleted, MachineStatus.NotAvailable, DownState),
             (ResourceStatus.Stopped, MachineStatus.NotAvailable, CleanupState),
         ]
@@ -252,6 +254,7 @@ class TestDroneStates(TestCase):
 
     def test_shutdown_state(self):
         matrix = [
+            (ResourceStatus.Booting, None, CleanupState),
             (ResourceStatus.Running, None, ShuttingDownState),
             (ResourceStatus.Stopped, None, CleanupState),
             (ResourceStatus.Deleted, None, DownState),
@@ -291,6 +294,7 @@ class TestDroneStates(TestCase):
 
     def test_shutting_down_state(self):
         matrix = [
+            (ResourceStatus.Booting, None, CleanupState),
             (ResourceStatus.Running, None, ShuttingDownState),
             (ResourceStatus.Stopped, None, CleanupState),
             (ResourceStatus.Deleted, None, DownState),
