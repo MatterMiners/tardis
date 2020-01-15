@@ -15,6 +15,7 @@ Welcome to the TARDIS documentation!
    executors/executors
    plugins/plugins
    contribute/contribute
+   changelog
    Module Index <api/modules>
 
 .. container:: left-col
