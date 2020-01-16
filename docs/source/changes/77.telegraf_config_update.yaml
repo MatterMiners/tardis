@@ -1,0 +1,7 @@
+category: added
+summary: The machine name has been added as a default tag in the telegraf monitoring plugin, can be overwritten.
+pull requests:
+  - 77
+description: |
+  The machine name has been added as a default tag in the telegraf monitoring plugin. Can be overwritten by adding
+  `tardis_machine_name` as default tag in the plugin configuration.
