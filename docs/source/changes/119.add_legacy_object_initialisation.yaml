@@ -1,0 +1,9 @@
+category: added
+summary: Add support for COBalD legacy object initialisation
+pull requests:
+  - 119
+issues:
+  - 118
+description: |
+  Support for the `COBalD` object initialisation syntax to construct python objects instead of using YAML tags has been
+  enabled.

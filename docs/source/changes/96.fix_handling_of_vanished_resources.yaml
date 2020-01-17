@@ -1,0 +1,8 @@
+category: fixed
+summary: Fix the handling of the termination of vanished resources
+pull requests:
+  - 96
+description: |
+  Fix a bug with resources that shut down itself while being idle for 20 minutes, which remained in `CleanUpState`
+  forever, since the `teminate_resource` call keept raising `TardisResourceStatusUpdateFailed`, which led to infinte
+  retries of the `terminate_resource` call.

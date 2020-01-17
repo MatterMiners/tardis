@@ -1,0 +1,6 @@
+category: added
+summary: Add support for Python 3.8
+pull requests:
+  - 120
+description: |
+  Support for Python3.8 added to setup.py classifiers and travis uniitests for Python3.8 have been enabled.
