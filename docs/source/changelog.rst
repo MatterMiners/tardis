@@ -1,4 +1,4 @@
-.. Created by changelog.py at 2020-01-16, command
+.. Created by changelog.py at 2020-01-17, command
    '/Users/giffler/.cache/pre-commit/repont7o94ca/py_env-default/bin/changelog docs/source/changes compile --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
@@ -6,7 +6,7 @@
 CHANGELOG
 #########
 
-[Unreleased] - 2020-01-16
+[Unreleased] - 2020-01-17
 =========================
 
 Added
@@ -17,6 +17,7 @@ Added
 * Add support for COBalD legacy object initialisation
 * The machine name has been added as a default tag in the telegraf monitoring plugin, can be overwritten.
 * An optional and per site configurable drone minimum lifetime has been added
+* Add the possibility to use an unified `COBalD` and `TARDIS` configuration
 
 Fixed
 -----
