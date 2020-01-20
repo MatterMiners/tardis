@@ -41,7 +41,10 @@ setup(
     entry_points={
         "cobald.config.yaml_constructors": [
             "TardisPoolFactory = tardis.resources.poolfactory:create_composite_pool"
-        ]
+        ],
+        "cobald.config.sections": [
+            "tardis = tardis.configuration.configuration:Configuration"
+        ],
     },
     keywords=package_about["__keywords__"],
     packages=find_packages(exclude=["tests"]),

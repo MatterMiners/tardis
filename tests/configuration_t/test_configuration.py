@@ -1,8 +1,10 @@
 from tardis.configuration.configuration import Configuration
 from tardis.utilities.executors.sshexecutor import SSHExecutor
+from tardis.utilities.attributedict import AttributeDict
 
 from unittest import TestCase
 import os
+import yaml
 
 
 class TestConfiguration(TestCase):
@@ -34,6 +36,15 @@ class TestConfiguration(TestCase):
         self.assertEqual(
             self.configuration2.CloudStackAIO,
             {"api_key": "asdfghjkl", "api_secret": "qwertzuiop"},
+        )
+
+    def test_update_configuration(self):
+        with open(os.path.join(self.test_path, "OpenStack.yml"), "r") as config_file:
+            config_file_content = yaml.safe_load(config_file)
+        self.configuration1 = Configuration(config_file_content)
+        self.assertEqual(
+            self.configuration1.OpenStack,
+            AttributeDict(api_key="qwertzuiop", api_secret="katze123"),
         )
 
     def test_translate_config(self):

@@ -141,6 +141,75 @@ Configuration of TARDIS
               Memory: 16
               Disk: 160
 
+Unified Configuration
+=====================
+
+.. content-tabs:: left-col
+
+    Alternatively a unified ``COBalD`` and ``TARDIS`` configuration can be used. In this case, the ``TARDIS``
+    part of the configuration is represented by a ``tardis`` MappingNode.
+
+    .. warning::
+        In case of the unified configuration you can currently not use the yaml tag ``!TardisPoolFactory`` to initialize
+        the pool factory, please use the `COBalD` legacy object initialisation
+        ``__type__: tardis.resources.poolfactory.create_composite_pool`` instead!
+
+.. content-tabs:: right-col
+
+    .. rubric:: Example configuration
+    .. code-block:: yaml
+
+        pipeline:
+          # Makes decision to add remove resources based utilisation and allocation
+          - !LinearController
+            low_utilisation: 0.90
+            high_allocation: 0.90
+            rate: 1
+          # Limits the demand for a resource
+          - !Limiter
+            minimum: 1
+          # Log changes
+          - !Logger
+            name: 'changes'
+          # Factory function to create composite resource pool
+          - __type__: tardis.resources.poolfactory.create_composite_pool
+        tardis:
+            Plugins:
+              SqliteRegistry:
+                db_file: drone_registry.db
+
+            BatchSystem:
+              adapter: FakeBatchSystem
+              allocation: 1.0
+              utilization: !PeriodicValue
+                           period: 3600
+                           amplitude: 0.5
+                           offset: 0.5
+                           phase: 0.
+              machine_status: Available
+
+            Sites:
+              - name: Fake
+                adapter: FakeSite
+                quota: 8000 # CPU core quota
+
+            Fake:
+              api_response_delay: !RandomGauss
+                                  mu: 0.1
+                                  sigma: 0.01
+              resource_boot_time: !RandomGauss
+                                  mu: 60
+                                  sigma: 10
+              MachineTypes:
+                - m1.infinity
+              MachineTypeConfiguration:
+                m1.infinity:
+              MachineMetaData:
+                m1.infinity:
+                  Cores: 8
+                  Memory: 16
+                  Disk: 160
+
 Start-up your instance
 ======================
 

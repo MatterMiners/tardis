@@ -27,7 +27,7 @@ def str_to_state(resources):
     return resources
 
 
-def create_composite_pool(configuration: str = "tardis.yml") -> WeightedComposite:
+def create_composite_pool(configuration: str = None) -> WeightedComposite:
     configuration = Configuration(configuration)
 
     composites = []

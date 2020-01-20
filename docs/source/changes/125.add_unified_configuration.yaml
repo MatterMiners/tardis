@@ -1,0 +1,6 @@
+category: added
+summary: Add the possibility to use an unified `COBalD` and `TARDIS` configuration
+pull requests:
+  - 125
+description: |
+  The possibility to combine the `COBalD` and the `TARDIS` configuration in one single `yaml` has been added.
