@@ -15,15 +15,16 @@ import yaml
 
 def translate_config(obj):
     if isinstance(obj, AttributeDict):
+        translated_obj = AttributeDict(obj)
         for key, value in obj.items():
             if key == "user_data":  # base64 encode user data
                 with open(os.path.join(os.getcwd(), obj[key]), "rb") as f:
-                    obj[key] = b64encode(f.read())
+                    translated_obj[key] = b64encode(f.read())
             elif key == "__type__":  # do legacy object initialisation
                 return Translator().translate_hierarchy(obj)
             else:
-                obj[key] = translate_config(value)
-        return obj
+                translated_obj[key] = translate_config(value)
+        return translated_obj
     elif isinstance(obj, list):
         return [translate_config(item) for item in obj]
     else:
