@@ -24,6 +24,7 @@ Fixed
 
 * Fix draining of slots having a startd name
 * Fix the translation of cloud init scripts into base64 encoded strings
+* Use utilisation as weight in composite pools
 * Allow removal of booting drones if demand drops to zero
 * The `CleanupState` is now taking into account the status of the resource for state transitions
 * Improved logging of the `HTCondor` batch system adapter and the status changes of the drones
