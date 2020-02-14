@@ -1,4 +1,4 @@
-.. Created by changelog.py at 2020-01-24, command
+.. Created by changelog.py at 2020-02-13, command
    '/Users/giffler/.cache/pre-commit/repont7o94ca/py_env-default/bin/changelog docs/source/changes compile --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
@@ -6,7 +6,7 @@
 CHANGELOG
 #########
 
-[Unreleased] - 2020-01-24
+[Unreleased] - 2020-02-13
 =========================
 
 Added
@@ -24,6 +24,7 @@ Fixed
 
 * Fix draining of slots having a startd name
 * Fix the translation of cloud init scripts into base64 encoded strings
+* Use utilisation as weight in composite pools
 * Allow removal of booting drones if demand drops to zero
 * The `CleanupState` is now taking into account the status of the resource for state transitions
 * Improved logging of the `HTCondor` batch system adapter and the status changes of the drones

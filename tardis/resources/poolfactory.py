@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Iterable, Optional
 
 from tardis.interfaces.plugin import Plugin
 from tardis.interfaces.state import State
@@ -87,18 +87,18 @@ def create_composite_pool(configuration: str = None) -> WeightedComposite:
             )
         composites.append(
             Standardiser(
-                WeightedComposite(*site_composites),
+                WeightedComposite(*site_composites, weight="utilisation"),
                 maximum=site.quota if site.quota >= 0 else inf,
             )
         )
 
-    return WeightedComposite(*composites)
+    return WeightedComposite(*composites, weight="utilisation")
 
 
 def create_drone(
     site_agent: SiteAgent,
     batch_system_agent: BatchSystemAgent,
-    plugins: Optional[List[Plugin]] = None,
+    plugins: Optional[Iterable[Plugin]] = None,
     remote_resource_uuid=None,
     drone_uuid=None,
     state: State = RequestState(),
