@@ -5,7 +5,7 @@ from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from tardis.exceptions.executorexceptions import CommandExecutionFailure
 from tardis.interfaces.siteadapter import ResourceStatus
 from tardis.utilities.attributedict import AttributeDict
-from ...utilities.utilities import async_return
+from ...utilities.utilities import mock_executor_run_command
 from ...utilities.utilities import run_async
 
 from unittest import TestCase
@@ -14,11 +14,12 @@ from unittest.mock import patch
 from datetime import datetime, timedelta
 
 import asyncio
+import logging
 
 __all__ = ["TestSlurmAdapter"]
 
 TEST_RESOURCE_STATUS_RESPONSE = """
-1390065|None assigned|PENDING
+1390065||PENDING
 1391999|fh2n1573|TIMEOUT
 1391999.batch|fh2n1573|CANCELLED
 """
@@ -30,11 +31,31 @@ TEST_RESOURCE_STATUS_RESPONSE_RUNNING = """
 1391999.batch|fh2n1573|CANCELLED
 """
 
-TEST_RESOURCE_STATUS_RESPONSE_DEAD = """
-1390065|fh2n1552|TIMEOUT
-1390065.batch|fh2n1552|CANCELLED
-1391999|fh2n1573|TIMEOUT
-1391999.batch|fh2n1573|CANCELLED
+TEST_RESOURCE_STATUS_RESPONSE_ALL_STATES = """
+1000000|fh1n1000|BOOT_FAIL
+1001000|fh1n1001|CANCELLED
+1002000|fh1n1002|COMPLETED
+1003000|fh1n1003|CONFIGURING
+1004000|fh1n1004|COMPLETING
+1005000|fh1n1005|DEADLINE
+1006000|fh1n1006|FAILED
+1007000|fh1n1007|NODE_FAIL
+1008000|fh1n1008|OUT_OF_MEMORY
+1009000||PENDING
+1010000|fh1n1010|PREEMPTED
+1011000|fh1n1011|RUNNING
+1012000|fh1n1012|RESV_DEL_HOLD
+1013000|fh1n1013|REQUEUE_FED
+1014000|fh1n1014|REQUEUE_HOLD
+1015000|fh1n1015|REQUEUED
+1016000|fh1n1016|RESIZING
+1017000|fh1n1017|REVOKED
+1018000|fh1n1018|SIGNALING
+1019000|fh1n1019|SPECIAL_EXIT
+1020000|fh1n1020|STAGE_OUT
+1021000|fh1n1021|STOPPED
+1022000|fh1n1022|SUSPENDED
+1023000|fh1n1023|TIMEOUT
 """
 
 TEST_DEPLOY_RESOURCE_RESPONSE = """
@@ -42,25 +63,19 @@ Submitted batch job 1390065
 """
 
 
-def mock_executor_run_command(stdout, stderr="", exit_code=0, raise_exception=None):
-    def decorator(func):
-        def wrapper(self):
-            executor = self.mock_executor.return_value
-            executor.run_command.return_value = async_return(
-                return_value=AttributeDict(
-                    stdout=stdout, stderr=stderr, exit_code=exit_code
-                )
-            )
-            executor.run_command.side_effect = raise_exception
-            func(self)
-            executor.run_command.side_effect = None
-
-        return wrapper
-
-    return decorator
-
-
 class TestSlurmAdapter(TestCase):
+    mock_config_patcher = None
+    mock_executor_patcher = None
+
+    def check_attribute_dicts(
+        self, expected_attributes, returned_attributes, exclude=tuple()
+    ):
+        for key in expected_attributes.keys():
+            if key not in exclude:
+                self.assertEqual(
+                    getattr(returned_attributes, key), getattr(expected_attributes, key)
+                )
+
     @classmethod
     def setUpClass(cls):
         cls.mock_config_patcher = patch("tardis.adapters.sites.slurm.Configuration")
@@ -106,12 +121,6 @@ class TestSlurmAdapter(TestCase):
             site_name="TestSite",
             remote_resource_uuid=1390065,
             resource_status=ResourceStatus.Booting,
-            created=datetime.strptime(
-                "Wed Jan 23 2019 15:01:47", "%a %b %d %Y %H:%M:%S"
-            ),
-            updated=datetime.strptime(
-                "Wed Jan 23 2019 15:02:17", "%a %b %d %Y %H:%M:%S"
-            ),
             drone_uuid="testsite-1390065",
         )
 
@@ -121,25 +130,24 @@ class TestSlurmAdapter(TestCase):
         expected_resource_attributes.update(
             created=datetime.now(), updated=datetime.now()
         )
-        return_resource_attributes = run_async(
+        returned_resource_attributes = run_async(
             self.slurm_adapter.deploy_resource,
             resource_attributes=AttributeDict(
                 machine_type="test2large", site_name="TestSite"
             ),
         )
-        if return_resource_attributes.created - expected_resource_attributes.created > timedelta(
-            seconds=1
-        ) or return_resource_attributes.updated - expected_resource_attributes.updated > timedelta(
-            seconds=1
-        ):
-            raise Exception("Creation time or update time wrong!")
-        del (
-            expected_resource_attributes.created,
-            expected_resource_attributes.updated,
-            return_resource_attributes.created,
-            return_resource_attributes.updated,
+
+        self.assertLess(
+            returned_resource_attributes.created - expected_resource_attributes.created,
+            timedelta(seconds=1),
         )
-        self.assertEqual(return_resource_attributes, expected_resource_attributes)
+
+        self.check_attribute_dicts(
+            expected_resource_attributes,
+            returned_resource_attributes,
+            exclude=("created", "updated"),
+        )
+
         self.mock_executor.return_value.run_command.assert_called_with(
             "sbatch -p normal -N 1 -n 20 --mem=62gb -t 60 --export=SLURM_Walltime=60 pilot.sh"
         )
@@ -160,124 +168,193 @@ class TestSlurmAdapter(TestCase):
         expected_resource_attributes = self.resource_attributes
         expected_resource_attributes.update(updated=datetime.now())
 
-        return_resource_attributes = run_async(
+        returned_resource_attributes = run_async(
             self.slurm_adapter.resource_status,
             resource_attributes=self.resource_attributes,
         )
-        if (
-            return_resource_attributes.updated - expected_resource_attributes.updated
-            > timedelta(seconds=1)
-        ):
-            raise Exception("Update time wrong!")
-        del expected_resource_attributes.updated, return_resource_attributes.updated
-        self.assertEqual(return_resource_attributes, expected_resource_attributes)
+
+        self.assertLess(
+            (
+                returned_resource_attributes.updated
+                - expected_resource_attributes.updated
+            ),
+            timedelta(seconds=1),
+        )
+
+        self.check_attribute_dicts(
+            expected_resource_attributes,
+            returned_resource_attributes,
+            exclude=("created", "updated"),
+        )
+
+        self.mock_executor.return_value.run_command.assert_called_with(
+            'squeue -o "%A|%N|%T" -h -t all'
+        )
 
     @mock_executor_run_command(TEST_RESOURCE_STATUS_RESPONSE_RUNNING)
-    def test_resource_status_update(self):
+    def test_update_resource_status(self):
         self.assertEqual(
             self.resource_attributes["resource_status"], ResourceStatus.Booting
         )
+
         return_resource_attributes = run_async(
             self.slurm_adapter.resource_status,
             resource_attributes=self.resource_attributes,
         )
+
         self.assertEqual(
             return_resource_attributes["resource_status"], ResourceStatus.Running
         )
-        self.assertEqual(return_resource_attributes["drone_uuid"], "testsite-1390065")
 
-    @mock_executor_run_command(stdout="", stderr="", exit_code=0)
-    def test_stop_resource(self):
-        expected_resource_attributes = self.resource_attributes
-        expected_resource_attributes.update(
-            updated=datetime.now(), resource_status=ResourceStatus.Stopped
-        )
-        return_resource_attributes = run_async(
-            self.slurm_adapter.stop_resource,
-            resource_attributes=self.resource_attributes,
-        )
-        if (
-            return_resource_attributes.updated - expected_resource_attributes.updated
-            > timedelta(seconds=1)
-        ):
-            raise Exception("Update time wrong!")
-        del expected_resource_attributes.updated, return_resource_attributes.updated
-        self.assertEqual(return_resource_attributes, expected_resource_attributes)
-
-    @mock_executor_run_command(stdout="", stderr="", exit_code=0)
-    def test_terminate_resource(self):
-        expected_resource_attributes = self.resource_attributes
-        expected_resource_attributes.update(
-            updated=datetime.now(), resource_status=ResourceStatus.Stopped
-        )
-        return_resource_attributes = run_async(
-            self.slurm_adapter.terminate_resource,
-            resource_attributes=self.resource_attributes,
-        )
-        if (
-            return_resource_attributes.updated - expected_resource_attributes.updated
-            > timedelta(seconds=1)
-        ):
-            raise Exception("Update time wrong!")
-        del expected_resource_attributes.updated, return_resource_attributes.updated
-        self.assertEqual(return_resource_attributes, expected_resource_attributes)
-
-    @mock_executor_run_command(stdout="", stderr="", exit_code=0)
-    def test_terminate_dead_resource(self):
-        expected_resource_attributes = self.resource_attributes
-        expected_resource_attributes.update(
-            updated=datetime.now(), resource_status=ResourceStatus.Stopped
-        )
-        return_resource_attributes = run_async(
-            self.slurm_adapter.terminate_resource,
-            resource_attributes=self.resource_attributes,
-        )
         self.assertEqual(
-            return_resource_attributes["resource_status"], ResourceStatus.Stopped
+            return_resource_attributes["drone_uuid"],
+            self.resource_attributes["drone_uuid"],
         )
 
-    @mock_executor_run_command(TEST_RESOURCE_STATUS_RESPONSE_DEAD)
-    def test_dead_resource(self):
-        return_resource_attributes = run_async(
-            self.slurm_adapter.resource_status,
-            resource_attributes=self.resource_attributes,
-        )
-        self.assertEqual(
-            return_resource_attributes["resource_status"], ResourceStatus.Stopped
+        self.mock_executor.return_value.run_command.assert_called_with(
+            'squeue -o "%A|%N|%T" -h -t all'
         )
 
-    def test_resource_status_raise(self):
-        # Update interval is 10 minutes, so set last update back by 2 minutes in order to execute sacct command and
-        # creation date to current date
+    @mock_executor_run_command(TEST_RESOURCE_STATUS_RESPONSE_ALL_STATES)
+    def test_resource_state_translation(self):
+        state_translations = {
+            "BOOT_FAIL": ResourceStatus.Error,
+            "CANCELLED": ResourceStatus.Deleted,
+            "COMPLETED": ResourceStatus.Deleted,
+            "CONFIGURING": ResourceStatus.Booting,
+            "COMPLETING": ResourceStatus.Running,
+            "DEADLINE": ResourceStatus.Error,
+            "FAILED": ResourceStatus.Error,
+            "NODE_FAIL": ResourceStatus.Error,
+            "OUT_OF_MEMORY": ResourceStatus.Error,
+            "PENDING": ResourceStatus.Booting,
+            "PREEMPTED": ResourceStatus.Deleted,
+            "RUNNING": ResourceStatus.Running,
+            "RESV_DEL_HOLD": ResourceStatus.Stopped,
+            "REQUEUE_FED": ResourceStatus.Booting,
+            "REQUEUE_HOLD": ResourceStatus.Booting,
+            "REQUEUED": ResourceStatus.Booting,
+            "RESIZING": ResourceStatus.Running,
+            "REVOKED": ResourceStatus.Error,
+            "SIGNALING": ResourceStatus.Running,
+            "SPECIAL_EXIT": ResourceStatus.Booting,
+            "STAGE_OUT": ResourceStatus.Running,
+            "STOPPED": ResourceStatus.Stopped,
+            "SUSPENDED": ResourceStatus.Stopped,
+            "TIMEOUT": ResourceStatus.Error,
+        }
+
+        for id, value in enumerate(state_translations.values()):
+            job_id = int(f"{id + 1000}000")
+            returned_resource_attributes = run_async(
+                self.slurm_adapter.resource_status,
+                AttributeDict(remote_resource_uuid=job_id),
+            )
+            self.assertEqual(returned_resource_attributes.resource_status, value)
+
+        self.mock_executor.return_value.run_command.called_once()
+
+        self.mock_executor.return_value.run_command.assert_called_with(
+            'squeue -o "%A|%N|%T" -h -t all'
+        )
+
+    def test_resource_status_raise_update_failed(self):
+        # Update interval is 10 minutes, so turn back last update by 2 minutes
+        # and creation date to current date, so that
+        # TardisResourceStatusUpdateFailed is raised
         created_timestamp = datetime.now()
         new_timestamp = datetime.now() - timedelta(minutes=2)
+
         self.slurm_adapter._slurm_status._last_update = new_timestamp
+
         with self.assertRaises(TardisResourceStatusUpdateFailed):
-            response = run_async(
+            run_async(
                 self.slurm_adapter.resource_status,
                 AttributeDict(
-                    resource_id=1351043,
                     remote_resource_uuid=1351043,
                     resource_state=ResourceStatus.Booting,
                     created=created_timestamp,
                 ),
             )
 
-    def test_resource_status_raise_past(self):
-        # Update interval is 10 minutes, so set last update back by 11 minutes in order to execute sacct command and
-        # creation date to 12 minutes ago
+    @mock_executor_run_command("")
+    def test_resource_status_of_completed_jobs(self):
+        # Update interval is 10 minutes, so turn back last update by 11 minutes
+        # and creation date to 12 minutes ago. => squeue should be executed
+        # The empty string returned by squeue represents a resource is already
+        # gone. So, ResourceStatus returned should be Deleted.
         past_timestamp = datetime.now() - timedelta(minutes=12)
         new_timestamp = datetime.now() - timedelta(minutes=11)
         self.slurm_adapter._slurm_status._last_update = new_timestamp
+
         response = run_async(
             self.slurm_adapter.resource_status,
             AttributeDict(
-                resource_id=1390065,
-                remote_resource_uuid=1351043,
+                resource_id="1390065",
+                remote_resource_uuid="1351043",
                 created=past_timestamp,
             ),
         )
-        self.assertEqual(response.resource_status, ResourceStatus.Stopped)
+
+        self.assertEqual(response.resource_status, ResourceStatus.Deleted)
+
+        self.mock_executor.return_value.run_command.assert_called_with(
+            'squeue -o "%A|%N|%T" -h -t all'
+        )
+
+    @mock_executor_run_command(
+        stdout="",
+        raise_exception=CommandExecutionFailure(
+            message="Failed", stdout="Failed", stderr="Failed", exit_code=2
+        ),
+    )
+    def test_resource_status_update_failed(self):
+        # set previous data, should be returned when update fails
+        self.slurm_adapter._slurm_status._data = {
+            "1390065": {"JobId": "1390065", "Host": "fh2n1552", "State": "RUNNING"}
+        }
+
+        with self.assertLogs(logging.getLogger(), logging.ERROR):
+            response = run_async(
+                self.slurm_adapter.resource_status,
+                AttributeDict(remote_resource_uuid="1390065"),
+            )
+
+        self.check_attribute_dicts(
+            AttributeDict(
+                remote_resource_uuid=1390065,
+                resource_status=ResourceStatus.Running,
+                updated=datetime.now(),
+            ),
+            response,
+            exclude=("updated",),
+        )
+
+        self.mock_executor.return_value.run_command.assert_called_with(
+            'squeue -o "%A|%N|%T" -h -t all'
+        )
+
+    @mock_executor_run_command(stdout="", stderr="", exit_code=0)
+    def test_stop_resource(self):
+        run_async(
+            self.slurm_adapter.stop_resource,
+            resource_attributes=self.resource_attributes,
+        )
+
+        self.mock_executor.return_value.run_command.assert_called_with(
+            "scancel 1390065"
+        )
+
+    @mock_executor_run_command(stdout="", stderr="", exit_code=0)
+    def test_terminate_resource(self):
+        run_async(
+            self.slurm_adapter.terminate_resource,
+            resource_attributes=self.resource_attributes,
+        )
+
+        self.mock_executor.return_value.run_command.assert_called_with(
+            "scancel 1390065"
+        )
 
     def test_exception_handling(self):
         def test_exception_handling(to_raise, to_catch):

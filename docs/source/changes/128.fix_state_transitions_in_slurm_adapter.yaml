@@ -1,0 +1,9 @@
+category: fixed
+summary: Fix state transitions and refactoring of the SLURM site adapter
+pull requests:
+  - 128
+description: |
+  The SLURM site adapter contains now state transition for all possible job states in the SLURM batch system. For some
+  states the transition to `TARDIS` `resources_states` has been corrected leading to an infinite execution of `scancel`
+  to jobs not in the queue anymore. In addtion, `squeue` (jobs in batch queue) instead of the `sacct`
+  (Accounting tool listing also history of jobs) is used in order to minize the number of jobs to keep track of.
