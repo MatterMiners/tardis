@@ -21,5 +21,5 @@ class BatchSystemAgent(BatchSystemAdapter):
     async def get_machine_status(self, drone_uuid: str) -> MachineStatus:
         return await self._batch_system_adapter.get_machine_status(drone_uuid)
 
-    async def get_utilization(self, drone_uuid: str) -> float:
-        return await self._batch_system_adapter.get_utilization(drone_uuid)
+    async def get_utilisation(self, drone_uuid: str) -> float:
+        return await self._batch_system_adapter.get_utilisation(drone_uuid)

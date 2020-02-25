@@ -10,7 +10,7 @@ class FakeBatchSystemAdapter(BatchSystemAdapter):
     batch system. It can be used for testing purposes and as a demonstrator
     in workshops and tutorials.
 
-    The mocked response to the :py:meth:`~.get_utilization`, :py:meth:`~.get_allocation`
+    The mocked response to the :py:meth:`~.get_utilisation`, :py:meth:`~.get_allocation`
     and :py:meth:`~.get_machine_status` API calls is configurable statically.
     """
 
@@ -81,19 +81,19 @@ class FakeBatchSystemAdapter(BatchSystemAdapter):
         else:
             return machine_status
 
-    async def get_utilization(self, drone_uuid: str) -> float:
+    async def get_utilisation(self, drone_uuid: str) -> float:
         """
-        Returns the fake utilization according to the configuration of the
+        Returns the fake utilisation according to the configuration of the
         FakeBatchSystem
 
         :param drone_uuid: Unique identifier of the drone
         :type drone_uuid: str
-        :return: Utilization value specified in the FakeBatchSystem configuration
+        :return: utilisation value specified in the FakeBatchSystem configuration
         :rtype: float
         """
         try:
-            utilization = self.fake_config.utilization.get_value()
+            utilisation = self.fake_config.utilisation.get_value()
         except AttributeError:
-            return self.fake_config.utilization
+            return self.fake_config.utilisation
         else:
-            return utilization
+            return utilisation

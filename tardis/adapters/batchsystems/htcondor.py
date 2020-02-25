@@ -221,16 +221,16 @@ class HTCondorAdapter(BatchSystemAdapter):
                 MachineStatus.NotAvailable,
             )
 
-    async def get_utilization(self, drone_uuid: str) -> float:
+    async def get_utilisation(self, drone_uuid: str) -> float:
         """
-        Get the utilization of a worker node in HTCondor, which is defined as
+        Get the utilisation of a worker node in HTCondor, which is defined as
         minimum of the ratios of requested over total resources
         (CPU, Memory, Disk, etc.).
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
         :type drone_uuid: str
-        :return: The utilization of a worker node as described above.
+        :return: The utilisation of a worker node as described above.
         :rtype: float
         """
         return min(await self.get_resource_ratios(drone_uuid), default=0.0)
