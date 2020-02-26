@@ -40,7 +40,11 @@ setup(
     ],
     entry_points={
         "cobald.config.yaml_constructors": [
-            "TardisPoolFactory = tardis.resources.poolfactory:create_composite_pool"
+            "TardisPoolFactory = tardis.resources.poolfactory:create_composite_pool",
+            "TardisPeriodicValue = tardis.utilities.simulators.periodicvalue:PeriodicValue",
+            "TardisRandomGauss = tardis.utilities.simulators.randomgauss:RandomGauss",
+            "TardisSSHExecutor = tardis.utilities.executors.sshexecutor:SSHExecutor",
+            "TardisShellExecutor = tardis.utilities.executors.shellexecutor:ShellExecutor",
         ],
         "cobald.config.sections": [
             "tardis = tardis.configuration.configuration:Configuration"
@@ -53,7 +57,7 @@ setup(
         "CloudStackAIO",
         "PyYAML",
         "AsyncOpenStackClient",
-        "cobald",
+        "cobald>=0.12.0",
         "asyncssh",
         "aiotelegraf",
     ],
