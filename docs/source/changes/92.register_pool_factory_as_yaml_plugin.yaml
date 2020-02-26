@@ -1,9 +1,10 @@
 category: added
-summary: Register pool factory as `COBalD` yaml plugin
-pull requests:
-  - 92
-issues:
-  - 91
+summary: "Register pool factory as `COBalD` yaml plugin"
 description: |
   Register the composite pool factory function `create_composite_pool` as `COBalD` yaml plugin, so that it can be loaded
   via yaml tags in the `COBalD` configuration.
+issues:
+- 91
+pull requests:
+- 92
+version: 0.3.0

@@ -1,8 +1,9 @@
 category: fixed
 summary: "Fix draining of slots having a startd name"
-pull requests:
-  - 123
 description: |
   `TARDIS` supports running more than one Drone on the same host. To differentiate the drones, the `TardisDroneUuid` has
   been introduced and will be set as `STARTD_NAME` on the corresponding sites. `TARDIS` used to use only the `hostname`
   when draining resources. This change will take into account the provided `STARTD_NAME` as well.
+pull requests:
+- 123
+version: 0.3.0

@@ -7,6 +7,7 @@ from ..utilities.executors import *  # noqa: F403, F401
 from ..utilities.simulators import *  # noqa: F403, F401
 
 from cobald.daemon.config.mapping import Translator
+from cobald.daemon.plugins import constraints as plugin_constraints
 
 from base64 import b64encode
 import os
@@ -31,6 +32,7 @@ def translate_config(obj):
         return obj
 
 
+@plugin_constraints(before={"pipeline"})
 class Configuration(Borg):
     _shared_state = AttributeDict()
 
