@@ -1,8 +1,9 @@
 category: fixed
-summary: Allow removal of booting drones if demand drops to zero
-pull requests:
-  - 76
+summary: "Allow removal of booting drones if demand drops to zero"
 description: |
   So far draining of drones in `AvailableState` was supported by `TARDIS`, which works well for cloud providers. Since
   the queueing time in batch systems can be long, the deletion of queued drones (idle batch jobs) has been enabled as
   well.
+pull requests:
+- 76
+version: 0.3.0

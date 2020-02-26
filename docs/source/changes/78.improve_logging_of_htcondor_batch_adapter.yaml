@@ -1,7 +1,9 @@
 category: fixed
-summary: Improved logging of the `HTCondor` batch system adapter and the status changes of the drones
-pull requests:
-  - 78
+summary: "Improved logging of the `HTCondor` batch system adapter and the status changes\
+  \ of the drones"
 description: |
   Drone resource attributes to have been addedd to the debug logging of drone status changes. The `condor_status`
   command has been added to the debug logging of the htcondor batch system adapter.
+pull requests:
+- 78
+version: 0.3.0

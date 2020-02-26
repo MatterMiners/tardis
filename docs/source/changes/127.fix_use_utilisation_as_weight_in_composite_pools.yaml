@@ -1,8 +1,9 @@
 category: fixed
-summary: Use utilisation as weight in composite pools
-pull requests:
-  - 127
+summary: "Use utilisation as weight in composite pools"
 description: |
   The experience of using `WeightedComposite` pools in production shows that weighting the `demand` of resources by
   their `supply` is not always the best choice. Weighting the `demand` of resources by `utilisation` is instead more
   desired, since `COBalD` should increase the best utilised resource.
+pull requests:
+- 127
+version: 0.3.0
