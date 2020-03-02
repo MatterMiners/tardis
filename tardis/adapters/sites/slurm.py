@@ -22,22 +22,25 @@ import re
 
 
 async def slurm_status_updater(executor):
-    attributes = dict(JobId="JOBID", Host="NodeList", State="State")
-    # Escape slurm expressions and add them to attributes
-    attributes.update(
-        {key: value for key, value in Configuration().BatchSystem.ratios.items()}
-    )
-    cmd = f'sacct -o "JobID,NodeList,State" -n -P'
+    attributes = dict(JobId="%A", Host="%N", State="%T")
+    attributes_string = "|".join(attributes.values())
+    cmd = f'squeue -o "{attributes_string}" -h -t all'
+
     slurm_resource_status = {}
-    logging.debug("Slurm status update is running.")
-    slurm_status = await executor.run_command(cmd)
-    for row in htcondor_csv_parser(
-        slurm_status.stdout, fieldnames=tuple(attributes.keys()), delimiter="|"
-    ):
-        row["State"] = row["State"].strip()
-        slurm_resource_status[row["JobId"]] = row
-    logging.debug("Slurm status update finished.")
-    return slurm_resource_status
+    logging.debug("Slurm status update is started.")
+    try:
+        slurm_status = await executor.run_command(cmd)
+    except CommandExecutionFailure as cf:
+        logging.error(f"Slurm status update has failed due to {cf}.")
+        raise
+    else:
+        for row in htcondor_csv_parser(
+            slurm_status.stdout, fieldnames=tuple(attributes.keys()), delimiter="|"
+        ):
+            row["State"] = row["State"].strip()
+            slurm_resource_status[row["JobId"]] = row
+        logging.debug("Slurm status update finished.")
+        return slurm_resource_status
 
 
 class SlurmAdapter(SiteAdapter):
@@ -58,24 +61,27 @@ class SlurmAdapter(SiteAdapter):
             remote_resource_uuid="JobId", resource_status="State"
         )
 
-        # see job state codes at https://slurm.schedmd.com/squeue.html
+        # see job state codes at https://slurm.schedmd.com/squeue.html#lbAG
         translator_functions = StaticMapping(
             State=lambda x, translator=StaticMapping(
-                BOOT_FAIL=ResourceStatus.Error,
-                CANCELLED=ResourceStatus.Stopped,
-                COMPLETED=ResourceStatus.Stopped,
-                DEADLINE=ResourceStatus.Stopped,
-                FAILED=ResourceStatus.Error,
-                NODE_FAIL=ResourceStatus.Error,
-                OUT_OF_MEMORY=ResourceStatus.Error,
+                CANCELLED=ResourceStatus.Deleted,
+                COMPLETED=ResourceStatus.Deleted,
+                COMPLETING=ResourceStatus.Running,
+                CONFIGURING=ResourceStatus.Booting,
                 PENDING=ResourceStatus.Booting,
+                PREEMPTED=ResourceStatus.Deleted,
+                RESV_DEL_HOLD=ResourceStatus.Stopped,
+                REQUEUE_FED=ResourceStatus.Booting,
+                REQUEUE_HOLD=ResourceStatus.Booting,
+                REQUEUED=ResourceStatus.Booting,
+                RESIZING=ResourceStatus.Running,
                 RUNNING=ResourceStatus.Running,
-                REQUEUED=ResourceStatus.Error,
-                RESIZING=ResourceStatus.Error,
-                REVOKED=ResourceStatus.Error,
-                SUSPENDED=ResourceStatus.Running,
-                TIMEOUT=ResourceStatus.Stopped,
-            ): translator[x],
+                SIGNALING=ResourceStatus.Running,
+                SPECIAL_EXIT=ResourceStatus.Booting,
+                STAGE_OUT=ResourceStatus.Running,
+                STOPPED=ResourceStatus.Stopped,
+                SUSPENDED=ResourceStatus.Stopped,
+            ): translator.get(x, default=ResourceStatus.Error),
             JobId=lambda x: int(x),
         )
 
@@ -98,14 +104,14 @@ class SlurmAdapter(SiteAdapter):
             f"{self._startup_command}"
         )
         result = await self._executor.run_command(request_command)
-        logging.debug(f"{self.site_name} servers create returned {result}")
+        logging.debug(f"{self.site_name} sbatch returned {result}")
         pattern = re.compile(r"^Submitted batch job (\d*)", flags=re.MULTILINE)
         remote_resource_uuid = int(pattern.findall(result.stdout)[0])
         resource_attributes.update(
             remote_resource_uuid=remote_resource_uuid,
             created=datetime.now(),
             updated=datetime.now(),
-            drone_uuid=self.drone_uuid(remote_resource_uuid),
+            drone_uuid=self.drone_uuid(str(remote_resource_uuid)),
             resource_status=ResourceStatus.Booting,
         )
         return resource_attributes
@@ -114,9 +120,6 @@ class SlurmAdapter(SiteAdapter):
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
         await self._slurm_status.update_status()
-        # In case the created timestamp is after last update timestamp of the
-        # asynccachemap, no decision about the current state can be given,
-        # since map is updated asynchronously.
         try:
             resource_uuid = resource_attributes.remote_resource_uuid
             resource_status = self._slurm_status[str(resource_uuid)]
@@ -124,6 +127,9 @@ class SlurmAdapter(SiteAdapter):
             if (
                 self._slurm_status.last_update - resource_attributes.created
             ).total_seconds() < 0:
+                # In case the created timestamp is after last update timestamp of the
+                # asynccachemap, no decision about the current state can be given,
+                # since map is updated asynchronously. Just retry later on.
                 raise TardisResourceStatusUpdateFailed
             else:
                 resource_status = {

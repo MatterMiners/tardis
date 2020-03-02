@@ -84,7 +84,7 @@ class TestDroneStates(TestCase):
         self.drone.batch_system_agent.get_allocation.return_value = async_return(
             return_value=None
         )
-        self.drone.batch_system_agent.get_utilization.return_value = async_return(
+        self.drone.batch_system_agent.get_utilisation.return_value = async_return(
             return_value=None
         )
 

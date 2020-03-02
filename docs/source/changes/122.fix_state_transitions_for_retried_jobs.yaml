@@ -1,9 +1,8 @@
 category: fixed
-summary: Fix state transitions for jobs retried by HTCondor
-pull_requests:
-  - 122
+summary: "Fix state transitions for jobs retried by HTCondor"
 description: |
   In case a job is in `DrainingState`, `ShuttingDownState` or `ShutDownState` a transition back to BootingState is
   currently not covered by `TARDIS`. However, a currently running job can potentially be retried by HTCondor in case of
   an internal error. Now, retried jobs previously in `DrainingState`, `ShuttingDownState` or `ShutDownState` are removed
   entirely from the batch queue.
+version: 0.3.0

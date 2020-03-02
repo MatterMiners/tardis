@@ -7,7 +7,7 @@ Batch System Adapters
 Fake Batch System Adapter
 -------------------------
 
-.. |FakeBatchSystemAdapter.get_utilization| replace:: :py:meth:`~tardis.adapters.batchsystems.fakebatchsystem.FakeBatchSystemAdapter.get_utilization`
+.. |FakeBatchSystemAdapter.get_utilisation| replace:: :py:meth:`~tardis.adapters.batchsystems.fakebatchsystem.FakeBatchSystemAdapter.get_utilisation`
 
 .. |FakeBatchSystemAdapter.get_allocation| replace:: :py:meth:`~tardis.adapters.batchsystems.fakebatchsystem.FakeBatchSystemAdapter.get_allocation`
 
@@ -19,7 +19,7 @@ Fake Batch System Adapter
     implements a batch system adapter that mocks the response of hypothetical batch system.
     It can be used for testing purposes and as a demonstrator in workshops and tutorials.
 
-    The mocked response to the |FakeBatchSystemAdapter.get_allocation|, |FakeBatchSystemAdapter.get_utilization| and
+    The mocked response to the |FakeBatchSystemAdapter.get_allocation|, |FakeBatchSystemAdapter.get_utilisation| and
     |FakeBatchSystemAdapter.get_machine_status| API calls is configurable statically in the adapter configuration.
 
 Available configuration options
@@ -34,7 +34,7 @@ Available configuration options
     +----------------+---------------------------------------------------------------------+-----------------+
     | allocation     | Mocked response to |FakeBatchSystemAdapter.get_allocation| call     |  **Required**   |
     +----------------+---------------------------------------------------------------------+-----------------+
-    | utilization    | Mocked response to |FakeBatchSystemAdapter.get_utilization| call    |  **Required**   |
+    | utilisation    | Mocked response to |FakeBatchSystemAdapter.get_utilisation| call    |  **Required**   |
     +----------------+---------------------------------------------------------------------+-----------------+
     | machine_status | Mocked response to |FakeBatchSystemAdapter.get_machine_status| call |  **Required**   |
     +----------------+---------------------------------------------------------------------+-----------------+
@@ -48,7 +48,7 @@ Available configuration options
         BatchSystem:
             adapter: FakeBatchSystem
             allocation: 1.0
-            utilization: 1.0
+            utilisation: 1.0
             machine_status: Available
 
 HTCondor Batch System Adapter
@@ -56,7 +56,7 @@ HTCondor Batch System Adapter
 
 .. content-tabs:: left-col
 
-    .. |HTCondorAdapter.get_utilization| replace:: :py:meth:`~tardis.adapters.batchsystems.htcondor.HTCondorAdapter.get_utilization`
+    .. |HTCondorAdapter.get_utilisation| replace:: :py:meth:`~tardis.adapters.batchsystems.htcondor.HTCondorAdapter.get_utilisation`
 
     .. |HTCondorAdapter.get_allocation| replace:: :py:meth:`~tardis.adapters.batchsystems.htcondor.HTCondorAdapter.get_allocation`
 
@@ -65,7 +65,7 @@ HTCondor Batch System Adapter
     The :py:class:`~tardis.adapters.batchsystems.htcondor.HTCondorAdapter` implements the TARDIS interface to dynamically
     integrate and manage opportunistic resources with the HTCondor batch system.
 
-    Information provider for the API calls |HTCondorAdapter.get_utilization|, |HTCondorAdapter.get_allocation| and
+    Information provider for the API calls |HTCondorAdapter.get_utilisation|, |HTCondorAdapter.get_allocation| and
     |HTCondorAdapter.get_machine_status| is the HTCondor ``condor_status`` command, which is called asynchronously and its
     output is cached for a configurable time ``max_age``.
 
@@ -73,7 +73,7 @@ HTCondor Batch System Adapter
     ClassAds ``State`` and ``Activity``. It can take the states ``Available``, ``Draining``, ``Drained`` and
     ``NotAvailable``.
 
-    The allocation and utilization of a worker node is defined as maximum and minimum of the relative ratio of requested
+    The allocation and utilisation of a worker node is defined as maximum and minimum of the relative ratio of requested
     over total resources such as CPU, Memory, Disk, respectively. Which resource ratios to take into account can be
     configured via the ``ratios`` option. Any valid HTCondor expression that returns a floating point number is accepted.
 
@@ -104,7 +104,7 @@ Available configuration options
     +----------------+-------------------------------------------------------------------------+-----------------+
     | max_age        | Maximum age of the cached ``condor_status`` information in minutes      |  **Required**   |
     +----------------+-------------------------------------------------------------------------+-----------------+
-    | ratios         | HTCondor expressions used to determine allocation and utilization       |  **Required**   |
+    | ratios         | HTCondor expressions used to determine allocation and utilisation       |  **Required**   |
     +----------------+-------------------------------------------------------------------------+-----------------+
     | options        | Additional command line options to add to the ``condor_status`` command |  **Optional**   |
     +----------------+-------------------------------------------------------------------------+-----------------+

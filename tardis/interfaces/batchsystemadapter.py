@@ -32,5 +32,5 @@ class BatchSystemAdapter(metaclass=ABCMeta):
         return NotImplemented
 
     @abstractmethod
-    async def get_utilization(self, drone_uuid: str) -> float:
+    async def get_utilisation(self, drone_uuid: str) -> float:
         return NotImplemented

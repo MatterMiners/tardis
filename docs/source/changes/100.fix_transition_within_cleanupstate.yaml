@@ -1,7 +1,9 @@
 category: fixed
-summary: The `CleanupState` is now taking into account the status of the resource for state transitions
-pull requests:
-  - 100
+summary: "The `CleanupState` is now taking into account the status of the resource\
+  \ for state transitions"
 description: |
   The `CleanupState` is now taking into account the status of the resource and two missing state transitions have been
   added to the transistion dictionary.
+pull requests:
+- 100
+version: 0.3.0

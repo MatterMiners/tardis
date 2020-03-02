@@ -1,9 +1,10 @@
 category: added
-summary: An optional and per site configurable drone minimum lifetime has been added
-pull requests:
-  - 116
-issues:
-  - 114
+summary: "An optional and per site configurable drone minimum lifetime has been added"
 description: |
   An optionally and per site configurable drone minimum life time to TARDIS. The minimum life time is defined as the
   time the drone is being in `AvailableState`. At the end of life, the drone is set to `DrainState`.
+issues:
+- 114
+pull requests:
+- 116
+version: 0.3.0

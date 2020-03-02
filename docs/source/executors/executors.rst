@@ -28,7 +28,7 @@ Shell Executor
 
     .. code-block:: yaml
 
-      !ShellExecutor
+      !TardisShellExecutor
 
     .. rubric:: Example configuration (`COBalD` legacy object initialisation)
 
@@ -53,7 +53,7 @@ SSH Executor
 
     .. code-block:: yaml
 
-      !SSHExecutor
+      !TardisSSHExecutor
         host: login.dorie.somewherein.de
         username: clown
         client_keys:
