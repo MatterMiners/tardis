@@ -250,7 +250,7 @@ class SlurmAdapter(BatchSystemAdapter):
                 machine_status["State"], MachineStatus.NotAvailable
             )
 
-    async def get_utilization(self, drone_uuid: str) -> float:
+    async def get_utilisation(self, drone_uuid: str) -> float:
         """
         Get the utilization of a worker node in Slurm, which is defined as
         minimum of the ratios of requested over total resources (CPU, Memory,
