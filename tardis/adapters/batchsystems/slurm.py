@@ -200,8 +200,7 @@ class SlurmAdapter(BatchSystemAdapter):
         :return: The allocation of a worker node as described above.
         :rtype: float
         """
-        # default was 0.0 in HT Condor, but I think it makes more sense to have 1.0?
-        return max(await self.get_resource_ratios(drone_uuid), default=1.0)
+        return max(await self.get_resource_ratios(drone_uuid), default=0.0)
 
     async def get_machine_status(self, drone_uuid: str) -> MachineStatus:
         """
