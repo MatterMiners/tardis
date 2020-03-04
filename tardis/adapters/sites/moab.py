@@ -72,12 +72,29 @@ class MoabAdapter(SiteAdapter):
             remote_resource_uuid="JobID", resource_status="State"
         )
 
+        # see job state codes at https://computing.llnl.gov/tutorials/moab/#JobStates
         translator_functions = StaticMapping(
             State=lambda x, translator=StaticMapping(
-                Idle=ResourceStatus.Booting,
-                Running=ResourceStatus.Running,
-                Completed=ResourceStatus.Deleted,
+                BatchHold=ResourceStatus.Stopped,
                 Canceling=ResourceStatus.Running,
+                Completed=ResourceStatus.Deleted,
+                Deffered=ResourceStatus.Booting,
+                Depend=ResourceStatus.Error,
+                Dependency=ResourceStatus.Error,
+                Idle=ResourceStatus.Booting,
+                JobHeldUser=ResourceStatus.Stopped,
+                Migrated=ResourceStatus.Booting,
+                NotQueued=ResourceStatus.Error,
+                Priority=ResourceStatus.Booting,
+                Removed=ResourceStatus.Deleted,
+                Resources=ResourceStatus.Booting,
+                Running=ResourceStatus.Running,
+                Staging=ResourceStatus.Booting,
+                Starting=ResourceStatus.Booting,
+                Suspended=ResourceStatus.Stopped,
+                SystemHold=ResourceStatus.Stopped,
+                TimeLimit=ResourceStatus.Stopped,
+                UserHold=ResourceStatus.Stopped,
                 Vacated=ResourceStatus.Stopped,
             ): translator[x],
             JobID=lambda x: int(x),
