@@ -42,3 +42,46 @@ def htcondor_csv_parser(htcondor_input, fieldnames, delimiter="\t", replacements
                 key: value if value not in replacements.keys() else replacements[value]
                 for key, value in row.items()
             }
+
+
+def slurm_cmd_option_formatter(options):
+    """
+    Formats name/value pais in the `options` dict as `--<name> value` suitable
+    for passing to SLURM command line tools.
+
+    :param options:  name/value pairs
+    :type options: AttributeDict
+    """
+    options = (
+        f"--{name} {value}" if value is not None else f"--{name}"
+        for name, value in options.items()
+    )
+
+    return " ".join(options)
+
+
+def slurm_csv_parser(slurm_input, fieldnames, delimiter=" ", replacements=None):
+    """
+    Parses the output of Slurm commands
+
+    :param slurm_input: Slurm command response
+    :type slurm_input: str
+    :param fieldnames: corresponding field names
+    :type fieldnames: str
+    :param delimiter: delimiter between entries
+    :type delimiter: char
+    :param replacements: fields to be replaced
+    :type replacements: str
+    """
+    replacements = replacements or {}
+    with StringIO(slurm_input) as csv_input:
+        cvs_reader = csv.DictReader(
+            csv_input, fieldnames=fieldnames, delimiter=delimiter, skipinitialspace=True
+        )
+        for row in cvs_reader:
+            yield {
+                key: value
+                #  if value not in replacements.keys()
+                #  else replacements[value]
+                for key, value in row.items()
+            }
