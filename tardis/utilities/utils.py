@@ -73,7 +73,8 @@ def slurm_csv_parser(slurm_input, fieldnames, delimiter=" ", replacements=None):
     :param replacements: fields to be replaced
     :type replacements: str
     """
-    replacements = replacements or {}
+    # TODO: add replacements functionality to be consistent with htcondor parser
+    #  replacements = replacements or {}
     with StringIO(slurm_input) as csv_input:
         cvs_reader = csv.DictReader(
             csv_input, fieldnames=fieldnames, delimiter=delimiter, skipinitialspace=True
