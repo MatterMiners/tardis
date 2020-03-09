@@ -1,7 +1,6 @@
 """SLURM Batch system Adapter"""
 
 import logging
-import os
 
 from functools import partial
 
