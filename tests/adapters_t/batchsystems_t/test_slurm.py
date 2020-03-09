@@ -32,46 +32,22 @@ class TestSlurmAdapter(TestCase):
 
     def setUp(self):
         self.cpu_ratio = 0.5
-        self.memory_ratio = 0.75
+        self.memory_ratio = 0.25
 
-        self.command = (
-            'sinfo --format="%T %C %e %m %f %n" --partition nemo_vm_atlsch --noheader'
-        )
+        self.command = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader -r --partition test_part'
 
-        self.command_wo_options = (
-            'sinfo --format="%T %C %e %m %f %n" --partition nemo_vm_atlsch --noheader'
-        )
+        self.command_wo_options = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader -r'
 
-        # sinfo --partition=nemo_vm_atlsch --format="%T %C %e %m %f %n" -r --noheader
-        # Machine (DNS name)
-        #     %n
-        # State
-        #     %T
-        #     Figure out which states to handle how.
-        # DroneUuid
-        #     potentially not necessary could be implemented as feature: Drone
-        #     itself adds MOAB job id to the features
-        #     %f
-        # CPU Stuff
-        #     %C
-        #     Output: allocated/idle/other/total
-        #     Parse and compute measure. Maybe adapt configuration format such that
-        #     user can choose formula.
-        # Memory Stuff
-        #     %e: free memory
-        #     %m: total memory
-        #     Parse and compute measure. Maybe adapt configuration format such that
-        #     user can choose formula.
         return_value = "\n".join(
             [
-                f"mixed 2/2/0/4 6000 24000 NemoVM host-10-18-1-1",
-                f"mixed 3/1/0/4 15853 22011 NemoVM host-10-18-1-2",
-                f"mixed 1/3/0/4 18268 22011 NemoVM host-10-18-1-4",
-                f"mixed 3/1/0/4 17803 22011 NemoVM host-10-18-1-7",
-                f"draining 0/4/0/4 17803 22011 NemoVM draining_machine",
-                f"idle 0/4/0/4 17803 22011 NemoVM idle_machine",
-                f"drained 0/4/0/4 17803 22011 NemoVM drained_machine",
-                f"powerup 0/4/0/4 17803 22011 NemoVM power_up_machine",
+                f"mixed      2/2/0/4   6000    24000   VM-1   host-10-18-1-1",
+                f"mixed      3/1/0/4   15853   22011   VM-2   host-10-18-1-2",
+                f"mixed      1/3/0/4   18268   22011   VM-3   host-10-18-1-4",
+                f"mixed      3/1/0/4   17803   22011   VM-4   host-10-18-1-7",
+                f"draining   0/4/0/4   17803   22011   draining_machine   draining_machine",
+                f"idle       0/4/0/4   17803   22011   idle_machine   idle_machine",
+                f"drained    0/4/0/4   17803   22011   drained_machine   drained_machine",
+                f"powerup    0/4/0/4   17803   22011   power_up_machine   power_up_machine",
             ]
         )
 
@@ -79,7 +55,7 @@ class TestSlurmAdapter(TestCase):
             return_value=return_value
         )
 
-        self.setup_config_mock(options={"partition": "nemo_vm_atlsch"})
+        self.setup_config_mock(options={"partition": "test_part"})
 
         self.slurm_adapter = SlurmAdapter()
 
@@ -104,9 +80,9 @@ class TestSlurmAdapter(TestCase):
         )
 
     def test_drain_machine(self):
-        run_async(self.slurm_adapter.drain_machine, drone_uuid="host-10-18-1-1")
+        run_async(self.slurm_adapter.drain_machine, drone_uuid="VM-1")
         self.mock_async_run_command.assert_called_with(
-            "scontrol update --partition nemo_vm_atlsch NodeName=host-10-18-1-1 State=DRAIN Reason='COBalD/TARDIS says so'"
+            "scontrol update NodeName=host-10-18-1-1 State=DRAIN Reason='COBalD/TARDIS'"
         )
         self.assertIsNone(
             run_async(self.slurm_adapter.drain_machine, drone_uuid="not_exists")
@@ -139,23 +115,19 @@ class TestSlurmAdapter(TestCase):
         self.setup_config_mock()
         self.slurm_adapter = SlurmAdapter()
 
-        run_async(self.slurm_adapter.drain_machine, drone_uuid="host-10-18-1-1")
+        run_async(self.slurm_adapter.drain_machine, drone_uuid="VM-1")
         self.mock_async_run_command.assert_called_with(
-            "scontrol update NodeName=host-10-18-1-1 State=DRAIN Reason='COBalD/TARDIS says so'"
+            "scontrol update NodeName=host-10-18-1-1 State=DRAIN Reason='COBalD/TARDIS'"
         )
 
     def test_integrate_machine(self):
         self.assertIsNone(
-            run_async(self.slurm_adapter.integrate_machine, drone_uuid="host-10-18-1-1")
+            run_async(self.slurm_adapter.integrate_machine, drone_uuid="VM-1")
         )
 
     def test_get_resource_ratios(self):
         self.assertCountEqual(
-            list(
-                run_async(
-                    self.slurm_adapter.get_resource_ratios, drone_uuid="host-10-18-1-1"
-                )
-            ),
+            list(run_async(self.slurm_adapter.get_resource_ratios, drone_uuid="VM-1")),
             [self.cpu_ratio, self.memory_ratio],
         )
         self.mock_async_run_command.assert_called_with(self.command)
@@ -171,11 +143,7 @@ class TestSlurmAdapter(TestCase):
         self.slurm_adapter = SlurmAdapter()
 
         self.assertCountEqual(
-            list(
-                run_async(
-                    self.slurm_adapter.get_resource_ratios, drone_uuid="host-10-18-1-1"
-                )
-            ),
+            list(run_async(self.slurm_adapter.get_resource_ratios, drone_uuid="VM-1")),
             [self.cpu_ratio, self.memory_ratio],
         )
 
@@ -183,16 +151,14 @@ class TestSlurmAdapter(TestCase):
 
     def test_get_allocation(self):
         self.assertEqual(
-            run_async(self.slurm_adapter.get_allocation, drone_uuid="host-10-18-1-1"),
+            run_async(self.slurm_adapter.get_allocation, drone_uuid="VM-1"),
             max([self.cpu_ratio, self.memory_ratio]),
         )
         self.mock_async_run_command.assert_called_with(self.command)
 
     def test_get_machine_status(self):
         self.assertEqual(
-            run_async(
-                self.slurm_adapter.get_machine_status, drone_uuid="host-10-18-1-1"
-            ),
+            run_async(self.slurm_adapter.get_machine_status, drone_uuid="VM-1"),
             MachineStatus.Available,
         )
         self.mock_async_run_command.assert_called_with(self.command)
@@ -211,14 +177,14 @@ class TestSlurmAdapter(TestCase):
         self.mock_async_run_command.reset_mock()
         self.assertEqual(
             run_async(self.slurm_adapter.get_machine_status, drone_uuid="idle_machine"),
-            MachineStatus.Draining,
+            MachineStatus.Available,
         )
         self.mock_async_run_command.reset_mock()
         self.assertEqual(
             run_async(
                 self.slurm_adapter.get_machine_status, drone_uuid="drained_machine"
             ),
-            MachineStatus.Drained,
+            MachineStatus.NotAvailable,
         )
         self.mock_async_run_command.reset_mock()
         self.assertEqual(
@@ -230,9 +196,7 @@ class TestSlurmAdapter(TestCase):
         self.mock_async_run_command.reset_mock()
 
         self.assertEqual(
-            run_async(
-                self.slurm_adapter.get_machine_status, drone_uuid="host-10-18-1-1"
-            ),
+            run_async(self.slurm_adapter.get_machine_status, drone_uuid="VM-1"),
             MachineStatus.Available,
         )
         self.mock_async_run_command.reset_mock()
@@ -264,9 +228,10 @@ class TestSlurmAdapter(TestCase):
         #      self.mock_async_run_command.assert_called_with(self.command)
         #  self.mock_async_run_command.side_effect = None
 
-    def test_get_utilization(self):
+    def test_get_utilisation(self):
+        print(run_async(self.slurm_adapter.get_utilisation, drone_uuid="VM-1"))
         self.assertEqual(
-            run_async(self.slurm_adapter.get_utilization, drone_uuid="host-10-18-1-1"),
+            run_async(self.slurm_adapter.get_utilisation, drone_uuid="VM-1"),
             min([self.cpu_ratio, self.memory_ratio]),
         )
         self.mock_async_run_command.assert_called_with(self.command)
