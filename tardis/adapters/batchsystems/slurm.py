@@ -34,11 +34,10 @@ async def slurm_status_updater(
 
     options_string = slurm_cmd_option_formatter(options)
 
-    # Needlessly complicated (Rust, where art thou??)
     attributes_string = ",".join([str(x) for x in attributes.values()])
 
-    cmd = f'sinfo --Format="{attributes_string}" -e --noheader'
-    #  cmd = f'sinfo --Format="{attributes_string}" -e --noheader -r'
+    #  cmd = f'sinfo --Format="{attributes_string}" -e --noheader'
+    cmd = f'sinfo --Format="{attributes_string}" -e --noheader -r'
 
     if options_string:
         cmd = f"{cmd} {options_string}"
@@ -56,7 +55,6 @@ async def slurm_status_updater(
             replacements=dict(undefined=None),
         ):
             row["CPUs"] = list(map(float, row["CPUs"].split("/")))
-            # Convert to float because we want to do some math!
             row["TotalMem"] = float(row["TotalMem"])
             try:
                 row["FreeMem"] = row["TotalMem"] - float(row["AllocMem"])
@@ -64,13 +62,10 @@ async def slurm_status_updater(
                 # Not sure what it should be.
                 #  row["FreeMem"] = 0.0
                 row["FreeMem"] = row["TotalMem"]
-            machine = row["Machine"]
-            cmd = f'sinfo -n {machine} --format="%f" --noheader'
-            stream = os.popen(cmd)
-            status_key = stream.read().strip()
 
-            # wat?
-            if status_key is not None and status_key:
+            status_key = row["Features"]
+
+            if status_key is not None:
                 slurm_status[status_key] = row
 
     except CommandExecutionFailure as ex:
@@ -226,7 +221,7 @@ class SlurmAdapter(BatchSystemAdapter):
             "draining": MachineStatus.Draining,
             "down": MachineStatus.Drained,
             "down*": MachineStatus.Drained,
-            "drained": MachineStatus.Drained,
+            "drained": MachineStatus.NotAvailable,
             "drained*": MachineStatus.Drained,
             "fail": MachineStatus.Drained,
             "failing": MachineStatus.Drained,
