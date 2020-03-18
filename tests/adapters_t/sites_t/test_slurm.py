@@ -12,6 +12,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from datetime import datetime, timedelta
+from warnings import filterwarnings
 
 import asyncio
 import logging
@@ -92,7 +93,6 @@ class TestSlurmAdapter(TestCase):
         config = self.mock_config.return_value
         self.test_site_config = config.TestSite
         self.test_site_config.MachineMetaData = self.machine_meta_data
-        self.test_site_config.StartupCommand = "pilot.sh"
         self.test_site_config.StatusUpdate = 10
         self.test_site_config.MachineTypeConfiguration = self.machine_type_configuration
         self.test_site_config.executor = self.mock_executor.return_value
@@ -111,7 +111,9 @@ class TestSlurmAdapter(TestCase):
     @property
     def machine_type_configuration(self):
         return AttributeDict(
-            test2large=AttributeDict(Partition="normal", Walltime="60")
+            test2large=AttributeDict(
+                Partition="normal", StartupCommand="pilot.sh", Walltime="60"
+            )
         )
 
     @property
@@ -123,6 +125,18 @@ class TestSlurmAdapter(TestCase):
             resource_status=ResourceStatus.Booting,
             drone_uuid="testsite-1390065",
         )
+
+    def test_start_up_command_deprecation_warning(self):
+        # Necessary to avoid annoying message in PyCharm
+        filterwarnings(action="ignore", message="unclosed", category=ResourceWarning)
+        del self.test_site_config.MachineTypeConfiguration.test2large.StartupCommand
+
+        self.test_site_config.StartupCommand = "pilot.sh"
+
+        with self.assertWarns(DeprecationWarning):
+            self.slurm_adapter = SlurmAdapter(
+                machine_type="test2large", site_name="TestSite"
+            )
 
     @mock_executor_run_command(TEST_DEPLOY_RESOURCE_RESPONSE)
     def test_deploy_resource(self):
