@@ -31,3 +31,11 @@ Fixed
 * Fix the handling of the termination of vanished resources
 * Fix state transitions for jobs retried by HTCondor
 * Fix state transitions and refactoring of the SLURM site adapter
+
+[Unreleased] - 2020-03-18
+=========================
+
+Changed
+-------
+
+* The SLURM adapter can now be configured to use different startup commands for each machine type.
