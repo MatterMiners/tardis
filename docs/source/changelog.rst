@@ -32,8 +32,8 @@ Fixed
 * Fix state transitions for jobs retried by HTCondor
 * Fix state transitions and refactoring of the SLURM site adapter
 
-
 [Unreleased] - 2020-03-19
+=========================
 
 Changed
 -------

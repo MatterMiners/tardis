@@ -54,6 +54,8 @@ class MoabAdapter(SiteAdapter):
         try:
             self._startup_command = self.machine_type_configuration.StartupCommand
         except AttributeError:
+            if not hasattr(self._configuration, "StartupCommand"):
+                raise
             warnings.warn(
                 "StartupCommand has been moved to the machine_type_configuration!",
                 DeprecationWarning,
