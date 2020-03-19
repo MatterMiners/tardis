@@ -9,7 +9,7 @@ from ...utilities.utilities import mock_executor_run_command
 from ...utilities.utilities import run_async
 
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from datetime import datetime, timedelta
 from warnings import filterwarnings
@@ -91,6 +91,14 @@ class TestSlurmAdapter(TestCase):
 
     def setUp(self):
         config = self.mock_config.return_value
+        config.TestSite = MagicMock(
+            spec=[
+                "MachineMetaData",
+                "StatusUpdate",
+                "MachineTypeConfiguration",
+                "executor",
+            ]
+        )
         self.test_site_config = config.TestSite
         self.test_site_config.MachineMetaData = self.machine_meta_data
         self.test_site_config.StatusUpdate = 10
@@ -130,6 +138,11 @@ class TestSlurmAdapter(TestCase):
         # Necessary to avoid annoying message in PyCharm
         filterwarnings(action="ignore", message="unclosed", category=ResourceWarning)
         del self.test_site_config.MachineTypeConfiguration.test2large.StartupCommand
+
+        with self.assertRaises(AttributeError):
+            self.slurm_adapter = SlurmAdapter(
+                machine_type="test2large", site_name="TestSite"
+            )
 
         self.test_site_config.StartupCommand = "pilot.sh"
 
