@@ -39,3 +39,4 @@ Changed
 -------
 
 * The SLURM adapter can now be configured to use different startup commands for each machine type.
+* The Moab adapter can now be configured to use different startup commands for each machine type.

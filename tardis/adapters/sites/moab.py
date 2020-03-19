@@ -19,6 +19,7 @@ from datetime import datetime
 import asyncssh
 import logging
 import re
+import warnings
 from xml.dom import minidom
 
 
@@ -49,7 +50,17 @@ class MoabAdapter(SiteAdapter):
         self._configuration = getattr(Configuration(), site_name)
         self._machine_type = machine_type
         self._site_name = site_name
-        self._startup_command = self._configuration.StartupCommand
+
+        try:
+            self._startup_command = self.machine_type_configuration.StartupCommand
+        except AttributeError:
+            if not hasattr(self._configuration, "StartupCommand"):
+                raise
+            warnings.warn(
+                "StartupCommand has been moved to the machine_type_configuration!",
+                DeprecationWarning,
+            )
+            self._startup_command = self._configuration.StartupCommand
 
         self._executor = getattr(self._configuration, "executor", ShellExecutor())
 

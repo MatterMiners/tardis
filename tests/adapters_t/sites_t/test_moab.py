@@ -9,9 +9,10 @@ from tests.utilities.utilities import mock_executor_run_command
 from tests.utilities.utilities import run_async
 
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from datetime import datetime, timedelta
+from warnings import filterwarnings
 
 import asyncio
 import asyncssh
@@ -95,9 +96,16 @@ class TestMoabAdapter(TestCase):
 
     def setUp(self):
         config = self.mock_config.return_value
+        config.TestSite = MagicMock(
+            spec=[
+                "MachineMetaData",
+                "StatusUpdate",
+                "MachineTypeConfiguration",
+                "executor",
+            ]
+        )
         self.test_site_config = config.TestSite
         self.test_site_config.MachineMetaData = self.machine_meta_data
-        self.test_site_config.StartupCommand = "startVM.py"
         self.test_site_config.StatusUpdate = 10
         self.test_site_config.MachineTypeConfiguration = self.machine_type_configuration
         self.test_site_config.executor = self.mock_executor.return_value
@@ -114,7 +122,9 @@ class TestMoabAdapter(TestCase):
     @property
     def machine_type_configuration(self):
         return AttributeDict(
-            test2large=AttributeDict(NodeType="1:ppn=20", Walltime="02:00:00:00")
+            test2large=AttributeDict(
+                NodeType="1:ppn=20", StartupCommand="startVM.py", Walltime="02:00:00:00"
+            )
         )
 
     @property
@@ -132,6 +142,23 @@ class TestMoabAdapter(TestCase):
             ),
             drone_uuid="testsite-4761849",
         )
+
+    def test_start_up_command_deprecation_warning(self):
+        # Necessary to avoid annoying message in PyCharm
+        filterwarnings(action="ignore", message="unclosed", category=ResourceWarning)
+        del self.test_site_config.MachineTypeConfiguration.test2large.StartupCommand
+
+        with self.assertRaises(AttributeError):
+            self.moab_adapter = MoabAdapter(
+                machine_type="test2large", site_name="TestSite"
+            )
+
+        self.test_site_config.StartupCommand = "startVM.py"
+
+        with self.assertWarns(DeprecationWarning):
+            self.moab_adapter = MoabAdapter(
+                machine_type="test2large", site_name="TestSite"
+            )
 
     @mock_executor_run_command(TEST_DEPLOY_RESOURCE_RESPONSE)
     def test_deploy_resource(self):
@@ -283,7 +310,7 @@ class TestMoabAdapter(TestCase):
         new_timestamp = datetime.now() - timedelta(minutes=2)
         self.moab_adapter._moab_status._last_update = new_timestamp
         with self.assertRaises(TardisResourceStatusUpdateFailed):
-            response = run_async(
+            run_async(
                 self.moab_adapter.resource_status,
                 AttributeDict(
                     resource_id=1351043,
