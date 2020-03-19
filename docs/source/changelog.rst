@@ -1,5 +1,5 @@
-.. Created by changelog.py at 2020-02-26, command
-   '/Users/giffler/.cache/pre-commit/repont7o94ca/py_env-default/bin/changelog docs/source/changes compile --output=docs/source/changelog.rst'
+.. Created by changelog.py at 2020-03-19, command
+   '/Users/giffler/.cache/pre-commit/repont7o94ca/py_env-python3.7/bin/changelog docs/source/changes compile --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
 #########
@@ -31,3 +31,11 @@ Fixed
 * Fix the handling of the termination of vanished resources
 * Fix state transitions for jobs retried by HTCondor
 * Fix state transitions and refactoring of the SLURM site adapter
+
+[Unreleased] - 2020-03-19
+=========================
+
+Changed
+-------
+
+* The SLURM adapter can now be configured to use different startup commands for each machine type.

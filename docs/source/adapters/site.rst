@@ -376,17 +376,17 @@ Available adapter configuration options
 
 .. content-tabs:: left-col
 
-    +----------------+-----------------------------------------------------------------------------------+-----------------+
-    | Option         | Short Description                                                                 | Requirement     |
-    +================+===================================================================================+=================+
-    | StatusUpdate   | The result of the status call is cached for `StatusUpdate` in minutes.            |  **Required**   |
-    +----------------+-----------------------------------------------------------------------------------+-----------------+
-    | StartUpCommand | The command executed in the batch job.                                            |  **Required**   |
-    +----------------+-----------------------------------------------------------------------------------+-----------------+
-    | executor       | The |executor| used to run submission and further calls to the Moab batch system. |  **Optional**   |
-    +                +                                                                                   +                 +
-    |                | Default: ShellExecutor is used!                                                   |                 |
-    +----------------+-----------------------------------------------------------------------------------+-----------------+
+    +----------------+---------------------------------------------------------------------------------------------+-----------------+
+    | Option         | Short Description                                                                           | Requirement     |
+    +================+=============================================================================================+=================+
+    | StatusUpdate   | The result of the status call is cached for `StatusUpdate` in minutes.                      |  **Required**   |
+    +----------------+---------------------------------------------------------------------------------------------+-----------------+
+    | StartUpCommand | The command executed in the batch job. (**Deprecated:** Moved to MachineTypeConfiguration!) |  **Deprecated** |
+    +----------------+---------------------------------------------------------------------------------------------+-----------------+
+    | executor       | The |executor| used to run submission and further calls to the Moab batch system.           |  **Optional**   |
+    +                +                                                                                             +                 +
+    |                | Default: ShellExecutor is used!                                                             |                 |
+    +----------------+---------------------------------------------------------------------------------------------+-----------------+
 
 .. content-tabs:: right-col
 
@@ -405,7 +405,6 @@ Available adapter configuration options
             username: billy
             client_keys:
              - /opt/tardis/ssh/tardis
-          StartupCommand: pilot_clean.sh
           StatusUpdate: 2
           MachineTypes:
             - one_day
@@ -414,9 +413,11 @@ Available adapter configuration options
             one_day:
               Walltime: '1440'
               Partition: normal
+              StartupCommand: 'pilot_clean.sh'
             twelve_hours:
               Walltime: '720'
               Partition: normal
+              StartupCommand: 'pilot_clean.sh'
           MachineMetaData:
             one_day:
               Cores: 20
