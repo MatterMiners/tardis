@@ -2,13 +2,13 @@ from tests.utilities.utilities import async_return
 from tests.utilities.utilities import run_async
 from tardis.adapters.batchsystems.slurm import SlurmAdapter
 
-#  from tardis.adapters.batchsystems.slurm import slurm_status_updater
+from tardis.adapters.batchsystems.slurm import slurm_status_updater
 from tardis.interfaces.batchsystemadapter import MachineStatus
 
-#  from tardis.exceptions.tardisexceptions import AsyncRunCommandFailure
+from tardis.exceptions.executorexceptions import CommandExecutionFailure
 
-#  from functools import partial
-#  from shlex import quote
+from functools import partial
+from shlex import quote
 from unittest.mock import patch
 from unittest import TestCase
 
@@ -35,8 +35,10 @@ class TestSlurmAdapter(TestCase):
         self.memory_ratio = 0.25
 
         self.command = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader -r --partition test_part'
+        #  self.command = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader --partition test_part'
 
         self.command_wo_options = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader -r'
+        #  self.command_wo_options = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader'
 
         return_value = "\n".join(
             [
@@ -84,27 +86,28 @@ class TestSlurmAdapter(TestCase):
         self.mock_async_run_command.assert_called_with(
             "scontrol update NodeName=host-10-18-1-1 State=DRAIN Reason='COBalD/TARDIS'"
         )
+
+        self.mock_async_run_command.reset_mock()
+
+        run_async(self.slurm_adapter.drain_machine, drone_uuid="VM-1")
+        self.mock_async_run_command.assert_called_with(
+            "scontrol update NodeName=host-10-18-1-1 State=DRAIN Reason='COBalD/TARDIS'"
+        )
         self.assertIsNone(
             run_async(self.slurm_adapter.drain_machine, drone_uuid="not_exists")
         )
-        #  # Does not work
-        #  self.mock_async_run_command.side_effect = AsyncRunCommandFailure(
-        #      message="Does not exists",
-        #      error_code=1,
-        #      error_message="Does not exists",
-        #  )
+        self.mock_async_run_command.side_effect = CommandExecutionFailure(
+            message="Does not exists", exit_code=1, stderr="Does not exists"
+        )
         self.assertIsNone(
             run_async(self.slurm_adapter.drain_machine, drone_uuid="test")
         )
 
-        # Does not work
-        #  self.mock_async_run_command.side_effect = AsyncRunCommandFailure(
-        #      message="Unhandled error",
-        #      error_code=2,
-        #      error_message="Unhandled error",
+        # Review: Not working, and I don't know why. What is this testing?
+        #  self.mock_async_run_command.side_effect = CommandExecutionFailure(
+        #      message="Unhandled error", exit_code=2, stderr="Unhandled error"
         #  )
-        # Does not work
-        #  with self.assertRaises(AsyncRunCommandFailure):
+        #  with self.assertRaises(CommandExecutionFailure):
         #      self.assertIsNone(
         #          run_async(self.slurm_adapter.drain_machine, drone_uuid="test")
         #      )
@@ -201,32 +204,34 @@ class TestSlurmAdapter(TestCase):
         )
         self.mock_async_run_command.reset_mock()
 
-        # TODO: Not sure yet what this is doing
-        #  self.mock_async_run_command.side_effect = AsyncRunCommandFailure(
-        #      message="Test", error_code=123, error_message="Test"
-        #  )
-        #  with self.assertLogs(level="ERROR"):
-        #      attributes = dict(
-        #          Machine="Machine",
-        #          State="State",
-        #          Activity="Activity",
-        #          TardisDroneUuid="TardisDroneUuid",
-        #      )
-        #      # Escape slurm expressions and add them to attributes
-        #      attributes.update(
-        #          {
-        #              key: quote(value)
-        #              for key, value in self.config.BatchSystem.ratios.items()
-        #          }
-        #      )
-        #
-        #      run_async(
-        #          partial(
-        #              slurm_status_updater, self.config.BatchSystem.options, attributes
-        #          )
-        #      )
-        #      self.mock_async_run_command.assert_called_with(self.command)
-        #  self.mock_async_run_command.side_effect = None
+        self.mock_async_run_command.side_effect = CommandExecutionFailure(
+            message="Test", exit_code=123, stderr="Test"
+        )
+        with self.assertLogs(level="ERROR"):
+            with self.assertRaises(CommandExecutionFailure):
+                attributes = {
+                    "Machine": "Machine",
+                    "State": "State",
+                    "Activity": "Activity",
+                    "TardisDroneUuid": "TardisDroneUuid",
+                }
+                # Escape Slurm expressions and add them to attributes
+                attributes.update(
+                    {
+                        key: quote(value)
+                        for key, value in self.config.BatchSystem.ratios.items()
+                    }
+                )
+                run_async(
+                    partial(
+                        slurm_status_updater,
+                        self.config.BatchSystem.options,
+                        attributes,
+                    )
+                )
+                self.mock_async_run_command.assert_called_with(self.command)
+
+        self.mock_async_run_command.side_effect = None
 
     def test_get_utilisation(self):
         print(run_async(self.slurm_adapter.get_utilisation, drone_uuid="VM-1"))
