@@ -218,7 +218,7 @@ class SlurmAdapter(BatchSystemAdapter):
             "completing": MachineStatus.Draining,
             "completing+": MachineStatus.Draining,
             "draining": MachineStatus.Draining,
-            "down": MachineStatus.Drained,
+            "down": MachineStatus.NotAvailable,
             "down*": MachineStatus.Drained,
             "drained": MachineStatus.NotAvailable,
             "drained*": MachineStatus.Drained,
@@ -229,7 +229,7 @@ class SlurmAdapter(BatchSystemAdapter):
             "reboot": MachineStatus.Drained,
             "power_down": MachineStatus.Drained,
             "powering_down": MachineStatus.Drained,
-            "reserved": MachineStatus.Drained,
+            "reserved": MachineStatus.NotAvailable,
             "unknown": MachineStatus.NotAvailable,
             "power_up": MachineStatus.NotAvailable,
         }
