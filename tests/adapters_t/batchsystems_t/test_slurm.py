@@ -34,11 +34,11 @@ class TestSlurmAdapter(TestCase):
         self.cpu_ratio = 0.5
         self.memory_ratio = 0.25
 
-        self.command = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader -r --partition test_part'
-        #  self.command = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader --partition test_part'
+        #  self.command = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader -r --partition test_part'
+        self.command = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader --partition test_part'
 
-        self.command_wo_options = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader -r'
-        #  self.command_wo_options = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader'
+        #  self.command_wo_options = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader -r'
+        self.command_wo_options = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader'
 
         return_value = "\n".join(
             [
@@ -168,7 +168,7 @@ class TestSlurmAdapter(TestCase):
         self.mock_async_run_command.reset_mock()
         self.assertEqual(
             run_async(self.slurm_adapter.get_machine_status, drone_uuid="not_exists"),
-            MachineStatus.NotAvailable,
+            MachineStatus.Drained,
         )
         self.mock_async_run_command.reset_mock()
         self.assertEqual(
@@ -187,7 +187,7 @@ class TestSlurmAdapter(TestCase):
             run_async(
                 self.slurm_adapter.get_machine_status, drone_uuid="drained_machine"
             ),
-            MachineStatus.NotAvailable,
+            MachineStatus.Drained,
         )
         self.mock_async_run_command.reset_mock()
         self.assertEqual(
