@@ -35,8 +35,8 @@ async def slurm_status_updater(
 
     attributes_string = ",".join([str(x) for x in attributes.values()])
 
-    #  cmd = f'sinfo --Format="{attributes_string}" -e --noheader'
-    cmd = f'sinfo --Format="{attributes_string}" -e --noheader -r'
+    cmd = f'sinfo --Format="{attributes_string}" -e --noheader'
+    #  cmd = f'sinfo --Format="{attributes_string}" -e --noheader -r'
 
     if options_string:
         cmd = f"{cmd} {options_string}"
@@ -218,9 +218,9 @@ class SlurmAdapter(BatchSystemAdapter):
             "completing": MachineStatus.Draining,
             "completing+": MachineStatus.Draining,
             "draining": MachineStatus.Draining,
-            "down": MachineStatus.NotAvailable,
+            "down": MachineStatus.Drained,
             "down*": MachineStatus.Drained,
-            "drained": MachineStatus.NotAvailable,
+            "drained": MachineStatus.Drained,
             "drained*": MachineStatus.Drained,
             "fail": MachineStatus.Drained,
             "failing": MachineStatus.Drained,
@@ -238,7 +238,7 @@ class SlurmAdapter(BatchSystemAdapter):
         try:
             machine_status = self._slurm_status[drone_uuid]
         except KeyError:
-            return MachineStatus.NotAvailable
+            return MachineStatus.Drained
         else:
             return status_mapping.get(
                 machine_status["State"], MachineStatus.NotAvailable
