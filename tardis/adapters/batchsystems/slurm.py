@@ -35,8 +35,8 @@ async def slurm_status_updater(
 
     attributes_string = ",".join([str(x) for x in attributes.values()])
 
-    cmd = f'sinfo --Format="{attributes_string}" -e --noheader'
-    #  cmd = f'sinfo --Format="{attributes_string}" -e --noheader -r'
+    #  cmd = f'sinfo --Format="{attributes_string}" -e --noheader'
+    cmd = f'sinfo --Format="{attributes_string}" -e --noheader -r'
 
     if options_string:
         cmd = f"{cmd} {options_string}"
@@ -215,13 +215,13 @@ class SlurmAdapter(BatchSystemAdapter):
             "allocated+": MachineStatus.Available,
             "mixed": MachineStatus.Available,
             "idle": MachineStatus.Available,
-            "completing": MachineStatus.Draining,
-            "completing+": MachineStatus.Draining,
+            "completing": MachineStatus.Available,
+            "completing+": MachineStatus.Available,
             "draining": MachineStatus.Draining,
-            "down": MachineStatus.Drained,
-            "down*": MachineStatus.Drained,
-            "drained": MachineStatus.Drained,
-            "drained*": MachineStatus.Drained,
+            "down": MachineStatus.Available,
+            "down*": MachineStatus.Available,
+            "drained": MachineStatus.Available,
+            "drained*": MachineStatus.Available,
             "fail": MachineStatus.Drained,
             "failing": MachineStatus.Drained,
             "future": MachineStatus.Drained,
