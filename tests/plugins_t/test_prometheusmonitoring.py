@@ -50,7 +50,14 @@ class TestPrometheusMonitoring(TestCase):
         assert self.plugin._deleted._samples()[0][2] == 0.0
         assert self.plugin._error._samples()[0][2] == 0.0
 
-        test_param["resource_status"] = ResourceStatus.Running
+        test_param = AttributeDict(
+            site_name="test-site",
+            machine_type="test_machine_type",
+            created=datetime.now(),
+            updated=datetime.now(),
+            drone_uuid="12345666",
+            resource_status=ResourceStatus.Running,
+        )
         run_async(self.plugin.notify, test_state, test_param)
         assert self.plugin._booting._samples()[0][2] == 0.0
         assert self.plugin._running._samples()[0][2] == 1.0
@@ -58,7 +65,14 @@ class TestPrometheusMonitoring(TestCase):
         assert self.plugin._deleted._samples()[0][2] == 0.0
         assert self.plugin._error._samples()[0][2] == 0.0
 
-        test_param["resource_status"] = ResourceStatus.Stopped
+        test_param = AttributeDict(
+            site_name="test-site",
+            machine_type="test_machine_type",
+            created=datetime.now(),
+            updated=datetime.now(),
+            drone_uuid="12345666",
+            resource_status=ResourceStatus.Stopped,
+        )
         run_async(self.plugin.notify, test_state, test_param)
         assert self.plugin._booting._samples()[0][2] == 0.0
         assert self.plugin._running._samples()[0][2] == 0.0
@@ -66,7 +80,14 @@ class TestPrometheusMonitoring(TestCase):
         assert self.plugin._deleted._samples()[0][2] == 0.0
         assert self.plugin._error._samples()[0][2] == 0.0
 
-        test_param["resource_status"] = ResourceStatus.Deleted
+        test_param = AttributeDict(
+            site_name="test-site",
+            machine_type="test_machine_type",
+            created=datetime.now(),
+            updated=datetime.now(),
+            drone_uuid="12345666",
+            resource_status=ResourceStatus.Deleted,
+        )
         run_async(self.plugin.notify, test_state, test_param)
         assert self.plugin._booting._samples()[0][2] == 0.0
         assert self.plugin._running._samples()[0][2] == 0.0

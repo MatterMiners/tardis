@@ -29,26 +29,6 @@ class PrometheusMonitoring(Plugin):
 
         start_http_server(config.port)
 
-    def compute_metrics(self) -> None:
-        booting = 0
-        running = 0
-        stopped = 0
-        error = 0
-        for drone in self._drones.values():
-            if drone.resource_status == ResourceStatus.Booting:
-                booting += 1
-            if drone.resource_status == ResourceStatus.Running:
-                running += 1
-            if drone.resource_status == ResourceStatus.Stopped:
-                stopped += 1
-            if drone.resource_status == ResourceStatus.Error:
-                error += 1
-
-        self._booting.set(booting)
-        self._running.set(running)
-        self._stopped.set(stopped)
-        self._error.set(error)
-
     async def notify(self, state: State, resource_attributes: AttributeDict) -> None:
         """
         Update metrics at every state change
@@ -64,10 +44,28 @@ class PrometheusMonitoring(Plugin):
             f"Drone: {str(resource_attributes)} has changed state to {state}"
         )
 
-        if resource_attributes.resource_status == ResourceStatus.Deleted:
+        if resource_attributes.drone_uuid in self._drones:
+            old_status = self._drones[resource_attributes.drone_uuid].resource_status
+            if old_status == ResourceStatus.Booting:
+                self._booting.dec()
+            elif old_status == ResourceStatus.Running:
+                self._running.dec()
+            elif old_status == ResourceStatus.Stopped:
+                self._stopped.dec()
+            elif old_status == ResourceStatus.Error:
+                self._error.dec()
+
+        new_status = resource_attributes.resource_status
+        self._drones[resource_attributes.drone_uuid] = resource_attributes
+
+        if new_status == ResourceStatus.Booting:
+            self._booting.inc()
+        elif new_status == ResourceStatus.Running:
+            self._running.inc()
+        elif new_status == ResourceStatus.Stopped:
+            self._stopped.inc()
+        elif new_status == ResourceStatus.Error:
+            self._error.inc()
+        elif new_status == ResourceStatus.Deleted:
             self._drones.pop(resource_attributes.drone_uuid, None)
             self._deleted.inc()
-        else:
-            self._drones[resource_attributes.drone_uuid] = resource_attributes
-
-        self.compute_metrics()
