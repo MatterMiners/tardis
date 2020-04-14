@@ -60,7 +60,7 @@ setup(
         "cobald>=0.12.0",
         "asyncssh",
         "aiotelegraf",
-        "prometheus_client",
+        "aioprometheus",
     ],
     extras_require={
         "docs": ["sphinx", "sphinx_rtd_theme", "sphinxcontrib-contentui"],

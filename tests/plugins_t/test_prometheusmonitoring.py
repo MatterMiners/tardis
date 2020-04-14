@@ -26,6 +26,7 @@ class TestPrometheusMonitoring(TestCase):
     @patch("tardis.plugins.prometheusmonitoring.logging", Mock())
     def setUp(self):
         self.config = self.mock_config.return_value
+        self.config.Plugins.PrometheusMonitoring.addr = "127.0.0.1"
         self.config.Plugins.PrometheusMonitoring.port = 1234
 
         self.plugin = PrometheusMonitoring()
@@ -44,11 +45,12 @@ class TestPrometheusMonitoring(TestCase):
 
         run_async(self.plugin.notify, test_state, test_param)
 
-        assert self.plugin._booting._samples()[0][2] == 1.0
-        assert self.plugin._running._samples()[0][2] == 0.0
-        assert self.plugin._stopped._samples()[0][2] == 0.0
-        assert self.plugin._deleted._samples()[0][2] == 0.0
-        assert self.plugin._error._samples()[0][2] == 0.0
+        assert self.plugin._booting.get({}) == 1.0
+        assert self.plugin._booting.get({}) == 1.0
+        assert self.plugin._running.get({}) == 0.0
+        assert self.plugin._stopped.get({}) == 0.0
+        assert self.plugin._deleted.get({}) == 0.0
+        assert self.plugin._error.get({}) == 0.0
 
         test_param = AttributeDict(
             site_name="test-site",
@@ -59,11 +61,11 @@ class TestPrometheusMonitoring(TestCase):
             resource_status=ResourceStatus.Running,
         )
         run_async(self.plugin.notify, test_state, test_param)
-        assert self.plugin._booting._samples()[0][2] == 0.0
-        assert self.plugin._running._samples()[0][2] == 1.0
-        assert self.plugin._stopped._samples()[0][2] == 0.0
-        assert self.plugin._deleted._samples()[0][2] == 0.0
-        assert self.plugin._error._samples()[0][2] == 0.0
+        assert self.plugin._booting.get({}) == 0.0
+        assert self.plugin._running.get({}) == 1.0
+        assert self.plugin._stopped.get({}) == 0.0
+        assert self.plugin._deleted.get({}) == 0.0
+        assert self.plugin._error.get({}) == 0.0
 
         test_param = AttributeDict(
             site_name="test-site",
@@ -74,11 +76,11 @@ class TestPrometheusMonitoring(TestCase):
             resource_status=ResourceStatus.Stopped,
         )
         run_async(self.plugin.notify, test_state, test_param)
-        assert self.plugin._booting._samples()[0][2] == 0.0
-        assert self.plugin._running._samples()[0][2] == 0.0
-        assert self.plugin._stopped._samples()[0][2] == 1.0
-        assert self.plugin._deleted._samples()[0][2] == 0.0
-        assert self.plugin._error._samples()[0][2] == 0.0
+        assert self.plugin._booting.get({}) == 0.0
+        assert self.plugin._running.get({}) == 0.0
+        assert self.plugin._stopped.get({}) == 1.0
+        assert self.plugin._deleted.get({}) == 0.0
+        assert self.plugin._error.get({}) == 0.0
 
         test_param = AttributeDict(
             site_name="test-site",
@@ -89,11 +91,11 @@ class TestPrometheusMonitoring(TestCase):
             resource_status=ResourceStatus.Deleted,
         )
         run_async(self.plugin.notify, test_state, test_param)
-        assert self.plugin._booting._samples()[0][2] == 0.0
-        assert self.plugin._running._samples()[0][2] == 0.0
-        assert self.plugin._stopped._samples()[0][2] == 0.0
-        assert self.plugin._deleted._samples()[0][2] == 1.0
-        assert self.plugin._error._samples()[0][2] == 0.0
+        assert self.plugin._booting.get({}) == 0.0
+        assert self.plugin._running.get({}) == 0.0
+        assert self.plugin._stopped.get({}) == 0.0
+        assert self.plugin._deleted.get({}) == 1.0
+        assert self.plugin._error.get({}) == 0.0
 
         test_param = AttributeDict(
             site_name="test-site",
@@ -104,11 +106,11 @@ class TestPrometheusMonitoring(TestCase):
             resource_status=ResourceStatus.Error,
         )
         run_async(self.plugin.notify, test_state, test_param)
-        assert self.plugin._booting._samples()[0][2] == 0.0
-        assert self.plugin._running._samples()[0][2] == 0.0
-        assert self.plugin._stopped._samples()[0][2] == 0.0
-        assert self.plugin._deleted._samples()[0][2] == 1.0
-        assert self.plugin._error._samples()[0][2] == 1.0
+        assert self.plugin._booting.get({}) == 0.0
+        assert self.plugin._running.get({}) == 0.0
+        assert self.plugin._stopped.get({}) == 0.0
+        assert self.plugin._deleted.get({}) == 1.0
+        assert self.plugin._error.get({}) == 1.0
 
         test_param = AttributeDict(
             site_name="test-site",
@@ -119,11 +121,11 @@ class TestPrometheusMonitoring(TestCase):
             resource_status=ResourceStatus.Booting,
         )
         run_async(self.plugin.notify, test_state, test_param)
-        assert self.plugin._booting._samples()[0][2] == 1.0
-        assert self.plugin._running._samples()[0][2] == 0.0
-        assert self.plugin._stopped._samples()[0][2] == 0.0
-        assert self.plugin._deleted._samples()[0][2] == 1.0
-        assert self.plugin._error._samples()[0][2] == 1.0
+        assert self.plugin._booting.get({}) == 1.0
+        assert self.plugin._running.get({}) == 0.0
+        assert self.plugin._stopped.get({}) == 0.0
+        assert self.plugin._deleted.get({}) == 1.0
+        assert self.plugin._error.get({}) == 1.0
 
         test_param = AttributeDict(
             site_name="test-site",
@@ -134,8 +136,8 @@ class TestPrometheusMonitoring(TestCase):
             resource_status=ResourceStatus.Error,
         )
         run_async(self.plugin.notify, test_state, test_param)
-        assert self.plugin._booting._samples()[0][2] == 1.0
-        assert self.plugin._running._samples()[0][2] == 0.0
-        assert self.plugin._stopped._samples()[0][2] == 0.0
-        assert self.plugin._deleted._samples()[0][2] == 1.0
-        assert self.plugin._error._samples()[0][2] == 2.0
+        assert self.plugin._booting.get({}) == 1.0
+        assert self.plugin._running.get({}) == 0.0
+        assert self.plugin._stopped.get({}) == 0.0
+        assert self.plugin._deleted.get({}) == 1.0
+        assert self.plugin._error.get({}) == 2.0

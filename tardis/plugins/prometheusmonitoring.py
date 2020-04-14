@@ -5,7 +5,7 @@ from ..interfaces.siteadapter import ResourceStatus
 from ..utilities.attributedict import AttributeDict
 
 import logging
-from prometheus_client import Gauge, start_http_server
+from aioprometheus import Service, Gauge
 
 
 class PrometheusMonitoring(Plugin):
@@ -19,6 +19,9 @@ class PrometheusMonitoring(Plugin):
         self.logger.setLevel(logging.DEBUG)
         config = Configuration().Plugins.PrometheusMonitoring
 
+        self._port = config.port
+        self._addr = config.addr
+
         self._drones = {}
 
         self._booting = Gauge("booting", "Booting drones")
@@ -27,11 +30,29 @@ class PrometheusMonitoring(Plugin):
         self._deleted = Gauge("deleted", "Deleted drones")
         self._error = Gauge("error", "Drones in error state")
 
-        start_http_server(config.port)
+        self._svr = Service()
+        self._svr.register(self._booting)
+        self._svr.register(self._running)
+        self._svr.register(self._stopped)
+        self._svr.register(self._deleted)
+        self._svr.register(self._error)
+
+        self._booting.set({}, 0.0)
+        self._running.set({}, 0.0)
+        self._stopped.set({}, 0.0)
+        self._deleted.set({}, 0.0)
+        self._error.set({}, 0.0)
+
+        self._svr_started = False
+
+    async def start(self):
+        await self._svr.start(addr=self._addr, port=self._port)
+        self.logger.debug(f"Serving Prometheus metrics on {self._svr.metrics_url}")
+        self._svr_started = True
 
     async def notify(self, state: State, resource_attributes: AttributeDict) -> None:
         """
-        Update metrics at every state change
+        Update Prometheus metrics at every state change
 
         :param state: New state of the Drone
         :type state: State
@@ -40,6 +61,9 @@ class PrometheusMonitoring(Plugin):
         :type resource_attributes: AttributeDict
         :return: None
         """
+        if not self._svr_started:
+            await self.start()
+
         self.logger.debug(
             f"Drone: {str(resource_attributes)} has changed state to {state}"
         )
@@ -47,25 +71,25 @@ class PrometheusMonitoring(Plugin):
         if resource_attributes.drone_uuid in self._drones:
             old_status = self._drones[resource_attributes.drone_uuid].resource_status
             if old_status == ResourceStatus.Booting:
-                self._booting.dec()
+                self._booting.dec({})
             elif old_status == ResourceStatus.Running:
-                self._running.dec()
+                self._running.dec({})
             elif old_status == ResourceStatus.Stopped:
-                self._stopped.dec()
+                self._stopped.dec({})
             elif old_status == ResourceStatus.Error:
-                self._error.dec()
+                self._error.dec({})
 
         new_status = resource_attributes.resource_status
         self._drones[resource_attributes.drone_uuid] = resource_attributes
 
         if new_status == ResourceStatus.Booting:
-            self._booting.inc()
+            self._booting.inc({})
         elif new_status == ResourceStatus.Running:
-            self._running.inc()
+            self._running.inc({})
         elif new_status == ResourceStatus.Stopped:
-            self._stopped.inc()
+            self._stopped.inc({})
         elif new_status == ResourceStatus.Error:
-            self._error.inc()
+            self._error.inc({})
         elif new_status == ResourceStatus.Deleted:
             self._drones.pop(resource_attributes.drone_uuid, None)
-            self._deleted.inc()
+            self._deleted.inc({})
