@@ -5,7 +5,6 @@ from ..interfaces.siteadapter import ResourceStatus
 from ..utilities.attributedict import AttributeDict
 
 import logging
-import copy
 from aioprometheus import Service, Gauge
 
 
