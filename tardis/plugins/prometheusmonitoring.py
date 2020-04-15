@@ -70,7 +70,7 @@ class PrometheusMonitoring(Plugin):
         )
 
         if resource_attributes.drone_uuid in self._drones:
-            old_status = self._drones[resource_attributes.drone_uuid].resource_status
+            old_status = self._drones[resource_attributes.drone_uuid]
             if old_status == ResourceStatus.Booting:
                 self._booting.dec({})
             elif old_status == ResourceStatus.Running:
@@ -81,9 +81,7 @@ class PrometheusMonitoring(Plugin):
                 self._error.dec({})
 
         new_status = resource_attributes.resource_status
-        self._drones[resource_attributes.drone_uuid] = copy.deepcopy(
-            resource_attributes
-        )
+        self._drones[resource_attributes.drone_uuid] = new_status
 
         if new_status == ResourceStatus.Booting:
             self._booting.inc({})
