@@ -5,6 +5,7 @@ from ..interfaces.siteadapter import ResourceStatus
 from ..utilities.attributedict import AttributeDict
 
 import logging
+import copy
 from aioprometheus import Service, Gauge
 
 
@@ -37,11 +38,11 @@ class PrometheusMonitoring(Plugin):
         self._svr.register(self._deleted)
         self._svr.register(self._error)
 
-        self._booting.set({}, 0.0)
-        self._running.set({}, 0.0)
-        self._stopped.set({}, 0.0)
-        self._deleted.set({}, 0.0)
-        self._error.set({}, 0.0)
+        self._booting.set({}, 0)
+        self._running.set({}, 0)
+        self._stopped.set({}, 0)
+        self._deleted.set({}, 0)
+        self._error.set({}, 0)
 
         self._svr_started = False
 
@@ -80,7 +81,9 @@ class PrometheusMonitoring(Plugin):
                 self._error.dec({})
 
         new_status = resource_attributes.resource_status
-        self._drones[resource_attributes.drone_uuid] = resource_attributes
+        self._drones[resource_attributes.drone_uuid] = copy.deepcopy(
+            resource_attributes
+        )
 
         if new_status == ResourceStatus.Booting:
             self._booting.inc({})
