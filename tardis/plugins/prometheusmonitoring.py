@@ -22,28 +22,22 @@ class PrometheusMonitoring(Plugin):
         self._port = config.port
         self._addr = config.addr
 
+        self._svr_started = False
         self._drones = {}
 
-        self._booting = Gauge("booting", "Booting drones")
-        self._running = Gauge("running", "Running drones")
-        self._stopped = Gauge("stopped", "Stopped drones")
-        self._deleted = Gauge("deleted", "Deleted drones")
-        self._error = Gauge("error", "Drones in error state")
-
         self._svr = Service()
-        self._svr.register(self._booting)
-        self._svr.register(self._running)
-        self._svr.register(self._stopped)
-        self._svr.register(self._deleted)
-        self._svr.register(self._error)
 
-        self._booting.set({}, 0)
-        self._running.set({}, 0)
-        self._stopped.set({}, 0)
-        self._deleted.set({}, 0)
-        self._error.set({}, 0)
+        self._gauges = {
+            ResourceStatus.Booting: Gauge("booting", "Booting drones"),
+            ResourceStatus.Running: Gauge("running", "Running drones"),
+            ResourceStatus.Stopped: Gauge("stopped", "Stopped drones"),
+            ResourceStatus.Deleted: Gauge("deleted", "Deleted drones"),
+            ResourceStatus.Error: Gauge("error", "Drones in error state"),
+        }
 
-        self._svr_started = False
+        for gauge in self._gauges.values():
+            self._svr.register(gauge)
+            gauge.set({}, 0)
 
     async def start(self):
         await self._svr.start(addr=self._addr, port=self._port)
@@ -70,26 +64,12 @@ class PrometheusMonitoring(Plugin):
 
         if resource_attributes.drone_uuid in self._drones:
             old_status = self._drones[resource_attributes.drone_uuid]
-            if old_status == ResourceStatus.Booting:
-                self._booting.dec({})
-            elif old_status == ResourceStatus.Running:
-                self._running.dec({})
-            elif old_status == ResourceStatus.Stopped:
-                self._stopped.dec({})
-            elif old_status == ResourceStatus.Error:
-                self._error.dec({})
+            self._gauges[old_status].dec({})
 
         new_status = resource_attributes.resource_status
         self._drones[resource_attributes.drone_uuid] = new_status
 
-        if new_status == ResourceStatus.Booting:
-            self._booting.inc({})
-        elif new_status == ResourceStatus.Running:
-            self._running.inc({})
-        elif new_status == ResourceStatus.Stopped:
-            self._stopped.inc({})
-        elif new_status == ResourceStatus.Error:
-            self._error.inc({})
-        elif new_status == ResourceStatus.Deleted:
+        self._gauges[new_status].inc({})
+
+        if new_status == ResourceStatus.Deleted:
             self._drones.pop(resource_attributes.drone_uuid, None)
-            self._deleted.inc({})
