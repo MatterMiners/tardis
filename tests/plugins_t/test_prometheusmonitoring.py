@@ -4,6 +4,7 @@ from tardis.utilities.attributedict import AttributeDict
 from tardis.interfaces.siteadapter import ResourceStatus
 
 from datetime import datetime
+from functools import reduce
 from unittest import TestCase
 from unittest.mock import Mock
 from unittest.mock import patch
@@ -33,110 +34,60 @@ class TestPrometheusMonitoring(TestCase):
 
     @patch("tardis.plugins.prometheusmonitoring.logging", Mock())
     def test_notify(self):
-        test_param = AttributeDict(
-            site_name="test-site",
-            machine_type="test_machine_type",
-            created=datetime.now(),
-            updated=datetime.now(),
-            drone_uuid="12345666",
-            resource_status=ResourceStatus.Booting,
-        )
         test_state = RequestState()
 
-        run_async(self.plugin.notify, test_state, test_param)
-
-        assert self.plugin._gauges[ResourceStatus.Booting].get({}) == 1.0
-        assert self.plugin._gauges[ResourceStatus.Running].get({}) == 0.0
-        assert self.plugin._gauges[ResourceStatus.Stopped].get({}) == 0.0
-        assert self.plugin._gauges[ResourceStatus.Deleted].get({}) == 0.0
-        assert self.plugin._gauges[ResourceStatus.Error].get({}) == 0.0
-
-        test_param = AttributeDict(
-            site_name="test-site",
-            machine_type="test_machine_type",
-            created=datetime.now(),
-            updated=datetime.now(),
-            drone_uuid="12345666",
-            resource_status=ResourceStatus.Running,
+        run_async(
+            self.plugin.notify, test_state, get_test_param("6", ResourceStatus.Booting)
         )
-        run_async(self.plugin.notify, test_state, test_param)
-        assert self.plugin._gauges[ResourceStatus.Booting].get({}) == 0.0
-        assert self.plugin._gauges[ResourceStatus.Running].get({}) == 1.0
-        assert self.plugin._gauges[ResourceStatus.Stopped].get({}) == 0.0
-        assert self.plugin._gauges[ResourceStatus.Deleted].get({}) == 0.0
-        assert self.plugin._gauges[ResourceStatus.Error].get({}) == 0.0
+        self.assert_gauges([1, 0, 0, 0, 0])
 
-        test_param = AttributeDict(
-            site_name="test-site",
-            machine_type="test_machine_type",
-            created=datetime.now(),
-            updated=datetime.now(),
-            drone_uuid="12345666",
-            resource_status=ResourceStatus.Stopped,
+        run_async(
+            self.plugin.notify, test_state, get_test_param("6", ResourceStatus.Running)
         )
-        run_async(self.plugin.notify, test_state, test_param)
-        assert self.plugin._gauges[ResourceStatus.Booting].get({}) == 0.0
-        assert self.plugin._gauges[ResourceStatus.Running].get({}) == 0.0
-        assert self.plugin._gauges[ResourceStatus.Stopped].get({}) == 1.0
-        assert self.plugin._gauges[ResourceStatus.Deleted].get({}) == 0.0
-        assert self.plugin._gauges[ResourceStatus.Error].get({}) == 0.0
+        self.assert_gauges([0, 1, 0, 0, 0])
 
-        test_param = AttributeDict(
-            site_name="test-site",
-            machine_type="test_machine_type",
-            created=datetime.now(),
-            updated=datetime.now(),
-            drone_uuid="12345666",
-            resource_status=ResourceStatus.Deleted,
+        run_async(
+            self.plugin.notify, test_state, get_test_param("6", ResourceStatus.Stopped)
         )
-        run_async(self.plugin.notify, test_state, test_param)
-        assert self.plugin._gauges[ResourceStatus.Booting].get({}) == 0.0
-        assert self.plugin._gauges[ResourceStatus.Running].get({}) == 0.0
-        assert self.plugin._gauges[ResourceStatus.Stopped].get({}) == 0.0
-        assert self.plugin._gauges[ResourceStatus.Deleted].get({}) == 1.0
-        assert self.plugin._gauges[ResourceStatus.Error].get({}) == 0.0
+        self.assert_gauges([0, 0, 1, 0, 0])
 
-        test_param = AttributeDict(
-            site_name="test-site",
-            machine_type="test_machine_type",
-            created=datetime.now(),
-            updated=datetime.now(),
-            drone_uuid="12345667",
-            resource_status=ResourceStatus.Error,
+        run_async(
+            self.plugin.notify, test_state, get_test_param("6", ResourceStatus.Deleted)
         )
-        run_async(self.plugin.notify, test_state, test_param)
-        assert self.plugin._gauges[ResourceStatus.Booting].get({}) == 0.0
-        assert self.plugin._gauges[ResourceStatus.Running].get({}) == 0.0
-        assert self.plugin._gauges[ResourceStatus.Stopped].get({}) == 0.0
-        assert self.plugin._gauges[ResourceStatus.Deleted].get({}) == 1.0
-        assert self.plugin._gauges[ResourceStatus.Error].get({}) == 1.0
+        self.assert_gauges([0, 0, 0, 1, 0])
 
-        test_param = AttributeDict(
-            site_name="test-site",
-            machine_type="test_machine_type",
-            created=datetime.now(),
-            updated=datetime.now(),
-            drone_uuid="12345669",
-            resource_status=ResourceStatus.Booting,
+        run_async(
+            self.plugin.notify, test_state, get_test_param("7", ResourceStatus.Error)
         )
-        run_async(self.plugin.notify, test_state, test_param)
-        assert self.plugin._gauges[ResourceStatus.Booting].get({}) == 1.0
-        assert self.plugin._gauges[ResourceStatus.Running].get({}) == 0.0
-        assert self.plugin._gauges[ResourceStatus.Stopped].get({}) == 0.0
-        assert self.plugin._gauges[ResourceStatus.Deleted].get({}) == 1.0
-        assert self.plugin._gauges[ResourceStatus.Error].get({}) == 1.0
+        self.assert_gauges([0, 0, 0, 1, 1])
 
-        test_param = AttributeDict(
-            site_name="test-site",
-            machine_type="test_machine_type",
-            created=datetime.now(),
-            updated=datetime.now(),
-            drone_uuid="12345668",
-            resource_status=ResourceStatus.Error,
+        run_async(
+            self.plugin.notify, test_state, get_test_param("9", ResourceStatus.Booting)
         )
-        run_async(self.plugin.notify, test_state, test_param)
-        assert self.plugin._gauges[ResourceStatus.Booting].get({}) == 1.0
-        assert self.plugin._gauges[ResourceStatus.Running].get({}) == 0.0
-        assert self.plugin._gauges[ResourceStatus.Stopped].get({}) == 0.0
-        assert self.plugin._gauges[ResourceStatus.Deleted].get({}) == 1.0
-        assert self.plugin._gauges[ResourceStatus.Error].get({}) == 2.0
+        self.assert_gauges([1, 0, 0, 1, 1])
+
+        run_async(
+            self.plugin.notify, test_state, get_test_param("8", ResourceStatus.Error)
+        )
+        self.assert_gauges([1, 0, 0, 1, 2])
+
+    def assert_gauges(self, values):
+        assert reduce(
+            lambda a, b: a and b,
+            [
+                a.get({}) == b
+                for (a, b) in zip([a for a in self.plugin._gauges.values()], values)
+            ],
+            True,
+        )
+
+
+def get_test_param(drone_uuid, resource_status):
+    return AttributeDict(
+        site_name="test-site",
+        machine_type="test_machine_type",
+        created=datetime.now(),
+        updated=datetime.now(),
+        drone_uuid=drone_uuid,
+        resource_status=resource_status,
+    )
