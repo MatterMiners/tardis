@@ -120,7 +120,8 @@ Available configuration options
 
         Plugins:
           PrometheusMonitoring:
-            port: 8092
+            addr: 127.0.0.1
+            port: 8080
 
 .. content-tabs:: left-col
 
