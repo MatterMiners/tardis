@@ -28,11 +28,11 @@ class PrometheusMonitoring(Plugin):
         self._svr = Service()
 
         self._gauges = {
-            "ResourceStatus.Booting": Gauge("booting", "Booting drones"),
-            "ResourceStatus.Running": Gauge("running", "Running drones"),
-            "ResourceStatus.Stopped": Gauge("stopped", "Stopped drones"),
-            "ResourceStatus.Deleted": Gauge("deleted", "Deleted drones"),
-            "ResourceStatus.Error": Gauge("error", "Drones in error state"),
+            ResourceStatus.Booting: Gauge("booting", "Booting drones"),
+            ResourceStatus.Running: Gauge("running", "Running drones"),
+            ResourceStatus.Stopped: Gauge("stopped", "Stopped drones"),
+            ResourceStatus.Deleted: Gauge("deleted", "Deleted drones"),
+            ResourceStatus.Error: Gauge("error", "Drones in error state"),
         }
 
         for gauge in self._gauges.values():
@@ -63,10 +63,10 @@ class PrometheusMonitoring(Plugin):
         )
 
         if resource_attributes.drone_uuid in self._drones:
-            old_status = str(self._drones[resource_attributes.drone_uuid])
+            old_status = self._drones[resource_attributes.drone_uuid]
             self._gauges[old_status].dec({})
 
-        new_status = str(resource_attributes.resource_status)
+        new_status = resource_attributes.resource_status
         self._drones[resource_attributes.drone_uuid] = new_status
 
         self._gauges[new_status].inc({})
