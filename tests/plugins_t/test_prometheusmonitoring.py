@@ -45,12 +45,11 @@ class TestPrometheusMonitoring(TestCase):
 
         run_async(self.plugin.notify, test_state, test_param)
 
-        assert self.plugin._booting.get({}) == 1.0
-        assert self.plugin._booting.get({}) == 1.0
-        assert self.plugin._running.get({}) == 0.0
-        assert self.plugin._stopped.get({}) == 0.0
-        assert self.plugin._deleted.get({}) == 0.0
-        assert self.plugin._error.get({}) == 0.0
+        assert self.plugin._gauges[ResourceStatus.Booting].get({}) == 1.0
+        assert self.plugin._gauges[ResourceStatus.Running].get({}) == 0.0
+        assert self.plugin._gauges[ResourceStatus.Stopped].get({}) == 0.0
+        assert self.plugin._gauges[ResourceStatus.Deleted].get({}) == 0.0
+        assert self.plugin._gauges[ResourceStatus.Error].get({}) == 0.0
 
         test_param = AttributeDict(
             site_name="test-site",
@@ -61,11 +60,11 @@ class TestPrometheusMonitoring(TestCase):
             resource_status=ResourceStatus.Running,
         )
         run_async(self.plugin.notify, test_state, test_param)
-        assert self.plugin._booting.get({}) == 0.0
-        assert self.plugin._running.get({}) == 1.0
-        assert self.plugin._stopped.get({}) == 0.0
-        assert self.plugin._deleted.get({}) == 0.0
-        assert self.plugin._error.get({}) == 0.0
+        assert self.plugin._gauges[ResourceStatus.Booting].get({}) == 0.0
+        assert self.plugin._gauges[ResourceStatus.Running].get({}) == 1.0
+        assert self.plugin._gauges[ResourceStatus.Stopped].get({}) == 0.0
+        assert self.plugin._gauges[ResourceStatus.Deleted].get({}) == 0.0
+        assert self.plugin._gauges[ResourceStatus.Error].get({}) == 0.0
 
         test_param = AttributeDict(
             site_name="test-site",
@@ -76,11 +75,11 @@ class TestPrometheusMonitoring(TestCase):
             resource_status=ResourceStatus.Stopped,
         )
         run_async(self.plugin.notify, test_state, test_param)
-        assert self.plugin._booting.get({}) == 0.0
-        assert self.plugin._running.get({}) == 0.0
-        assert self.plugin._stopped.get({}) == 1.0
-        assert self.plugin._deleted.get({}) == 0.0
-        assert self.plugin._error.get({}) == 0.0
+        assert self.plugin._gauges[ResourceStatus.Booting].get({}) == 0.0
+        assert self.plugin._gauges[ResourceStatus.Running].get({}) == 0.0
+        assert self.plugin._gauges[ResourceStatus.Stopped].get({}) == 1.0
+        assert self.plugin._gauges[ResourceStatus.Deleted].get({}) == 0.0
+        assert self.plugin._gauges[ResourceStatus.Error].get({}) == 0.0
 
         test_param = AttributeDict(
             site_name="test-site",
@@ -91,11 +90,11 @@ class TestPrometheusMonitoring(TestCase):
             resource_status=ResourceStatus.Deleted,
         )
         run_async(self.plugin.notify, test_state, test_param)
-        assert self.plugin._booting.get({}) == 0.0
-        assert self.plugin._running.get({}) == 0.0
-        assert self.plugin._stopped.get({}) == 0.0
-        assert self.plugin._deleted.get({}) == 1.0
-        assert self.plugin._error.get({}) == 0.0
+        assert self.plugin._gauges[ResourceStatus.Booting].get({}) == 0.0
+        assert self.plugin._gauges[ResourceStatus.Running].get({}) == 0.0
+        assert self.plugin._gauges[ResourceStatus.Stopped].get({}) == 0.0
+        assert self.plugin._gauges[ResourceStatus.Deleted].get({}) == 1.0
+        assert self.plugin._gauges[ResourceStatus.Error].get({}) == 0.0
 
         test_param = AttributeDict(
             site_name="test-site",
@@ -106,11 +105,11 @@ class TestPrometheusMonitoring(TestCase):
             resource_status=ResourceStatus.Error,
         )
         run_async(self.plugin.notify, test_state, test_param)
-        assert self.plugin._booting.get({}) == 0.0
-        assert self.plugin._running.get({}) == 0.0
-        assert self.plugin._stopped.get({}) == 0.0
-        assert self.plugin._deleted.get({}) == 1.0
-        assert self.plugin._error.get({}) == 1.0
+        assert self.plugin._gauges[ResourceStatus.Booting].get({}) == 0.0
+        assert self.plugin._gauges[ResourceStatus.Running].get({}) == 0.0
+        assert self.plugin._gauges[ResourceStatus.Stopped].get({}) == 0.0
+        assert self.plugin._gauges[ResourceStatus.Deleted].get({}) == 1.0
+        assert self.plugin._gauges[ResourceStatus.Error].get({}) == 1.0
 
         test_param = AttributeDict(
             site_name="test-site",
@@ -121,11 +120,11 @@ class TestPrometheusMonitoring(TestCase):
             resource_status=ResourceStatus.Booting,
         )
         run_async(self.plugin.notify, test_state, test_param)
-        assert self.plugin._booting.get({}) == 1.0
-        assert self.plugin._running.get({}) == 0.0
-        assert self.plugin._stopped.get({}) == 0.0
-        assert self.plugin._deleted.get({}) == 1.0
-        assert self.plugin._error.get({}) == 1.0
+        assert self.plugin._gauges[ResourceStatus.Booting].get({}) == 1.0
+        assert self.plugin._gauges[ResourceStatus.Running].get({}) == 0.0
+        assert self.plugin._gauges[ResourceStatus.Stopped].get({}) == 0.0
+        assert self.plugin._gauges[ResourceStatus.Deleted].get({}) == 1.0
+        assert self.plugin._gauges[ResourceStatus.Error].get({}) == 1.0
 
         test_param = AttributeDict(
             site_name="test-site",
@@ -136,8 +135,8 @@ class TestPrometheusMonitoring(TestCase):
             resource_status=ResourceStatus.Error,
         )
         run_async(self.plugin.notify, test_state, test_param)
-        assert self.plugin._booting.get({}) == 1.0
-        assert self.plugin._running.get({}) == 0.0
-        assert self.plugin._stopped.get({}) == 0.0
-        assert self.plugin._deleted.get({}) == 1.0
-        assert self.plugin._error.get({}) == 2.0
+        assert self.plugin._gauges[ResourceStatus.Booting].get({}) == 1.0
+        assert self.plugin._gauges[ResourceStatus.Running].get({}) == 0.0
+        assert self.plugin._gauges[ResourceStatus.Stopped].get({}) == 0.0
+        assert self.plugin._gauges[ResourceStatus.Deleted].get({}) == 1.0
+        assert self.plugin._gauges[ResourceStatus.Error].get({}) == 2.0
