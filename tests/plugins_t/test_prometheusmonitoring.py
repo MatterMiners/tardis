@@ -4,7 +4,6 @@ from tardis.utilities.attributedict import AttributeDict
 from tardis.interfaces.siteadapter import ResourceStatus
 
 from datetime import datetime
-from functools import reduce
 from unittest import TestCase
 from unittest.mock import Mock
 from unittest.mock import patch
@@ -72,13 +71,11 @@ class TestPrometheusMonitoring(TestCase):
         self.assert_gauges([1, 0, 0, 1, 2])
 
     def assert_gauges(self, values):
-        assert reduce(
-            lambda a, b: a and b,
+        assert all(
             [
-                a.get({}) == b
-                for (a, b) in zip([a for a in self.plugin._gauges.values()], values)
+                gauge.get({}) == result
+                for (gauge, result) in zip(self.plugin._gauges.values(), values)
             ],
-            True,
         )
 
 
