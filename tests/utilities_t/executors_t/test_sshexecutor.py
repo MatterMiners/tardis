@@ -1,46 +1,38 @@
-from tests.utilities.utilities import run_async
+from tests.utilities.utilities import async_return, run_async
 from tardis.utilities.attributedict import AttributeDict
-from tardis.utilities.executors.sshexecutor import SSHExecutor
+from tardis.utilities.executors.sshexecutor import SSHConnectionPool, SSHExecutor
 from tardis.exceptions.executorexceptions import CommandExecutionFailure
 
-from asyncssh import ProcessError
-from asyncssh.misc import ConnectionLost, DisconnectError
+from asyncssh import ChannelOpenError, ConnectionLost, DisconnectError, ProcessError
 
 try:
     from contextlib import asynccontextmanager
 except ImportError:
     from aiotools import async_ctx_manager as asynccontextmanager
 
+from functools import partial
 from unittest import TestCase
 from unittest.mock import patch
 
+import asyncio
 import yaml
 
 
-def generate_connect(response, exception=None):
-    @asynccontextmanager
-    async def connect(*args, **kwargs):
-        class Connection(object):
-            async def run(self, *args, input, **kwargs):
-                if exception:
-                    raise exception
-                self.stdout = input and input.decode()
-                return self
+class MockConnection(object):
+    def __init__(self, exception=None, **kwargs):
+        self.exception = exception and exception(**kwargs)
 
-            @property
-            def exit_status(self):
-                return response.exit_status
-
-            @property
-            def stderr(self):
-                return response.stderr
-
-        yield Connection()
-
-    return connect
+    async def run(self, command, input=None, **kwargs):
+        if self.exception:
+            raise self.exception
+        return AttributeDict(
+            stdout=input and input.decode(), stderr="TestError", exit_status=0
+        )
 
 
-class TestSSHExecutor(TestCase):
+class TestSSHConnectionPool(TestCase):
+    mock_asyncssh = None
+
     @classmethod
     def setUpClass(cls):
         cls.mock_asyncssh_patcher = patch(
@@ -48,8 +40,9 @@ class TestSSHExecutor(TestCase):
         )
         cls.mock_asyncssh = cls.mock_asyncssh_patcher.start()
         cls.mock_asyncssh.ProcessError = ProcessError
-        cls.mock_asyncssh.misc.ConnectionLost = ConnectionLost
-        cls.mock_asyncssh.misc.DisconnectError = DisconnectError
+        cls.mock_asyncssh.ConnectionLost = ConnectionLost
+        cls.mock_asyncssh.DisconnectError = DisconnectError
+        cls.mock_asyncssh.ChannelOpenError = ChannelOpenError
 
     @classmethod
     def tearDownClass(cls):
@@ -57,42 +50,142 @@ class TestSSHExecutor(TestCase):
 
     def setUp(self) -> None:
         self.response = AttributeDict(stderr="", exit_status=0)
-        self.mock_asyncssh.connect.side_effect = generate_connect(self.response)
+        self.mock_asyncssh.connect.return_value = async_return(
+            return_value=MockConnection()
+        )
         self.mock_asyncssh.reset_mock()
+
+        self.test_asyncssh_params = AttributeDict(
+            host="test_host", username="test", client_keys=["TestKey"]
+        )
+
+        self.test_connection_pool_size = 5
+
+        self.ssh_connection_pool = SSHConnectionPool(
+            self.test_connection_pool_size, **self.test_asyncssh_params
+        )
+
+        self.mock_asyncssh.reset_mock()
+
+    def test_init_wo_host(self):
+        with self.assertRaises(AssertionError):
+            SSHConnectionPool(
+                connection_pool_size=self.test_connection_pool_size,
+                username=self.test_asyncssh_params.username,
+                client_keys=self.test_asyncssh_params.client_keys,
+            )
+
+    def test_acquire_lock(self):
+        self.assertIsInstance(self.ssh_connection_pool.acquire_lock, asyncio.Lock)
+
+    @patch("tardis.utilities.executors.sshexecutor.asyncio.sleep", async_return)
+    def test_establish_connection(self):
+        self.assertIsInstance(
+            run_async(self.ssh_connection_pool.establish_connection), MockConnection
+        )
+
+        self.mock_asyncssh.connect.assert_called_with(**self.test_asyncssh_params)
+
+        test_exceptions = [
+            ConnectionResetError(),
+            DisconnectError(reason="test_reason", code=255),
+            ConnectionLost(reason="test_reason"),
+            BrokenPipeError(),
+        ]
+
+        for exception in test_exceptions:
+            self.mock_asyncssh.reset_mock()
+            self.mock_asyncssh.connect.side_effect = exception
+
+            with self.assertRaises(type(exception)):
+                run_async(self.ssh_connection_pool.establish_connection)
+
+            self.assertEqual(self.mock_asyncssh.connect.call_count, 10)
+
+        self.mock_asyncssh.connect.side_effect = None
+
+    def test_init_connection_pool(self):
+        run_async(self.ssh_connection_pool._init_connection_pool)
+
+        self.assertTrue("test_host" in self.ssh_connection_pool._connection_pool)
+
+        self.assertEqual(
+            self.ssh_connection_pool._connection_pool["test_host"].qsize(),
+            self.test_connection_pool_size,
+        )
+
+    def test_get_connection(self):
+        async def helper_function(raise_exception=None, **kwargs):
+            async with self.ssh_connection_pool.get_connection() as conn:
+                self.assertIsInstance(conn, MockConnection)
+                if raise_exception:
+                    raise raise_exception(**kwargs)
+
+        run_async(helper_function)
+
+        with self.assertRaises(CommandExecutionFailure):
+            run_async(helper_function, ChannelOpenError, reason="test_reason", code=255)
+
+        with self.assertRaises(Exception):
+            run_async(helper_function, Exception)
+
+
+class TestSSHExecutor(TestCase):
+    mock_ssh_connection_pool_patcher = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.mock_ssh_connection_pool_patcher = patch(
+            "tardis.utilities.executors.sshexecutor.SSHConnectionPool"
+        )
+        cls.mock_ssh_connection_pool = cls.mock_ssh_connection_pool_patcher.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.mock_ssh_connection_pool_patcher.stop()
+
+    def setUp(self) -> None:
+        @asynccontextmanager
+        async def helper_manager(exception=None, *args, **kwargs):
+            yield MockConnection(exception=exception, **kwargs)
+
+        self.helper_manager = helper_manager
+
+        self.mocked_ssh_connection_pool = self.mock_ssh_connection_pool.return_value
+        self.mocked_ssh_connection_pool.get_connection.side_effect = self.helper_manager
+
+        self.test_asyncssh_params = AttributeDict(
+            host="test_host", username="test", client_keys=["TestKey"]
+        )
+
+        self.test_connection_pool_size = 5
+
+        self.executor = SSHExecutor(
+            connection_pool_size=self.test_connection_pool_size,
+            **self.test_asyncssh_params,
+        )
+
+        self.mock_ssh_connection_pool.reset_mock()
 
     def test_run_command(self):
-        executor = SSHExecutor(
-            host="test_host", username="test", client_keys=["TestKey"]
-        )
-        self.assertIsNone(run_async(executor.run_command, command="Test").stdout)
-        self.mock_asyncssh.connect.assert_called_with(
-            host="test_host", username="test", client_keys=["TestKey"]
-        )
-        self.mock_asyncssh.reset_mock()
+        self.assertIsNone(run_async(self.executor.run_command, command="Test").stdout)
+        self.mocked_ssh_connection_pool.get_connection.assert_called_with()
 
-        executor = SSHExecutor(
-            host="test_host", username="test", client_keys=("TestKey",)
-        )
-        self.assertIsNone(run_async(executor.run_command, command="Test").stdout)
-        self.mock_asyncssh.connect.assert_called_with(
-            host="test_host", username="test", client_keys=("TestKey",)
+        self.mock_ssh_connection_pool.reset_mock()
+
+        response = run_async(
+            self.executor.run_command, command="Test", stdin_input="Test"
         )
 
-        self.mock_asyncssh.reset_mock()
+        self.assertEqual(response.stdout, "Test")
 
-        executor = SSHExecutor(
-            host="test_host", username="test", client_keys=("TestKey",)
-        )
-        self.assertEqual(
-            run_async(executor.run_command, command="Test", stdin_input="Test").stdout,
-            "Test",
-        )
-        self.mock_asyncssh.connect.assert_called_with(
-            host="test_host", username="test", client_keys=("TestKey",)
-        )
+        self.assertEqual(response.stderr, "TestError")
 
-    def test_run_raises_process_error(self):
-        test_exception = ProcessError(
+        self.assertEqual(response.exit_code, 0)
+
+        self.mocked_ssh_connection_pool.get_connection.side_effect = partial(
+            self.helper_manager,
+            exception=ProcessError,
             env="Test",
             command="Test",
             subsystem="Test",
@@ -103,56 +196,24 @@ class TestSSHExecutor(TestCase):
             stderr="TestError",
         )
 
-        self.mock_asyncssh.connect.side_effect = generate_connect(
-            self.response, exception=test_exception
-        )
-
-        executor = SSHExecutor(
-            host="test_host", username="test", client_keys=("TestKey",)
-        )
-
         with self.assertRaises(CommandExecutionFailure):
-            run_async(executor.run_command, command="Test", stdin_input="Test")
-
-    def test_run_raises_ssh_errors(self):
-        test_exceptions = [
-            ConnectionResetError,
-            DisconnectError(reason="test_reason", code=255),
-            ConnectionLost(reason="test_reason"),
-            BrokenPipeError,
-        ]
-
-        for test_exception in test_exceptions:
-            self.mock_asyncssh.connect.side_effect = generate_connect(
-                self.response, exception=test_exception
-            )
-
-            executor = SSHExecutor(
-                host="test_host", username="test", client_keys=("TestKey",)
-            )
-
-            with self.assertRaises(CommandExecutionFailure):
-                run_async(executor.run_command, command="Test", stdin_input="Test")
+            run_async(self.executor.run_command, command="Test", stdin_input="Test")
 
     def test_construction_by_yaml(self):
         executor = yaml.safe_load(
             """
                    !SSHExecutor
+                   connection_pool_size: 10
                    host: test_host
                    username: test
                    client_keys:
                     - TestKey
                    """
         )
-        response = AttributeDict(stderr="", exit_status=0)
 
-        self.mock_asyncssh.connect.side_effect = generate_connect(response)
         self.assertEqual(
             run_async(executor.run_command, command="Test", stdin_input="Test").stdout,
             "Test",
         )
-        self.mock_asyncssh.connect.assert_called_with(
-            host="test_host", username="test", client_keys=["TestKey"]
-        )
-        self.mock_asyncssh.connect.side_effect = None
-        self.mock_asyncssh.reset_mock()
+
+        self.mocked_ssh_connection_pool.get_connection.assert_called_with()
