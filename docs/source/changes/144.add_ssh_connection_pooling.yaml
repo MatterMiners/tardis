@@ -1,0 +1,10 @@
+category: added
+summary: "Add ssh connection pooling to `SSHExecutor` in order to re-use existing connection"
+pull requests:
+  - 144
+issues:
+  - 135
+description: |
+  The `SSHExector` is now re-using existing connections stored in a connection pool. Closed connections are
+  automatically reestablished. This will avoid connection problems when bothering a remote ssh server with too many
+  requests in too short intervals.

@@ -41,11 +41,24 @@ SSH Executor
 
 .. content-tabs:: left-col
 
-    The ssh executor is used to asynchronously execute shell commands remotely via ssh. All parameters specified in the
-    configuration are directly passed as keyword arguments to `asyncssh` `connect` call. You can find all available
-    parameters in the `asyncssh documentation`_
+    The ssh executor is used to asynchronously execute shell commands remotely via ssh. The actual ssh connections to
+    the host are preserved and recycled via a :py:class:`~tardis.utilities.executors.sshexecutor.SSHConnectionPool`.
+    The default size of the connection pool is 5 and can be modified by passing the `connection_pool_size` argument
+    to the :py:class:`~tardis.utilities.executors.sshexecutor.SSHExecutor`.
+    All parameters specified in the configuration except the `connection_pool_size` are directly passed as keyword
+    arguments to `asyncssh` `connect` call. You can find all available parameters in the `asyncssh documentation`_.
 
     .. _asyncssh documentation: https://asyncssh.readthedocs.io/en/latest/api.html#connect
+
+Available configuration options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    +--------------------------------------------------+---------------------------------------+-----------------+
+    | Option                                           | Short Description                     | Requirement     |
+    +==================================================+=======================================+=================+
+    | connection_pool_size                             | Size of the SSH connection pool       |  **Optional**   |
+    +--------------------------------------------------+---------------------------------------+-----------------+
+    | All keyword arguments `asyncssh.connect` accepts | Directly passed to `asyncssh.connect` |  **Optional**   |
+    +--------------------------------------------------+---------------------------------------+-----------------+
 
 .. content-tabs:: right-col
 
@@ -54,6 +67,7 @@ SSH Executor
     .. code-block:: yaml
 
       !TardisSSHExecutor
+        connection_pool_size: 10
         host: login.dorie.somewherein.de
         username: clown
         client_keys:
@@ -64,6 +78,7 @@ SSH Executor
     .. code-block:: yaml
 
         __type__: tardis.utilities.executors.sshexecutor.SSHExecutor
+        connection_pool_size: 10
         host: login.dorie.somewherein.de
         username: clown
         client_keys:
