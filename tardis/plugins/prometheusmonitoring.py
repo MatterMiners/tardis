@@ -15,7 +15,9 @@ class PrometheusMonitoring(Plugin):
     """
 
     def __init__(self):
-        self.logger = logging.getLogger("prometheusmonitoring")
+        self.logger = logging.getLogger(
+            "cobald.runtime.tardis.plugins.prometheusmonitoring"
+        )
         self.logger.setLevel(logging.DEBUG)
         config = Configuration().Plugins.PrometheusMonitoring
 
