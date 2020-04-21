@@ -43,16 +43,13 @@ class ElasticsearchMonitoring(Plugin):
             f"Drone: {str(resource_attributes)} has changed state to {state}"
         )
 
-        # Add state
-        resource_attributes["state"] = str(state)
-        # Add meta
-        resource_attributes["meta"] = self._meta
-        # Add timestamp
-        resource_attributes["timestamp"] = int(time() * 1000)
-        # Make serializable
-        resource_attributes["resource_status"] = str(
-            resource_attributes["resource_status"]
-        )
+        resource_attributes = {
+            **resource_attributes,
+            "state": str(state),
+            "meta": self._meta,
+            "timestamp": int(time() * 1000),
+            "resource_status": str(resource_attributes["resource_status"]),
+        }
 
         revision = 0
         while True:
