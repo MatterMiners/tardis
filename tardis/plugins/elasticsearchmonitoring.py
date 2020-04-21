@@ -3,7 +3,9 @@ from ..interfaces.plugin import Plugin
 from ..interfaces.state import State
 from ..utilities.attributedict import AttributeDict
 
+from concurrent.futures import ThreadPoolExecutor
 import logging
+import asyncio
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import ConflictError
 from time import time
@@ -30,6 +32,8 @@ class ElasticsearchMonitoring(Plugin):
 
         self._es = Elasticsearch([{"host": self._host, "port": self._port}])
 
+        self.thread_pool_executor = ThreadPoolExecutor(max_workers=1)
+
     async def notify(self, state: State, resource_attributes: AttributeDict) -> None:
         """
         Pushes drone info at every state change to an ElasticSearch instance.
@@ -53,16 +57,32 @@ class ElasticsearchMonitoring(Plugin):
             "resource_status": str(resource_attributes["resource_status"]),
         }
 
+        await self.async_execute(resource_attributes)
+
+    async def async_execute(self, resource_attributes: AttributeDict) -> None:
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            self.thread_pool_executor, self.execute, resource_attributes
+        )
+
+    def execute(self, resource_attributes: AttributeDict) -> None:
+        """
+        Pushes drone info to an ElasticSearch instance.
+
+        :param state: New state of the Drone
+        :type state: State
+        :param resource_attributes: Contains all meta-data of the Drone (created and
+            updated timestamps, dns name, unique id, site_name, machine_type, etc.)
+        :type resource_attributes: AttributeDict
+        :return: None
+        """
         revision = 0
         while True:
             try:
                 # Add revision number
                 resource_attributes["revision"] = revision
-
                 doc_id = resource_attributes["drone_uuid"] + "-" + str(revision)
-
                 self._es.create(index=self._index, id=doc_id, body=resource_attributes)
-
                 break
             except ConflictError:
                 revision += 1
