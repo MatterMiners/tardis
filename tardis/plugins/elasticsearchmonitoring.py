@@ -17,7 +17,9 @@ class ElasticsearchMonitoring(Plugin):
     """
 
     def __init__(self):
-        self.logger = logging.getLogger("elasticsearchmonitoring")
+        self.logger = logging.getLogger(
+            "cobald.runtime.tardis.plugins.elasticsearchmonitoring"
+        )
         self.logger.setLevel(logging.DEBUG)
         config = Configuration().Plugins.ElasticsearchMonitoring
 
