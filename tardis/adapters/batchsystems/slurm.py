@@ -218,10 +218,10 @@ class SlurmAdapter(BatchSystemAdapter):
             "completing": MachineStatus.Available,
             "completing+": MachineStatus.Available,
             "draining": MachineStatus.Draining,
-            "down": MachineStatus.Available,
-            "down*": MachineStatus.Available,
-            "drained": MachineStatus.Available,
-            "drained*": MachineStatus.Available,
+            "down": MachineStatus.NotAvailable,
+            "down*": MachineStatus.Drained,
+            "drained": MachineStatus.NotAvailable,
+            "drained*": MachineStatus.Drained,
             "fail": MachineStatus.Drained,
             "failing": MachineStatus.Drained,
             "future": MachineStatus.Drained,
@@ -230,7 +230,7 @@ class SlurmAdapter(BatchSystemAdapter):
             "power_down": MachineStatus.Drained,
             "powering_down": MachineStatus.Drained,
             "reserved": MachineStatus.NotAvailable,
-            "unknown": MachineStatus.NotAvailable,
+            "unknown": MachineStatus.Drained,
             "power_up": MachineStatus.NotAvailable,
         }
 
@@ -238,7 +238,7 @@ class SlurmAdapter(BatchSystemAdapter):
         try:
             machine_status = self._slurm_status[drone_uuid]
         except KeyError:
-            return MachineStatus.Drained
+            return MachineStatus.NotAvailable
         else:
             return status_mapping.get(
                 machine_status["State"], MachineStatus.NotAvailable
