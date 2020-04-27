@@ -35,6 +35,11 @@ Fixed
 [Unreleased] - 2020-04-27
 =========================
 
+Added
+-----
+
+* Add ssh connection sharing to `SSHExecutor` in order to re-use existing connection
+
 Changed
 -------
 
