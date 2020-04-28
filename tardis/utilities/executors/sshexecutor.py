@@ -27,11 +27,14 @@ class SSHExecutor(Executor):
                 await asyncio.sleep(retry * 10)
         return await asyncssh.connect(**self._parameters)
 
-    async def initialize_connection(self):
-        async with self.lock:
-            # check that connection has not yet been initialize in a different task
-            if self._ssh_connection is None:
-                self._ssh_connection = await self._establish_connection()
+    @property
+    async def ssh_connection(self):
+        if self._ssh_connection is None:
+            async with self.lock:
+                # check that connection has not yet been initialize in a different task
+                while self._ssh_connection is None:
+                    self._ssh_connection = await self._establish_connection()
+        return self._ssh_connection
 
     @property
     def lock(self):
@@ -42,10 +45,9 @@ class SSHExecutor(Executor):
         return self._lock
 
     async def run_command(self, command, stdin_input=None):
-        if not self._ssh_connection:
-            await self.initialize_connection()
+        ssh_connection = await self.ssh_connection
         try:
-            response = await self._ssh_connection.run(
+            response = await ssh_connection.run(
                 command, check=True, input=stdin_input and stdin_input.encode()
             )
         except asyncssh.ProcessError as pe:

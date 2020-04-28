@@ -79,15 +79,18 @@ class TestSSHExecutor(TestCase):
 
         self.mock_asyncssh.connect.side_effect = None
 
-    def test_initialize_connection(self):
+    def test_connection_property(self):
+        async def helper_coroutine():
+            return await self.executor.ssh_connection
+
         self.assertIsNone(self.executor._ssh_connection)
-        run_async(self.executor.initialize_connection)
+        run_async(helper_coroutine)
 
         self.assertIsInstance(self.executor._ssh_connection, MockConnection)
 
         current_ssh_connection = self.executor._ssh_connection
 
-        run_async(self.executor.initialize_connection)
+        run_async(helper_coroutine)
 
         self.assertEqual(self.executor._ssh_connection, current_ssh_connection)
 
