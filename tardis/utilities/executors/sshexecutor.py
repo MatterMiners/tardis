@@ -30,14 +30,14 @@ class SSHExecutor(Executor):
     async def initialize_connection(self):
         async with self.lock:
             # check that connection has not yet been initialize in a different task
-            if not self._ssh_connection:
+            if self._ssh_connection is None:
                 self._ssh_connection = await self.establish_connection()
 
     @property
     def lock(self):
         # Create lock once tardis event loop is running.
         # To avoid got Future <Future pending> attached to a different loop exception
-        if not self._lock:
+        if self._lock is None:
             self._lock = asyncio.Lock()
         return self._lock
 
