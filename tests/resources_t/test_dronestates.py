@@ -314,6 +314,8 @@ class TestDroneStates(TestCase):
 
         self.run_the_matrix(matrix, initial_state=CleanupState)
 
+        log_channel = "cobald.runtime.tardis.resources.dronestates"
+
         with self.assertLogs(level=logging.WARNING) as msg:
             self.run_side_effects(
                 CleanupState(),
@@ -324,7 +326,7 @@ class TestDroneStates(TestCase):
             self.assertEqual(
                 msg.output,
                 [
-                    "WARNING:root:Calling terminate_resource failed for"
+                    f"WARNING:{log_channel}:Calling terminate_resource failed for"
                     " drone test-923ABF. Drone crashed!"
                 ],
             )
@@ -339,7 +341,7 @@ class TestDroneStates(TestCase):
             self.assertEqual(
                 msg.output,
                 [
-                    "WARNING:root:Calling terminate_resource failed for"
+                    f"WARNING:{log_channel}:Calling terminate_resource failed for"
                     " drone test-923ABF. Will retry later!"
                 ],
             )

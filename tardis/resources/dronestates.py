@@ -19,6 +19,8 @@ from ..utilities.pipeline import StopProcessing
 if TYPE_CHECKING:
     from tardis.resources.drone import Drone
 
+logger = logging.getLogger("cobald.runtime.tardis.resources.dronestates")
+
 
 async def batchsystem_machine_status(
     state_transition, drone: "Drone", current_state: Type[State]
@@ -56,7 +58,7 @@ async def resource_status(state_transition, drone: "Drone", current_state: Type[
         drone.resource_attributes.update(
             await drone.site_agent.resource_status(drone.resource_attributes)
         )
-        logging.info(f"Resource attributes: {drone.resource_attributes}")
+        logger.info(f"Resource attributes: {drone.resource_attributes}")
     except (TardisAuthError, TardisTimeout, TardisResourceStatusUpdateFailed):
         #  Retry to get current state of the resource
         raise StopProcessing(last_result=current_state())
@@ -70,7 +72,7 @@ async def resource_status(state_transition, drone: "Drone", current_state: Type[
 class RequestState(State):
     @classmethod
     async def run(cls, drone: "Drone"):
-        logging.info(f"Drone {drone.resource_attributes} in RequestState")
+        logger.info(f"Drone {drone.resource_attributes} in RequestState")
         try:
             drone.resource_attributes.update(
                 await drone.site_agent.deploy_resource(drone.resource_attributes)
@@ -101,14 +103,14 @@ class BootingState(State):
 
     @classmethod
     async def run(cls, drone: "Drone"):
-        logging.info(f"Drone {drone.resource_attributes} in BootingState")
+        logger.info(f"Drone {drone.resource_attributes} in BootingState")
         await drone.set_state(await cls.run_processing_pipeline(drone))
 
 
 class IntegrateState(State):
     @classmethod
     async def run(cls, drone: "Drone"):
-        logging.info(f"Drone {drone.resource_attributes} in IntegrateState")
+        logger.info(f"Drone {drone.resource_attributes} in IntegrateState")
         await drone.batch_system_agent.integrate_machine(
             drone_uuid=drone.resource_attributes["drone_uuid"]
         )
@@ -133,7 +135,7 @@ class IntegratingState(State):
 
     @classmethod
     async def run(cls, drone: "Drone"):
-        logging.info(f"Drone {drone.resource_attributes} in IntegratingState")
+        logger.info(f"Drone {drone.resource_attributes} in IntegratingState")
         await drone.set_state(await cls.run_processing_pipeline(drone))
 
 
@@ -160,7 +162,7 @@ class AvailableState(State):
 
     @classmethod
     async def run(cls, drone: "Drone"):
-        logging.info(f"Drone {drone.resource_attributes} in AvailableState")
+        logger.info(f"Drone {drone.resource_attributes} in AvailableState")
 
         new_state = await cls.run_processing_pipeline(drone)
 
@@ -179,7 +181,7 @@ class AvailableState(State):
 class DrainState(State):
     @classmethod
     async def run(cls, drone: "Drone"):
-        logging.info(f"Drone {drone.resource_attributes} in DrainState")
+        logger.info(f"Drone {drone.resource_attributes} in DrainState")
         await drone.batch_system_agent.drain_machine(
             drone_uuid=drone.resource_attributes["drone_uuid"]
         )
@@ -206,14 +208,14 @@ class DrainingState(State):
 
     @classmethod
     async def run(cls, drone: "Drone"):
-        logging.info(f"Drone {drone.resource_attributes} in DrainingState")
+        logger.info(f"Drone {drone.resource_attributes} in DrainingState")
         await drone.set_state(await cls.run_processing_pipeline(drone))
 
 
 class DisintegrateState(State):
     @classmethod
     async def run(cls, drone: "Drone"):
-        logging.info(f"Drone {drone.resource_attributes} in DisintegrateState")
+        logger.info(f"Drone {drone.resource_attributes} in DisintegrateState")
         await drone.batch_system_agent.disintegrate_machine(
             drone_uuid=drone.resource_attributes["drone_uuid"]
         )
@@ -235,8 +237,8 @@ class ShutDownState(State):
 
     @classmethod
     async def run(cls, drone: "Drone"):
-        logging.info(f"Drone {drone.resource_attributes} in ShutDownState")
-        logging.info(
+        logger.info(f"Drone {drone.resource_attributes} in ShutDownState")
+        logger.debug(
             f"Stopping VM with ID {drone.resource_attributes.remote_resource_uuid}"
         )
 
@@ -245,7 +247,7 @@ class ShutDownState(State):
             try:
                 await drone.site_agent.stop_resource(drone.resource_attributes)
             except TardisResourceStatusUpdateFailed:
-                logging.warning(
+                logger.warning(
                     f"Calling stop_resource failed for drone "
                     f"{drone.resource_attributes.drone_uuid}"
                 )
@@ -267,8 +269,8 @@ class ShuttingDownState(State):
 
     @classmethod
     async def run(cls, drone: "Drone"):
-        logging.info(f"Drone {drone.resource_attributes} in ShuttingDownState")
-        logging.info(
+        logger.info(f"Drone {drone.resource_attributes} in ShuttingDownState")
+        logger.debug(
             f"Checking Status of VM with ID "
             f"{drone.resource_attributes.remote_resource_uuid}"
         )
@@ -287,25 +289,25 @@ class CleanupState(State):
 
     @classmethod
     async def run(cls, drone: "Drone"):
-        logging.info(f"Drone {drone.resource_attributes} in CleanupState")
+        logger.info(f"Drone {drone.resource_attributes} in CleanupState")
 
         new_state = await cls.run_processing_pipeline(drone)
 
         if isinstance(new_state, CleanupState):
             try:
-                logging.info(
+                logger.debug(
                     f"Destroying VM with ID "
                     f"{drone.resource_attributes.remote_resource_uuid}"
                 )
                 await drone.site_agent.terminate_resource(drone.resource_attributes)
             except TardisDroneCrashed:
-                logging.warning(
+                logger.warning(
                     f"Calling terminate_resource failed for drone "
                     f"{drone.resource_attributes.drone_uuid}. Drone crashed!"
                 )
                 new_state = DownState()
             except TardisResourceStatusUpdateFailed:
-                logging.warning(
+                logger.warning(
                     f"Calling terminate_resource failed for drone "
                     f"{drone.resource_attributes.drone_uuid}. Will retry later!"
                 )
@@ -316,5 +318,5 @@ class CleanupState(State):
 class DownState(State):
     @classmethod
     async def run(cls, drone: "Drone"):
-        logging.info(f"Drone {drone.resource_attributes} in DownState")
+        logger.info(f"Drone {drone.resource_attributes} in DownState")
         drone.demand = 0
