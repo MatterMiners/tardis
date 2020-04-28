@@ -56,7 +56,7 @@ class TestSSHExecutor(TestCase):
     @patch("tardis.utilities.executors.sshexecutor.asyncio.sleep", async_return)
     def test_establish_connection(self):
         self.assertIsInstance(
-            run_async(self.executor.establish_connection), MockConnection
+            run_async(self.executor._establish_connection), MockConnection
         )
 
         self.mock_asyncssh.connect.assert_called_with(**self.test_asyncssh_params)
@@ -73,7 +73,7 @@ class TestSSHExecutor(TestCase):
             self.mock_asyncssh.connect.side_effect = exception
 
             with self.assertRaises(type(exception)):
-                run_async(self.executor.establish_connection)
+                run_async(self.executor._establish_connection)
 
             self.assertEqual(self.mock_asyncssh.connect.call_count, 10)
 

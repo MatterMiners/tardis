@@ -14,7 +14,7 @@ class SSHExecutor(Executor):
         self._ssh_connection = None
         self._lock = None
 
-    async def establish_connection(self):
+    async def _establish_connection(self):
         for retry in range(1, 10):
             try:
                 return await asyncssh.connect(**self._parameters)
@@ -31,7 +31,7 @@ class SSHExecutor(Executor):
         async with self.lock:
             # check that connection has not yet been initialize in a different task
             if self._ssh_connection is None:
-                self._ssh_connection = await self.establish_connection()
+                self._ssh_connection = await self._establish_connection()
 
     @property
     def lock(self):
