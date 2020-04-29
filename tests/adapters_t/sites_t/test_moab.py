@@ -80,6 +80,39 @@ ERROR:  invalid job specified (4761849)
 
 """
 
+STATE_TRANSLATIONS = [
+    ("BatchHold", ResourceStatus.Stopped),
+    ("Canceling", ResourceStatus.Running),
+    ("CANCELLED", ResourceStatus.Deleted),
+    ("Completed", ResourceStatus.Deleted),
+    ("COMPLETED", ResourceStatus.Deleted),
+    ("COMPLETING", ResourceStatus.Running),
+    ("Deffered", ResourceStatus.Booting),
+    ("Depend", ResourceStatus.Error),
+    ("Dependency", ResourceStatus.Error),
+    ("FAILED", ResourceStatus.Error),
+    ("Idle", ResourceStatus.Booting),
+    ("JobHeldUser", ResourceStatus.Stopped),
+    ("Migrated", ResourceStatus.Booting),
+    ("NODE_FAIL", ResourceStatus.Error),
+    ("NotQueued", ResourceStatus.Error),
+    ("PENDING", ResourceStatus.Booting),
+    ("Priority", ResourceStatus.Booting),
+    ("Removed", ResourceStatus.Deleted),
+    ("Resources", ResourceStatus.Booting),
+    ("Running", ResourceStatus.Running),
+    ("RUNNING", ResourceStatus.Running),
+    ("Staging", ResourceStatus.Booting),
+    ("Starting", ResourceStatus.Booting),
+    ("Suspended", ResourceStatus.Stopped),
+    ("SUSPENDED", ResourceStatus.Stopped),
+    ("SystemHold", ResourceStatus.Stopped),
+    ("TimeLimit", ResourceStatus.Deleted),
+    ("TIMEOUT", ResourceStatus.Deleted),
+    ("UserHold", ResourceStatus.Stopped),
+    ("Vacated", ResourceStatus.Deleted),
+]
+
 TEST_RESOURCE_STATE_TRANSLATION_RESPONSE = f"\n\n".join(
     f"""
 <Data>
@@ -98,31 +131,7 @@ TEST_RESOURCE_STATE_TRANSLATION_RESPONSE = f"\n\n".join(
  </queue>
 </Data>
 """
-    for num, resource_status in enumerate(
-        [
-            "BatchHold",
-            "Canceling",
-            "Completed",
-            "Deffered",
-            "Depend",
-            "Dependency",
-            "Idle",
-            "JobHeldUser",
-            "Migrated",
-            "NotQueued",
-            "Priority",
-            "Removed",
-            "Resources",
-            "Running",
-            "Staging",
-            "Starting",
-            "Suspended",
-            "SystemHold",
-            "TimeLimit",
-            "UserHold",
-            "Vacated",
-        ]
-    )
+    for num, (resource_status, _) in enumerate(STATE_TRANSLATIONS)
 )
 
 
@@ -263,30 +272,7 @@ class TestMoabAdapter(TestCase):
 
     @mock_executor_run_command(TEST_RESOURCE_STATE_TRANSLATION_RESPONSE)
     def test_resource_state_translation(self):
-        state_translations = {
-            "BatchHold": ResourceStatus.Stopped,
-            "Canceling": ResourceStatus.Running,
-            "Completed": ResourceStatus.Deleted,
-            "Deffered": ResourceStatus.Booting,
-            "Depend": ResourceStatus.Error,
-            "Dependency": ResourceStatus.Error,
-            "Idle": ResourceStatus.Booting,
-            "JobHeldUser": ResourceStatus.Stopped,
-            "Migrated": ResourceStatus.Booting,
-            "NotQueued": ResourceStatus.Error,
-            "Priority": ResourceStatus.Booting,
-            "Removed": ResourceStatus.Deleted,
-            "Resources": ResourceStatus.Booting,
-            "Running": ResourceStatus.Running,
-            "Staging": ResourceStatus.Booting,
-            "Starting": ResourceStatus.Booting,
-            "Suspended": ResourceStatus.Stopped,
-            "SystemHold": ResourceStatus.Stopped,
-            "TimeLimit": ResourceStatus.Stopped,
-            "UserHold": ResourceStatus.Stopped,
-            "Vacated": ResourceStatus.Stopped,
-        }
-        for num, state in enumerate(state_translations.values()):
+        for num, (_, state) in enumerate(STATE_TRANSLATIONS):
             job_id = f"76242{num:02}"
             return_resource_attributes = run_async(
                 self.moab_adapter.resource_status,
