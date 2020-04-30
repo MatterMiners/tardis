@@ -106,7 +106,7 @@ class MoabAdapter(SiteAdapter):
                 UserHold=ResourceStatus.Stopped,
                 Vacated=ResourceStatus.Deleted,
             ): translator[x],
-            JobID=lambda x: int(x),
+            JobID=int,
         )
 
         self.handle_response = partial(
