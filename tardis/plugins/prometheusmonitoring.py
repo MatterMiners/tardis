@@ -10,7 +10,7 @@ from aioprometheus import Service, Gauge
 
 class PrometheusMonitoring(Plugin):
     """
-    The :py:class:`~tardis.plugins.prometheusmonitoring.PrometheusMonitoring`
+    The :py:class:`~.PrometheusMonitoring`
     implements an interface to monitor the state of the Drones using Prometheus.
     """
 
