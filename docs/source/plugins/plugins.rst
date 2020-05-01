@@ -91,6 +91,38 @@ Available configuration options
             default_tags:
               something_default: 'The Default Tag'
 
+Prometheus Monitoring
+---------------------
+
+.. content-tabs:: left-col
+
+    The :py:class:`~tardis.plugins.prometheusmonitoring.PrometheusMonitoring` implements an interface to monitor the
+    number of drones in the states ``Booting``, ``Running``, ``Stopped``, ``Deleted``, and ``Error``.
+
+Available configuration options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. content-tabs:: left-col
+
+    +----------------+---------------------------------------------------------------------------+-----------------+
+    | Option         | Short Description                                                         | Requirement     |
+    +================+===========================================================================+=================+
+    | addr           | Address on which the metrics are served on for Prometheus                 |  **Required**   |
+    +----------------+---------------------------------------------------------------------------+-----------------+
+    | port           | Port on which the metrics are served on for Prometheus                    |  **Required**   |
+    +----------------+---------------------------------------------------------------------------+-----------------+
+
+.. content-tabs:: right-col
+
+    .. rubric:: Example configuration
+
+    .. code-block:: yaml
+
+        Plugins:
+          PrometheusMonitoring:
+            addr: 127.0.0.1
+            port: 8080
+
 .. content-tabs:: left-col
 
     Your favorite monitoring is currently not supported?
