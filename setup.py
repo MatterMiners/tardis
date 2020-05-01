@@ -11,7 +11,7 @@ with open(os.path.join(repo_base_dir, "tardis", "__about__.py")) as about_file:
 with open(os.path.join(repo_base_dir, "README.md"), "r") as read_me:
     long_description = read_me.read()
 
-TESTS_REQUIRE = ["aiotools", "flake8"]
+TESTS_REQUIRE = ["flake8"]
 
 setup(
     name=package_about["__package__"],
@@ -57,7 +57,7 @@ setup(
         "CloudStackAIO",
         "PyYAML",
         "AsyncOpenStackClient",
-        "cobald>=0.12.0",
+        "cobald>=0.12.1",
         "asyncssh",
         "aiotelegraf",
         "aioprometheus",
