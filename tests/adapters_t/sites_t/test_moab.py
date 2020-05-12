@@ -80,6 +80,60 @@ ERROR:  invalid job specified (4761849)
 
 """
 
+STATE_TRANSLATIONS = [
+    ("BatchHold", ResourceStatus.Stopped),
+    ("Canceling", ResourceStatus.Running),
+    ("CANCELLED", ResourceStatus.Deleted),
+    ("Completed", ResourceStatus.Deleted),
+    ("COMPLETED", ResourceStatus.Deleted),
+    ("COMPLETING", ResourceStatus.Running),
+    ("Deffered", ResourceStatus.Booting),
+    ("Depend", ResourceStatus.Error),
+    ("Dependency", ResourceStatus.Error),
+    ("FAILED", ResourceStatus.Error),
+    ("Idle", ResourceStatus.Booting),
+    ("JobHeldUser", ResourceStatus.Stopped),
+    ("Migrated", ResourceStatus.Booting),
+    ("NODE_FAIL", ResourceStatus.Error),
+    ("NotQueued", ResourceStatus.Error),
+    ("PENDING", ResourceStatus.Booting),
+    ("Priority", ResourceStatus.Booting),
+    ("Removed", ResourceStatus.Deleted),
+    ("Resources", ResourceStatus.Booting),
+    ("Running", ResourceStatus.Running),
+    ("RUNNING", ResourceStatus.Running),
+    ("Staging", ResourceStatus.Booting),
+    ("Starting", ResourceStatus.Booting),
+    ("Suspended", ResourceStatus.Stopped),
+    ("SUSPENDED", ResourceStatus.Stopped),
+    ("SystemHold", ResourceStatus.Stopped),
+    ("TimeLimit", ResourceStatus.Deleted),
+    ("TIMEOUT", ResourceStatus.Deleted),
+    ("UserHold", ResourceStatus.Stopped),
+    ("Vacated", ResourceStatus.Deleted),
+]
+
+TEST_RESOURCE_STATE_TRANSLATION_RESPONSE = f"\n\n".join(
+    f"""
+<Data>
+ <Object>queue</Object>
+ <cluster LocalActiveNodes="0" LocalAllocProcs="0" LocalConfigNodes="918" LocalIdleNodes="9" LocalIdleProcs="1336" LocalUpNodes="916" LocalUpProcs="18776" RemoteActiveNodes="0" RemoteAllocProcs="0" RemoteConfigNodes="0" RemoteIdleNodes="0" RemoteIdleProcs="0" RemoteUpNodes="0" RemoteUpProcs="0" time="1583334681"/>
+ <queue count="0" option="active"/>
+ <queue count="0" option="eligible"/>
+ <queue count="0" option="blocked"/>
+</Data>
+
+<Data>
+ <Object>queue</Object>
+ <cluster LocalActiveNodes="0" LocalAllocProcs="0" LocalConfigNodes="918" LocalIdleNodes="9" LocalIdleProcs="1336" LocalUpNodes="916" LocalUpProcs="18776" RemoteActiveNodes="0" RemoteAllocProcs="0" RemoteConfigNodes="0" RemoteIdleNodes="0" RemoteIdleProcs="0" RemoteUpNodes="0" RemoteUpProcs="0" time="1583334681"/>
+ <queue count="1" option="completed" purgetime="86400">
+  <job Account="bw16g013" CompletionCode="CNCLD" EEDuration="2729" GJID="76242{num:02}" Group="ka_etp" JobID="76242{num:02}" JobName="startVM.py" ReqAWDuration="360" ReqProcs="20" StartTime="0" StatPSDed="0.000000" StatPSUtl="0.000000" State="{resource_status}" SubmissionTime="1583331813" SuspendDuration="0" User="ka_qb1555"/>
+ </queue>
+</Data>
+"""
+    for num, (resource_status, _) in enumerate(STATE_TRANSLATIONS)
+)
+
 
 class TestMoabAdapter(TestCase):
     @classmethod
@@ -215,6 +269,20 @@ class TestMoabAdapter(TestCase):
             raise Exception("Update time wrong!")
         del expected_resource_attributes.updated, return_resource_attributes.updated
         self.assertEqual(return_resource_attributes, expected_resource_attributes)
+
+    @mock_executor_run_command(TEST_RESOURCE_STATE_TRANSLATION_RESPONSE)
+    def test_resource_state_translation(self):
+        for num, (_, state) in enumerate(STATE_TRANSLATIONS):
+            job_id = f"76242{num:02}"
+            return_resource_attributes = run_async(
+                self.moab_adapter.resource_status,
+                AttributeDict(remote_resource_uuid=job_id),
+            )
+            self.assertEqual(return_resource_attributes.resource_status, state)
+
+        self.mock_executor.return_value.run_command.assert_called_with(
+            "showq --xml -w user=$(whoami) && showq -c --xml -w user=$(whoami)"
+        )
 
     @mock_executor_run_command(TEST_RESOURCE_STATUS_RESPONSE_RUNNING)
     def test_resource_status_update(self):

@@ -61,6 +61,7 @@ setup(
         "asyncssh",
         "aiotelegraf",
         "elasticsearch",
+        "aioprometheus",
     ],
     extras_require={
         "docs": ["sphinx", "sphinx_rtd_theme", "sphinxcontrib-contentui"],

@@ -41,9 +41,10 @@ SSH Executor
 
 .. content-tabs:: left-col
 
-    The ssh executor is used to asynchronously execute shell commands remotely via ssh. All parameters specified in the
-    configuration are directly passed as keyword arguments to `asyncssh` `connect` call. You can find all available
-    parameters in the `asyncssh documentation`_
+    The ssh executor is used to asynchronously execute shell commands remotely via ssh. The actual ssh connection to
+    the host is preserved, recycled and automatically reestablished. All parameters specified in the configuration are
+    directly passed as keyword arguments to `asyncssh` `connect` call. You can find all available parameters in the
+    `asyncssh documentation`_
 
     .. _asyncssh documentation: https://asyncssh.readthedocs.io/en/latest/api.html#connect
 
