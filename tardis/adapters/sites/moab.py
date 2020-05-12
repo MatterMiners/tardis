@@ -19,6 +19,7 @@ from datetime import datetime
 import asyncssh
 import logging
 import re
+import warnings
 from xml.dom import minidom
 
 
@@ -49,7 +50,17 @@ class MoabAdapter(SiteAdapter):
         self._configuration = getattr(Configuration(), site_name)
         self._machine_type = machine_type
         self._site_name = site_name
-        self._startup_command = self._configuration.StartupCommand
+
+        try:
+            self._startup_command = self.machine_type_configuration.StartupCommand
+        except AttributeError:
+            if not hasattr(self._configuration, "StartupCommand"):
+                raise
+            warnings.warn(
+                "StartupCommand has been moved to the machine_type_configuration!",
+                DeprecationWarning,
+            )
+            self._startup_command = self._configuration.StartupCommand
 
         self._executor = getattr(self._configuration, "executor", ShellExecutor())
 
@@ -61,15 +72,41 @@ class MoabAdapter(SiteAdapter):
             remote_resource_uuid="JobID", resource_status="State"
         )
 
+        # see job state codes at https://computing.llnl.gov/tutorials/moab/#JobStates
         translator_functions = StaticMapping(
             State=lambda x, translator=StaticMapping(
-                Idle=ResourceStatus.Booting,
-                Running=ResourceStatus.Running,
-                Completed=ResourceStatus.Deleted,
+                BatchHold=ResourceStatus.Stopped,
                 Canceling=ResourceStatus.Running,
-                Vacated=ResourceStatus.Stopped,
+                CANCELLED=ResourceStatus.Deleted,
+                Completed=ResourceStatus.Deleted,
+                COMPLETED=ResourceStatus.Deleted,
+                COMPLETING=ResourceStatus.Running,
+                Deffered=ResourceStatus.Booting,
+                Depend=ResourceStatus.Error,
+                Dependency=ResourceStatus.Error,
+                FAILED=ResourceStatus.Error,
+                Idle=ResourceStatus.Booting,
+                JobHeldUser=ResourceStatus.Stopped,
+                Migrated=ResourceStatus.Booting,
+                NODE_FAIL=ResourceStatus.Error,
+                NotQueued=ResourceStatus.Error,
+                PENDING=ResourceStatus.Booting,
+                Priority=ResourceStatus.Booting,
+                Removed=ResourceStatus.Deleted,
+                Resources=ResourceStatus.Booting,
+                Running=ResourceStatus.Running,
+                RUNNING=ResourceStatus.Running,
+                Staging=ResourceStatus.Booting,
+                Starting=ResourceStatus.Booting,
+                Suspended=ResourceStatus.Stopped,
+                SUSPENDED=ResourceStatus.Stopped,
+                SystemHold=ResourceStatus.Stopped,
+                TimeLimit=ResourceStatus.Deleted,
+                TIMEOUT=ResourceStatus.Deleted,
+                UserHold=ResourceStatus.Stopped,
+                Vacated=ResourceStatus.Deleted,
             ): translator[x],
-            JobID=lambda x: int(x),
+            JobID=int,
         )
 
         self.handle_response = partial(

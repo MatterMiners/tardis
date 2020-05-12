@@ -9,9 +9,10 @@ from tests.utilities.utilities import mock_executor_run_command
 from tests.utilities.utilities import run_async
 
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from datetime import datetime, timedelta
+from warnings import filterwarnings
 
 import asyncio
 import asyncssh
@@ -79,6 +80,60 @@ ERROR:  invalid job specified (4761849)
 
 """
 
+STATE_TRANSLATIONS = [
+    ("BatchHold", ResourceStatus.Stopped),
+    ("Canceling", ResourceStatus.Running),
+    ("CANCELLED", ResourceStatus.Deleted),
+    ("Completed", ResourceStatus.Deleted),
+    ("COMPLETED", ResourceStatus.Deleted),
+    ("COMPLETING", ResourceStatus.Running),
+    ("Deffered", ResourceStatus.Booting),
+    ("Depend", ResourceStatus.Error),
+    ("Dependency", ResourceStatus.Error),
+    ("FAILED", ResourceStatus.Error),
+    ("Idle", ResourceStatus.Booting),
+    ("JobHeldUser", ResourceStatus.Stopped),
+    ("Migrated", ResourceStatus.Booting),
+    ("NODE_FAIL", ResourceStatus.Error),
+    ("NotQueued", ResourceStatus.Error),
+    ("PENDING", ResourceStatus.Booting),
+    ("Priority", ResourceStatus.Booting),
+    ("Removed", ResourceStatus.Deleted),
+    ("Resources", ResourceStatus.Booting),
+    ("Running", ResourceStatus.Running),
+    ("RUNNING", ResourceStatus.Running),
+    ("Staging", ResourceStatus.Booting),
+    ("Starting", ResourceStatus.Booting),
+    ("Suspended", ResourceStatus.Stopped),
+    ("SUSPENDED", ResourceStatus.Stopped),
+    ("SystemHold", ResourceStatus.Stopped),
+    ("TimeLimit", ResourceStatus.Deleted),
+    ("TIMEOUT", ResourceStatus.Deleted),
+    ("UserHold", ResourceStatus.Stopped),
+    ("Vacated", ResourceStatus.Deleted),
+]
+
+TEST_RESOURCE_STATE_TRANSLATION_RESPONSE = f"\n\n".join(
+    f"""
+<Data>
+ <Object>queue</Object>
+ <cluster LocalActiveNodes="0" LocalAllocProcs="0" LocalConfigNodes="918" LocalIdleNodes="9" LocalIdleProcs="1336" LocalUpNodes="916" LocalUpProcs="18776" RemoteActiveNodes="0" RemoteAllocProcs="0" RemoteConfigNodes="0" RemoteIdleNodes="0" RemoteIdleProcs="0" RemoteUpNodes="0" RemoteUpProcs="0" time="1583334681"/>
+ <queue count="0" option="active"/>
+ <queue count="0" option="eligible"/>
+ <queue count="0" option="blocked"/>
+</Data>
+
+<Data>
+ <Object>queue</Object>
+ <cluster LocalActiveNodes="0" LocalAllocProcs="0" LocalConfigNodes="918" LocalIdleNodes="9" LocalIdleProcs="1336" LocalUpNodes="916" LocalUpProcs="18776" RemoteActiveNodes="0" RemoteAllocProcs="0" RemoteConfigNodes="0" RemoteIdleNodes="0" RemoteIdleProcs="0" RemoteUpNodes="0" RemoteUpProcs="0" time="1583334681"/>
+ <queue count="1" option="completed" purgetime="86400">
+  <job Account="bw16g013" CompletionCode="CNCLD" EEDuration="2729" GJID="76242{num:02}" Group="ka_etp" JobID="76242{num:02}" JobName="startVM.py" ReqAWDuration="360" ReqProcs="20" StartTime="0" StatPSDed="0.000000" StatPSUtl="0.000000" State="{resource_status}" SubmissionTime="1583331813" SuspendDuration="0" User="ka_qb1555"/>
+ </queue>
+</Data>
+"""
+    for num, (resource_status, _) in enumerate(STATE_TRANSLATIONS)
+)
+
 
 class TestMoabAdapter(TestCase):
     @classmethod
@@ -95,9 +150,16 @@ class TestMoabAdapter(TestCase):
 
     def setUp(self):
         config = self.mock_config.return_value
+        config.TestSite = MagicMock(
+            spec=[
+                "MachineMetaData",
+                "StatusUpdate",
+                "MachineTypeConfiguration",
+                "executor",
+            ]
+        )
         self.test_site_config = config.TestSite
         self.test_site_config.MachineMetaData = self.machine_meta_data
-        self.test_site_config.StartupCommand = "startVM.py"
         self.test_site_config.StatusUpdate = 10
         self.test_site_config.MachineTypeConfiguration = self.machine_type_configuration
         self.test_site_config.executor = self.mock_executor.return_value
@@ -114,7 +176,9 @@ class TestMoabAdapter(TestCase):
     @property
     def machine_type_configuration(self):
         return AttributeDict(
-            test2large=AttributeDict(NodeType="1:ppn=20", Walltime="02:00:00:00")
+            test2large=AttributeDict(
+                NodeType="1:ppn=20", StartupCommand="startVM.py", Walltime="02:00:00:00"
+            )
         )
 
     @property
@@ -132,6 +196,23 @@ class TestMoabAdapter(TestCase):
             ),
             drone_uuid="testsite-4761849",
         )
+
+    def test_start_up_command_deprecation_warning(self):
+        # Necessary to avoid annoying message in PyCharm
+        filterwarnings(action="ignore", message="unclosed", category=ResourceWarning)
+        del self.test_site_config.MachineTypeConfiguration.test2large.StartupCommand
+
+        with self.assertRaises(AttributeError):
+            self.moab_adapter = MoabAdapter(
+                machine_type="test2large", site_name="TestSite"
+            )
+
+        self.test_site_config.StartupCommand = "startVM.py"
+
+        with self.assertWarns(DeprecationWarning):
+            self.moab_adapter = MoabAdapter(
+                machine_type="test2large", site_name="TestSite"
+            )
 
     @mock_executor_run_command(TEST_DEPLOY_RESOURCE_RESPONSE)
     def test_deploy_resource(self):
@@ -188,6 +269,20 @@ class TestMoabAdapter(TestCase):
             raise Exception("Update time wrong!")
         del expected_resource_attributes.updated, return_resource_attributes.updated
         self.assertEqual(return_resource_attributes, expected_resource_attributes)
+
+    @mock_executor_run_command(TEST_RESOURCE_STATE_TRANSLATION_RESPONSE)
+    def test_resource_state_translation(self):
+        for num, (_, state) in enumerate(STATE_TRANSLATIONS):
+            job_id = f"76242{num:02}"
+            return_resource_attributes = run_async(
+                self.moab_adapter.resource_status,
+                AttributeDict(remote_resource_uuid=job_id),
+            )
+            self.assertEqual(return_resource_attributes.resource_status, state)
+
+        self.mock_executor.return_value.run_command.assert_called_with(
+            "showq --xml -w user=$(whoami) && showq -c --xml -w user=$(whoami)"
+        )
 
     @mock_executor_run_command(TEST_RESOURCE_STATUS_RESPONSE_RUNNING)
     def test_resource_status_update(self):
@@ -283,7 +378,7 @@ class TestMoabAdapter(TestCase):
         new_timestamp = datetime.now() - timedelta(minutes=2)
         self.moab_adapter._moab_status._last_update = new_timestamp
         with self.assertRaises(TardisResourceStatusUpdateFailed):
-            response = run_async(
+            run_async(
                 self.moab_adapter.resource_status,
                 AttributeDict(
                     resource_id=1351043,

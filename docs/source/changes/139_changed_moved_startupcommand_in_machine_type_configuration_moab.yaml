@@ -1,0 +1,7 @@
+category: changed
+summary: The Moab adapter can now be configured to use different startup commands for each machine type.
+pull requests:
+  - 139
+description: |
+  The Moab adapter can now be configured to use different startup commands for each machine type. The old behaviour of
+  providing one startup command is still supported, but will be deprecated in the next major release 0.4.0.
