@@ -20,7 +20,7 @@ matrix:
       dist: xenial
       script:
         - python -m flake8 tardis tests setup.py
-        - python -m black --target-version py36 --check tardis/ tests/
+        - python -m black --target-version py36 --check tardis/ tests/ setup.py
   fast_finish: true
 
 install:
