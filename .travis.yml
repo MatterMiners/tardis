@@ -19,7 +19,7 @@ matrix:
       name: Style
       dist: xenial
       script:
-        - python setup.py flake8
+        - python -m flake8 tardis tests setup.py
         - python -m black --target-version py36 --check tardis/ tests/
   fast_finish: true
 
