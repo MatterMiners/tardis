@@ -21,6 +21,8 @@ import logging
 import re
 import warnings
 
+logger = logging.getLogger("cobald.runtime.tardis.adapters.sites.slurm")
+
 
 async def slurm_status_updater(executor):
     attributes = dict(JobId="%A", Host="%N", State="%T")
@@ -28,11 +30,11 @@ async def slurm_status_updater(executor):
     cmd = f'squeue -o "{attributes_string}" -h -t all'
 
     slurm_resource_status = {}
-    logging.debug("Slurm status update is started.")
+    logger.debug("Slurm status update is started.")
     try:
         slurm_status = await executor.run_command(cmd)
     except CommandExecutionFailure as cf:
-        logging.error(f"Slurm status update has failed due to {cf}.")
+        logger.error(f"Slurm status update has failed due to {cf}.")
         raise
     else:
         for row in htcondor_csv_parser(
@@ -40,7 +42,7 @@ async def slurm_status_updater(executor):
         ):
             row["State"] = row["State"].strip()
             slurm_resource_status[row["JobId"]] = row
-        logging.debug("Slurm status update finished.")
+        logger.debug("Slurm status update finished.")
         return slurm_resource_status
 
 
@@ -115,7 +117,7 @@ class SlurmAdapter(SiteAdapter):
             f"{self._startup_command}"
         )
         result = await self._executor.run_command(request_command)
-        logging.debug(f"{self.site_name} sbatch returned {result}")
+        logger.debug(f"{self.site_name} sbatch returned {result}")
         pattern = re.compile(r"^Submitted batch job (\d*)", flags=re.MULTILINE)
         remote_resource_uuid = int(pattern.findall(result.stdout)[0])
         resource_attributes.update(
@@ -147,7 +149,7 @@ class SlurmAdapter(SiteAdapter):
                     "JobID": resource_attributes.remote_resource_uuid,
                     "State": "COMPLETED",
                 }
-        logging.debug(f"{self.site_name} has status {resource_status}.")
+        logger.debug(f"{self.site_name} has status {resource_status}.")
         resource_attributes.update(updated=datetime.now())
         return convert_to_attribute_dict(
             {**resource_attributes, **self.handle_response(resource_status)}
@@ -164,7 +166,7 @@ class SlurmAdapter(SiteAdapter):
         )
 
     async def stop_resource(self, resource_attributes: AttributeDict):
-        logging.debug("Slurm jobs cannot be stopped gracefully. Terminating instead.")
+        logger.debug("Slurm jobs cannot be stopped gracefully. Terminating instead.")
         return await self.terminate_resource(resource_attributes)
 
     @contextmanager
@@ -172,7 +174,7 @@ class SlurmAdapter(SiteAdapter):
         try:
             yield
         except CommandExecutionFailure as ex:
-            logging.info("Execute command failed: %s" % str(ex))
+            logger.warning("Execute command failed: %s" % str(ex))
             raise TardisResourceStatusUpdateFailed
         except TardisResourceStatusUpdateFailed:
             raise

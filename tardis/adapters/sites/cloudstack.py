@@ -20,6 +20,8 @@ from functools import partial
 import asyncio
 import logging
 
+logger = logging.getLogger("cobald.runtime.tardis.adapters.sites.cloudstack")
+
 
 class CloudStackAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
@@ -61,7 +63,7 @@ class CloudStackAdapter(SiteAdapter):
         response = await self.cloud_stack_client.deployVirtualMachine(
             name=resource_attributes.drone_uuid, **self.machine_type_configuration
         )
-        logging.debug(f"{self.site_name} deployVirtualMachine returned {response}")
+        logger.debug(f"{self.site_name} deployVirtualMachine returned {response}")
         return self.handle_response(response["virtualmachine"])
 
     async def resource_status(
@@ -70,21 +72,21 @@ class CloudStackAdapter(SiteAdapter):
         response = await self.cloud_stack_client.listVirtualMachines(
             id=resource_attributes.remote_resource_uuid
         )
-        logging.debug(f"{self.site_name} listVirtualMachines returned {response}")
+        logger.debug(f"{self.site_name} listVirtualMachines returned {response}")
         return self.handle_response(response["virtualmachine"][0])
 
     async def stop_resource(self, resource_attributes: AttributeDict):
         response = await self.cloud_stack_client.stopVirtualMachine(
             id=resource_attributes.remote_resource_uuid
         )
-        logging.debug(f"{self.site_name} stopVirtualMachine returned {response}")
+        logger.debug(f"{self.site_name} stopVirtualMachine returned {response}")
         return response
 
     async def terminate_resource(self, resource_attributes: AttributeDict):
         response = await self.cloud_stack_client.destroyVirtualMachine(
             id=resource_attributes.remote_resource_uuid
         )
-        logging.debug(f"{self.site_name} destroyVirtualMachine returned {response}")
+        logger.debug(f"{self.site_name} destroyVirtualMachine returned {response}")
         return response
 
     @contextmanager
@@ -94,29 +96,29 @@ class CloudStackAdapter(SiteAdapter):
         except asyncio.TimeoutError as te:
             raise TardisTimeout from te
         except ClientConnectionError:
-            logging.info("Connection reset error")
+            logger.warning("Connection reset error")
             raise TardisResourceStatusUpdateFailed
         except CloudStackClientException as ce:
             if ce.error_code == 535:
-                logging.info("Quota exceeded")
-                logging.debug(str(ce))
+                logger.warning("Quota exceeded")
+                logger.warning(str(ce))
                 raise TardisQuotaExceeded
             elif ce.error_code == 500:
-                logging.info(
+                logger.warning(
                     f"Error code: {ce.error_code}, error text: {ce.error_text}, "
                     f"response: {ce.response}"
                 )
                 if "timed out" in ce.response["message"]:
-                    logging.debug(f"Timed out: {ce.response}")
+                    logger.warning(f"Timed out: {ce.response}")
                     raise TardisTimeout from ce
                 elif "connection was closed" in ce.response["message"]:
-                    logging.debug(f"Connection was closed: {ce.response}")
+                    logger.warning(f"Connection was closed: {ce.response}")
                     raise TardisResourceStatusUpdateFailed from ce
                 else:
-                    logging.debug(f"CloudStackClient response: {ce.response}")
+                    logger.error(f"CloudStackClient response: {ce.response}")
                     raise TardisError from ce
             else:
-                logging.info(
+                logger.error(
                     f"Error code: {ce.error_code}, error text: {ce.error_text}, "
                     f"response: {ce.response}"
                 )
