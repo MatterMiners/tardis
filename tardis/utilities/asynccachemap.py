@@ -7,6 +7,8 @@ import asyncio
 import logging
 import json
 
+logger = logging.getLogger("cobald.runtime.tardis.utilities.asynccachemap")
+
 
 class AsyncCacheMap(Mapping):
     def __init__(self, update_coroutine, max_age: int = 60 * 15):
@@ -36,11 +38,11 @@ class AsyncCacheMap(Mapping):
                 try:
                     data = await self._update_coroutine()
                 except json.decoder.JSONDecodeError as je:
-                    logging.error(
+                    logger.error(
                         f"AsyncMap update_status failed: Could not decode json {je}"
                     )
                 except CommandExecutionFailure as cf:
-                    logging.error(f"AsyncMap update_status failed: {cf}")
+                    logger.error(f"AsyncMap update_status failed: {cf}")
                 else:
                     self._data = data
                     self._last_update = current_time
