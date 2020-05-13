@@ -113,7 +113,7 @@ STATE_TRANSLATIONS = [
     ("Vacated", ResourceStatus.Deleted),
 ]
 
-TEST_RESOURCE_STATE_TRANSLATION_RESPONSE = f"\n\n".join(
+TEST_RESOURCE_STATE_TRANSLATION_RESPONSE = "\n\n".join(
     f"""
 <Data>
  <Object>queue</Object>
