@@ -176,7 +176,26 @@ class TestSlurmAdapter(TestCase):
         )
 
         self.mock_executor.return_value.run_command.assert_called_with(
-            "sbatch -p normal -N 1 -n 20 --mem=62gb -t 60 --export=SLURM_Walltime=60 pilot.sh"  # noqa: B950
+            "sbatch -p normal -N 1 -n 20 -t 60 --mem=62gb --export=SLURM_Walltime=60 pilot.sh"  # noqa: B950
+        )
+
+    @mock_executor_run_command(TEST_DEPLOY_RESOURCE_RESPONSE)
+    def test_deploy_resource_w_submit_options(self):
+        self.test_site_config.MachineTypeConfiguration.test2large.SubmitOptions = AttributeDict(  # noqa: B950
+            long=AttributeDict(gres="tmp:1G")
+        )
+
+        slurm_adapter = SlurmAdapter(machine_type="test2large", site_name="TestSite")
+
+        run_async(
+            slurm_adapter.deploy_resource,
+            resource_attributes=AttributeDict(
+                machine_type="test2large", site_name="TestSite"
+            ),
+        )
+
+        self.mock_executor.return_value.run_command.assert_called_with(
+            "sbatch -p normal -N 1 -n 20 -t 60 --gres=tmp:1G --mem=62gb --export=SLURM_Walltime=60 pilot.sh"  # noqa: B950
         )
 
     def test_machine_meta_data(self):

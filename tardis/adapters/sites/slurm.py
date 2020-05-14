@@ -11,6 +11,7 @@ from ...utilities.attributedict import convert_to_attribute_dict
 from ...utilities.executors.shellexecutor import ShellExecutor
 from ...utilities.asynccachemap import AsyncCacheMap
 from ...utilities.utils import htcondor_csv_parser
+from ...utilities.utils import slurm_cmd_option_formatter
 
 from asyncio import TimeoutError
 from contextlib import contextmanager
@@ -61,6 +62,10 @@ class SlurmAdapter(SiteAdapter):
             )
             self._startup_command = self._configuration.StartupCommand
 
+        self._sbatch_cmdline_option_string = slurm_cmd_option_formatter(
+            self.sbatch_cmdline_options
+        )
+
         self._executor = getattr(self._configuration, "executor", ShellExecutor())
 
         self._slurm_status = AsyncCacheMap(
@@ -105,17 +110,16 @@ class SlurmAdapter(SiteAdapter):
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
+
         request_command = (
-            f"sbatch -p {self.machine_type_configuration.Partition} "
-            f"-N 1 -n {self.machine_meta_data.Cores} "
-            f"--mem={self.machine_meta_data.Memory}gb "
-            f"-t {self.machine_type_configuration.Walltime} "
-            f"--export=SLURM_Walltime="
-            f"{self.machine_type_configuration.Walltime} "
+            "sbatch "
+            f"{self._sbatch_cmdline_option_string} "
             f"{self._startup_command}"
         )
+
         result = await self._executor.run_command(request_command)
-        logging.debug(f"{self.site_name} sbatch returned {result}")
+        logging.debug(f"{self.site_name} {request_command} returned {result}")
+
         pattern = re.compile(r"^Submitted batch job (\d*)", flags=re.MULTILINE)
         remote_resource_uuid = int(pattern.findall(result.stdout)[0])
         resource_attributes.update(
@@ -161,6 +165,27 @@ class SlurmAdapter(SiteAdapter):
         )
         return self.handle_response(
             {"JobId": resource_attributes.remote_resource_uuid}, **resource_attributes
+        )
+
+    @property
+    def sbatch_cmdline_options(self):
+        sbatch_options = self.machine_type_configuration.get(
+            "SubmitOptions", AttributeDict()
+        )
+
+        return AttributeDict(
+            short=AttributeDict(
+                **sbatch_options.get("short", AttributeDict()),
+                p=self.machine_type_configuration.Partition,
+                N=1,
+                n=self.machine_meta_data.Cores,
+                t=self.machine_type_configuration.Walltime,
+            ),
+            long=AttributeDict(
+                **sbatch_options.get("long", AttributeDict()),
+                mem=f"{self.machine_meta_data.Memory}gb",
+                export=f"SLURM_Walltime={self.machine_type_configuration.Walltime}",
+            ),
         )
 
     async def stop_resource(self, resource_attributes: AttributeDict):
