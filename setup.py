@@ -41,10 +41,10 @@ setup(
     entry_points={
         "cobald.config.yaml_constructors": [
             "TardisPoolFactory = tardis.resources.poolfactory:create_composite_pool",
-            "TardisPeriodicValue = tardis.utilities.simulators.periodicvalue:PeriodicValue",
+            "TardisPeriodicValue = tardis.utilities.simulators.periodicvalue:PeriodicValue",  # noqa: B950
             "TardisRandomGauss = tardis.utilities.simulators.randomgauss:RandomGauss",
             "TardisSSHExecutor = tardis.utilities.executors.sshexecutor:SSHExecutor",
-            "TardisShellExecutor = tardis.utilities.executors.shellexecutor:ShellExecutor",
+            "TardisShellExecutor = tardis.utilities.executors.shellexecutor:ShellExecutor",  # noqa: B950
         ],
         "cobald.config.sections": [
             "tardis = tardis.configuration.configuration:Configuration"

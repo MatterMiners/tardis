@@ -34,24 +34,24 @@ class TestHTCondorAdapter(TestCase):
         self.command = (
             "condor_status -af:t Machine Name State Activity TardisDroneUuid "
             "'Real(TotalSlotCpus-Cpus)/TotalSlotCpus' "
-            "'Real(TotalSlotMemory-Memory)/TotalSlotMemory' -constraint PartitionableSlot=?=True"
+            "'Real(TotalSlotMemory-Memory)/TotalSlotMemory' -constraint PartitionableSlot=?=True"  # noqa: B950
             " -pool my-htcondor.local -test"
         )
 
         self.command_wo_options = (
             "condor_status -af:t Machine Name State Activity TardisDroneUuid "
             "'Real(TotalSlotCpus-Cpus)/TotalSlotCpus' "
-            "'Real(TotalSlotMemory-Memory)/TotalSlotMemory' -constraint PartitionableSlot=?=True"
+            "'Real(TotalSlotMemory-Memory)/TotalSlotMemory' -constraint PartitionableSlot=?=True"  # noqa: B950
         )
 
         return_value = "\n".join(
             [
-                f"test\tslot1@test\tUnclaimed\tIdle\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",
-                f"test_drain\tslot1@test\tDrained\tRetiring\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",
-                f"test_drained\tslot1@test\tDrained\tIdle\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",
-                f"test_owner\tslot1@test\tOwner\tIdle\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",
-                f"test_uuid_plus\tslot1@test_uuid@test\tUnclaimed\tIdle\ttest_uuid\t{self.cpu_ratio}\t{self.memory_ratio}",
-                "exoscale-26d361290f\tslot1@exoscale-26d361290f\tUnclaimed\tIdle\tundefined\t0.125\t0.125",
+                f"test\tslot1@test\tUnclaimed\tIdle\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",  # noqa: B950
+                f"test_drain\tslot1@test\tDrained\tRetiring\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",  # noqa: B950
+                f"test_drained\tslot1@test\tDrained\tIdle\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",  # noqa: B950
+                f"test_owner\tslot1@test\tOwner\tIdle\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",  # noqa: B950
+                f"test_uuid_plus\tslot1@test_uuid@test\tUnclaimed\tIdle\ttest_uuid\t{self.cpu_ratio}\t{self.memory_ratio}",  # noqa: B950
+                "exoscale-26d361290f\tslot1@exoscale-26d361290f\tUnclaimed\tIdle\tundefined\t0.125\t0.125",  # noqa: B950
             ]
         )
         self.mock_async_run_command.return_value = async_return(
