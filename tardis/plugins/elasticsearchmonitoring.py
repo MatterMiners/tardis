@@ -22,7 +22,6 @@ class ElasticsearchMonitoring(Plugin):
         self.logger = logging.getLogger(
             "cobald.runtime.tardis.plugins.elasticsearchmonitoring"
         )
-        self.logger.setLevel(logging.DEBUG)
         config = Configuration().Plugins.ElasticsearchMonitoring
 
         self._index = config.index + "-" + datetime.now().strftime("%Y-%m-%d")
@@ -49,7 +48,7 @@ class ElasticsearchMonitoring(Plugin):
             f"Drone: {str(resource_attributes)} has changed state to {state}"
         )
 
-        resource_attributes = {
+        document = {
             **resource_attributes,
             "state": str(state),
             "meta": self._meta,
@@ -57,32 +56,35 @@ class ElasticsearchMonitoring(Plugin):
             "resource_status": str(resource_attributes["resource_status"]),
         }
 
-        await self.async_execute(resource_attributes)
+        await self.async_execute(document)
 
-    async def async_execute(self, resource_attributes: AttributeDict) -> None:
+    async def async_execute(self, document: AttributeDict) -> None:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            self.thread_pool_executor, self.execute, resource_attributes
+            self.thread_pool_executor, self.execute, document
         )
 
-    def execute(self, resource_attributes: AttributeDict) -> None:
+    def execute(self, document: AttributeDict) -> None:
         """
         Pushes drone info to an ElasticSearch instance.
 
         :param state: New state of the Drone
         :type state: State
-        :param resource_attributes: Contains all meta-data of the Drone (created and
+        :param document: Contains all meta-data of the Drone (created and
             updated timestamps, dns name, unique id, site_name, machine_type, etc.)
-        :type resource_attributes: AttributeDict
+        :type document: AttributeDict
         :return: None
         """
         revision = 0
         while True:
             try:
                 # Add revision number
-                resource_attributes["revision"] = revision
-                doc_id = resource_attributes["drone_uuid"] + "-" + str(revision)
-                self._es.create(index=self._index, id=doc_id, body=resource_attributes)
+                document["revision"] = revision
+                self._es.create(
+                    index=self._index,
+                    id=f"{document['drone_uuid']}-{revision}",
+                    body=document,
+                )
                 break
             except ConflictError:
                 revision += 1

@@ -139,9 +139,11 @@ Available configuration options
     +----------------+---------------------------------------------------------------------------+-----------------+
     | Option         | Short Description                                                         | Requirement     |
     +================+===========================================================================+=================+
-    | host           | Hostname or IP address the Elasticsearch instance.                        |  **Required**   |
+    | host           | Hostname or IP address of the Elasticsearch instance.                     |  **Required**   |
     +----------------+---------------------------------------------------------------------------+-----------------+
     | port           | Port the Elasticsearch instance is listening on.                          |  **Required**   |
+    +----------------+---------------------------------------------------------------------------+-----------------+
+    | index          | Target index in the Elasticsearch instance                                |  **Required**   |
     +----------------+---------------------------------------------------------------------------+-----------------+
     | meta           | Additional meta data (can be used to distinguish TARDIS instances).       |  **Optional**   |
     +----------------+---------------------------------------------------------------------------+-----------------+
