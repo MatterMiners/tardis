@@ -1,6 +1,9 @@
+from tardis.utilities.attributedict import AttributeDict
 from tardis.utilities.utils import async_run_command
 from tardis.utilities.utils import htcondor_cmd_option_formatter
 from tardis.utilities.utils import htcondor_csv_parser
+from tardis.utilities.utils import slurm_cmd_option_formatter
+
 from tardis.exceptions.executorexceptions import CommandExecutionFailure
 
 from ..utilities.utilities import run_async
@@ -21,10 +24,15 @@ class TestAsyncRunCommand(TestCase):
 
 class TestHTCondorCMDOptionFormatter(TestCase):
     def test_htcondor_cmd_option_formatter(self):
-        options = {"pool": "my-htcondor.local", "test": None}
-        options_string = htcondor_cmd_option_formatter(options)
+        options = AttributeDict(pool="my-htcondor.local", test=None)
+        option_string = htcondor_cmd_option_formatter(options)
 
-        self.assertEqual(options_string, "-pool my-htcondor.local -test")
+        self.assertEqual(option_string, "-pool my-htcondor.local -test")
+
+        options = AttributeDict()
+        option_string = htcondor_cmd_option_formatter(options)
+
+        self.assertEqual(option_string, "")
 
 
 class TestHTCondorCSVParser(TestCase):
@@ -62,4 +70,32 @@ class TestHTCondorCSVParser(TestCase):
                 Test1=None,
                 Test2=None,
             ),
+        )
+
+
+class TestSlurmCMDOptionFormatter(TestCase):
+    def test_slurm_cmd_option_formatter(self):
+        options = AttributeDict()
+        option_string = slurm_cmd_option_formatter(options)
+
+        self.assertEqual(option_string, "")
+
+        options = AttributeDict(short=AttributeDict(foo="bar", test=None))
+        option_string = slurm_cmd_option_formatter(options)
+
+        self.assertEqual(option_string, "-foo bar -test")
+
+        options = AttributeDict(long=AttributeDict(foo="bar", test=None))
+        option_string = slurm_cmd_option_formatter(options)
+
+        self.assertEqual(option_string, "--foo=bar --test")
+
+        options = AttributeDict(
+            short=AttributeDict(foo="bar", test=None),
+            long=AttributeDict(foo_long="bar_long", test_long=None),
+        )
+        option_string = slurm_cmd_option_formatter(options)
+
+        self.assertEqual(
+            option_string, "-foo bar -test --foo_long=bar_long --test_long"
         )

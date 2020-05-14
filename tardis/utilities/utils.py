@@ -22,13 +22,17 @@ async def async_run_command(cmd, shell_executor=ShellExecutor()):
         return response.stdout
 
 
-def htcondor_cmd_option_formatter(options):
+def cmd_option_formatter(options, prefix, separator):
     options = (
-        f"-{name} {value}" if value is not None else f"-{name}"
+        f"{prefix}{name}{separator}{value}" if value is not None else f"{prefix}{name}"
         for name, value in options.items()
     )
 
     return " ".join(options)
+
+
+def htcondor_cmd_option_formatter(options):
+    return cmd_option_formatter(options, prefix="-", separator=" ")
 
 
 def htcondor_csv_parser(htcondor_input, fieldnames, delimiter="\t", replacements=None):
@@ -42,3 +46,26 @@ def htcondor_csv_parser(htcondor_input, fieldnames, delimiter="\t", replacements
                 key: value if value not in replacements.keys() else replacements[value]
                 for key, value in row.items()
             }
+
+
+def slurm_cmd_option_formatter(options):
+    option_prefix = dict(short="-", long="--")
+    option_separator = dict(short=" ", long="=")
+
+    option_string = ""
+
+    for option_type in ("short", "long"):
+        try:
+            tmp_option_string = cmd_option_formatter(
+                getattr(options, option_type),
+                prefix=option_prefix[option_type],
+                separator=option_separator[option_type],
+            )
+        except AttributeError:
+            pass
+        else:
+            if option_string:  # add additional space between short and long options
+                option_string += " "
+            option_string += tmp_option_string
+
+    return option_string
