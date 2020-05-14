@@ -21,7 +21,7 @@ from importlib import import_module
 def str_to_state(resources):
     for entry in resources:
         state_class = getattr(
-            import_module(name=f"tardis.resources.dronestates"), f"{entry['state']}"
+            import_module(name="tardis.resources.dronestates"), f"{entry['state']}"
         )
         entry["state"] = state_class()
     return resources

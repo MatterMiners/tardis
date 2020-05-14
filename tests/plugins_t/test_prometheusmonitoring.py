@@ -75,7 +75,7 @@ class TestPrometheusMonitoring(TestCase):
             [
                 gauge.get({}) == result
                 for (gauge, result) in zip(self.plugin._gauges.values(), values)
-            ],
+            ]
         )
 
 

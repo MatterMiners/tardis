@@ -48,7 +48,7 @@ request_cpus=8
 request_memory=32768
 request_disk=163840
 
-queue 1"""
+queue 1"""  # noqa: B950
 
 
 class TestHTCondorSiteAdapter(TestCase):
@@ -201,8 +201,8 @@ class TestHTCondorSiteAdapter(TestCase):
         ),
     )
     def test_resource_status_raise_past(self):
-        # Update interval is 10 minutes, so set last update back by 11 minutes in order to execute condor_q command and
-        # creation date to 12 minutes ago
+        # Update interval is 10 minutes, so set last update back by 11 minutes
+        # in order to execute condor_q command and creation date to 12 minutes ago
         past_timestamp = datetime.now() - timedelta(minutes=12)
         self.adapter._htcondor_queue._last_update = datetime.now() - timedelta(
             minutes=11
