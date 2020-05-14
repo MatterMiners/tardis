@@ -5,7 +5,7 @@ from unittest import TestCase
 import yaml
 
 
-@enable_yaml_load("!TestDummy")
+@enable_yaml_load("!TestDummy")  # noqa: B903
 class TestDummy(object):
     def __init__(self, *args, **kwargs):
         self.args = args

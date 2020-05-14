@@ -176,7 +176,7 @@ class TestSlurmAdapter(TestCase):
         )
 
         self.mock_executor.return_value.run_command.assert_called_with(
-            "sbatch -p normal -N 1 -n 20 --mem=62gb -t 60 --export=SLURM_Walltime=60 pilot.sh"
+            "sbatch -p normal -N 1 -n 20 --mem=62gb -t 60 --export=SLURM_Walltime=60 pilot.sh"  # noqa: B950
         )
 
     def test_machine_meta_data(self):
