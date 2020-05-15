@@ -7,7 +7,6 @@ from concurrent.futures import ThreadPoolExecutor
 import logging
 import asyncio
 from elasticsearch import Elasticsearch
-from elasticsearch.exceptions import ConflictError
 from time import time
 from datetime import datetime
 
@@ -73,13 +72,13 @@ class ElasticsearchMonitoring(Plugin):
         :type document: AttributeDict
         :return: None
         """
-        revision = len(
+        revision = int(
             self._es.search(
                 index=f"{self._index}*",
                 body={
                     "query": {"term": {"drone_uuid.keyword": document["drone_uuid"]}}
                 },
-            )["hits"]["hits"]
+            )["hits"]["total"]["value"]
         )
 
         document["revision"] = revision
