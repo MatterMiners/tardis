@@ -99,27 +99,23 @@ class CloudStackAdapter(SiteAdapter):
             logger.warning("Connection reset error")
             raise TardisResourceStatusUpdateFailed
         except CloudStackClientException as ce:
+            log_msg = (
+                f"Error code: {ce.error_code}, error text: {ce.error_text}, "
+                f"response: {ce.response}"
+            )
             if ce.error_code == 535:
-                logger.warning("Quota exceeded")
-                logger.warning(str(ce))
+                logger.warning(f"Quota exceeded: {log_msg}")
                 raise TardisQuotaExceeded
             elif ce.error_code == 500:
-                logger.warning(
-                    f"Error code: {ce.error_code}, error text: {ce.error_text}, "
-                    f"response: {ce.response}"
-                )
                 if "timed out" in ce.response["message"]:
-                    logger.warning(f"Timed out: {ce.response}")
+                    logger.warning(f"Timed out: {log_msg}")
                     raise TardisTimeout from ce
                 elif "connection was closed" in ce.response["message"]:
-                    logger.warning(f"Connection was closed: {ce.response}")
+                    logger.warning(f"Connection was closed: {log_msg}")
                     raise TardisResourceStatusUpdateFailed from ce
                 else:
-                    logger.error(f"CloudStackClient response: {ce.response}")
+                    logger.critical(log_msg)
                     raise TardisError from ce
             else:
-                logger.error(
-                    f"Error code: {ce.error_code}, error text: {ce.error_text}, "
-                    f"response: {ce.response}"
-                )
+                logger.critical(log_msg)
                 raise TardisError from ce

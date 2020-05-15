@@ -58,8 +58,7 @@ async def htcondor_status_updater(
             htcondor_status[status_key] = row
 
     except CommandExecutionFailure as cef:
-        logger.error("condor_status could not be executed!")
-        logger.error(str(cef))
+        logger.warning(f"condor_status could not be executed due to {cef}!")
         raise
     else:
         logger.debug("HTCondor status update finished.")
@@ -139,11 +138,12 @@ class HTCondorAdapter(BatchSystemAdapter):
             if cef.exit_code == 1:
                 # exit code 1: HTCondor can't connect to StartD of Drone
                 # https://github.com/htcondor/htcondor/blob/master/src/condor_tools/drain.cpp  # noqa: B950
-                logger.info(f"Draining failed with: {str(cef)}")
-                logger.info(
-                    f"Probably drone {drone_uuid} is not available or already drained."
+                logger.warning(
+                    f"Draining failed with: {str(cef)}. Probably drone {drone_uuid}"
+                    " is not available or already drained."
                 )
                 return
+            logger.critical(f"Draining failed with: {str(cef)}.")
             raise cef
 
     async def integrate_machine(self, drone_uuid: str) -> None:

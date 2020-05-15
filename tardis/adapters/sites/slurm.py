@@ -34,7 +34,7 @@ async def slurm_status_updater(executor):
     try:
         slurm_status = await executor.run_command(cmd)
     except CommandExecutionFailure as cf:
-        logger.error(f"Slurm status update has failed due to {cf}.")
+        logger.warning(f"Slurm status update has failed due to {cf}.")
         raise
     else:
         for row in htcondor_csv_parser(

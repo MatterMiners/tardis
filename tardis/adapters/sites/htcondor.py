@@ -32,7 +32,7 @@ async def htcondor_queue_updater(executor):
     try:
         condor_queue = await executor.run_command(queue_command)
     except CommandExecutionFailure as cf:
-        logger.error(f"htcondor_queue_update failed: {cf}")
+        logger.warning(f"htcondor_queue_update failed: {cf}")
         raise
     else:
         for row in htcondor_csv_parser(
@@ -107,7 +107,7 @@ class HTCondorAdapter(SiteAdapter):
                 for key, value in self.machine_meta_data.items()
             }
         except KeyError as ke:
-            logger.error(f"deploy_resource failed: no translation known for {ke}")
+            logger.critical(f"deploy_resource failed: no translation known for {ke}")
             raise
         else:
             translated_meta_data["Uuid"] = resource_attributes.drone_uuid

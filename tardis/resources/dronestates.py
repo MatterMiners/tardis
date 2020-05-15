@@ -58,7 +58,7 @@ async def resource_status(state_transition, drone: "Drone", current_state: Type[
         drone.resource_attributes.update(
             await drone.site_agent.resource_status(drone.resource_attributes)
         )
-        logger.info(f"Resource attributes: {drone.resource_attributes}")
+        logger.debug(f"Resource attributes: {drone.resource_attributes}")
     except (TardisAuthError, TardisTimeout, TardisResourceStatusUpdateFailed):
         #  Retry to get current state of the resource
         raise StopProcessing(last_result=current_state())
@@ -271,7 +271,7 @@ class ShuttingDownState(State):
     async def run(cls, drone: "Drone"):
         logger.info(f"Drone {drone.resource_attributes} in ShuttingDownState")
         logger.debug(
-            f"Checking Status of VM with ID "
+            f"Checking Status of drone with ID "
             f"{drone.resource_attributes.remote_resource_uuid}"
         )
         await drone.set_state(await cls.run_processing_pipeline(drone))

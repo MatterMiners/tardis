@@ -207,7 +207,7 @@ class MoabAdapter(SiteAdapter):
         )
 
     async def stop_resource(self, resource_attributes: AttributeDict):
-        logger.info("MOAB jobs cannot be stopped gracefully. Terminating instead.")
+        logger.debug("MOAB jobs cannot be stopped gracefully. Terminating instead.")
         return await self.terminate_resource(resource_attributes)
 
     @contextmanager

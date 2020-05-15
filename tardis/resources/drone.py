@@ -16,6 +16,8 @@ import asyncio
 import logging
 import uuid
 
+logger = logging.getLogger("cobald.runtime.tardis.resources.drone")
+
 
 @service(flavour=asyncio)
 class Drone(Pool):
@@ -30,7 +32,6 @@ class Drone(Pool):
         created: float = None,
         updated: float = None,
     ):
-        self.logger = logging.getLogger("cobald.runtime.tardis.resources.drone")
         self._site_agent = site_agent
         self._batch_system_agent = batch_system_agent
         self._plugins = plugins or []
@@ -91,7 +92,7 @@ class Drone(Pool):
             current_state = self.state
             await current_state.run(self)
             if isinstance(current_state, DownState):
-                self.logger.debug(
+                logger.debug(
                     f"Garbage Collect Drone: {self.resource_attributes.drone_uuid}"
                 )
                 self._demand = 0
