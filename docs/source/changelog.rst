@@ -38,6 +38,7 @@ Fixed
 Added
 -----
 
+* Enable support for `sbatch` command line options in the Slurm site adapter
 * Add ssh connection sharing to `SSHExecutor` in order to re-use existing connection
 
 Changed
