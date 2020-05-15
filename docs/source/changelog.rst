@@ -43,5 +43,6 @@ Added
 Changed
 -------
 
+* Added log channels and adjusted log levels according to the conventions in `COBalD` documentation
 * The Moab adapter can now be configured to use different startup commands for each machine type.
 * The SLURM adapter can now be configured to use different startup commands for each machine type.
