@@ -24,12 +24,10 @@ class ElasticsearchMonitoring(Plugin):
         )
         config = Configuration().Plugins.ElasticsearchMonitoring
 
-        self._index = config.index + "-" + datetime.now().strftime("%Y-%m-%d")
-        self._host = config.host
-        self._port = config.port
+        self._index = config.index
         self._meta = config.meta
 
-        self._es = Elasticsearch([{"host": self._host, "port": self._port}])
+        self._es = Elasticsearch([{"host": config.host, "port": config.port}])
 
         self.thread_pool_executor = ThreadPoolExecutor(max_workers=1)
 
@@ -75,16 +73,18 @@ class ElasticsearchMonitoring(Plugin):
         :type document: AttributeDict
         :return: None
         """
-        revision = 0
-        while True:
-            try:
-                # Add revision number
-                document["revision"] = revision
-                self._es.create(
-                    index=self._index,
-                    id=f"{document['drone_uuid']}-{revision}",
-                    body=document,
-                )
-                break
-            except ConflictError:
-                revision += 1
+        revision = len(
+            self._es.search(
+                index=f"{self._index}*",
+                body={
+                    "query": {"term": {"drone_uuid.keyword": document["drone_uuid"]}}
+                },
+            )["hits"]["hits"]
+        )
+
+        document["revision"] = revision
+        self._es.create(
+            index=f"{self._index}-{datetime.now().strftime('%Y-%m-%d')}",
+            id=f"{document['drone_uuid']}-{revision}",
+            body=document,
+        )
