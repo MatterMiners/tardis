@@ -437,14 +437,14 @@ Available machine type configuration options
                   C: "intel"
                 long:
                   gres: "gpu:2,mic:1"
-            twelve_hours:
+            six_hours:
               Walltime: '360'
               Partition: normal
               StartupCommand: 'pilot_clean.sh'
               SubmitOptions:
                 long:
                   gres: "gpu:2,mic:1"
-            six_hours:
+            twelve_hours:
               Walltime: '720'
               Partition: normal
               StartupCommand: 'pilot_clean.sh'
