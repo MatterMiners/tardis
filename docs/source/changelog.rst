@@ -53,4 +53,5 @@ Changed
 Fixed
 -----
 
+* Fixed the exception handling of `ConnectionResetError` in `SSHExecutor`
 * Fixed the resource status translation of the moab site adapter
