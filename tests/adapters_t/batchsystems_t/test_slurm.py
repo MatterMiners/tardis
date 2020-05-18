@@ -66,10 +66,6 @@ class TestSlurmAdapter(TestCase):
 
     def setup_config_mock(self, options=None):
         self.config = self.mock_config.return_value
-        self.config.BatchSystem.ratios = {
-            "cpu_ratio": "Real(TotalSlotCpus-Cpus)/TotalSlotCpus",
-            "memory_ratio": "Real(TotalSlotMemory-Memory)/TotalSlotMemory",
-        }
         self.config.BatchSystem.max_age = 10
         if options:
             self.config.BatchSystem.options = options
@@ -99,18 +95,10 @@ class TestSlurmAdapter(TestCase):
         self.mock_async_run_command.side_effect = CommandExecutionFailure(
             message="Does not exists", exit_code=1, stderr="Does not exists"
         )
-        self.assertIsNone(
-            run_async(self.slurm_adapter.drain_machine, drone_uuid="test")
-        )
-
-        # Review: Not working, and I don't know why. What is this testing?
-        #  self.mock_async_run_command.side_effect = CommandExecutionFailure(
-        #      message="Unhandled error", exit_code=2, stderr="Unhandled error"
-        #  )
-        #  with self.assertRaises(CommandExecutionFailure):
-        #      self.assertIsNone(
-        #          run_async(self.slurm_adapter.drain_machine, drone_uuid="test")
-        #      )
+        with self.assertRaises(CommandExecutionFailure):
+            self.assertIsNone(
+                run_async(self.slurm_adapter.drain_machine, drone_uuid="idle_machine")
+            )
 
         self.mock_async_run_command.side_effect = None
 
@@ -129,7 +117,7 @@ class TestSlurmAdapter(TestCase):
         )
 
     def test_get_resource_ratios(self):
-        self.assertCountEqual(
+        self.assertEqual(
             list(run_async(self.slurm_adapter.get_resource_ratios, drone_uuid="VM-1")),
             [self.cpu_ratio, self.memory_ratio],
         )
@@ -160,54 +148,27 @@ class TestSlurmAdapter(TestCase):
         self.mock_async_run_command.assert_called_with(self.command)
 
     def test_get_machine_status(self):
-        self.assertEqual(
-            run_async(self.slurm_adapter.get_machine_status, drone_uuid="VM-1"),
-            MachineStatus.Available,
-        )
-        self.mock_async_run_command.assert_called_with(self.command)
-        self.mock_async_run_command.reset_mock()
-        self.assertEqual(
-            run_async(self.slurm_adapter.get_machine_status, drone_uuid="not_exists"),
-            MachineStatus.NotAvailable,
-        )
-        self.mock_async_run_command.reset_mock()
-        self.assertEqual(
-            run_async(
-                self.slurm_adapter.get_machine_status, drone_uuid="draining_machine"
-            ),
-            MachineStatus.Draining,
-        )
-        self.mock_async_run_command.reset_mock()
-        self.assertEqual(
-            run_async(self.slurm_adapter.get_machine_status, drone_uuid="idle_machine"),
-            MachineStatus.Available,
-        )
-        self.mock_async_run_command.reset_mock()
-        self.assertEqual(
-            run_async(
-                self.slurm_adapter.get_machine_status, drone_uuid="drained_machine"
-            ),
-            MachineStatus.NotAvailable,
-        )
-        self.mock_async_run_command.reset_mock()
-        self.assertEqual(
-            run_async(
-                self.slurm_adapter.get_machine_status, drone_uuid="power_up_machine"
-            ),
-            MachineStatus.NotAvailable,
-        )
-        self.mock_async_run_command.reset_mock()
+        state_mapping = {
+            "VM-1": MachineStatus.Available,
+            "not_exists": MachineStatus.NotAvailable,
+            "draining_machine": MachineStatus.Draining,
+            "idle_machine": MachineStatus.Available,
+            "drained_machine": MachineStatus.NotAvailable,
+            "power_up_machine": MachineStatus.NotAvailable,
+        }
 
-        self.assertEqual(
-            run_async(self.slurm_adapter.get_machine_status, drone_uuid="VM-1"),
-            MachineStatus.Available,
-        )
+        for machine, state in state_mapping.items():
+            self.assertEqual(
+                run_async(self.slurm_adapter.get_machine_status, drone_uuid=machine),
+                state,
+            )
+
         self.mock_async_run_command.reset_mock()
 
         self.mock_async_run_command.side_effect = CommandExecutionFailure(
             message="Test", exit_code=123, stderr="Test"
         )
-        with self.assertLogs(level="ERROR"):
+        with self.assertLogs(level="WARN"):
             with self.assertRaises(CommandExecutionFailure):
                 attributes = {
                     "Machine": "Machine",
@@ -234,7 +195,6 @@ class TestSlurmAdapter(TestCase):
         self.mock_async_run_command.side_effect = None
 
     def test_get_utilisation(self):
-        print(run_async(self.slurm_adapter.get_utilisation, drone_uuid="VM-1"))
         self.assertEqual(
             run_async(self.slurm_adapter.get_utilisation, drone_uuid="VM-1"),
             min([self.cpu_ratio, self.memory_ratio]),

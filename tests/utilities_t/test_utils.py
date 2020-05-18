@@ -1,6 +1,6 @@
 from tardis.utilities.utils import async_run_command
 from tardis.utilities.utils import htcondor_cmd_option_formatter
-from tardis.utilities.utils import htcondor_csv_parser
+from tardis.utilities.utils import csv_parser
 from tardis.exceptions.executorexceptions import CommandExecutionFailure
 
 from ..utilities.utilities import run_async
@@ -27,8 +27,8 @@ class TestHTCondorCMDOptionFormatter(TestCase):
         self.assertEqual(options_string, "-pool my-htcondor.local -test")
 
 
-class TestHTCondorCSVParser(TestCase):
-    def test_htcondor_csv_parser(self):
+class TestCSVParser(TestCase):
+    def test_csv_parser(self):
         htcondor_input = "\n".join(
             [
                 "exoscale-26d361290f\tUnclaimed\tIdle\t0.125\t0.125",
@@ -36,8 +36,8 @@ class TestHTCondorCSVParser(TestCase):
             ]
         )
 
-        parsed_rows = htcondor_csv_parser(
-            htcondor_input=htcondor_input,
+        parsed_rows = csv_parser(
+            input_csv=htcondor_input,
             fieldnames=("Machine", "State", "Activity", "Test1", "Test2"),
             replacements=dict(undefined=None),
         )

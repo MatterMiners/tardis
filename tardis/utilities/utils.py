@@ -31,19 +31,6 @@ def htcondor_cmd_option_formatter(options):
     return " ".join(options)
 
 
-def htcondor_csv_parser(htcondor_input, fieldnames, delimiter="\t", replacements=None):
-    replacements = replacements or {}
-    with StringIO(htcondor_input) as csv_input:
-        cvs_reader = csv.DictReader(
-            csv_input, fieldnames=fieldnames, delimiter=delimiter
-        )
-        for row in cvs_reader:
-            yield {
-                key: value if value not in replacements.keys() else replacements[value]
-                for key, value in row.items()
-            }
-
-
 def slurm_cmd_option_formatter(options):
     """
     Formats name/value pais in the `options` dict as `--<name> value` suitable
@@ -60,29 +47,32 @@ def slurm_cmd_option_formatter(options):
     return " ".join(options)
 
 
-def slurm_csv_parser(slurm_input, fieldnames, delimiter=" ", replacements=None):
+def csv_parser(
+    input_csv, fieldnames, delimiter="\t", replacements=None, skipinitialspace=False
+):
     """
-    Parses the output of Slurm commands
+    Parses CSV formatted input
 
-    :param slurm_input: Slurm command response
-    :type slurm_input: str
+    :param input_csv: CSV formatted input
+    :type input_csv: str
     :param fieldnames: corresponding field names
     :type fieldnames: str
     :param delimiter: delimiter between entries
     :type delimiter: char
     :param replacements: fields to be replaced
-    :type replacements: str
+    :type replacements: dict
     """
-    # TODO: add replacements functionality to be consistent with htcondor parser
-    #  replacements = replacements or {}
-    with StringIO(slurm_input) as csv_input:
-        cvs_reader = csv.DictReader(
-            csv_input, fieldnames=fieldnames, delimiter=delimiter, skipinitialspace=True
+    replacements = replacements or {}
+    with StringIO(input_csv) as csv_input:
+        csv_reader = csv.DictReader(
+            csv_input,
+            fieldnames=fieldnames,
+            delimiter=delimiter,
+            skipinitialspace=skipinitialspace,
         )
-        for row in cvs_reader:
+        for row in csv_reader:
             yield {
-                key: value
-                #  if value not in replacements.keys()
-                #  else replacements[value]
+                key: value if value not in replacements.keys() else replacements[value]
                 for key, value in row.items()
+                if key is not None
             }

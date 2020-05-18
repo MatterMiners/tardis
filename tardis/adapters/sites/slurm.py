@@ -10,7 +10,7 @@ from ...utilities.attributedict import AttributeDict
 from ...utilities.attributedict import convert_to_attribute_dict
 from ...utilities.executors.shellexecutor import ShellExecutor
 from ...utilities.asynccachemap import AsyncCacheMap
-from ...utilities.utils import htcondor_csv_parser
+from ...utilities.utils import csv_parser
 
 from asyncio import TimeoutError
 from contextlib import contextmanager
@@ -35,7 +35,7 @@ async def slurm_status_updater(executor):
         logging.error(f"Slurm status update has failed due to {cf}.")
         raise
     else:
-        for row in htcondor_csv_parser(
+        for row in csv_parser(
             slurm_status.stdout, fieldnames=tuple(attributes.keys()), delimiter="|"
         ):
             row["State"] = row["State"].strip()

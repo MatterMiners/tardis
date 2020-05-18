@@ -12,7 +12,7 @@ from ...interfaces.batchsystemadapter import BatchSystemAdapter
 from ...interfaces.batchsystemadapter import MachineStatus
 from ...utilities.utils import async_run_command
 from ...utilities.utils import slurm_cmd_option_formatter
-from ...utilities.utils import slurm_csv_parser
+from ...utilities.utils import csv_parser
 from ...utilities.asynccachemap import AsyncCacheMap
 from ...utilities.attributedict import AttributeDict
 
@@ -46,21 +46,16 @@ async def slurm_status_updater(
     try:
         logging.debug(f"SLURM status update is running. Command: {cmd}")
         status = await async_run_command(cmd)
-
-        for row in slurm_csv_parser(
-            slurm_input=status,
+        for row in csv_parser(
+            input_csv=status,
             fieldnames=tuple(attributes.keys()),
             delimiter=" ",
             replacements=dict(undefined=None),
+            skipinitialspace=True,
         ):
-            row["CPUs"] = list(map(float, row["CPUs"].split("/")))
+            row["CPUs"] = [float(elem) for elem in row["CPUs"].split("/")]
             row["TotalMem"] = float(row["TotalMem"])
-            try:
-                row["FreeMem"] = row["TotalMem"] - float(row["AllocMem"])
-            except ValueError:
-                # Not sure what it should be.
-                #  row["FreeMem"] = 0.0
-                row["FreeMem"] = row["TotalMem"]
+            row["FreeMem"] = row["TotalMem"] - float(row["AllocMem"])
 
             status_key = row["Features"]
 
@@ -68,8 +63,8 @@ async def slurm_status_updater(
                 slurm_status[status_key] = row
 
     except CommandExecutionFailure as ex:
-        logging.error("SLURM's sinfo could not be executed!")
-        logging.error(str(ex))
+        logging.warning(f"SLURM's sinfo could not be executed! {str(ex)}")
+        #  logging.warning(str(ex))
         raise
     else:
         logging.debug("SLURM status update finished.")
@@ -137,10 +132,7 @@ class SlurmAdapter(BatchSystemAdapter):
 
         cmd = f"scontrol update NodeName={machine} State=DRAIN Reason='COBalD/TARDIS'"
 
-        try:
-            return await async_run_command(cmd)
-        except CommandExecutionFailure as ex:
-            raise ex
+        return await async_run_command(cmd)
 
     async def integrate_machine(self, drone_uuid: str) -> None:
         """

@@ -4,7 +4,7 @@ from ...interfaces.batchsystemadapter import BatchSystemAdapter
 from ...interfaces.batchsystemadapter import MachineStatus
 from ...utilities.utils import async_run_command
 from ...utilities.utils import htcondor_cmd_option_formatter
-from ...utilities.utils import htcondor_csv_parser
+from ...utilities.utils import csv_parser
 from ...utilities.asynccachemap import AsyncCacheMap
 from ...utilities.attributedict import AttributeDict
 
@@ -45,8 +45,8 @@ async def htcondor_status_updater(
     try:
         logging.debug(f"HTCondor status update is running. Command: {cmd}")
         condor_status = await async_run_command(cmd)
-        for row in htcondor_csv_parser(
-            htcondor_input=condor_status,
+        for row in csv_parser(
+            input_csv=condor_status,
             fieldnames=tuple(attributes.keys()),
             delimiter="\t",
             replacements=dict(undefined=None),
