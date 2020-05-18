@@ -202,6 +202,9 @@ Available adapter configuration options
     HTCondor batch system. The template jdl is using the `Python template string`_ syntax
     (see example HTCondor JDL for details).
 
+    .. Note::
+        The `$(...)` used for HTCondor variables needs to be replaced by `$$(...)` in the JDL.
+
     .. _Python template string: https://docs.python.org/3.4/library/string.html#template-strings
 
 .. content-tabs:: right-col
