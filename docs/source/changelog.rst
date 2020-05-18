@@ -38,6 +38,7 @@ Fixed
 Added
 -----
 
+* Added an example HTCondor jdl for the HTCondor site adapter
 * Add ssh connection sharing to `SSHExecutor` in order to re-use existing connection
 
 Changed
