@@ -40,6 +40,7 @@ Added
 
 * Added an example HTCondor jdl for the HTCondor site adapter
 * Enable support for `sbatch` command line options in the Slurm site adapter
+* Added a prometheus monitoring plugin
 * Add ssh connection sharing to `SSHExecutor` in order to re-use existing connection
 
 Changed
