@@ -55,12 +55,12 @@ class TestAsyncCacheMap(TestCase):
             self.assertEqual(value, self.test_data.get(key))
 
     def test_json_failing_update(self):
-        with self.assertLogs(logging.getLogger(), logging.WARNING):
+        with self.assertLogs(level=logging.WARNING):
             run_async(self.json_failing_async_cache_map.update_status)
             self.assertEqual(len(self.json_failing_async_cache_map), 0)
 
     def test_command_failing_update(self):
-        with self.assertLogs(logging.getLogger(), logging.WARNING):
+        with self.assertLogs(level=logging.WARNING):
             run_async(self.json_failing_async_cache_map.update_status)
             self.assertEqual(len(self.json_failing_async_cache_map), 0)
 

@@ -100,7 +100,7 @@ class TestHTCondorAdapter(TestCase):
         self.mock_async_run_command.side_effect = CommandExecutionFailure(
             message="Does not exists", exit_code=1, stderr="Does not exists"
         )
-        with self.assertLogs(level="WARNING"):
+        with self.assertLogs(level=logging.WARNING):
             self.assertIsNone(
                 run_async(self.htcondor_adapter.drain_machine, drone_uuid="test")
             )
@@ -109,7 +109,7 @@ class TestHTCondorAdapter(TestCase):
             message="Unhandled error", exit_code=2, stderr="Unhandled error"
         )
         with self.assertRaises(CommandExecutionFailure):
-            with self.assertLogs(level="CRITICAL"):
+            with self.assertLogs(level=logging.CRITICAL):
                 self.assertIsNone(
                     run_async(self.htcondor_adapter.drain_machine, drone_uuid="test")
                 )
@@ -219,7 +219,7 @@ class TestHTCondorAdapter(TestCase):
         self.mock_async_run_command.side_effect = CommandExecutionFailure(
             message="Test", exit_code=123, stderr="Test"
         )
-        with self.assertLogs(level="WARNING"):
+        with self.assertLogs(level=logging.WARNING):
             with self.assertRaises(CommandExecutionFailure):
                 attributes = {
                     "Machine": "Machine",
