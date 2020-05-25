@@ -1,4 +1,3 @@
-.. Created by changelog.py at 2020-05-15, command
    '/Users/giffler/.cache/pre-commit/repont7o94ca/py_env-default/bin/changelog docs/source/changes compile --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
@@ -32,13 +31,14 @@ Fixed
 * Fix state transitions for jobs retried by HTCondor
 * Fix state transitions and refactoring of the SLURM site adapter
 
-[Unreleased] - 2020-05-15
+[Unreleased] - 2020-05-18
 =========================
 
 Added
 -----
 
 * Enable support for `sbatch` command line options in the Slurm site adapter
+* Added an example HTCondor jdl for the HTCondor site adapter
 * Add ssh connection sharing to `SSHExecutor` in order to re-use existing connection
 
 Changed

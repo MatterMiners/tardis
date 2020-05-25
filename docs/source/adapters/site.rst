@@ -199,7 +199,11 @@ Available adapter configuration options
     +----------------+-----------------------------------------------------------------------------------+-----------------+
 
     The only available option in the `MachineTypeConfiguration` section is a template jdl used to submit drones to the
-    HTCondor batch system. The template jdl is using the `Python template string`_ syntax.
+    HTCondor batch system. The template jdl is using the `Python template string`_ syntax
+    (see example HTCondor JDL for details).
+
+    .. Note::
+        The `$(...)` used for HTCondor variables needs to be replaced by `$$(...)` in the JDL.
 
     .. _Python template string: https://docs.python.org/3.4/library/string.html#template-strings
 
@@ -226,6 +230,27 @@ Available adapter configuration options
               Cores: 42
               Memory: 256
               Disk: 840
+
+    .. rubric:: Example HTCondor JDL
+
+    .. code-block::
+
+        executable = start_pilot.sh
+        transfer_input_files = setup_pilot.sh,grid-mapfile
+        output = logs/$$(cluster).$$(process).out
+        error = logs/$$(cluster).$$(process).err
+        log = logs/cluster.log
+
+        accounting_group=tardis
+        x509userproxy = /home/tardis/proxy
+
+        environment=${Environment}
+
+        request_cpus=${Cores}
+        request_memory=${Memory}
+        request_disk=${Disk}
+
+        queue 1
 
 Moab Site Adapter
 -----------------
