@@ -10,6 +10,8 @@ from shlex import quote
 from unittest.mock import patch
 from unittest import TestCase
 
+import logging
+
 
 class TestHTCondorAdapter(TestCase):
     @classmethod
