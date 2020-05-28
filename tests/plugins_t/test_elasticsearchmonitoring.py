@@ -75,7 +75,7 @@ class TestElasticsearchMonitoring(TestCase):
         self.mock_elasticsearch.return_value.create.assert_called_with(
             body=test_param_ext,
             id=f"{test_param.drone_uuid}-1",
-            index=f"{self.plugin._index}-{self.mock_datetime.now.return_value.strftime.return_value}",
+            index=f"{self.plugin._index}-{self.mock_datetime.now.return_value.strftime.return_value}",  # noqa: B950
         )
 
         self.mock_elasticsearch.reset()
