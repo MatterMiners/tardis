@@ -65,8 +65,6 @@ class ElasticsearchMonitoring(Plugin):
         """
         Pushes drone info to an ElasticSearch instance.
 
-        :param state: New state of the Drone
-        :type state: State
         :param document: Contains all meta-data of the Drone (created and
             updated timestamps, dns name, unique id, site_name, machine_type, etc.)
         :type document: AttributeDict

@@ -1,6 +1,7 @@
 from tardis.plugins.elasticsearchmonitoring import ElasticsearchMonitoring
 from tardis.utilities.attributedict import AttributeDict
 from tardis.interfaces.siteadapter import ResourceStatus
+from tardis.resources.dronestates import CleanupState
 
 from datetime import datetime
 from unittest import TestCase
@@ -19,21 +20,27 @@ class TestElasticsearchMonitoring(TestCase):
         cls.mock_elasticsearch_patcher = patch(
             "tardis.plugins.elasticsearchmonitoring.Elasticsearch"
         )
+        cls.mock_datetime_patcher = patch(
+            "tardis.plugins.elasticsearchmonitoring.datetime"
+        )
+        cls.mock_time_patcher = patch("tardis.plugins.elasticsearchmonitoring.time")
         cls.mock_config = cls.mock_config_patcher.start()
         cls.mock_elasticsearch = cls.mock_elasticsearch_patcher.start()
+        cls.mock_datetime = cls.mock_datetime_patcher.start()
+        cls.mock_time = cls.mock_time_patcher.start()
 
     @classmethod
     def tearDownClass(cls):
         cls.mock_config_patcher.stop()
         cls.mock_elasticsearch_patcher.stop()
+        cls.mock_datetime_patcher.stop()
+        cls.mock_time_patcher.stop()
 
     @patch("tardis.plugins.elasticsearchmonitoring.logging", Mock())
     def setUp(self):
         self.config = self.mock_config.return_value
         self.config.Plugins.ElasticsearchMonitoring._index = "index"
         self.config.Plugins.ElasticsearchMonitoring._meta = "meta"
-
-        #  elasticsearch_inst = self.mock_elasticsearch.Elasticsearch.return_value
 
         self.plugin = ElasticsearchMonitoring()
 
@@ -47,9 +54,28 @@ class TestElasticsearchMonitoring(TestCase):
             resource_status=ResourceStatus.Booting,
             drone_uuid="test-drone",
         )
-        run_async(self.plugin.async_execute, test_param)
 
-        self.mock_elasticsearch.return_value.search.assert_called()
-        self.mock_elasticsearch.return_value.create.assert_called()
+        test_param_ext = {
+            **test_param,
+            "state": str(CleanupState()),
+            "meta": self.plugin._meta,
+            "timestamp": int(self.mock_time.return_value * 1000),
+            "resource_status": str(test_param.resource_status),
+            "revision": 1,
+        }
+
+        run_async(
+            self.plugin.notify, state=CleanupState(), resource_attributes=test_param
+        )
+
+        self.mock_elasticsearch.return_value.search.assert_called_with(
+            index=f"{self.plugin._index}*",
+            body={"query": {"term": {"drone_uuid.keyword": test_param.drone_uuid}}},
+        )
+        self.mock_elasticsearch.return_value.create.assert_called_with(
+            body=test_param_ext,
+            id=f"{test_param.drone_uuid}-1",
+            index=f"{self.plugin._index}-{self.mock_datetime.now.return_value.strftime.return_value}",
+        )
 
         self.mock_elasticsearch.reset()
