@@ -360,7 +360,7 @@ class TestSlurmAdapter(TestCase):
             "1390065": {"JobId": "1390065", "Host": "fh2n1552", "State": "RUNNING"}
         }
 
-        with self.assertLogs(logging.getLogger(), logging.ERROR):
+        with self.assertLogs(level=logging.WARNING):
             response = run_async(
                 self.slurm_adapter.resource_status,
                 AttributeDict(remote_resource_uuid="1390065"),
@@ -405,8 +405,9 @@ class TestSlurmAdapter(TestCase):
     def test_exception_handling(self):
         def test_exception_handling(to_raise, to_catch):
             with self.assertRaises(to_catch):
-                with self.slurm_adapter.handle_exceptions():
-                    raise to_raise
+                with self.assertLogs(level=logging.WARNING):
+                    with self.slurm_adapter.handle_exceptions():
+                        raise to_raise
 
         matrix = [
             (asyncio.TimeoutError(), TardisTimeout),

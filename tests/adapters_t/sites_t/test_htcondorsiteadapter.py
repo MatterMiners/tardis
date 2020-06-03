@@ -185,7 +185,7 @@ class TestHTCondorSiteAdapter(TestCase):
     )
     def test_resource_status_raise_future(self):
         future_timestamp = datetime.now() + timedelta(minutes=1)
-        with self.assertLogs(logging.getLogger(), logging.ERROR):
+        with self.assertLogs(level=logging.WARNING):
             with self.assertRaises(TardisResourceStatusUpdateFailed):
                 run_async(
                     self.adapter.resource_status,
@@ -207,7 +207,7 @@ class TestHTCondorSiteAdapter(TestCase):
         self.adapter._htcondor_queue._last_update = datetime.now() - timedelta(
             minutes=11
         )
-        with self.assertLogs(logging.getLogger(), logging.ERROR):
+        with self.assertLogs(level=logging.WARNING):
             response = run_async(
                 self.adapter.resource_status,
                 AttributeDict(remote_resource_uuid="1351043", created=past_timestamp),

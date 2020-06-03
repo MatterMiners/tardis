@@ -16,6 +16,7 @@ from warnings import filterwarnings
 
 import asyncio
 import asyncssh
+import logging
 
 __all__ = ["TestMoabAdapter"]
 
@@ -349,10 +350,11 @@ class TestMoabAdapter(TestCase):
         expected_resource_attributes.update(
             updated=datetime.now(), resource_status=ResourceStatus.Stopped
         )
-        return_resource_attributes = run_async(
-            self.moab_adapter.terminate_resource,
-            resource_attributes=self.resource_attributes,
-        )
+        with self.assertLogs(level=logging.WARNING):
+            return_resource_attributes = run_async(
+                self.moab_adapter.terminate_resource,
+                resource_attributes=self.resource_attributes,
+            )
         self.assertEqual(
             return_resource_attributes["resource_status"], ResourceStatus.Stopped
         )
@@ -407,8 +409,9 @@ class TestMoabAdapter(TestCase):
     def test_exception_handling(self):
         def test_exception_handling(to_raise, to_catch):
             with self.assertRaises(to_catch):
-                with self.moab_adapter.handle_exceptions():
-                    raise to_raise
+                with self.assertLogs(level=logging.WARNING):
+                    with self.moab_adapter.handle_exceptions():
+                        raise to_raise
 
         matrix = [
             (asyncio.TimeoutError(), TardisTimeout),

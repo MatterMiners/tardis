@@ -7,6 +7,8 @@ from ..utilities.attributedict import AttributeDict
 import logging
 from aioprometheus import Service, Gauge
 
+logger = logging.getLogger("cobald.runtime.tardis.plugins.prometheusmonitoring")
+
 
 class PrometheusMonitoring(Plugin):
     """
@@ -15,10 +17,6 @@ class PrometheusMonitoring(Plugin):
     """
 
     def __init__(self):
-        self.logger = logging.getLogger(
-            "cobald.runtime.tardis.plugins.prometheusmonitoring"
-        )
-        self.logger.setLevel(logging.DEBUG)
         config = Configuration().Plugins.PrometheusMonitoring
 
         self._port = config.port
@@ -43,7 +41,7 @@ class PrometheusMonitoring(Plugin):
 
     async def start(self):
         await self._svr.start(addr=self._addr, port=self._port)
-        self.logger.debug(f"Serving Prometheus metrics on {self._svr.metrics_url}")
+        logger.debug(f"Serving Prometheus metrics on {self._svr.metrics_url}")
         self._svr_started = True
 
     async def notify(self, state: State, resource_attributes: AttributeDict) -> None:
@@ -60,9 +58,7 @@ class PrometheusMonitoring(Plugin):
         if not self._svr_started:
             await self.start()
 
-        self.logger.debug(
-            f"Drone: {str(resource_attributes)} has changed state to {state}"
-        )
+        logger.debug(f"Drone: {str(resource_attributes)} has changed state to {state}")
 
         if resource_attributes.drone_uuid in self._drones:
             old_status = self._drones[resource_attributes.drone_uuid]
