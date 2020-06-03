@@ -1,9 +1,11 @@
 category: changed
-summary: Added log channels and adjusted log levels according to the conventions in `COBalD` documentation
-pull requests:
-  - 146
-issues:
-  - 137
+summary: "Added log channels and adjusted log levels according to the conventions\
+  \ in `COBalD` documentation"
 description: |
   Added log channels and adjusted log levels according to the conventions in the `COBalD` documentation.
   This will improve the user's ability to filter log messages according their needs.
+issues:
+- 137
+pull requests:
+- 146
+version: 0.4.0

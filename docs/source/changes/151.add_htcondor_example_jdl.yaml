@@ -1,9 +1,10 @@
 category: added
-summary: Added an example HTCondor jdl for the HTCondor site adapter
-pull requests:
-  - 151
-issues:
-  - 132
+summary: "Added an example HTCondor jdl for the HTCondor site adapter"
 description: |
   A example for an HTCondor JDL has been added to the HTCondor site adapter configuration.
   So, that people new to `TARDIS` have a starting point to use this adapter.
+issues:
+- 132
+pull requests:
+- 151
+version: 0.4.0
