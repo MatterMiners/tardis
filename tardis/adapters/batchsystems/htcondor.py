@@ -13,6 +13,8 @@ from shlex import quote
 from typing import Iterable
 import logging
 
+logger = logging.getLogger("cobald.runtime.tardis.adapters.batchsystem.htcondor")
+
 
 async def htcondor_status_updater(
     options: AttributeDict, attributes: AttributeDict
@@ -31,6 +33,7 @@ async def htcondor_status_updater(
     :return: Dictionary containing the output of the ``condor_status`` command
     :rtype: dict
     """
+
     attributes_string = f'-af:t {" ".join(attributes.values())}'
 
     options_string = htcondor_cmd_option_formatter(options)
@@ -43,7 +46,7 @@ async def htcondor_status_updater(
     htcondor_status = {}
 
     try:
-        logging.debug(f"HTCondor status update is running. Command: {cmd}")
+        logger.debug(f"HTCondor status update is running. Command: {cmd}")
         condor_status = await async_run_command(cmd)
         for row in htcondor_csv_parser(
             htcondor_input=condor_status,
@@ -55,11 +58,10 @@ async def htcondor_status_updater(
             htcondor_status[status_key] = row
 
     except CommandExecutionFailure as cef:
-        logging.error("condor_status could not be executed!")
-        logging.error(str(cef))
+        logger.warning(f"condor_status could not be executed due to {cef}!")
         raise
     else:
-        logging.debug("HTCondor status update finished.")
+        logger.debug("HTCondor status update finished.")
         return htcondor_status
 
 
@@ -136,11 +138,12 @@ class HTCondorAdapter(BatchSystemAdapter):
             if cef.exit_code == 1:
                 # exit code 1: HTCondor can't connect to StartD of Drone
                 # https://github.com/htcondor/htcondor/blob/master/src/condor_tools/drain.cpp  # noqa: B950
-                logging.debug(f"Draining failed with: {str(cef)}")
-                logging.debug(
-                    f"Probably drone {drone_uuid} is not available or already drained."
+                logger.warning(
+                    f"Draining failed with: {str(cef)}. Probably drone {drone_uuid}"
+                    " is not available or already drained."
                 )
                 return
+            logger.critical(f"Draining failed with: {str(cef)}.")
             raise cef
 
     async def integrate_machine(self, drone_uuid: str) -> None:

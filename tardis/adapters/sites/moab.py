@@ -22,10 +22,12 @@ import re
 import warnings
 from xml.dom import minidom
 
+logger = logging.getLogger("cobald.runtime.tardis.adapters.sites.moab")
+
 
 async def moab_status_updater(executor):
     cmd = "showq --xml -w user=$(whoami) && showq -c --xml -w user=$(whoami)"
-    logging.debug("Moab status update is running.")
+    logger.debug("Moab status update is running.")
     response = await executor.run_command(cmd)
     # combine two XML outputs to one
     xml_output = minidom.parseString(
@@ -41,7 +43,7 @@ async def moab_status_updater(executor):
                 "JobID": line.attributes["JobID"].value,
                 "State": line.attributes["State"].value,
             }
-    logging.debug("Moab status update completed")
+    logger.debug("Moab status update completed")
     return moab_resource_status
 
 
@@ -126,7 +128,7 @@ class MoabAdapter(SiteAdapter):
             f"{self._startup_command}"
         )
         result = await self._executor.run_command(request_command)
-        logging.debug(f"{self.site_name} servers create returned {result}")
+        logger.debug(f"{self.site_name} servers create returned {result}")
 
         remote_resource_uuid = int(result.stdout)
         resource_attributes.update(
@@ -172,7 +174,7 @@ class MoabAdapter(SiteAdapter):
                     "JobID": resource_attributes.remote_resource_uuid,
                     "State": "Completed",
                 }
-        logging.debug(f"{self.site_name} has status {resource_status}.")
+        logger.debug(f"{self.site_name} has status {resource_status}.")
         resource_attributes.update(updated=datetime.now())
         return convert_to_attribute_dict(
             {**resource_attributes, **self.handle_response(resource_status)}
@@ -184,7 +186,7 @@ class MoabAdapter(SiteAdapter):
             response = await self._executor.run_command(request_command)
         except CommandExecutionFailure as cf:
             if cf.exit_code == 1:
-                logging.debug(
+                logger.warning(
                     f"{self.site_name} servers terminate returned {cf.stdout}"
                 )
                 remote_resource_uuid = self.check_remote_resource_uuid(
@@ -195,7 +197,7 @@ class MoabAdapter(SiteAdapter):
             else:
                 raise cf
         else:
-            logging.debug(f"{self.site_name} servers terminate returned {response}")
+            logger.debug(f"{self.site_name} servers terminate returned {response}")
             remote_resource_uuid = self.check_remote_resource_uuid(
                 resource_attributes, r"^job \'(\d*)\' cancelled", response.stdout
             )
@@ -205,7 +207,7 @@ class MoabAdapter(SiteAdapter):
         )
 
     async def stop_resource(self, resource_attributes: AttributeDict):
-        logging.debug("MOAB jobs cannot be stopped gracefully. Terminating instead.")
+        logger.debug("MOAB jobs cannot be stopped gracefully. Terminating instead.")
         return await self.terminate_resource(resource_attributes)
 
     @contextmanager
@@ -215,7 +217,7 @@ class MoabAdapter(SiteAdapter):
         except TimeoutError as te:
             raise TardisTimeout from te
         except asyncssh.Error as exc:
-            logging.info("SSH connection failed: " + str(exc))
+            logger.warning("SSH connection failed: " + str(exc))
             raise TardisResourceStatusUpdateFailed
         except IndexError as ide:
             raise TardisResourceStatusUpdateFailed from ide

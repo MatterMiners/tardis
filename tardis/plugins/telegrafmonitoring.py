@@ -8,6 +8,8 @@ from datetime import datetime
 import logging
 import platform
 
+logger = logging.getLogger("cobald.runtime.tardis.plugins.telegrafmonitoring")
+
 
 class TelegrafMonitoring(Plugin):
     """
@@ -17,8 +19,6 @@ class TelegrafMonitoring(Plugin):
     """
 
     def __init__(self):
-        self.logger = logging.getLogger("telegrafmonitoring")
-        self.logger.setLevel(logging.DEBUG)
         config = Configuration().Plugins.TelegrafMonitoring
 
         host = config.host
@@ -40,9 +40,7 @@ class TelegrafMonitoring(Plugin):
         :type resource_attributes: AttributeDict
         :return: None
         """
-        self.logger.debug(
-            f"Drone: {str(resource_attributes)} has changed state to {state}"
-        )
+        logger.debug(f"Drone: {str(resource_attributes)} has changed state to {state}")
         await self.client.connect()
         data = dict(
             state=str(state),

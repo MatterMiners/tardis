@@ -8,6 +8,8 @@ import asyncio
 import logging
 import sqlite3
 
+logger = logging.getLogger("cobald.runtime.tardis.plugins.sqliteregistry")
+
 
 class SqliteRegistry(Plugin):
     def __init__(self):
@@ -17,8 +19,6 @@ class SqliteRegistry(Plugin):
         of this module is recommended in order to recover the last state of
         TARDIS in case the service has to be restarted.
         """
-        self.logger = logging.getLogger("sqliteregistry")
-        self.logger.setLevel(logging.DEBUG)
         configuration = Configuration()
         self._db_file = configuration.Plugins.SqliteRegistry.db_file
         self._deploy_db_schema()
@@ -113,7 +113,7 @@ class SqliteRegistry(Plugin):
             }
             cursor = connection.cursor()
             cursor.execute(sql_query, bind_parameters)
-            logging.debug(f"{sql_query},{bind_parameters} executed")
+            logger.debug(f"{sql_query},{bind_parameters} executed")
             return cursor.fetchall()
 
     def get_resources(self, site_name: str, machine_type: str):
@@ -144,9 +144,7 @@ class SqliteRegistry(Plugin):
 
     async def notify(self, state: State, resource_attributes: AttributeDict) -> None:
         state = str(state)
-        self.logger.debug(
-            f"Drone: {str(resource_attributes)} has changed state to {state}"
-        )
+        logger.debug(f"Drone: {str(resource_attributes)} has changed state to {state}")
         bind_parameters = dict(state=state)
         bind_parameters.update(resource_attributes)
         await self._dispatch_on_state.get(state, self.update_resource)(bind_parameters)

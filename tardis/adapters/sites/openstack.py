@@ -22,6 +22,8 @@ from functools import partial
 
 import logging
 
+logger = logging.getLogger("cobald.runtime.tardis.adapters.sites.openstack")
+
 
 class OpenStackAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
@@ -68,7 +70,7 @@ class OpenStackAdapter(SiteAdapter):
         specs.update(self.machine_type_configuration)
         await self.nova.init_api(timeout=60)
         response = await self.nova.servers.create(server=specs)
-        logging.debug(f"{self.site_name} servers create returned {response}")
+        logger.debug(f"{self.site_name} servers create returned {response}")
         return self.handle_response(response["server"])
 
     async def resource_status(
@@ -76,7 +78,7 @@ class OpenStackAdapter(SiteAdapter):
     ) -> AttributeDict:
         await self.nova.init_api(timeout=60)
         response = await self.nova.servers.get(resource_attributes.remote_resource_uuid)
-        logging.debug(f"{self.site_name} servers get returned {response}")
+        logger.debug(f"{self.site_name} servers get returned {response}")
         return self.handle_response(response["server"])
 
     async def stop_resource(self, resource_attributes: AttributeDict):
@@ -85,7 +87,7 @@ class OpenStackAdapter(SiteAdapter):
         response = await self.nova.servers.run_action(
             resource_attributes.remote_resource_uuid, **params
         )
-        logging.debug(f"{self.site_name} servers stop returned {response}")
+        logger.debug(f"{self.site_name} servers stop returned {response}")
         return response
 
     async def terminate_resource(self, resource_attributes: AttributeDict):
@@ -93,7 +95,7 @@ class OpenStackAdapter(SiteAdapter):
         response = await self.nova.servers.force_delete(
             resource_attributes.remote_resource_uuid
         )
-        logging.debug(f"{self.site_name} servers terminate returned {response}")
+        logger.debug(f"{self.site_name} servers terminate returned {response}")
         return response
 
     @contextmanager
@@ -105,13 +107,13 @@ class OpenStackAdapter(SiteAdapter):
         except AuthError as ae:
             raise TardisAuthError from ae
         except ContentTypeError:
-            logging.info("OpenStack: content Type Error")
+            logger.warning("OpenStack: content Type Error")
             raise TardisResourceStatusUpdateFailed
         except ClientError:
-            logging.info("REST client error")
+            logger.warning("REST client error")
             raise TardisDroneCrashed
         except ClientConnectionError:
-            logging.info("Connection reset error")
+            logger.warning("Connection reset error")
             raise TardisResourceStatusUpdateFailed
         except Exception as ex:
             raise TardisError from ex
