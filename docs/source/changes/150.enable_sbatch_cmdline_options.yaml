@@ -1,0 +1,9 @@
+category: added
+summary: "Enable support for `sbatch` command line options in the Slurm site adapter"
+pull requests:
+  - 150
+issues:
+  - 147
+description: |
+  `sbatch` command line option can now be added to the `MachineTypeConfiguration` of the
+  Slurm site adapter. `short` and `long` option are supported via yaml MappingNodes.

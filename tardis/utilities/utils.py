@@ -1,12 +1,17 @@
+from .attributedict import AttributeDict
 from .executors.shellexecutor import ShellExecutor
 from ..exceptions.executorexceptions import CommandExecutionFailure
+from ..interfaces.executor import Executor
 
 from io import StringIO
+from typing import List, Tuple
 
 import csv
 
 
-async def async_run_command(cmd, shell_executor=ShellExecutor()):
+async def async_run_command(
+    cmd: str, shell_executor: Executor = ShellExecutor()
+) -> str:
     try:
         response = await shell_executor.run_command(cmd)
     except CommandExecutionFailure as ef:
@@ -22,16 +27,25 @@ async def async_run_command(cmd, shell_executor=ShellExecutor()):
         return response.stdout
 
 
-def htcondor_cmd_option_formatter(options):
+def cmd_option_formatter(options: AttributeDict, prefix: str, separator: str) -> str:
     options = (
-        f"-{name} {value}" if value is not None else f"-{name}"
+        f"{prefix}{name}{separator}{value}" if value is not None else f"{prefix}{name}"
         for name, value in options.items()
     )
 
     return " ".join(options)
 
 
-def htcondor_csv_parser(htcondor_input, fieldnames, delimiter="\t", replacements=None):
+def htcondor_cmd_option_formatter(options: AttributeDict) -> str:
+    return cmd_option_formatter(options, prefix="-", separator=" ")
+
+
+def htcondor_csv_parser(
+    htcondor_input: str,
+    fieldnames: [List, Tuple],
+    delimiter: str = "\t",
+    replacements: dict = None,
+):
     replacements = replacements or {}
     with StringIO(htcondor_input) as csv_input:
         cvs_reader = csv.DictReader(
@@ -42,3 +56,26 @@ def htcondor_csv_parser(htcondor_input, fieldnames, delimiter="\t", replacements
                 key: value if value not in replacements.keys() else replacements[value]
                 for key, value in row.items()
             }
+
+
+def slurm_cmd_option_formatter(options: AttributeDict) -> str:
+    option_prefix = dict(short="-", long="--")
+    option_separator = dict(short=" ", long="=")
+
+    option_string = ""
+
+    for option_type in ("short", "long"):
+        try:
+            tmp_option_string = cmd_option_formatter(
+                getattr(options, option_type),
+                prefix=option_prefix[option_type],
+                separator=option_separator[option_type],
+            )
+        except AttributeError:
+            pass
+        else:
+            if option_string:  # add additional space between short and long options
+                option_string += " "
+            option_string += tmp_option_string
+
+    return option_string
