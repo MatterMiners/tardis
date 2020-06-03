@@ -1,10 +1,34 @@
 .. Created by changelog.py at 2020-06-03, command
-   '/Users/giffler/.cache/pre-commit/repom71tvz6z/py_env-default/bin/changelog docs/source/changes compile --output=docs/source/changelog.rst'
+   '/Users/giffler/.cache/pre-commit/repor6pnmwlm/py_env-default/bin/changelog docs/source/changes compile --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
 #########
 CHANGELOG
 #########
+
+[0.4.0] - 2020-06-03
+====================
+
+Added
+-----
+
+* Added an example HTCondor jdl for the HTCondor site adapter
+* Added a prometheus monitoring plugin
+* Enable support for `sbatch` command line options in the Slurm site adapter
+* Add ssh connection sharing to `SSHExecutor` in order to re-use existing connection
+
+Changed
+-------
+
+* Added log channels and adjusted log levels according to the conventions in `COBalD` documentation
+* The Moab adapter can now be configured to use different startup commands for each machine type.
+* The SLURM adapter can now be configured to use different startup commands for each machine type.
+
+Fixed
+-----
+
+* Fixed the exception handling of `ConnectionResetError` in `SSHExecutor`
+* Fixed the resource status translation of the moab site adapter
 
 [0.3.0] - 2020-02-26
 ====================
@@ -31,27 +55,3 @@ Fixed
 * Fix the handling of the termination of vanished resources
 * Fix state transitions for jobs retried by HTCondor
 * Fix state transitions and refactoring of the SLURM site adapter
-
-[Unreleased] - 2020-06-03
-=========================
-
-Added
------
-
-* Added an example HTCondor jdl for the HTCondor site adapter
-* Added a prometheus monitoring plugin
-* Enable support for `sbatch` command line options in the Slurm site adapter
-* Add ssh connection sharing to `SSHExecutor` in order to re-use existing connection
-
-Changed
--------
-
-* Added log channels and adjusted log levels according to the conventions in `COBalD` documentation
-* The Moab adapter can now be configured to use different startup commands for each machine type.
-* The SLURM adapter can now be configured to use different startup commands for each machine type.
-
-Fixed
------
-
-* Fixed the exception handling of `ConnectionResetError` in `SSHExecutor`
-* Fixed the resource status translation of the moab site adapter

@@ -15,7 +15,7 @@ repos:
     hooks:
       - id: flake8
 -   repo: https://github.com/Matterminers/dev-tools
-    rev: "875763550820a7c7bed0e11d094b4227fcf377c7"
+    rev: "87c2435b377bd932acbcc1b619320d98e67b630a"
     hooks:
       -  id: contributors
       -  id: changelog

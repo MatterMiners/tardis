@@ -1,9 +1,11 @@
 category: added
-summary: "Add ssh connection sharing to `SSHExecutor` in order to re-use existing connection"
-pull requests:
-  - 145
-issues:
-  - 135
+summary: "Add ssh connection sharing to `SSHExecutor` in order to re-use existing\
+  \ connection"
 description: |
   The `SSHExector` is now re-using existing connections. Closed connections are automatically reestablished. This will
   avoid connection problems when bothering a remote ssh server with too many requests in too short intervals.
+issues:
+- 135
+pull requests:
+- 145
+version: 0.4.0
