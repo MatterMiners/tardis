@@ -17,8 +17,8 @@ Site Adapter
     is assumed. Multiple sites are supported by using SequenceNodes.
 
     .. note::
-        Even a minimum lifetime is set, it is not guaranteed that the :py:class:`~tardis.resources.drone.Drone` is not
-        drained due to a dropping demand for it before its minimum lifetime is exceeded.
+        Even if a minimum lifetime is set, it is not guaranteed that the :py:class:`~tardis.resources.drone.Drone` is not
+        drained due to its dropping demand before its minimum lifetime is exceeded.
 
 
 Generic Site Adapter Configuration
