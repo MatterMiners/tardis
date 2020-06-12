@@ -39,22 +39,6 @@ def htcondor_cmd_option_formatter(options: AttributeDict) -> str:
     return cmd_option_formatter(options, prefix="-", separator=" ")
 
 
-#  def slurm_cmd_option_formatter(options):
-#      """
-#      Formats name/value pairs in the `options` dict as `--<name> value` suitable
-#      for passing to SLURM command line tools.
-#
-#      :param options:  name/value pairs
-#      :type options: AttributeDict
-#      """
-#      options = (
-#          f"--{name} {value}" if value is not None else f"--{name}"
-#          for name, value in options.items()
-#      )
-#
-#      return " ".join(options)
-
-
 def csv_parser(
     input_csv, fieldnames, delimiter="\t", replacements=None, skipinitialspace=False
 ):

@@ -1,6 +1,7 @@
 from tests.utilities.utilities import async_return
 from tests.utilities.utilities import run_async
 from tardis.adapters.batchsystems.slurm import SlurmAdapter
+from tardis.utilities.attributedict import AttributeDict
 
 from tardis.adapters.batchsystems.slurm import slurm_status_updater
 from tardis.interfaces.batchsystemadapter import MachineStatus
@@ -34,7 +35,7 @@ class TestSlurmAdapter(TestCase):
         self.cpu_ratio = 0.5
         self.memory_ratio = 0.25
 
-        self.command = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader -r'
+        self.command = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader -r --partition=test_part'
         #  self.command = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader'
 
         self.command_wo_options = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader -r'
@@ -57,7 +58,9 @@ class TestSlurmAdapter(TestCase):
             return_value=return_value
         )
 
-        self.setup_config_mock(options={"partition": "test_part"})
+        self.setup_config_mock(
+            options=AttributeDict({"long": {"partition": "test_part"}})
+        )
 
         self.slurm_adapter = SlurmAdapter()
 
