@@ -18,6 +18,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 import asyncio
+import logging
 
 
 class TestOpenStackAdapter(TestCase):
@@ -163,8 +164,9 @@ class TestOpenStackAdapter(TestCase):
     def test_exception_handling(self):
         def test_exception_handling(to_raise, to_catch):
             with self.assertRaises(to_catch):
-                with self.openstack_adapter.handle_exceptions():
-                    raise to_raise
+                with self.assertLogs(level=logging.WARNING):
+                    with self.openstack_adapter.handle_exceptions():
+                        raise to_raise
 
         matrix = [
             (asyncio.TimeoutError(), TardisTimeout),

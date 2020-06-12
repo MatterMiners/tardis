@@ -1,0 +1,7 @@
+category: added
+summary: "Added a prometheus monitoring plugin"
+description: |
+  Added a new plugin to enable support for prometheus monitoring.
+pull requests:
+- 142
+version: 0.4.0

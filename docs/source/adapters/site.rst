@@ -16,9 +16,9 @@ Site Adapter
     :py:class:`~tardis.resources.dronestates.AvailableState` before draining it. If no value is given, infinite lifetime
     is assumed. Multiple sites are supported by using SequenceNodes.
 
-.. note::
-    Even a minimum lifetime is set, it is not guaranteed that the :py:class:`~tardis.resources.drone.Drone` is not
-    drained due to a dropping demand for it before its minimum lifetime is exceeded.
+    .. note::
+        Even if a minimum lifetime is set, it is not guaranteed that the :py:class:`~tardis.resources.drone.Drone` is not
+        drained due to its dropping demand before its minimum lifetime is exceeded.
 
 
 Generic Site Adapter Configuration
@@ -414,6 +414,23 @@ Available adapter configuration options
     |                | Default: ShellExecutor is used!                                                             |                 |
     +----------------+---------------------------------------------------------------------------------------------+-----------------+
 
+Available machine type configuration options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. content-tabs:: left-col
+
+    +----------------+--------------------------------------------------------------------------------------------------+-----------------+
+    | Option         | Short Description                                                                                | Requirement     |
+    +================+==================================================================================================+=================+
+    | Walltime       | Expected walltime of drone                                                                       |  **Required**   |
+    +----------------+--------------------------------------------------------------------------------------------------+-----------------+
+    | Partition      | Name of the Slurm partition to run in                                                            |  **Required**   |
+    +----------------+--------------------------------------------------------------------------------------------------+-----------------+
+    | StartupCommand | The command to execute at job start                                                              |  **Required**   |
+    +----------------+--------------------------------------------------------------------------------------------------+-----------------+
+    | SubmitOptions  | Options to add to the `sbatch` command. `long` and `short` arguments are supported (see example) |  **Optional**   |
+    +----------------+--------------------------------------------------------------------------------------------------+-----------------+
+
 .. content-tabs:: right-col
 
     .. rubric:: Example configuration
@@ -440,6 +457,18 @@ Available adapter configuration options
               Walltime: '1440'
               Partition: normal
               StartupCommand: 'pilot_clean.sh'
+              SubmitOptions:
+                short:
+                  C: "intel"
+                long:
+                  gres: "gpu:2,mic:1"
+            six_hours:
+              Walltime: '360'
+              Partition: normal
+              StartupCommand: 'pilot_clean.sh'
+              SubmitOptions:
+                long:
+                  gres: "gpu:2,mic:1"
             twelve_hours:
               Walltime: '720'
               Partition: normal
@@ -453,6 +482,11 @@ Available adapter configuration options
               Cores: 20
               Memory: 62
               Disk: 480
+            six_hours:
+              Cores: 20
+              Memory: 62
+              Disk: 480
+
 
 .. content-tabs:: left-col
 
