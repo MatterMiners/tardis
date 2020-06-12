@@ -34,22 +34,22 @@ class TestSlurmAdapter(TestCase):
         self.cpu_ratio = 0.5
         self.memory_ratio = 0.25
 
-        self.command = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader -r --partition test_part'
-        #  self.command = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader --partition test_part'
+        self.command = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader -r'
+        #  self.command = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader'
 
         self.command_wo_options = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader -r'
         #  self.command_wo_options = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader'
 
         return_value = "\n".join(
             [
-                f"mixed      2/2/0/4   6000    24000   VM-1   host-10-18-1-1",
-                f"mixed      3/1/0/4   15853   22011   VM-2   host-10-18-1-2",
-                f"mixed      1/3/0/4   18268   22011   VM-3   host-10-18-1-4",
-                f"mixed      3/1/0/4   17803   22011   VM-4   host-10-18-1-7",
-                f"draining   0/4/0/4   17803   22011   draining_machine   draining_machine",
-                f"idle       0/4/0/4   17803   22011   idle_machine   idle_machine",
-                f"drained    0/4/0/4   17803   22011   drained_machine   drained_machine",
-                f"powerup    0/4/0/4   17803   22011   power_up_machine   power_up_machine",
+                "mixed      2/2/0/4   6000    24000   VM-1   host-10-18-1-1",
+                "mixed      3/1/0/4   15853   22011   VM-2   host-10-18-1-2",
+                "mixed      1/3/0/4   18268   22011   VM-3   host-10-18-1-4",
+                "mixed      3/1/0/4   17803   22011   VM-4   host-10-18-1-7",
+                "draining   0/4/0/4   17803   22011   draining_machine   draining_machine",
+                "idle       0/4/0/4   17803   22011   idle_machine   idle_machine",
+                "drained    0/4/0/4   17803   22011   drained_machine   drained_machine",
+                "powerup    0/4/0/4   17803   22011   power_up_machine   power_up_machine",
             ]
         )
 
