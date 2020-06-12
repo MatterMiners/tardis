@@ -16,9 +16,9 @@ Site Adapter
     :py:class:`~tardis.resources.dronestates.AvailableState` before draining it. If no value is given, infinite lifetime
     is assumed. Multiple sites are supported by using SequenceNodes.
 
-.. note::
-    Even a minimum lifetime is set, it is not guaranteed that the :py:class:`~tardis.resources.drone.Drone` is not
-    drained due to a dropping demand for it before its minimum lifetime is exceeded.
+    .. note::
+        Even if a minimum lifetime is set, it is not guaranteed that the :py:class:`~tardis.resources.drone.Drone` is not
+        drained due to its dropping demand before its minimum lifetime is exceeded.
 
 
 Generic Site Adapter Configuration
@@ -199,7 +199,11 @@ Available adapter configuration options
     +----------------+-----------------------------------------------------------------------------------+-----------------+
 
     The only available option in the `MachineTypeConfiguration` section is a template jdl used to submit drones to the
-    HTCondor batch system. The template jdl is using the `Python template string`_ syntax.
+    HTCondor batch system. The template jdl is using the `Python template string`_ syntax
+    (see example HTCondor JDL for details).
+
+    .. Note::
+        The `$(...)` used for HTCondor variables needs to be replaced by `$$(...)` in the JDL.
 
     .. _Python template string: https://docs.python.org/3.4/library/string.html#template-strings
 
@@ -226,6 +230,27 @@ Available adapter configuration options
               Cores: 42
               Memory: 256
               Disk: 840
+
+    .. rubric:: Example HTCondor JDL
+
+    .. code-block::
+
+        executable = start_pilot.sh
+        transfer_input_files = setup_pilot.sh,grid-mapfile
+        output = logs/$$(cluster).$$(process).out
+        error = logs/$$(cluster).$$(process).err
+        log = logs/cluster.log
+
+        accounting_group=tardis
+        x509userproxy = /home/tardis/proxy
+
+        environment=${Environment}
+
+        request_cpus=${Cores}
+        request_memory=${Memory}
+        request_disk=${Disk}
+
+        queue 1
 
 Moab Site Adapter
 -----------------
@@ -389,6 +414,23 @@ Available adapter configuration options
     |                | Default: ShellExecutor is used!                                                             |                 |
     +----------------+---------------------------------------------------------------------------------------------+-----------------+
 
+Available machine type configuration options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. content-tabs:: left-col
+
+    +----------------+--------------------------------------------------------------------------------------------------+-----------------+
+    | Option         | Short Description                                                                                | Requirement     |
+    +================+==================================================================================================+=================+
+    | Walltime       | Expected walltime of drone                                                                       |  **Required**   |
+    +----------------+--------------------------------------------------------------------------------------------------+-----------------+
+    | Partition      | Name of the Slurm partition to run in                                                            |  **Required**   |
+    +----------------+--------------------------------------------------------------------------------------------------+-----------------+
+    | StartupCommand | The command to execute at job start                                                              |  **Required**   |
+    +----------------+--------------------------------------------------------------------------------------------------+-----------------+
+    | SubmitOptions  | Options to add to the `sbatch` command. `long` and `short` arguments are supported (see example) |  **Optional**   |
+    +----------------+--------------------------------------------------------------------------------------------------+-----------------+
+
 .. content-tabs:: right-col
 
     .. rubric:: Example configuration
@@ -415,6 +457,18 @@ Available adapter configuration options
               Walltime: '1440'
               Partition: normal
               StartupCommand: 'pilot_clean.sh'
+              SubmitOptions:
+                short:
+                  C: "intel"
+                long:
+                  gres: "gpu:2,mic:1"
+            six_hours:
+              Walltime: '360'
+              Partition: normal
+              StartupCommand: 'pilot_clean.sh'
+              SubmitOptions:
+                long:
+                  gres: "gpu:2,mic:1"
             twelve_hours:
               Walltime: '720'
               Partition: normal
@@ -428,6 +482,11 @@ Available adapter configuration options
               Cores: 20
               Memory: 62
               Disk: 480
+            six_hours:
+              Cores: 20
+              Memory: 62
+              Disk: 480
+
 
 .. content-tabs:: left-col
 

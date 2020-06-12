@@ -16,6 +16,7 @@ from warnings import filterwarnings
 
 import asyncio
 import asyncssh
+import logging
 
 __all__ = ["TestMoabAdapter"]
 
@@ -38,7 +39,7 @@ TEST_RESOURCE_STATUS_RESPONSE = """
  </queue>
 </Data>
 
-"""
+"""  # noqa: B950
 
 TEST_RESOURCE_STATUS_RESPONSE_RUNNING = """
 <Data>
@@ -58,7 +59,7 @@ TEST_RESOURCE_STATUS_RESPONSE_RUNNING = """
  </queue>
 </Data>
 
-"""
+"""  # noqa: B950
 
 TEST_DEPLOY_RESOURCE_RESPONSE = """
 
@@ -113,7 +114,7 @@ STATE_TRANSLATIONS = [
     ("Vacated", ResourceStatus.Deleted),
 ]
 
-TEST_RESOURCE_STATE_TRANSLATION_RESPONSE = f"\n\n".join(
+TEST_RESOURCE_STATE_TRANSLATION_RESPONSE = "\n\n".join(
     f"""
 <Data>
  <Object>queue</Object>
@@ -130,7 +131,7 @@ TEST_RESOURCE_STATE_TRANSLATION_RESPONSE = f"\n\n".join(
   <job Account="bw16g013" CompletionCode="CNCLD" EEDuration="2729" GJID="76242{num:02}" Group="ka_etp" JobID="76242{num:02}" JobName="startVM.py" ReqAWDuration="360" ReqProcs="20" StartTime="0" StatPSDed="0.000000" StatPSUtl="0.000000" State="{resource_status}" SubmissionTime="1583331813" SuspendDuration="0" User="ka_qb1555"/>
  </queue>
 </Data>
-"""
+"""  # noqa: B950
     for num, (resource_status, _) in enumerate(STATE_TRANSLATIONS)
 )
 
@@ -226,9 +227,9 @@ class TestMoabAdapter(TestCase):
                 machine_type="test2large", site_name="TestSite"
             ),
         )
-        if return_resource_attributes.created - expected_resource_attributes.created > timedelta(
+        if return_resource_attributes.created - expected_resource_attributes.created > timedelta(  # noqa: B950
             seconds=1
-        ) or return_resource_attributes.updated - expected_resource_attributes.updated > timedelta(
+        ) or return_resource_attributes.updated - expected_resource_attributes.updated > timedelta(  # noqa: B950
             seconds=1
         ):
             raise Exception("Creation time or update time wrong!")
@@ -240,7 +241,7 @@ class TestMoabAdapter(TestCase):
         )
         self.assertEqual(return_resource_attributes, expected_resource_attributes)
         self.mock_executor.return_value.run_command.assert_called_with(
-            "msub -j oe -m p -l walltime=02:00:00:00,mem=120gb,nodes=1:ppn=20 startVM.py"
+            "msub -j oe -m p -l walltime=02:00:00:00,mem=120gb,nodes=1:ppn=20 startVM.py"  # noqa: B950
         )
 
     def test_machine_meta_data(self):
@@ -349,10 +350,11 @@ class TestMoabAdapter(TestCase):
         expected_resource_attributes.update(
             updated=datetime.now(), resource_status=ResourceStatus.Stopped
         )
-        return_resource_attributes = run_async(
-            self.moab_adapter.terminate_resource,
-            resource_attributes=self.resource_attributes,
-        )
+        with self.assertLogs(level=logging.WARNING):
+            return_resource_attributes = run_async(
+                self.moab_adapter.terminate_resource,
+                resource_attributes=self.resource_attributes,
+            )
         self.assertEqual(
             return_resource_attributes["resource_status"], ResourceStatus.Stopped
         )
@@ -372,8 +374,8 @@ class TestMoabAdapter(TestCase):
             )
 
     def test_resource_status_raise(self):
-        # Update interval is 10 minutes, so set last update back by 2 minutes in order to execute sacct command and
-        # creation date to current date
+        # Update interval is 10 minutes, so set last update back by 2 minutes in
+        # order to execute sacct command and creation date to current date
         created_timestamp = datetime.now()
         new_timestamp = datetime.now() - timedelta(minutes=2)
         self.moab_adapter._moab_status._last_update = new_timestamp
@@ -389,8 +391,8 @@ class TestMoabAdapter(TestCase):
             )
 
     def test_resource_status_raise_past(self):
-        # Update interval is 10 minutes, so set last update back by 11 minutes in order to execute sacct command and
-        # creation date to 12 minutes ago
+        # Update interval is 10 minutes, so set last update back by 11 minutes
+        # in order to execute sacct command and creation date to 12 minutes ago
         creation_timestamp = datetime.now() - timedelta(minutes=12)
         last_update_timestamp = datetime.now() - timedelta(minutes=11)
         self.moab_adapter._moab_status._last_update = last_update_timestamp
@@ -407,8 +409,9 @@ class TestMoabAdapter(TestCase):
     def test_exception_handling(self):
         def test_exception_handling(to_raise, to_catch):
             with self.assertRaises(to_catch):
-                with self.moab_adapter.handle_exceptions():
-                    raise to_raise
+                with self.assertLogs(level=logging.WARNING):
+                    with self.moab_adapter.handle_exceptions():
+                        raise to_raise
 
         matrix = [
             (asyncio.TimeoutError(), TardisTimeout),

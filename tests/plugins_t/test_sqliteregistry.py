@@ -96,7 +96,7 @@ class TestSqliteRegistry(TestCase):
         with sqlite3.connect(self.test_db) as connection:
             cursor = connection.cursor()
             cursor.execute(
-                """SELECT MachineTypes.machine_type, Sites.site_name FROM MachineTypes 
+                """SELECT MachineTypes.machine_type, Sites.site_name FROM MachineTypes
                               JOIN Sites ON MachineTypes.site_id=Sites.site_id"""
             )
             for row in cursor:
@@ -149,8 +149,8 @@ class TestSqliteRegistry(TestCase):
             with sqlite3.connect(db) as connection:
                 cursor = connection.cursor()
                 cursor.execute(
-                    """SELECT R.remote_resource_uuid, R.drone_uuid, RS.state, S.site_name, MT.machine_type, 
-                R.created, R.updated
+                    """SELECT R.remote_resource_uuid, R.drone_uuid, RS.state,
+                S.site_name, MT.machine_type, R.created, R.updated
                 FROM Resources R
                 JOIN ResourceStates RS ON R.state_id = RS.state_id
                 JOIN Sites S ON R.site_id = S.site_id

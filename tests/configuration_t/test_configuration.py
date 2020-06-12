@@ -49,7 +49,7 @@ class TestConfiguration(TestCase):
 
     def test_translate_config(self):
         b64_result = (
-            b"I2Nsb3VkLWNvbmZpZwoKd3JpdGVfZmlsZXM6CiAgLSBwYXRoOiAvZXRjL2huc2NpY2xvdWQvc2l0ZS1pZC5jZmcKICAgIGNvbn",
+            b"I2Nsb3VkLWNvbmZpZwoKd3JpdGVfZmlsZXM6CiAgLSBwYXRoOiAvZXRjL2huc2NpY2xvdWQvc2l0ZS1pZC5jZmcKICAgIGNvbn",  # noqa: B950
             b"RlbnQ6IHwKICAgICAgRXhvc2NhbGUKICAgIHBlcm1pc3Npb25zOiAnMDY0NCcK",
         )
         self.configuration1.load_config(os.path.join(self.test_path, "Sites.yml"))

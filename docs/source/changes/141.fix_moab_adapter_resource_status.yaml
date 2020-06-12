@@ -1,0 +1,8 @@
+category: fixed
+summary: "Fixed the resource status translation of the moab site adapter"
+description: |
+  A few moab resource states missing in the resource status translation have been added.
+  In addition, initially wrongly assigned states have been fixed.
+pull requests:
+- 141
+version: 0.4.0

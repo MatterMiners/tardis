@@ -11,5 +11,6 @@ Submodules
 
 .. toctree::
 
+   tardis.plugins.prometheusmonitoring
    tardis.plugins.sqliteregistry
    tardis.plugins.telegrafmonitoring

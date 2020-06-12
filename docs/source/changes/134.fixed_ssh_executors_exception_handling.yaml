@@ -1,0 +1,11 @@
+category: fixed
+summary: "Fixed the exception handling of `ConnectionResetError` in `SSHExecutor`"
+description: |
+  The exception handling of the `SSHExecutor` was fixed in order to catch
+  `ConnectionResetError` at the right position. Initially the exception was caught wrongly,
+  which led to crashes of TARDIS.
+issues:
+- 133
+pull requests:
+- 134
+version: 0.4.0
