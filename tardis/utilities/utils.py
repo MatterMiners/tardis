@@ -35,6 +35,10 @@ def cmd_option_formatter(options: AttributeDict, prefix: str, separator: str) ->
     return " ".join(options)
 
 
+def htcondor_cmd_option_formatter(options: AttributeDict) -> str:
+    return cmd_option_formatter(options, prefix="-", separator=" ")
+
+
 #  def slurm_cmd_option_formatter(options):
 #      """
 #      Formats name/value pairs in the `options` dict as `--<name> value` suitable
