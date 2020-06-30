@@ -3,7 +3,6 @@ from ..interfaces.plugin import Plugin
 from ..interfaces.state import State
 from ..utilities.attributedict import AttributeDict
 
-from concurrent.futures import ThreadPoolExecutor
 import logging
 import asyncio
 from elasticsearch import Elasticsearch
@@ -27,8 +26,6 @@ class ElasticsearchMonitoring(Plugin):
         self._meta = config.meta
 
         self._es = Elasticsearch([{"host": config.host, "port": config.port}])
-
-        self.thread_pool_executor = ThreadPoolExecutor(max_workers=1)
 
     async def notify(self, state: State, resource_attributes: AttributeDict) -> None:
         """
@@ -57,9 +54,7 @@ class ElasticsearchMonitoring(Plugin):
 
     async def async_execute(self, document: AttributeDict) -> None:
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            self.thread_pool_executor, self.execute, document
-        )
+        return await loop.run_in_executor(None, self.execute, document)
 
     def execute(self, document: AttributeDict) -> None:
         """
