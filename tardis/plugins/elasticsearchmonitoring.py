@@ -23,7 +23,7 @@ class ElasticsearchMonitoring(Plugin):
         config = Configuration().Plugins.ElasticsearchMonitoring
 
         self._index = config.index
-        self._meta = config.meta
+        self._meta = getattr(config, "meta", "")
 
         self._es = Elasticsearch([{"host": config.host, "port": config.port}])
 

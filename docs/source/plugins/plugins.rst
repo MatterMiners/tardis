@@ -158,6 +158,7 @@ Available configuration options
           ElasticsearchMonitoring:
             host: elasticsearch.foo.bar
             port: 9200
+            index: cobald_tardis
             meta: instance1
 
 .. content-tabs:: left-col

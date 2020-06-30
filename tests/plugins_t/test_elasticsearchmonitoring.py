@@ -5,7 +5,6 @@ from tardis.resources.dronestates import CleanupState
 
 from datetime import datetime
 from unittest import TestCase
-from unittest.mock import Mock
 from unittest.mock import patch
 
 from ..utilities.utilities import run_async
@@ -28,6 +27,8 @@ class TestElasticsearchMonitoring(TestCase):
         cls.mock_elasticsearch = cls.mock_elasticsearch_patcher.start()
         cls.mock_datetime = cls.mock_datetime_patcher.start()
         cls.mock_time = cls.mock_time_patcher.start()
+        cls.mock_datetime.now.return_value.strftime.return_value = "20200630"
+        cls.mock_time.return_value = 2
 
     @classmethod
     def tearDownClass(cls):
@@ -36,7 +37,6 @@ class TestElasticsearchMonitoring(TestCase):
         cls.mock_datetime_patcher.stop()
         cls.mock_time_patcher.stop()
 
-    @patch("tardis.plugins.elasticsearchmonitoring.logging", Mock())
     def setUp(self):
         self.config = self.mock_config.return_value
         self.config.Plugins.ElasticsearchMonitoring._index = "index"
@@ -44,7 +44,6 @@ class TestElasticsearchMonitoring(TestCase):
 
         self.plugin = ElasticsearchMonitoring()
 
-    @patch("tardis.plugins.elasticsearchmonitoring.logging", Mock())
     def test_notify(self):
         test_param = AttributeDict(
             site_name="test-site",
@@ -77,5 +76,3 @@ class TestElasticsearchMonitoring(TestCase):
             id=f"{test_param.drone_uuid}-1",
             index=f"{self.plugin._index}-{self.mock_datetime.now.return_value.strftime.return_value}",  # noqa: B950
         )
-
-        self.mock_elasticsearch.reset()
