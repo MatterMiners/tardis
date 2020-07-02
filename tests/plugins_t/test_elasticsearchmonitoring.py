@@ -60,7 +60,11 @@ class TestElasticsearchMonitoring(TestCase):
             "meta": self.plugin._meta,
             "timestamp": int(self.mock_time.return_value * 1000),
             "resource_status": str(test_param.resource_status),
-            "revision": 1,
+            "revision": 2,
+        }
+
+        self.mock_elasticsearch.return_value.search.return_value = {
+            "hits": {"total": {"value": 2}}
         }
 
         run_async(
@@ -73,6 +77,6 @@ class TestElasticsearchMonitoring(TestCase):
         )
         self.mock_elasticsearch.return_value.create.assert_called_with(
             body=test_param_ext,
-            id=f"{test_param.drone_uuid}-1",
+            id=f"{test_param.drone_uuid}-2",
             index=f"{self.plugin._index}-{self.mock_datetime.now.return_value.strftime.return_value}",  # noqa: B950
         )
