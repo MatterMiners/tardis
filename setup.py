@@ -60,6 +60,7 @@ setup(
         "cobald>=0.12.1",
         "asyncssh",
         "aiotelegraf",
+        "elasticsearch",
         "aioprometheus",
     ],
     extras_require={

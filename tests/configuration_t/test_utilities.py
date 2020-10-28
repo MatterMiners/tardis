@@ -6,7 +6,7 @@ import yaml
 
 
 @enable_yaml_load("!TestDummy")  # noqa: B903
-class TestDummy(object):
+class TestDummy(object):  # noqa: B903
     def __init__(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs

@@ -123,6 +123,44 @@ Available configuration options
             addr: 127.0.0.1
             port: 8080
 
+ElasticSearch Monitoring
+------------------------
+
+.. content-tabs:: left-col
+
+    The :py:class:`~tardis.plugins.elastisearchmonitoring.ElasticsearchMonitoring` implements an interface to push
+    the done state to an Elasticsearch instance at every state change.
+
+Available configuration options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. content-tabs:: left-col
+
+    +----------------+---------------------------------------------------------------------------+-----------------+
+    | Option         | Short Description                                                         | Requirement     |
+    +================+===========================================================================+=================+
+    | host           | Hostname or IP address of the Elasticsearch instance.                     |  **Required**   |
+    +----------------+---------------------------------------------------------------------------+-----------------+
+    | port           | Port the Elasticsearch instance is listening on.                          |  **Required**   |
+    +----------------+---------------------------------------------------------------------------+-----------------+
+    | index          | Target index in the Elasticsearch instance                                |  **Required**   |
+    +----------------+---------------------------------------------------------------------------+-----------------+
+    | meta           | Additional meta data (can be used to distinguish TARDIS instances).       |  **Optional**   |
+    +----------------+---------------------------------------------------------------------------+-----------------+
+
+.. content-tabs:: right-col
+
+    .. rubric:: Example configuration
+
+    .. code-block:: yaml
+
+        Plugins:
+          ElasticsearchMonitoring:
+            host: elasticsearch.foo.bar
+            port: 9200
+            index: cobald_tardis
+            meta: instance1
+
 .. content-tabs:: left-col
 
     Your favorite monitoring is currently not supported?
