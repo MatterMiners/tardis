@@ -227,11 +227,12 @@ class TestMoabAdapter(TestCase):
                 machine_type="test2large", site_name="TestSite"
             ),
         )
-        if return_resource_attributes.created - expected_resource_attributes.created > timedelta(  # noqa: B950
-            seconds=1
-        ) or return_resource_attributes.updated - expected_resource_attributes.updated > timedelta(  # noqa: B950
-            seconds=1
-        ):
+        if (
+            return_resource_attributes.created - expected_resource_attributes.created
+            > timedelta(seconds=1)
+            or return_resource_attributes.updated - expected_resource_attributes.updated
+            > timedelta(seconds=1)  # noqa: B950
+        ):  # noqa: B950
             raise Exception("Creation time or update time wrong!")
         del (
             expected_resource_attributes.created,
