@@ -145,7 +145,8 @@ class TestSlurmAdapter(TestCase):
         self.mock_async_run_command.assert_called_with(self.command)
 
         self.assertEqual(
-            run_async(self.slurm_adapter.get_allocation, drone_uuid="not_exists"), 0.0,
+            run_async(self.slurm_adapter.get_allocation, drone_uuid="not_exists"),
+            0.0,
         )
 
     def test_get_machine_status(self):
@@ -203,5 +204,6 @@ class TestSlurmAdapter(TestCase):
         self.mock_async_run_command.assert_called_with(self.command)
 
         self.assertEqual(
-            run_async(self.slurm_adapter.get_utilisation, drone_uuid="not_exists"), 0.0,
+            run_async(self.slurm_adapter.get_utilisation, drone_uuid="not_exists"),
+            0.0,
         )
