@@ -35,7 +35,6 @@ async def slurm_status_updater(
 
     attributes_string = ",".join([str(x) for x in attributes.values()])
 
-    #  cmd = f'sinfo --Format="{attributes_string}" -e --noheader'
     cmd = f'sinfo --Format="{attributes_string}" -e --noheader -r'
 
     if options_string:
@@ -52,6 +51,7 @@ async def slurm_status_updater(
             delimiter=" ",
             replacements=dict(undefined=None),
             skipinitialspace=True,
+            skiptrailingspace=True,
         ):
             row["CPUs"] = [float(elem) for elem in row["CPUs"].split("/")]
             row["TotalMem"] = float(row["TotalMem"])
@@ -148,9 +148,9 @@ class SlurmAdapter(BatchSystemAdapter):
 
     async def get_resource_ratios(self, drone_uuid: str) -> Iterable[float]:
         """
-        Get the ratio of requested over total resources (CPU, Memory, Disk,
-        etc.) for a worker node in HTCondor according to the HTCondor
-        expressions defined in the adapter configuration.
+        Get the ratio of requested over total resources for a worker node in Slurm.
+        The CPU ratio is calculated as allocated CPUs / total CPUs and the memory
+        ratio is given by allocated memory / total memory.
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
         to the host name of the drone.
@@ -159,8 +159,6 @@ class SlurmAdapter(BatchSystemAdapter):
         :rtype: Iterable[float]
         """
 
-        # TODO: We can't define formulas such as the ones possible in HTCondor.
-        # Therefore we need to to some math here!
         await self._slurm_status.update_status()
         try:
             slurm_status = self._slurm_status[drone_uuid]
@@ -201,14 +199,15 @@ class SlurmAdapter(BatchSystemAdapter):
         :rtype: MachineStatus
         """
 
-        # '*' means it didn't respond for a while
+        # '*' means the machine didn't respond for a while
+        # 'allocated+' means that node is allocated to one or more active jobs plus one
+        # or more jobs in COMPLETING
         status_mapping = {
             "allocated": MachineStatus.Available,
             "allocated+": MachineStatus.Available,
             "mixed": MachineStatus.Available,
             "idle": MachineStatus.Available,
             "completing": MachineStatus.Available,
-            "completing+": MachineStatus.Available,
             "draining": MachineStatus.Draining,
             "down": MachineStatus.NotAvailable,
             "down*": MachineStatus.Drained,

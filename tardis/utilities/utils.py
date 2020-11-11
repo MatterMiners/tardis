@@ -4,6 +4,7 @@ from ..exceptions.executorexceptions import CommandExecutionFailure
 from ..interfaces.executor import Executor
 
 from io import StringIO
+from typing import List, Tuple
 
 import csv
 
@@ -40,7 +41,12 @@ def htcondor_cmd_option_formatter(options: AttributeDict) -> str:
 
 
 def csv_parser(
-    input_csv, fieldnames, delimiter="\t", replacements=None, skipinitialspace=False
+    input_csv: str,
+    fieldnames: [List, Tuple],
+    delimiter: str = "\t",
+    replacements: dict = None,
+    skipinitialspace: bool = False,
+    skiptrailingspace: bool = False,
 ):
     """
     Parses CSV formatted input
@@ -48,12 +54,19 @@ def csv_parser(
     :param input_csv: CSV formatted input
     :type input_csv: str
     :param fieldnames: corresponding field names
-    :type fieldnames: str
+    :type fieldnames: [List, Tuple]
     :param delimiter: delimiter between entries
-    :type delimiter: char
+    :type delimiter: str
     :param replacements: fields to be replaced
     :type replacements: dict
+    :param skipinitialspace: ignore whitespace immediately following the delimiter
+    :type skipinitialspace: bool
+    :param skiptrailingspace: ignore whitespace at the end of each csv row
+    :type skiptrailingspace: bool
     """
+    if skiptrailingspace:
+        input_csv = "\n".join((line.strip() for line in input_csv.splitlines()))
+
     replacements = replacements or {}
     with StringIO(input_csv) as csv_input:
         csv_reader = csv.DictReader(
@@ -66,7 +79,6 @@ def csv_parser(
             yield {
                 key: value if value not in replacements.keys() else replacements[value]
                 for key, value in row.items()
-                if key is not None
             }
 
 

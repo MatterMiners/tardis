@@ -35,7 +35,7 @@ class TestHTCondorCMDOptionFormatter(TestCase):
 
 
 class TestCSVParser(TestCase):
-    def test_csv_parser(self):
+    def test_csv_parser_htcondor(self):
         htcondor_input = "\n".join(
             [
                 "exoscale-26d361290f\tUnclaimed\tIdle\t0.125\t0.125",
@@ -68,6 +68,47 @@ class TestCSVParser(TestCase):
                 Activity="Idle",
                 Test1=None,
                 Test2=None,
+            ),
+        )
+
+    def test_csv_parser_slurm(self):
+        slurm_input = "\n".join(
+            [
+                "mixed  2/38/0/40  8000  10000  site-123  host-1    ",
+                "idle   0/40/0/40     0  10000  site-124  host-2    ",
+            ]
+        )
+
+        parsed_rows = csv_parser(
+            input_csv=slurm_input,
+            fieldnames=("State", "CPU", "AllocMem", "Memory", "Features", "NodeHost"),
+            replacements=dict(undefined=None),
+            delimiter=" ",
+            skipinitialspace=True,
+            skiptrailingspace=True,
+        )
+
+        self.assertEqual(
+            next(parsed_rows),
+            dict(
+                State="mixed",
+                CPU="2/38/0/40",
+                AllocMem="8000",
+                Memory="10000",
+                Features="site-123",
+                NodeHost="host-1",
+            ),
+        )
+
+        self.assertEqual(
+            next(parsed_rows),
+            dict(
+                State="idle",
+                CPU="0/40/0/40",
+                AllocMem="0",
+                Memory="10000",
+                Features="site-124",
+                NodeHost="host-2",
             ),
         )
 

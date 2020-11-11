@@ -36,10 +36,8 @@ class TestSlurmAdapter(TestCase):
         self.memory_ratio = 0.25
 
         self.command = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader -r --partition=test_part'
-        #  self.command = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader'
 
         self.command_wo_options = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader -r'
-        #  self.command_wo_options = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader'
 
         return_value = "\n".join(
             [
@@ -88,10 +86,6 @@ class TestSlurmAdapter(TestCase):
 
         self.mock_async_run_command.reset_mock()
 
-        run_async(self.slurm_adapter.drain_machine, drone_uuid="VM-1")
-        self.mock_async_run_command.assert_called_with(
-            "scontrol update NodeName=host-10-18-1-1 State=DRAIN Reason='COBalD/TARDIS'"
-        )
         self.assertIsNone(
             run_async(self.slurm_adapter.drain_machine, drone_uuid="not_exists")
         )
@@ -136,7 +130,7 @@ class TestSlurmAdapter(TestCase):
         del self.config.BatchSystem.options
         self.slurm_adapter = SlurmAdapter()
 
-        self.assertCountEqual(
+        self.assertEqual(
             list(run_async(self.slurm_adapter.get_resource_ratios, drone_uuid="VM-1")),
             [self.cpu_ratio, self.memory_ratio],
         )
@@ -149,6 +143,10 @@ class TestSlurmAdapter(TestCase):
             max([self.cpu_ratio, self.memory_ratio]),
         )
         self.mock_async_run_command.assert_called_with(self.command)
+
+        self.assertEqual(
+            run_async(self.slurm_adapter.get_allocation, drone_uuid="not_exists"), 0.0,
+        )
 
     def test_get_machine_status(self):
         state_mapping = {
@@ -203,3 +201,7 @@ class TestSlurmAdapter(TestCase):
             min([self.cpu_ratio, self.memory_ratio]),
         )
         self.mock_async_run_command.assert_called_with(self.command)
+
+        self.assertEqual(
+            run_async(self.slurm_adapter.get_utilisation, drone_uuid="not_exists"), 0.0,
+        )
