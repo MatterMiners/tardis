@@ -35,9 +35,9 @@ class TestSlurmAdapter(TestCase):
         self.cpu_ratio = 0.5
         self.memory_ratio = 0.25
 
-        self.command = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader -r --partition=test_part'
+        self.command = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader -r --partition=test_part'  # noqa B950
 
-        self.command_wo_options = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader -r'
+        self.command_wo_options = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader -r'  # noqa B950
 
         return_value = "\n".join(
             [
@@ -45,10 +45,10 @@ class TestSlurmAdapter(TestCase):
                 "mixed      3/1/0/4   15853   22011   VM-2   host-10-18-1-2",
                 "mixed      1/3/0/4   18268   22011   VM-3   host-10-18-1-4",
                 "mixed      3/1/0/4   17803   22011   VM-4   host-10-18-1-7",
-                "draining   0/4/0/4   17803   22011   draining_machine   draining_machine",
-                "idle       0/4/0/4   17803   22011   idle_machine   idle_machine",
-                "drained    0/4/0/4   17803   22011   drained_machine   drained_machine",
-                "powerup    0/4/0/4   17803   22011   power_up_machine   power_up_machine",
+                "draining   0/4/0/4   17803   22011   draining_m   draining_m",
+                "idle       0/4/0/4   17803   22011   idle_m   idle_m",
+                "drained    0/4/0/4   17803   22011   drained_m   drained_m",
+                "powerup    0/4/0/4   17803   22011   pwr_up_m   pwr_up_m",
             ]
         )
 
@@ -94,7 +94,7 @@ class TestSlurmAdapter(TestCase):
         )
         with self.assertRaises(CommandExecutionFailure):
             self.assertIsNone(
-                run_async(self.slurm_adapter.drain_machine, drone_uuid="idle_machine")
+                run_async(self.slurm_adapter.drain_machine, drone_uuid="idle_m")
             )
 
         self.mock_async_run_command.side_effect = None
@@ -152,10 +152,10 @@ class TestSlurmAdapter(TestCase):
         state_mapping = {
             "VM-1": MachineStatus.Available,
             "not_exists": MachineStatus.NotAvailable,
-            "draining_machine": MachineStatus.Draining,
-            "idle_machine": MachineStatus.Available,
-            "drained_machine": MachineStatus.NotAvailable,
-            "power_up_machine": MachineStatus.NotAvailable,
+            "draining_m": MachineStatus.Draining,
+            "idle_m": MachineStatus.Available,
+            "drained_m": MachineStatus.NotAvailable,
+            "pwr_up_m": MachineStatus.NotAvailable,
         }
 
         for machine, state in state_mapping.items():
