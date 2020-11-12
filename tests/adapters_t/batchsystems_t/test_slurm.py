@@ -10,18 +10,21 @@ from tardis.exceptions.executorexceptions import CommandExecutionFailure
 
 from functools import partial
 from shlex import quote
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 from unittest import TestCase
 
 
 class TestSlurmAdapter(TestCase):
+    mock_config_patcher = None
+    mock_async_run_command_patcher = None
+
     @classmethod
     def setUpClass(cls):
         cls.mock_config_patcher = patch(
             "tardis.adapters.batchsystems.slurm.Configuration"
         )
         cls.mock_async_run_command_patcher = patch(
-            "tardis.adapters.batchsystems.slurm.async_run_command"
+            "tardis.adapters.batchsystems.slurm.async_run_command", new=MagicMock()
         )
         cls.mock_config = cls.mock_config_patcher.start()
         cls.mock_async_run_command = cls.mock_async_run_command_patcher.start()
