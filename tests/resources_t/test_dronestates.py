@@ -94,7 +94,7 @@ class TestDroneStates(TestCase):
                 return_value=AttributeDict(resource_status=resource_status)
             )
             self.drone.batch_system_agent.get_machine_status.return_value = (
-                async_return(return_value=machine_status)  # noqa: B950
+                async_return(return_value=machine_status)
             )
             self.drone.state.return_value = initial_state
             with self.assertLogs(None, level="DEBUG"):
