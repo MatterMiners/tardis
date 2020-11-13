@@ -183,7 +183,7 @@ class TestSlurmAdapter(TestCase):
     def test_deploy_resource_w_submit_options(self):
         self.test_site_config.MachineTypeConfiguration.test2large.SubmitOptions = (
             AttributeDict(long=AttributeDict(gres="tmp:1G"))
-        )  # noqa: B950
+        )
 
         slurm_adapter = SlurmAdapter(machine_type="test2large", site_name="TestSite")
 

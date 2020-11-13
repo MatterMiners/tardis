@@ -40,18 +40,42 @@ def htcondor_cmd_option_formatter(options: AttributeDict) -> str:
     return cmd_option_formatter(options, prefix="-", separator=" ")
 
 
-def htcondor_csv_parser(
-    htcondor_input: str,
+def csv_parser(
+    input_csv: str,
     fieldnames: [List, Tuple],
     delimiter: str = "\t",
     replacements: dict = None,
+    skipinitialspace: bool = False,
+    skiptrailingspace: bool = False,
 ):
+    """
+    Parses CSV formatted input
+
+    :param input_csv: CSV formatted input
+    :type input_csv: str
+    :param fieldnames: corresponding field names
+    :type fieldnames: [List, Tuple]
+    :param delimiter: delimiter between entries
+    :type delimiter: str
+    :param replacements: fields to be replaced
+    :type replacements: dict
+    :param skipinitialspace: ignore whitespace immediately following the delimiter
+    :type skipinitialspace: bool
+    :param skiptrailingspace: ignore whitespace at the end of each csv row
+    :type skiptrailingspace: bool
+    """
+    if skiptrailingspace:
+        input_csv = "\n".join((line.strip() for line in input_csv.splitlines()))
+
     replacements = replacements or {}
-    with StringIO(htcondor_input) as csv_input:
-        cvs_reader = csv.DictReader(
-            csv_input, fieldnames=fieldnames, delimiter=delimiter
+    with StringIO(input_csv) as csv_input:
+        csv_reader = csv.DictReader(
+            csv_input,
+            fieldnames=fieldnames,
+            delimiter=delimiter,
+            skipinitialspace=skipinitialspace,
         )
-        for row in cvs_reader:
+        for row in csv_reader:
             yield {
                 key: value if value not in replacements.keys() else replacements[value]
                 for key, value in row.items()
