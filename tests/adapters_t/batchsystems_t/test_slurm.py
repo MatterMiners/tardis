@@ -9,7 +9,6 @@ from tardis.interfaces.batchsystemadapter import MachineStatus
 from tardis.exceptions.executorexceptions import CommandExecutionFailure
 
 from functools import partial
-from shlex import quote
 from unittest.mock import MagicMock, patch
 from unittest import TestCase
 
@@ -181,13 +180,6 @@ class TestSlurmAdapter(TestCase):
                     "Activity": "Activity",
                     "TardisDroneUuid": "TardisDroneUuid",
                 }
-                # Escape Slurm expressions and add them to attributes
-                attributes.update(
-                    {
-                        key: quote(value)
-                        for key, value in self.config.BatchSystem.ratios.items()
-                    }
-                )
                 run_async(
                     partial(
                         slurm_status_updater,

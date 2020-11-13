@@ -64,7 +64,6 @@ async def slurm_status_updater(
 
     except CommandExecutionFailure as ex:
         logging.warning(f"SLURM's sinfo could not be executed! {str(ex)}")
-        #  logging.warning(str(ex))
         raise
     else:
         logging.debug("SLURM status update finished.")
