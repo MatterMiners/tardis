@@ -57,8 +57,6 @@ htcondor_status_codes = {
     "7": ResourceStatus.Stopped,
 }
 
-htcondor_translate_resources_prefix = {"Cores": 1, "Memory": 1024, "Disk": 1024}
-
 
 class HTCondorAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
@@ -101,22 +99,12 @@ class HTCondorAdapter(SiteAdapter):
         with open(jdl_file, "r") as f:
             jdl_template = Template(f.read())
 
-        try:
-            translated_meta_data = {
-                key: htcondor_translate_resources_prefix[key] * value
-                for key, value in self.machine_meta_data.items()
-            }
-        except KeyError as ke:
-            logger.critical(f"deploy_resource failed: no translation known for {ke}")
-            raise
-        else:
-            translated_meta_data["Uuid"] = resource_attributes.drone_uuid
+        drone_environment = self.drone_environment(resource_attributes.drone_uuid)
 
         submit_jdl = jdl_template.substitute(
-            translated_meta_data,
+            drone_environment,
             Environment=";".join(
-                f"TardisDrone{key}={value}"
-                for key, value in translated_meta_data.items()
+                f"TardisDrone{key}={value}" for key, value in drone_environment.items()
             ),
         )
 
