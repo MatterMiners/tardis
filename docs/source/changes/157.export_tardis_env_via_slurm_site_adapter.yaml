@@ -1,0 +1,9 @@
+category: added
+summary: "Export tardis environment variable via slurm site adapter"
+description: |
+  Export the drone meta data like allocated cores, memory as well as the drone uuid to the actual batch jobs
+  representing the drone. This environment variables are then used to configure the OBS node accordingly.
+  In addition, the drone uuid can be used as STARTD_NAME in the HTCondor OBS in order to uniquely match drones to the
+  underlying resources in the OBS.
+pull requests:
+- 157

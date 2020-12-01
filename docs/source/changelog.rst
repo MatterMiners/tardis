@@ -6,6 +6,14 @@
 CHANGELOG
 #########
 
+[Unreleased] - 2020-12-01
+=========================
+
+Added
+-----
+
+* Export tardis environment variable via slurm site adapter
+
 [0.4.0] - 2020-06-03
 ====================
 
