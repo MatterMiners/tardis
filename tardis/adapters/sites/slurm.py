@@ -114,7 +114,7 @@ class SlurmAdapter(SiteAdapter):
         )
 
         request_command = (
-            "sbatch " f"{sbatch_cmdline_option_string} " f"{self._startup_command}"
+            f"sbatch {sbatch_cmdline_option_string} {self._startup_command}"
         )
 
         result = await self._executor.run_command(request_command)
