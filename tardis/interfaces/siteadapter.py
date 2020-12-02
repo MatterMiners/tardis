@@ -117,6 +117,41 @@ class SiteAdapter(metaclass=ABCMeta):
 
         return translated_response
 
+    def drone_environment(
+        self, drone_uuid: str, meta_data_translation_mapping: dict = None
+    ):
+        """
+        Method to get the drone environment to be exported to batch jobs
+        providing the actual resources in the overlay batch system. It
+        translates units of drone meta data into a format the overlay
+        batch system is expecting. In addition, the drone_uuid is adding to
+        allow for matching drones to actual resources provided in the overlay
+        batch system.
+        :param drone_uuid: The unique id which is assigned to every drone on creation
+        :type drone_uuid: str
+        :param meta_data_translation_mapping: Mapping used for the meta data translation
+        :type meta_data_translation_mapping: dict
+        :return: Translated
+        :rtype: dict
+        """
+        meta_data_translation_mapping = meta_data_translation_mapping or {
+            "Cores": 1,
+            "Memory": 1024,
+            "Disk": 1024,
+        }  # defaults to units expected by HTCondor
+        try:
+            drone_environment = {
+                key: meta_data_translation_mapping[key] * value
+                for key, value in self.machine_meta_data.items()
+            }
+        except KeyError as ke:
+            logger.critical(f"drone_environment failed: no translation known for {ke}")
+            raise
+        else:
+            drone_environment["Uuid"] = drone_uuid
+
+        return drone_environment
+
     @property
     def drone_minimum_lifetime(self) -> [int, None]:
         try:
@@ -218,38 +253,3 @@ class SiteAdapter(metaclass=ABCMeta):
         :rtype: AttributeDict
         """
         raise NotImplementedError
-
-    def drone_environment(
-        self, drone_uuid: str, meta_data_translation_mapping: dict = None
-    ):
-        """
-        Method to get the drone environment to be exported to batch jobs
-        providing the actual resources in the overlay batch system. It
-        translates units of drone meta data into a format the overlay
-        batch system is expecting. In addition, the drone_uuid is adding to
-        allow for matching drones to actual resources provided in the overlay
-        batch system.
-        :param drone_uuid: The unique id which is assigned to every drone on creation
-        :type drone_uuid: str
-        :param meta_data_translation_mapping: Mapping used for the meta data translation
-        :type meta_data_translation_mapping: dict
-        :return: Translated
-        :rtype: dict
-        """
-        meta_data_translation_mapping = meta_data_translation_mapping or {
-            "Cores": 1,
-            "Memory": 1024,
-            "Disk": 1024,
-        }  # defaults to units expected by HTCondor
-        try:
-            drone_environment = {
-                key: meta_data_translation_mapping[key] * value
-                for key, value in self.machine_meta_data.items()
-            }
-        except KeyError as ke:
-            logger.critical(f"drone_environment failed: no translation known for {ke}")
-            raise
-        else:
-            drone_environment["Uuid"] = drone_uuid
-
-        return drone_environment
