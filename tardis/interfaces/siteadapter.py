@@ -119,14 +119,13 @@ class SiteAdapter(metaclass=ABCMeta):
 
     def drone_environment(
         self, drone_uuid: str, meta_data_translation_mapping: dict = None
-    ):
+    ) -> dict:
         """
         Method to get the drone environment to be exported to batch jobs
         providing the actual resources in the overlay batch system. It
         translates units of drone meta data into a format the overlay
-        batch system is expecting. In addition, the drone_uuid is adding to
-        allow for matching drones to actual resources provided in the overlay
-        batch system.
+        batch system is expecting. Also, the drone_uuid is added  for matching
+        drones to actual resources provided in the overlay batch system.
         :param drone_uuid: The unique id which is assigned to every drone on creation
         :type drone_uuid: str
         :param meta_data_translation_mapping: Mapping used for the meta data translation
