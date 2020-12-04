@@ -226,6 +226,48 @@ Start-up your instance
     However, it is recommended to start ``COBalD`` using systemd as decribed in the
     `COBalD Systemd Configuration <https://cobald.readthedocs.io/en/stable/source/daemon/systemd.html>`_ documentation.
 
+Running your instance in Docker
+===============================
+
+.. content-tabs:: left-col
+
+    For your convenience and to try out ``COBalD``/``TARDIS`` ready to use docker containers are provided via Dockerhub.
+    To start a demo setup managing fake resources and a fake batch system simply run the following command.
+
+.. content-tabs:: right-col
+
+    .. code-block::
+
+        docker run matterminers/cobald-tardis:latest
+
+.. content-tabs:: left-col
+
+    To run your own ``COBalD``/``TARDIS`` configuration you can run the following command.
+
+.. content-tabs:: right-col
+
+    .. code-block::
+
+        docker run --mount type=bind,source=</your_path/cobald.yml>,target=/srv/cobald.yml matterminers/cobald-tardis:latest
+
+.. content-tabs:: left-col
+
+    To use the Sqlite Database to persistently store the state of your resources you can export an entire path to the
+    container by running the following command.
+
+.. content-tabs:: right-col
+
+    .. code-block::
+
+        docker run -v </your_path>:/srv matterminers/cobald-tardis:latest
+
+.. content-tabs:: left-col
+
+    .. note::
+
+        This path must contain a valid `cobald.yml` file. The persistent database will then be stored on the local machine.
+
+
 Indices and tables
 ==================
 
