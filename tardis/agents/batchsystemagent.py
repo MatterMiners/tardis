@@ -23,3 +23,7 @@ class BatchSystemAgent(BatchSystemAdapter):
 
     async def get_utilisation(self, drone_uuid: str) -> float:
         return await self._batch_system_adapter.get_utilisation(drone_uuid)
+
+    @property
+    def machine_meta_data_translation_mapping(self) -> dict:
+        return self._batch_system_adapter.machine_meta_data_translation_mapping

@@ -4,7 +4,7 @@ from tardis.agents.batchsystemagent import BatchSystemAgent
 from tardis.interfaces.batchsystemadapter import BatchSystemAdapter
 
 from unittest import TestCase
-from unittest.mock import create_autospec
+from unittest.mock import create_autospec, PropertyMock
 
 
 class TestBatchSystemAgent(TestCase):
@@ -41,3 +41,19 @@ class TestBatchSystemAgent(TestCase):
         self.batch_system_adapter.get_utilisation.side_effect = async_return
         run_async(self.batch_system_agent.get_utilisation, drone_uuid="test")
         self.batch_system_adapter.get_utilisation.assert_called_with("test")
+
+    def test_machine_meta_data_translation_mapping(self):
+        machine_meta_data_translation_mock = PropertyMock(
+            return_value={"Cores": 1, "Memory": 1024, "Disk": 1024}
+        )
+
+        type(
+            self.batch_system_adapter
+        ).machine_meta_data_translation_mapping = machine_meta_data_translation_mock
+
+        self.assertEqual(
+            {"Cores": 1, "Memory": 1024, "Disk": 1024},
+            self.batch_system_agent.machine_meta_data_translation_mapping,
+        )
+
+        machine_meta_data_translation_mock.assert_called_once_with()
