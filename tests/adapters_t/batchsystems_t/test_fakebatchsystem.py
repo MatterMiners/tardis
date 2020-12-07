@@ -64,3 +64,9 @@ class TestFakeBatchSystemAdapter(TestCase):
         self.config.BatchSystem.utilisation = AttributeDict(get_value=lambda: 0.9)
         self.fake_adapter = FakeBatchSystemAdapter()
         self.assertEqual(run_async(self.fake_adapter.get_utilisation, "test-123"), 0.9)
+
+    def test_machine_meta_data_translation_map(self):
+        self.assertEqual(
+            {"Cores": 1, "Memory": 1, "Disk": 1},
+            self.fake_adapter.machine_meta_data_translation_mapping,
+        )

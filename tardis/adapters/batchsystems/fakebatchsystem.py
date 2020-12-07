@@ -97,3 +97,15 @@ class FakeBatchSystemAdapter(BatchSystemAdapter):
             return self.fake_config.utilisation
         else:
             return utilisation
+
+    @property
+    def machine_meta_data_translation_mapping(self) -> dict:
+        """
+        The machine meta data translation mapping is used to translate units of
+        the machine meta data in ``TARDIS`` to values expected by the
+        FakeBatchSystem adapter.
+
+        :return: Machine meta data translation mapping
+        :rtype: dict
+        """
+        return {"Cores": 1, "Memory": 1, "Disk": 1}
