@@ -239,13 +239,13 @@ class HTCondorAdapter(BatchSystemAdapter):
         return min(await self.get_resource_ratios(drone_uuid), default=0.0)
 
     @property
-    def machine_meta_data_translation_mapping(self) -> dict:
+    def machine_meta_data_translation_mapping(self) -> AttributeDict:
         """
         The machine meta data translation mapping is used to translate units of
         the machine meta data in ``TARDIS`` to values expected by the
         HTCondor batch system adapter.
 
         :return: Machine meta data translation mapping
-        :rtype: dict
+        :rtype: AttributeDict
         """
-        return {"Cores": 1, "Memory": 1024, "Disk": 1024 * 1024}
+        return AttributeDict(Cores=1, Memory=1024, Disk=1024 * 1024)

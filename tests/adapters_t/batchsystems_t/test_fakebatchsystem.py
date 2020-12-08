@@ -67,6 +67,6 @@ class TestFakeBatchSystemAdapter(TestCase):
 
     def test_machine_meta_data_translation_map(self):
         self.assertEqual(
-            {"Cores": 1, "Memory": 1, "Disk": 1},
+            AttributeDict(Cores=1, Memory=1, Disk=1),
             self.fake_adapter.machine_meta_data_translation_mapping,
         )

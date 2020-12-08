@@ -118,7 +118,7 @@ class SiteAdapter(metaclass=ABCMeta):
         return translated_response
 
     def drone_environment(
-        self, drone_uuid: str, meta_data_translation_mapping: dict
+        self, drone_uuid: str, meta_data_translation_mapping: AttributeDict
     ) -> dict:
         """
         Method to get the drone environment to be exported to batch jobs

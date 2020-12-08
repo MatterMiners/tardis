@@ -162,11 +162,11 @@ class TestSlurmAdapter(TestCase):
             resource_attributes=AttributeDict(
                 machine_type="test2large",
                 site_name="TestSite",
-                machine_meta_data_translation_mapping={
-                    "Cores": 1,
-                    "Memory": 1000,
-                    "Disk": 1000,
-                },
+                machine_meta_data_translation_mapping=AttributeDict(
+                    Cores=1,
+                    Memory=1000,
+                    Disk=1000,
+                ),
                 drone_uuid="testsite-1390065",
             ),
         )
@@ -199,11 +199,11 @@ class TestSlurmAdapter(TestCase):
             resource_attributes=AttributeDict(
                 machine_type="test2large",
                 site_name="TestSite",
-                machine_meta_data_translation_mapping={
-                    "Cores": 1,
-                    "Memory": 1000,
-                    "Disk": 1000,
-                },
+                machine_meta_data_translation_mapping=AttributeDict(
+                    Cores=1,
+                    Memory=1000,
+                    Disk=1000,
+                ),
                 drone_uuid="testsite-1390065",
             ),
         )

@@ -2,6 +2,7 @@ from ..utilities.utilities import run_async
 from ..utilities.utilities import async_return
 from tardis.agents.batchsystemagent import BatchSystemAgent
 from tardis.interfaces.batchsystemadapter import BatchSystemAdapter
+from tardis.utilities.attributedict import AttributeDict
 
 from unittest import TestCase
 from unittest.mock import create_autospec, PropertyMock
@@ -44,7 +45,7 @@ class TestBatchSystemAgent(TestCase):
 
     def test_machine_meta_data_translation_mapping(self):
         machine_meta_data_translation_mock = PropertyMock(
-            return_value={"Cores": 1, "Memory": 1024, "Disk": 1024}
+            return_value=AttributeDict(Cores=1, Memory=1024, Disk=1024)
         )
 
         type(
@@ -52,7 +53,7 @@ class TestBatchSystemAgent(TestCase):
         ).machine_meta_data_translation_mapping = machine_meta_data_translation_mock
 
         self.assertEqual(
-            {"Cores": 1, "Memory": 1024, "Disk": 1024},
+            AttributeDict(Cores=1, Memory=1024, Disk=1024),
             self.batch_system_agent.machine_meta_data_translation_mapping,
         )
 

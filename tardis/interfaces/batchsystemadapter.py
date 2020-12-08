@@ -1,3 +1,5 @@
+from ..utilities.attributedict import AttributeDict
+
 from abc import ABCMeta
 from abc import abstractmethod
 from enum import Enum
@@ -100,13 +102,13 @@ class BatchSystemAdapter(metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def machine_meta_data_translation_mapping(self) -> dict:
+    def machine_meta_data_translation_mapping(self) -> AttributeDict:
         """
         The machine meta data translation mapping is used to translate units of
         the machine meta data in ``TARDIS`` as expected by the overlay batch
         system.
 
         :return: machine meta data translation mapping
-        :rtype: dict
+        :rtype: AttributeDict
         """
         raise NotImplementedError

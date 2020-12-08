@@ -1,6 +1,7 @@
-from tardis.configuration.configuration import Configuration
-from tardis.interfaces.batchsystemadapter import BatchSystemAdapter
-from tardis.interfaces.batchsystemadapter import MachineStatus
+from ...configuration.configuration import Configuration
+from ...interfaces.batchsystemadapter import BatchSystemAdapter
+from ...interfaces.batchsystemadapter import MachineStatus
+from ...utilities.attributedict import AttributeDict
 
 
 class FakeBatchSystemAdapter(BatchSystemAdapter):
@@ -99,13 +100,13 @@ class FakeBatchSystemAdapter(BatchSystemAdapter):
             return utilisation
 
     @property
-    def machine_meta_data_translation_mapping(self) -> dict:
+    def machine_meta_data_translation_mapping(self) -> AttributeDict:
         """
         The machine meta data translation mapping is used to translate units of
         the machine meta data in ``TARDIS`` to values expected by the
         FakeBatchSystem adapter.
 
         :return: Machine meta data translation mapping
-        :rtype: dict
+        :rtype: AttributeDict
         """
-        return {"Cores": 1, "Memory": 1, "Disk": 1}
+        return AttributeDict(Cores=1, Memory=1, Disk=1)

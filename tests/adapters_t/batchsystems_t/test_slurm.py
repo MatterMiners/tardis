@@ -205,6 +205,6 @@ class TestSlurmAdapter(TestCase):
 
     def test_machine_meta_data_translation(self):
         self.assertEqual(
-            {"Cores": 1, "Memory": 1000, "Disk": 1000},
+            AttributeDict(Cores=1, Memory=1000, Disk=1000),
             self.slurm_adapter.machine_meta_data_translation_mapping,
         )

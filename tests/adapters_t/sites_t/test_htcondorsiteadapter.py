@@ -99,11 +99,11 @@ class TestHTCondorSiteAdapter(TestCase):
             self.adapter.deploy_resource,
             AttributeDict(
                 drone_uuid="test-123",
-                machine_meta_data_translation_mapping={
-                    "Cores": 1,
-                    "Memory": 1024,
-                    "Disk": 1024 * 1024,
-                },
+                machine_meta_data_translation_mapping=AttributeDict(
+                    Cores=1,
+                    Memory=1024,
+                    Disk=1024 * 1024,
+                ),
             ),
         )
         self.assertEqual(response.remote_resource_uuid, "1351043")
@@ -125,11 +125,11 @@ class TestHTCondorSiteAdapter(TestCase):
                     self.adapter.deploy_resource,
                     AttributeDict(
                         drone_uuid="test-123",
-                        machine_meta_data_translation_mapping={
-                            "Cores": 1,
-                            "Memory": 1024,
-                            "Disk": 1024 * 1024,
-                        },
+                        machine_meta_data_translation_mapping=AttributeDict(
+                            Cores=1,
+                            Memory=1024,
+                            Disk=1024 * 1024,
+                        ),
                     ),
                 )
 
