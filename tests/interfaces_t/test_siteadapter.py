@@ -87,18 +87,13 @@ class TestSiteAdapter(TestCase):
         self.site_adapter._machine_type = "test1xxl"
 
         self.assertEqual(
-            {"Cores": 128, "Disk": 102400, "Memory": 524288, "Uuid": "test-123"},
-            self.site_adapter.drone_environment(drone_uuid="test-123"),
-        )
-
-        self.assertEqual(
-            {"Cores": 128, "Memory": 0.5, "Disk": 0.1, "Uuid": "test-123"},
+            {"Cores": 128, "Memory": 524288, "Disk": 104857600, "Uuid": "test-123"},
             self.site_adapter.drone_environment(
                 drone_uuid="test-123",
                 meta_data_translation_mapping={
                     "Cores": 1,
-                    "Memory": 1.0 / 1024.0,
-                    "Disk": 1.0 / 1000.0,
+                    "Memory": 1024,
+                    "Disk": 1024 * 1024,
                 },
             ),
         )

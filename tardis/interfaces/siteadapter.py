@@ -118,7 +118,7 @@ class SiteAdapter(metaclass=ABCMeta):
         return translated_response
 
     def drone_environment(
-        self, drone_uuid: str, meta_data_translation_mapping: dict = None
+        self, drone_uuid: str, meta_data_translation_mapping: dict
     ) -> dict:
         """
         Method to get the drone environment to be exported to batch jobs
@@ -133,11 +133,6 @@ class SiteAdapter(metaclass=ABCMeta):
         :return: Translated
         :rtype: dict
         """
-        meta_data_translation_mapping = meta_data_translation_mapping or {
-            "Cores": 1,
-            "Memory": 1024,
-            "Disk": 1024,
-        }  # defaults to units expected by HTCondor
         try:
             drone_environment = {
                 key: meta_data_translation_mapping[key] * value

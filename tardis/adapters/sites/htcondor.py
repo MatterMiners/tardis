@@ -99,7 +99,10 @@ class HTCondorAdapter(SiteAdapter):
         with open(jdl_file, "r") as f:
             jdl_template = Template(f.read())
 
-        drone_environment = self.drone_environment(resource_attributes.drone_uuid)
+        drone_environment = self.drone_environment(
+            resource_attributes.drone_uuid,
+            resource_attributes.machine_meta_data_translation_mapping,
+        )
 
         submit_jdl = jdl_template.substitute(
             drone_environment,

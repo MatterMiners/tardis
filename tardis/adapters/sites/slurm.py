@@ -110,7 +110,10 @@ class SlurmAdapter(SiteAdapter):
     ) -> AttributeDict:
 
         sbatch_cmdline_option_string = slurm_cmd_option_formatter(
-            self.sbatch_cmdline_options(resource_attributes.drone_uuid)
+            self.sbatch_cmdline_options(
+                resource_attributes.drone_uuid,
+                resource_attributes.machine_meta_data_translation_mapping,
+            )
         )
 
         request_command = (
@@ -165,7 +168,7 @@ class SlurmAdapter(SiteAdapter):
             {"JobId": resource_attributes.remote_resource_uuid}, **resource_attributes
         )
 
-    def sbatch_cmdline_options(self, drone_uuid):
+    def sbatch_cmdline_options(self, drone_uuid, machine_meta_data_translation_mapping):
         sbatch_options = self.machine_type_configuration.get(
             "SubmitOptions", AttributeDict()
         )
@@ -174,7 +177,9 @@ class SlurmAdapter(SiteAdapter):
 
         drone_environment = ",".join(
             f"TardisDrone{key}={value}"
-            for key, value in self.drone_environment(drone_uuid).items()
+            for key, value in self.drone_environment(
+                drone_uuid, machine_meta_data_translation_mapping
+            ).items()
         )
 
         return AttributeDict(
