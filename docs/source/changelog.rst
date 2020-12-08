@@ -6,7 +6,7 @@
 CHANGELOG
 #########
 
-[Unreleased] - 2020-12-07
+[Unreleased] - 2020-12-08
 =========================
 
 Added

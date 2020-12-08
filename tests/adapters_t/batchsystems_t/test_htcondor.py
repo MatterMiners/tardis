@@ -255,3 +255,9 @@ class TestHTCondorAdapter(TestCase):
             min([self.cpu_ratio, self.memory_ratio]),
         )
         self.mock_async_run_command.assert_called_with(self.command)
+
+    def test_machine_meta_data_translation_mapping(self):
+        self.assertEqual(
+            {"Cores": 1, "Memory": 1024, "Disk": 1024 * 1024},
+            self.htcondor_adapter.machine_meta_data_translation_mapping,
+        )
