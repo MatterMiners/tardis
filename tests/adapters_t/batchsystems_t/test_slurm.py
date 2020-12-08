@@ -202,3 +202,9 @@ class TestSlurmAdapter(TestCase):
             run_async(self.slurm_adapter.get_utilisation, drone_uuid="not_exists"),
             0.0,
         )
+
+    def test_machine_meta_data_translation(self):
+        self.assertEqual(
+            {"Cores": 1, "Memory": 1000, "Disk": 1000},
+            self.slurm_adapter.machine_meta_data_translation_mapping,
+        )
