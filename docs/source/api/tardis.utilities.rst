@@ -10,6 +10,7 @@ Subpackages
 -----------
 
 .. toctree::
+   :maxdepth: 4
 
    tardis.utilities.executors
    tardis.utilities.simulators
@@ -18,6 +19,7 @@ Submodules
 ----------
 
 .. toctree::
+   :maxdepth: 4
 
    tardis.utilities.asynccachemap
    tardis.utilities.attributedict

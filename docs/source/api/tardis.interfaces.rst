@@ -10,6 +10,7 @@ Submodules
 ----------
 
 .. toctree::
+   :maxdepth: 4
 
    tardis.interfaces.batchsystemadapter
    tardis.interfaces.borg
