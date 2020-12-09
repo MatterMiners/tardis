@@ -78,6 +78,26 @@ class TestSiteAdapter(TestCase):
         self.site_adapter._machine_type = "TestFlavour"
         self.assertEqual(self.site_adapter.machine_meta_data, "Test")
 
+    def test_drone_environment(self):
+        self.site_adapter._configuration = AttributeDict(
+            MachineMetaData=AttributeDict(
+                test1xxl=AttributeDict(Cores=128, Memory=512, Disk=100)
+            )
+        )
+        self.site_adapter._machine_type = "test1xxl"
+
+        self.assertEqual(
+            AttributeDict(Cores=128, Memory=524288, Disk=104857600, Uuid="test-123"),
+            self.site_adapter.drone_environment(
+                drone_uuid="test-123",
+                meta_data_translation_mapping=AttributeDict(
+                    Cores=1,
+                    Memory=1024,
+                    Disk=1024 * 1024,
+                ),
+            ),
+        )
+
     def test_drone_minimum_lifetime(self):
         self.assertEqual(self.site_adapter.drone_minimum_lifetime, None)
 

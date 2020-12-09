@@ -64,10 +64,6 @@ class SlurmAdapter(SiteAdapter):
             )
             self._startup_command = self._configuration.StartupCommand
 
-        self._sbatch_cmdline_option_string = slurm_cmd_option_formatter(
-            self.sbatch_cmdline_options
-        )
-
         self._executor = getattr(self._configuration, "executor", ShellExecutor())
 
         self._slurm_status = AsyncCacheMap(
@@ -113,10 +109,15 @@ class SlurmAdapter(SiteAdapter):
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
 
+        sbatch_cmdline_option_string = slurm_cmd_option_formatter(
+            self.sbatch_cmdline_options(
+                resource_attributes.drone_uuid,
+                resource_attributes.machine_meta_data_translation_mapping,
+            )
+        )
+
         request_command = (
-            "sbatch "
-            f"{self._sbatch_cmdline_option_string} "
-            f"{self._startup_command}"
+            f"sbatch {sbatch_cmdline_option_string} {self._startup_command}"
         )
 
         result = await self._executor.run_command(request_command)
@@ -127,7 +128,6 @@ class SlurmAdapter(SiteAdapter):
             remote_resource_uuid=remote_resource_uuid,
             created=datetime.now(),
             updated=datetime.now(),
-            drone_uuid=self.drone_uuid(str(remote_resource_uuid)),
             resource_status=ResourceStatus.Booting,
         )
         return resource_attributes
@@ -168,10 +168,18 @@ class SlurmAdapter(SiteAdapter):
             {"JobId": resource_attributes.remote_resource_uuid}, **resource_attributes
         )
 
-    @property
-    def sbatch_cmdline_options(self):
+    def sbatch_cmdline_options(self, drone_uuid, machine_meta_data_translation_mapping):
         sbatch_options = self.machine_type_configuration.get(
             "SubmitOptions", AttributeDict()
+        )
+
+        walltime = self.machine_type_configuration.Walltime
+
+        drone_environment = ",".join(
+            f"TardisDrone{key}={value}"
+            for key, value in self.drone_environment(
+                drone_uuid, machine_meta_data_translation_mapping
+            ).items()
         )
 
         return AttributeDict(
@@ -185,7 +193,7 @@ class SlurmAdapter(SiteAdapter):
             long=AttributeDict(
                 **sbatch_options.get("long", AttributeDict()),
                 mem=f"{self.machine_meta_data.Memory}gb",
-                export=f"SLURM_Walltime={self.machine_type_configuration.Walltime}",
+                export=f"SLURM_Walltime={walltime},{drone_environment}",
             ),
         )
 

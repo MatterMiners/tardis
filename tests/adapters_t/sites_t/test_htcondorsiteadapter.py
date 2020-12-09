@@ -42,11 +42,11 @@ log = logs/cluster.log
 
 accounting_group=tardis
 
-environment=TardisDroneCores=8;TardisDroneMemory=32768;TardisDroneDisk=163840;TardisDroneUuid=test-123
+environment=TardisDroneCores=8;TardisDroneMemory=32768;TardisDroneDisk=167772160;TardisDroneUuid=test-123
 
 request_cpus=8
 request_memory=32768
-request_disk=163840
+request_disk=167772160
 
 queue 1"""  # noqa: B950
 
@@ -96,7 +96,15 @@ class TestHTCondorSiteAdapter(TestCase):
     @mock_executor_run_command(stdout=CONDOR_SUBMIT_OUTPUT)
     def test_deploy_resource(self):
         response = run_async(
-            self.adapter.deploy_resource, AttributeDict(drone_uuid="test-123")
+            self.adapter.deploy_resource,
+            AttributeDict(
+                drone_uuid="test-123",
+                machine_meta_data_translation_mapping=AttributeDict(
+                    Cores=1,
+                    Memory=1024,
+                    Disk=1024 * 1024,
+                ),
+            ),
         )
         self.assertEqual(response.remote_resource_uuid, "1351043")
         self.assertFalse(response.created - datetime.now() > timedelta(seconds=1))
@@ -114,7 +122,15 @@ class TestHTCondorSiteAdapter(TestCase):
         with self.assertLogs(logging.getLogger(), logging.ERROR):
             with self.assertRaises(KeyError):
                 run_async(
-                    self.adapter.deploy_resource, AttributeDict(drone_uuid="test-123")
+                    self.adapter.deploy_resource,
+                    AttributeDict(
+                        drone_uuid="test-123",
+                        machine_meta_data_translation_mapping=AttributeDict(
+                            Cores=1,
+                            Memory=1024,
+                            Disk=1024 * 1024,
+                        ),
+                    ),
                 )
 
     def test_machine_meta_data(self):

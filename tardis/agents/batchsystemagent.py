@@ -1,5 +1,6 @@
 from ..interfaces.batchsystemadapter import BatchSystemAdapter
 from ..interfaces.batchsystemadapter import MachineStatus
+from ..utilities.attributedict import AttributeDict
 
 
 class BatchSystemAgent(BatchSystemAdapter):
@@ -23,3 +24,7 @@ class BatchSystemAgent(BatchSystemAdapter):
 
     async def get_utilisation(self, drone_uuid: str) -> float:
         return await self._batch_system_adapter.get_utilisation(drone_uuid)
+
+    @property
+    def machine_meta_data_translation_mapping(self) -> AttributeDict:
+        return self._batch_system_adapter.machine_meta_data_translation_mapping

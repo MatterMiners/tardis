@@ -114,7 +114,7 @@ class TestSlurmAdapter(TestCase):
 
     @property
     def machine_meta_data(self):
-        return AttributeDict(test2large=AttributeDict(Cores=20, Memory="62"))
+        return AttributeDict(test2large=AttributeDict(Cores=20, Memory=62, Disk=100))
 
     @property
     def machine_type_configuration(self):
@@ -160,7 +160,14 @@ class TestSlurmAdapter(TestCase):
         returned_resource_attributes = run_async(
             self.slurm_adapter.deploy_resource,
             resource_attributes=AttributeDict(
-                machine_type="test2large", site_name="TestSite"
+                machine_type="test2large",
+                site_name="TestSite",
+                machine_meta_data_translation_mapping=AttributeDict(
+                    Cores=1,
+                    Memory=1000,
+                    Disk=1000,
+                ),
+                drone_uuid="testsite-1390065",
             ),
         )
 
@@ -176,7 +183,7 @@ class TestSlurmAdapter(TestCase):
         )
 
         self.mock_executor.return_value.run_command.assert_called_with(
-            "sbatch -p normal -N 1 -n 20 -t 60 --mem=62gb --export=SLURM_Walltime=60 pilot.sh"  # noqa: B950
+            "sbatch -p normal -N 1 -n 20 -t 60 --mem=62gb --export=SLURM_Walltime=60,TardisDroneCores=20,TardisDroneMemory=62000,TardisDroneDisk=100000,TardisDroneUuid=testsite-1390065 pilot.sh"  # noqa: B950
         )
 
     @mock_executor_run_command(TEST_DEPLOY_RESOURCE_RESPONSE)
@@ -190,12 +197,19 @@ class TestSlurmAdapter(TestCase):
         run_async(
             slurm_adapter.deploy_resource,
             resource_attributes=AttributeDict(
-                machine_type="test2large", site_name="TestSite"
+                machine_type="test2large",
+                site_name="TestSite",
+                machine_meta_data_translation_mapping=AttributeDict(
+                    Cores=1,
+                    Memory=1000,
+                    Disk=1000,
+                ),
+                drone_uuid="testsite-1390065",
             ),
         )
 
         self.mock_executor.return_value.run_command.assert_called_with(
-            "sbatch -p normal -N 1 -n 20 -t 60 --gres=tmp:1G --mem=62gb --export=SLURM_Walltime=60 pilot.sh"  # noqa: B950
+            "sbatch -p normal -N 1 -n 20 -t 60 --gres=tmp:1G --mem=62gb --export=SLURM_Walltime=60,TardisDroneCores=20,TardisDroneMemory=62000,TardisDroneDisk=100000,TardisDroneUuid=testsite-1390065 pilot.sh"  # noqa: B950
         )
 
     def test_machine_meta_data(self):

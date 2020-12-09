@@ -3,6 +3,10 @@ from ..utilities.attributedict import AttributeDict
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 
+import logging
+
+logger = logging.getLogger("cobald.runtime.tardis.interfaces.site")
+
 
 class ResourceStatus(Enum):
     """
@@ -112,6 +116,35 @@ class SiteAdapter(metaclass=ABCMeta):
             translated_response[key] = value
 
         return translated_response
+
+    def drone_environment(
+        self, drone_uuid: str, meta_data_translation_mapping: AttributeDict
+    ) -> dict:
+        """
+        Method to get the drone environment to be exported to batch jobs
+        providing the actual resources in the overlay batch system. It
+        translates units of drone meta data into a format the overlay
+        batch system is expecting. Also, the drone_uuid is added  for matching
+        drones to actual resources provided in the overlay batch system.
+        :param drone_uuid: The unique id which is assigned to every drone on creation
+        :type drone_uuid: str
+        :param meta_data_translation_mapping: Mapping used for the meta data translation
+        :type meta_data_translation_mapping: dict
+        :return: Translated
+        :rtype: dict
+        """
+        try:
+            drone_environment = {
+                key: meta_data_translation_mapping[key] * value
+                for key, value in self.machine_meta_data.items()
+            }
+        except KeyError as ke:
+            logger.critical(f"drone_environment failed: no translation known for {ke}")
+            raise
+        else:
+            drone_environment["Uuid"] = drone_uuid
+
+        return drone_environment
 
     @property
     def drone_minimum_lifetime(self) -> [int, None]:
