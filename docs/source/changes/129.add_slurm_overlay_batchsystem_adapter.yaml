@@ -1,0 +1,6 @@
+category: added
+summary: "Added support for Slurm overlay batch system"
+description: |
+  The Slurm batch system is now also supported as overlay batch system to manage dynamic resources.
+pull requests:
+- 129

@@ -13,6 +13,7 @@ Added
 -----
 
 * Export tardis environment variable via slurm site adapter
+* Added support for Slurm overlay batch system
 
 [0.4.0] - 2020-06-03
 ====================
