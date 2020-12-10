@@ -10,6 +10,8 @@ Submodules
 ----------
 
 .. toctree::
+   :maxdepth: 4
 
    tardis.adapters.batchsystems.fakebatchsystem
    tardis.adapters.batchsystems.htcondor
+   tardis.adapters.batchsystems.slurm

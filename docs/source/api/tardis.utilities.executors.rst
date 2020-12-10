@@ -10,6 +10,7 @@ Submodules
 ----------
 
 .. toctree::
+   :maxdepth: 4
 
    tardis.utilities.executors.shellexecutor
    tardis.utilities.executors.sshexecutor

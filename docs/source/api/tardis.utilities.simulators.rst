@@ -10,6 +10,7 @@ Submodules
 ----------
 
 .. toctree::
+   :maxdepth: 4
 
    tardis.utilities.simulators.periodicvalue
    tardis.utilities.simulators.randomgauss

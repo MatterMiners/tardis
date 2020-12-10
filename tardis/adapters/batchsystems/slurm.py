@@ -107,7 +107,7 @@ class SlurmAdapter(BatchSystemAdapter):
         in Freiburg).
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
-        to the host name of the drone.
+            to the host name of the drone.
         :type drone_uuid: str
         :return: None
         """
@@ -119,7 +119,7 @@ class SlurmAdapter(BatchSystemAdapter):
         jobs will be accepted
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
-        to the host name of the drone.
+            to the host name of the drone.
         :type drone_uuid: str
         :return: None
         """
@@ -139,7 +139,7 @@ class SlurmAdapter(BatchSystemAdapter):
         take care of it themselves)
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
-        to the host name of the drone.
+            to the host name of the drone.
         :type drone_uuid: str
         :return: None
         """
@@ -152,7 +152,7 @@ class SlurmAdapter(BatchSystemAdapter):
         ratio is given by allocated memory / total memory.
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
-        to the host name of the drone.
+            to the host name of the drone.
         :type drone_uuid: str
         :return: Iterable of float containing the ratios
         :rtype: Iterable[float]
@@ -178,7 +178,7 @@ class SlurmAdapter(BatchSystemAdapter):
         Disk, etc.).
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
-        to the host name of the drone.
+            to the host name of the drone.
         :type drone_uuid: str
         :return: The allocation of a worker node as described above.
         :rtype: float
@@ -191,10 +191,10 @@ class SlurmAdapter(BatchSystemAdapter):
         Drained, NotAvailable)
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
-        to the host name of the drone.
+            to the host name of the drone.
         :type drone_uuid: str
         :return: The machine status in SLURM (Available, Draining, Drained,
-        NotAvailable)
+            NotAvailable)
         :rtype: MachineStatus
         """
 
@@ -241,7 +241,7 @@ class SlurmAdapter(BatchSystemAdapter):
         Disk, etc.).
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
-        to the host name of the drone.
+            to the host name of the drone.
         :type drone_uuid: str
         :return: The utilization of a worker node as described above.
         :rtype: float

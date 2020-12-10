@@ -10,6 +10,7 @@ Submodules
 ----------
 
 .. toctree::
+   :maxdepth: 4
 
    tardis.exceptions.executorexceptions
    tardis.exceptions.tardisexceptions

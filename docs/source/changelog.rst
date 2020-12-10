@@ -1,4 +1,4 @@
-.. Created by changelog.py at 2020-12-08, command
+.. Created by changelog.py at 2020-12-09, command
    '/Users/giffler/.cache/pre-commit/repor6pnmwlm/py_env-python3.9/bin/changelog docs/source/changes compile --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
@@ -6,13 +6,14 @@
 CHANGELOG
 #########
 
-[Unreleased] - 2020-12-08
-=========================
+[0.5.0] - 2020-12-09
+====================
 
 Added
 -----
 
 * Export tardis environment variable via slurm site adapter
+* Added support for Slurm overlay batch system
 
 [0.4.0] - 2020-06-03
 ====================
