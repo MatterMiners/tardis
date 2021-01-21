@@ -10,6 +10,7 @@ from ...utilities.attributedict import AttributeDict
 from ...utilities.attributedict import convert_to_attribute_dict
 from ...utilities.executors.shellexecutor import ShellExecutor
 from ...utilities.asynccachemap import AsyncCacheMap
+from ...utilities.utils import moab_cmd_option_formatter
 
 from asyncio import TimeoutError
 from contextlib import contextmanager
@@ -66,8 +67,6 @@ class MoabAdapter(SiteAdapter):
 
         self._executor = getattr(self._configuration, "executor", ShellExecutor())
 
-        self._email = getattr(self._configuration, "Email", None)
-
         self._moab_status = AsyncCacheMap(
             update_coroutine=partial(moab_status_updater, self._executor),
             max_age=self._configuration.StatusUpdate * 60,
@@ -122,9 +121,11 @@ class MoabAdapter(SiteAdapter):
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
-        email = f"-M {self._email} " if self._email is not None else ""
+        msub_cmdline_option_string = moab_cmd_option_formatter(
+            self.machine_type_configuration.get("SubmitOptions", AttributeDict())
+        )
         request_command = (
-            f"msub -j oe -m p {email}"
+            f"msub -j oe -m p {msub_cmdline_option_string}"
             f"-l walltime={self.machine_type_configuration.Walltime},"
             f"mem={self.machine_meta_data.Memory}gb,"
             f"nodes={self.machine_type_configuration.NodeType} "

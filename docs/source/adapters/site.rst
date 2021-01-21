@@ -277,7 +277,7 @@ Available adapter configuration options
     +                +                                                                                             +                 +
     |                | Default: ShellExecutor is used!                                                             |                 |
     +----------------+---------------------------------------------------------------------------------------------+-----------------+
-    | Email          | Email list for the -M flag of Moabs msub command                                            |  **Optional**   |
+    | SubmitOptions  | Email list for the -M flag of Moabs msub command                                            |  **Optional**   |
     +----------------+---------------------------------------------------------------------------------------------+-----------------+
 
     The available options in the `MachineTypeConfiguration` section are the expected `WallTime` of the placeholder jobs and
@@ -309,6 +309,11 @@ Available adapter configuration options
               Walltime: '02:00:00:00'
               NodeType: '1:ppn=20'
               StartupCommand: startVM.py
+              SubmitOptions:
+                short:
+                  M: "someone@somewhere.com"
+                long:
+                  timeout: 60
             singularity_d1.large:
               Walltime: '01:00:00:00'
               NodeType: '1:ppn=20'

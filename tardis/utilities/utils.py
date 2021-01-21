@@ -103,3 +103,11 @@ def slurm_cmd_option_formatter(options: AttributeDict) -> str:
             option_string += tmp_option_string
 
     return option_string
+
+
+def moab_cmd_option_formatter(options: AttributeDict) -> str:
+    cmd_string = slurm_cmd_option_formatter(options)
+    # Add trailing space at end if not already present
+    if cmd_string != "" and not cmd_string.endswith(" "):
+        cmd_string += " "
+    return cmd_string
