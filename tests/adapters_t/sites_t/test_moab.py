@@ -227,10 +227,11 @@ class TestMoabAdapter(TestCase):
                 machine_type="test2large", site_name="TestSite"
             ),
         )
-        if return_resource_attributes.created - expected_resource_attributes.created > timedelta(
-            seconds=1
-        ) or return_resource_attributes.updated - expected_resource_attributes.updated > timedelta(
-            seconds=1
+        if (
+            return_resource_attributes.created - expected_resource_attributes.created
+            > timedelta(seconds=1)
+            or return_resource_attributes.updated - expected_resource_attributes.updated
+            > timedelta(seconds=1)
         ):
             raise Exception("Creation time or update time wrong!")
         del (
@@ -246,9 +247,11 @@ class TestMoabAdapter(TestCase):
 
     @mock_executor_run_command(TEST_DEPLOY_RESOURCE_RESPONSE)
     def test_deploy_resource_w_submit_options(self):
-        self.test_site_config.MachineTypeConfiguration.test2large.SubmitOptions = AttributeDict(
-            short=AttributeDict(M="someone@somewhere.com"),
-            long=AttributeDict(timeout=60),
+        self.test_site_config.MachineTypeConfiguration.test2large.SubmitOptions = (
+            AttributeDict(
+                short=AttributeDict(M="someone@somewhere.com"),
+                long=AttributeDict(timeout=60),
+            )
         )
 
         moab_adapter = MoabAdapter(machine_type="test2large", site_name="TestSite")
@@ -256,7 +259,8 @@ class TestMoabAdapter(TestCase):
         run_async(
             moab_adapter.deploy_resource,
             resource_attributes=AttributeDict(
-                machine_type="test2large", site_name="TestSite",
+                machine_type="test2large",
+                site_name="TestSite",
             ),
         )
         self.mock_executor.return_value.run_command.assert_called_with(
