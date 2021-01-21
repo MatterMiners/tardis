@@ -10,7 +10,7 @@ from ...utilities.attributedict import AttributeDict
 from ...utilities.attributedict import convert_to_attribute_dict
 from ...utilities.executors.shellexecutor import ShellExecutor
 from ...utilities.asynccachemap import AsyncCacheMap
-from ...utilities.utils import moab_cmd_option_formatter
+from ...utilities.utils import scheduler_cmd_option_formatter
 
 from asyncio import TimeoutError
 from contextlib import contextmanager
@@ -121,9 +121,7 @@ class MoabAdapter(SiteAdapter):
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
-        msub_cmdline_option_string = moab_cmd_option_formatter(
-            self.machine_type_configuration.get("SubmitOptions", AttributeDict())
-        )
+        msub_cmdline_option_string = self.msub_cmdline_options()
         request_command = (
             f"msub -j oe -m p {msub_cmdline_option_string}"
             f"-l walltime={self.machine_type_configuration.Walltime},"
@@ -213,6 +211,15 @@ class MoabAdapter(SiteAdapter):
     async def stop_resource(self, resource_attributes: AttributeDict):
         logger.debug("MOAB jobs cannot be stopped gracefully. Terminating instead.")
         return await self.terminate_resource(resource_attributes)
+
+    def msub_cmdline_options(self):
+        cmd_string = scheduler_cmd_option_formatter(
+            self.machine_type_configuration.get("SubmitOptions", AttributeDict())
+        )
+        # Add trailing space at end if not already present
+        if cmd_string != "" and not cmd_string.endswith(" "):
+            cmd_string += " "
+        return cmd_string
 
     @contextmanager
     def handle_exceptions(self):

@@ -2,7 +2,7 @@ from tardis.utilities.attributedict import AttributeDict
 from tardis.utilities.utils import async_run_command
 from tardis.utilities.utils import htcondor_cmd_option_formatter
 from tardis.utilities.utils import csv_parser
-from tardis.utilities.utils import slurm_cmd_option_formatter
+from tardis.utilities.utils import scheduler_cmd_option_formatter
 from tardis.exceptions.executorexceptions import CommandExecutionFailure
 
 from ..utilities.utilities import run_async
@@ -114,19 +114,19 @@ class TestCSVParser(TestCase):
 
 
 class TestSlurmCMDOptionFormatter(TestCase):
-    def test_slurm_cmd_option_formatter(self):
+    def test_scheduler_cmd_option_formatter(self):
         options = AttributeDict()
-        option_string = slurm_cmd_option_formatter(options)
+        option_string = scheduler_cmd_option_formatter(options)
 
         self.assertEqual(option_string, "")
 
         options = AttributeDict(short=AttributeDict(foo="bar", test=None))
-        option_string = slurm_cmd_option_formatter(options)
+        option_string = scheduler_cmd_option_formatter(options)
 
         self.assertEqual(option_string, "-foo bar -test")
 
         options = AttributeDict(long=AttributeDict(foo="bar", test=None))
-        option_string = slurm_cmd_option_formatter(options)
+        option_string = scheduler_cmd_option_formatter(options)
 
         self.assertEqual(option_string, "--foo=bar --test")
 
@@ -134,7 +134,7 @@ class TestSlurmCMDOptionFormatter(TestCase):
             short=AttributeDict(foo="bar", test=None),
             long=AttributeDict(foo_long="bar_long", test_long=None),
         )
-        option_string = slurm_cmd_option_formatter(options)
+        option_string = scheduler_cmd_option_formatter(options)
 
         self.assertEqual(
             option_string, "-foo bar -test --foo_long=bar_long --test_long"
