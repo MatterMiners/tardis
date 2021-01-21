@@ -277,6 +277,8 @@ Available adapter configuration options
     +                +                                                                                             +                 +
     |                | Default: ShellExecutor is used!                                                             |                 |
     +----------------+---------------------------------------------------------------------------------------------+-----------------+
+    | Email          | Email list for the -M flag of Moabs msub command                                            |  **Optional**   |
+    +----------------+---------------------------------------------------------------------------------------------+-----------------+
 
     The available options in the `MachineTypeConfiguration` section are the expected `WallTime` of the placeholder jobs and
     the requested `NodeType`. For details see the Moab documentation.

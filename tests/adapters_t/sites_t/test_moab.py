@@ -157,6 +157,7 @@ class TestMoabAdapter(TestCase):
                 "StatusUpdate",
                 "MachineTypeConfiguration",
                 "executor",
+                "Email",
             ]
         )
         self.test_site_config = config.TestSite
@@ -164,8 +165,31 @@ class TestMoabAdapter(TestCase):
         self.test_site_config.StatusUpdate = 10
         self.test_site_config.MachineTypeConfiguration = self.machine_type_configuration
         self.test_site_config.executor = self.mock_executor.return_value
+        self.test_site_config.Email = None
 
         self.moab_adapter = MoabAdapter(machine_type="test2large", site_name="TestSite")
+
+        config.TestSiteEmail = MagicMock(
+            spec=[
+                "MachineMetaData",
+                "StatusUpdate",
+                "MachineTypeConfiguration",
+                "executor",
+                "Email",
+            ]
+        )
+        self.test_site_config_email = config.TestSiteEmail
+        self.test_site_config_email.MachineMetaData = self.machine_meta_data
+        self.test_site_config_email.StatusUpdate = 10
+        self.test_site_config_email.MachineTypeConfiguration = (
+            self.machine_type_configuration
+        )
+        self.test_site_config_email.executor = self.mock_executor.return_value
+        self.test_site_config_email.Email = "someone@somewhere.com"
+
+        self.moab_adapter_email = MoabAdapter(
+            machine_type="test2large", site_name="TestSiteEmail"
+        )
 
     def tearDown(self):
         pass
@@ -227,11 +251,10 @@ class TestMoabAdapter(TestCase):
                 machine_type="test2large", site_name="TestSite"
             ),
         )
-        if (
-            return_resource_attributes.created - expected_resource_attributes.created
-            > timedelta(seconds=1)
-            or return_resource_attributes.updated - expected_resource_attributes.updated
-            > timedelta(seconds=1)
+        if return_resource_attributes.created - expected_resource_attributes.created > timedelta(
+            seconds=1
+        ) or return_resource_attributes.updated - expected_resource_attributes.updated > timedelta(
+            seconds=1
         ):
             raise Exception("Creation time or update time wrong!")
         del (
@@ -243,6 +266,18 @@ class TestMoabAdapter(TestCase):
         self.assertEqual(return_resource_attributes, expected_resource_attributes)
         self.mock_executor.return_value.run_command.assert_called_with(
             "msub -j oe -m p -l walltime=02:00:00:00,mem=120gb,nodes=1:ppn=20 startVM.py"  # noqa: B950
+        )
+
+    @mock_executor_run_command(TEST_DEPLOY_RESOURCE_RESPONSE)
+    def test_deploy_resource_email(self):
+        run_async(
+            self.moab_adapter_email.deploy_resource,
+            resource_attributes=AttributeDict(
+                machine_type="test2large", site_name="TestSiteEmail"
+            ),
+        )
+        self.mock_executor.return_value.run_command.assert_called_with(
+            "msub -j oe -m p -M someone@somewhere.com -l walltime=02:00:00:00,mem=120gb,nodes=1:ppn=20 startVM.py"  # noqa: B950
         )
 
     def test_machine_meta_data(self):
