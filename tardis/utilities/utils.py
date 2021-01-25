@@ -82,7 +82,7 @@ def csv_parser(
             }
 
 
-def scheduler_cmd_option_formatter(options: AttributeDict) -> str:
+def submit_cmd_option_formatter(options: AttributeDict) -> str:
     option_prefix = dict(short="-", long="--")
     option_separator = dict(short=" ", long="=")
 

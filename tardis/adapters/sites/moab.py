@@ -10,7 +10,7 @@ from ...utilities.attributedict import AttributeDict
 from ...utilities.attributedict import convert_to_attribute_dict
 from ...utilities.executors.shellexecutor import ShellExecutor
 from ...utilities.asynccachemap import AsyncCacheMap
-from ...utilities.utils import scheduler_cmd_option_formatter
+from ...utilities.utils import submit_cmd_option_formatter
 
 from asyncio import TimeoutError
 from contextlib import contextmanager
@@ -213,7 +213,7 @@ class MoabAdapter(SiteAdapter):
         return await self.terminate_resource(resource_attributes)
 
     def msub_cmdline_options(self):
-        cmd_string = scheduler_cmd_option_formatter(
+        cmd_string = submit_cmd_option_formatter(
             self.machine_type_configuration.get("SubmitOptions", AttributeDict())
         )
         # Add trailing space at end if not already present

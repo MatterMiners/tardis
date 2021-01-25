@@ -11,7 +11,7 @@ from ...exceptions.executorexceptions import CommandExecutionFailure
 from ...interfaces.batchsystemadapter import BatchSystemAdapter
 from ...interfaces.batchsystemadapter import MachineStatus
 from ...utilities.utils import async_run_command
-from ...utilities.utils import scheduler_cmd_option_formatter
+from ...utilities.utils import submit_cmd_option_formatter
 from ...utilities.utils import csv_parser
 from ...utilities.asynccachemap import AsyncCacheMap
 from ...utilities.attributedict import AttributeDict
@@ -31,7 +31,7 @@ async def slurm_status_updater(
     :rtype: dict
     """
 
-    options_string = scheduler_cmd_option_formatter(options)
+    options_string = submit_cmd_option_formatter(options)
 
     attributes_string = ",".join([str(x) for x in attributes.values()])
 
