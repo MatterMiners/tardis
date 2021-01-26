@@ -121,13 +121,8 @@ class MoabAdapter(SiteAdapter):
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
-        msub_cmdline_option_string = self.msub_cmdline_options()
         request_command = (
-            f"msub -j oe -m p {msub_cmdline_option_string}"
-            f"-l walltime={self.machine_type_configuration.Walltime},"
-            f"mem={self.machine_meta_data.Memory}gb,"
-            f"nodes={self.machine_type_configuration.NodeType} "
-            f"{self._startup_command}"
+            f"msub -j oe -m p {self.msub_cmdline_options()} {self._startup_command}"
         )
         result = await self._executor.run_command(request_command)
         logger.debug(f"{self.site_name} servers create returned {result}")
@@ -213,13 +208,25 @@ class MoabAdapter(SiteAdapter):
         return await self.terminate_resource(resource_attributes)
 
     def msub_cmdline_options(self):
-        cmd_string = submit_cmd_option_formatter(
-            self.machine_type_configuration.get("SubmitOptions", AttributeDict())
+        sbatch_options = self.machine_type_configuration.get(
+            "SubmitOptions", AttributeDict()
         )
-        # Add trailing space at end if not already present
-        if cmd_string != "" and not cmd_string.endswith(" "):
-            cmd_string += " "
-        return cmd_string
+
+        walltime = self.machine_type_configuration.Walltime
+        mem = self.machine_meta_data.Memory
+        node_type = self.machine_type_configuration.NodeType
+
+        return submit_cmd_option_formatter(
+            AttributeDict(
+                short=AttributeDict(
+                    **sbatch_options.get("short", AttributeDict()),
+                    l=f"walltime={walltime},mem={mem}gb,nodes={node_type}",
+                ),
+                long=AttributeDict(
+                    **sbatch_options.get("long", AttributeDict()),
+                ),
+            )
+        )
 
     @contextmanager
     def handle_exceptions(self):

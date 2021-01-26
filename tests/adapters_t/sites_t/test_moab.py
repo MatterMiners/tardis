@@ -264,7 +264,7 @@ class TestMoabAdapter(TestCase):
             ),
         )
         self.mock_executor.return_value.run_command.assert_called_with(
-            "msub -j oe -m p -M someone@somewhere.com --timeout=60 -l walltime=02:00:00:00,mem=120gb,nodes=1:ppn=20 startVM.py"  # noqa: B950
+            "msub -j oe -m p -M someone@somewhere.com -l walltime=02:00:00:00,mem=120gb,nodes=1:ppn=20 --timeout=60 startVM.py"  # noqa: B950
         )
 
     def test_machine_meta_data(self):
