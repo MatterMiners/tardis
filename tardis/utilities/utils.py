@@ -98,10 +98,9 @@ def submit_cmd_option_formatter(options: AttributeDict) -> str:
         except AttributeError:
             pass
         else:
-            # add additional space between short and long options if there are long
-            # options
-            if option_string and "long" in options and options["long"] != {}:
+            # add additional space between short and long options
+            if option_string:
                 option_string += " "
             option_string += tmp_option_string
 
-    return option_string
+    return option_string.strip()
