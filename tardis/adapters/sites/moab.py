@@ -121,9 +121,7 @@ class MoabAdapter(SiteAdapter):
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
-        request_command = (
-            f"msub -j oe -m p {self.msub_cmdline_options()} {self._startup_command}"
-        )
+        request_command = f"msub {self.msub_cmdline_options()} {self._startup_command}"
         result = await self._executor.run_command(request_command)
         logger.debug(f"{self.site_name} servers create returned {result}")
 
@@ -220,6 +218,8 @@ class MoabAdapter(SiteAdapter):
             AttributeDict(
                 short=AttributeDict(
                     **sbatch_options.get("short", AttributeDict()),
+                    j="oe",
+                    m="p",
                     l=f"walltime={walltime},mem={mem}gb,nodes={node_type}",
                 ),
                 long=AttributeDict(
