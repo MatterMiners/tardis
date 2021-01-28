@@ -10,6 +10,7 @@ from ...utilities.attributedict import AttributeDict
 from ...utilities.attributedict import convert_to_attribute_dict
 from ...utilities.executors.shellexecutor import ShellExecutor
 from ...utilities.asynccachemap import AsyncCacheMap
+from ...utilities.utils import submit_cmd_option_formatter
 
 from asyncio import TimeoutError
 from contextlib import contextmanager
@@ -120,13 +121,7 @@ class MoabAdapter(SiteAdapter):
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
-        request_command = (
-            f"msub -j oe -m p -l "
-            f"walltime={self.machine_type_configuration.Walltime},"
-            f"mem={self.machine_meta_data.Memory}gb,"
-            f"nodes={self.machine_type_configuration.NodeType} "
-            f"{self._startup_command}"
-        )
+        request_command = f"msub {self.msub_cmdline_options()} {self._startup_command}"
         result = await self._executor.run_command(request_command)
         logger.debug(f"{self.site_name} servers create returned {result}")
 
@@ -209,6 +204,29 @@ class MoabAdapter(SiteAdapter):
     async def stop_resource(self, resource_attributes: AttributeDict):
         logger.debug("MOAB jobs cannot be stopped gracefully. Terminating instead.")
         return await self.terminate_resource(resource_attributes)
+
+    def msub_cmdline_options(self):
+        sbatch_options = self.machine_type_configuration.get(
+            "SubmitOptions", AttributeDict()
+        )
+
+        walltime = self.machine_type_configuration.Walltime
+        mem = self.machine_meta_data.Memory
+        node_type = self.machine_type_configuration.NodeType
+
+        return submit_cmd_option_formatter(
+            AttributeDict(
+                short=AttributeDict(
+                    **sbatch_options.get("short", AttributeDict()),
+                    j="oe",
+                    m="p",
+                    l=f"walltime={walltime},mem={mem}gb,nodes={node_type}",
+                ),
+                long=AttributeDict(
+                    **sbatch_options.get("long", AttributeDict()),
+                ),
+            )
+        )
 
     @contextmanager
     def handle_exceptions(self):

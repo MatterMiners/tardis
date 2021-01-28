@@ -82,7 +82,7 @@ def csv_parser(
             }
 
 
-def slurm_cmd_option_formatter(options: AttributeDict) -> str:
+def submit_cmd_option_formatter(options: AttributeDict) -> str:
     option_prefix = dict(short="-", long="--")
     option_separator = dict(short=" ", long="=")
 
@@ -98,8 +98,9 @@ def slurm_cmd_option_formatter(options: AttributeDict) -> str:
         except AttributeError:
             pass
         else:
-            if option_string:  # add additional space between short and long options
+            # add additional space between short and long options
+            if option_string:
                 option_string += " "
             option_string += tmp_option_string
 
-    return option_string
+    return option_string.strip()

@@ -245,6 +245,28 @@ class TestMoabAdapter(TestCase):
             "msub -j oe -m p -l walltime=02:00:00:00,mem=120gb,nodes=1:ppn=20 startVM.py"  # noqa: B950
         )
 
+    @mock_executor_run_command(TEST_DEPLOY_RESOURCE_RESPONSE)
+    def test_deploy_resource_w_submit_options(self):
+        self.test_site_config.MachineTypeConfiguration.test2large.SubmitOptions = (
+            AttributeDict(
+                short=AttributeDict(M="someone@somewhere.com"),
+                long=AttributeDict(timeout=60),
+            )
+        )
+
+        moab_adapter = MoabAdapter(machine_type="test2large", site_name="TestSite")
+
+        run_async(
+            moab_adapter.deploy_resource,
+            resource_attributes=AttributeDict(
+                machine_type="test2large",
+                site_name="TestSite",
+            ),
+        )
+        self.mock_executor.return_value.run_command.assert_called_with(
+            "msub -M someone@somewhere.com -j oe -m p -l walltime=02:00:00:00,mem=120gb,nodes=1:ppn=20 --timeout=60 startVM.py"  # noqa: B950
+        )
+
     def test_machine_meta_data(self):
         self.assertEqual(
             self.moab_adapter.machine_meta_data, self.machine_meta_data["test2large"]

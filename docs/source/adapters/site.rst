@@ -266,17 +266,19 @@ Available adapter configuration options
 
 .. content-tabs:: left-col
 
-    +----------------+---------------------------------------------------------------------------------------------+-----------------+
-    | Option         | Short Description                                                                           | Requirement     |
-    +================+=============================================================================================+=================+
-    | StatusUpdate   | The result of the status call is cached for `StatusUpdate` in minutes.                      |  **Required**   |
-    +----------------+---------------------------------------------------------------------------------------------+-----------------+
-    | StartupCommand | The command executed in the batch job. (**Deprecated:** Moved to MachineTypeConfiguration!) |  **Deprecated** |
-    +----------------+---------------------------------------------------------------------------------------------+-----------------+
-    | executor       | The |executor| used to run submission and further calls to the Moab batch system.           |  **Optional**   |
-    +                +                                                                                             +                 +
-    |                | Default: ShellExecutor is used!                                                             |                 |
-    +----------------+---------------------------------------------------------------------------------------------+-----------------+
+    +----------------+------------------------------------------------------------------------------------------------+-----------------+
+    | Option         | Short Description                                                                              | Requirement     |
+    +================+================================================================================================+=================+
+    | StatusUpdate   | The result of the status call is cached for `StatusUpdate` in minutes.                         |  **Required**   |
+    +----------------+------------------------------------------------------------------------------------------------+-----------------+
+    | StartupCommand | The command executed in the batch job. (**Deprecated:** Moved to MachineTypeConfiguration!)    |  **Deprecated** |
+    +----------------+------------------------------------------------------------------------------------------------+-----------------+
+    | executor       | The |executor| used to run submission and further calls to the Moab batch system.              |  **Optional**   |
+    +                +                                                                                                +                 +
+    |                | Default: ShellExecutor is used!                                                                |                 |
+    +----------------+------------------------------------------------------------------------------------------------+-----------------+
+    | SubmitOptions  | Options to add to the `msub` command. `long` and `short` arguments are supported (see example) |  **Optional**   |
+    +----------------+------------------------------------------------------------------------------------------------+-----------------+
 
     The available options in the `MachineTypeConfiguration` section are the expected `WallTime` of the placeholder jobs and
     the requested `NodeType`. For details see the Moab documentation.
@@ -307,6 +309,11 @@ Available adapter configuration options
               Walltime: '02:00:00:00'
               NodeType: '1:ppn=20'
               StartupCommand: startVM.py
+              SubmitOptions:
+                short:
+                  M: "someone@somewhere.com"
+                long:
+                  timeout: 60
             singularity_d1.large:
               Walltime: '01:00:00:00'
               NodeType: '1:ppn=20'

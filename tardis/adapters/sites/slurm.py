@@ -11,7 +11,7 @@ from ...utilities.attributedict import convert_to_attribute_dict
 from ...utilities.executors.shellexecutor import ShellExecutor
 from ...utilities.asynccachemap import AsyncCacheMap
 from ...utilities.utils import csv_parser
-from ...utilities.utils import slurm_cmd_option_formatter
+from ...utilities.utils import submit_cmd_option_formatter
 
 from asyncio import TimeoutError
 from contextlib import contextmanager
@@ -109,7 +109,7 @@ class SlurmAdapter(SiteAdapter):
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
 
-        sbatch_cmdline_option_string = slurm_cmd_option_formatter(
+        sbatch_cmdline_option_string = submit_cmd_option_formatter(
             self.sbatch_cmdline_options(
                 resource_attributes.drone_uuid,
                 resource_attributes.machine_meta_data_translation_mapping,
