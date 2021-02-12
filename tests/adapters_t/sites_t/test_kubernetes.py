@@ -139,7 +139,7 @@ class TestKubernetesStackAdapter(TestCase):
                 resource_status=ResourceStatus.Running,
             ),
         )
-        self.mock_kubernetes_api.return_value.create_namespaced_deployment.assert_called_with(
+        self.mock_kubernetes_api.return_value.create_namespaced_deployment.assert_called_with(  # noqa: B950
             namespace="default", body=self.body
         )
 
@@ -170,11 +170,11 @@ class TestKubernetesStackAdapter(TestCase):
             ),
         )
 
-        self.mock_kubernetes_api.return_value.list_namespaced_deployment.assert_called_with(
+        self.mock_kubernetes_api.return_value.list_namespaced_deployment.assert_called_with(  # noqa: B950
             namespace="default"
         )
 
-        self.mock_kubernetes_api.return_value.read_namespaced_deployment.assert_called_with(
+        self.mock_kubernetes_api.return_value.read_namespaced_deployment.assert_called_with(  # noqa: B950
             name="testsite-089123", namespace="default"
         )
 
@@ -195,11 +195,11 @@ class TestKubernetesStackAdapter(TestCase):
             resource_attributes=AttributeDict(drone_uuid="testsite-089123"),
         )
 
-        self.mock_kubernetes_api.return_value.read_namespaced_deployment.assert_called_with(
+        self.mock_kubernetes_api.return_value.read_namespaced_deployment.assert_called_with(  # noqa: B950
             name="testsite-089123", namespace="default"
         )
 
-        self.mock_kubernetes_api.return_value.replace_namespaced_deployment.assert_called_with(
+        self.mock_kubernetes_api.return_value.replace_namespaced_deployment.assert_called_with(  # noqa: B950
             name="testsite-089123", namespace="default", body=self.body
         )
 
@@ -209,7 +209,7 @@ class TestKubernetesStackAdapter(TestCase):
             resource_attributes=AttributeDict(drone_uuid="testsite-089123"),
         )
 
-        self.mock_kubernetes_api.return_value.delete_namespaced_deployment.assert_called_with(
+        self.mock_kubernetes_api.return_value.delete_namespaced_deployment.assert_called_with(  # noqa: B950
             name="testsite-089123",
             namespace="default",
             body=client.V1DeleteOptions(
