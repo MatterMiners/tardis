@@ -8,6 +8,8 @@ RUN apk add --no-cache --virtual .build_deps \
              openssl-dev \
              libffi-dev \
              git \
+             rust \
+             cargo \
     && pip install --no-cache-dir git+$SOURCE_REPO_URL@$SOURCE_BRANCH \
     && apk del --no-network .build_deps
 
