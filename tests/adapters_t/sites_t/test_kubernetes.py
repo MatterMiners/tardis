@@ -56,7 +56,7 @@ class TestKubernetesStackAdapter(TestCase):
             args=["sleep", "3600"],
             name="testsite-089123",
             resources=client.V1ResourceRequirements(
-                limits={"cpu": "2", "memory": "400Mi"}
+                requests={"cpu": "2", "memory": "400Mi"}
             ),
         )
 

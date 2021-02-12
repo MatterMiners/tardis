@@ -54,11 +54,17 @@ class KubernetesAdapter(SiteAdapter):
             key_translator=key_translator,
             translator_functions=translator_functions,
         )
+        self._client = None
+
+    @property
+    def client(self):
+        if self._client is None:
+            self._client = client.AppsV1Api(client.ApiClient(self.aConfiguration))
+        return self._client
 
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
-        self.client = client.AppsV1Api(client.ApiClient(self.aConfiguration))
         spec = client.V1DeploymentSpec(
             replicas=1,
             selector=client.V1LabelSelector(
@@ -72,7 +78,7 @@ class KubernetesAdapter(SiteAdapter):
             args=self.machine_type_configuration.args.split(","),
             name=resource_attributes.drone_uuid,
             resources=client.V1ResourceRequirements(
-                limits={
+                requests={
                     "cpu": self.machine_meta_data.Cores,
                     "memory": self.machine_meta_data.Memory,
                 }
@@ -107,8 +113,6 @@ class KubernetesAdapter(SiteAdapter):
     async def resource_status(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
-        self.client = client.AppsV1Api(client.ApiClient(self.aConfiguration))
-
         list = await self.client.list_namespaced_deployment(namespace="default")
 
         response = dict(
@@ -145,7 +149,6 @@ class KubernetesAdapter(SiteAdapter):
         return self.handle_response(response)
 
     async def stop_resource(self, resource_attributes: AttributeDict):
-        self.client = client.AppsV1Api(client.ApiClient(self.aConfiguration))
         body = await self.client.read_namespaced_deployment(
             name=resource_attributes.drone_uuid, namespace="default"
         )
@@ -156,7 +159,6 @@ class KubernetesAdapter(SiteAdapter):
         return response
 
     async def terminate_resource(self, resource_attributes: AttributeDict):
-        self.client = client.AppsV1Api(client.ApiClient(self.aConfiguration))
         response = await self.client.delete_namespaced_deployment(
             name=resource_attributes.drone_uuid,
             namespace="default",
