@@ -31,17 +31,19 @@ Available configuration options
 
 .. container:: left-col
 
-    +------------------------+-----------------------------------------------------------------------------------------------------------------------+---------------+
-    | Option                 | Short Description                                                                                                     |  Requirement  |
-    +========================+=======================================================================================================================+===============+
-    | name                   | Name of the site                                                                                                      |  **Required** |
-    +------------------------+-----------------------------------------------------------------------------------------------------------------------+---------------+
-    | adapter                | Site adapter to use. Adapter will be auto-imported (class name without Adapter)                                       |  **Required** |
-    +------------------------+-----------------------------------------------------------------------------------------------------------------------+---------------+
-    | quota                  | Core quota to be used for this site. Negative values are interpreted as infinity                                      |  **Required** |
-    +------------------------+-----------------------------------------------------------------------------------------------------------------------+---------------+
-    | drone_minimum_lifetime | Time in seconds the drone will remain in :py:class:`~tardis.resources.dronestates.AvailableState` before draining it. |  **Optional** |
-    +------------------------+-----------------------------------------------------------------------------------------------------------------------+---------------+
+    +--------------------------+-----------------------------------------------------------------------------------------------------------------------+---------------+
+    | Option                   | Short Description                                                                                                     |  Requirement  |
+    +==========================+=======================================================================================================================+===============+
+    | name                     | Name of the site                                                                                                      |  **Required** |
+    +--------------------------+-----------------------------------------------------------------------------------------------------------------------+---------------+
+    | adapter                  | Site adapter to use. Adapter will be auto-imported (class name without Adapter)                                       |  **Required** |
+    +--------------------------+-----------------------------------------------------------------------------------------------------------------------+---------------+
+    | quota                    | Core quota to be used for this site. Negative values are interpreted as infinity                                      |  **Required** |
+    +--------------------------+-----------------------------------------------------------------------------------------------------------------------+---------------+
+    | drone_heartbeat_interval | Time in seconds between two consecutive executions of :py:meth:`tardis.resources.drone.run`. Defaults to 60s.         |  **Optional** |
+    +--------------------------+-----------------------------------------------------------------------------------------------------------------------+---------------+
+    | drone_minimum_lifetime   | Time in seconds the drone will remain in :py:class:`~tardis.resources.dronestates.AvailableState` before draining it. |  **Optional** |
+    +--------------------------+-----------------------------------------------------------------------------------------------------------------------+---------------+
 
     For each site in the `Sites` configuration block. A site specific configuration block carrying the site name
     has to be added to the configuration as well.
@@ -67,6 +69,7 @@ Available configuration options
           - name: MySiteName_1
             adapter: MyAdapter2Use
             quota: 123
+            drone_heartbeat_interval: 10
             drone_minimum_lifetime: 3600
           - name: MySiteName_2
             adapter: OtherAdapter2Use
