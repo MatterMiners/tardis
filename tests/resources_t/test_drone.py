@@ -33,6 +33,7 @@ class TestDrone(TestCase):
     def setUp(self) -> None:
         self.mock_site_agent.machine_meta_data = AttributeDict(Cores=8)
         self.mock_site_agent.drone_minimum_lifetime = None
+        self.mock_site_agent.drone_heartbeat_interval = 60
         self.mock_plugin = MagicMock(spec=Plugin)()
         self.mock_plugin.notify.return_value = async_return()
         self.drone = Drone(
@@ -52,6 +53,11 @@ class TestDrone(TestCase):
         self.assertEqual(self.drone.demand, 8)
         self.drone.demand = 0
         self.assertEqual(self.drone.demand, 0)
+
+    def test_heartbeat_interval(self):
+        self.assertEqual(self.drone.drone_heartbeat_interval, 60)
+        self.mock_site_agent.drone_heartbeat_interval = 10
+        self.assertEqual(self.drone.drone_heartbeat_interval, 10)
 
     def test_life_time(self):
         self.assertIsNone(self.drone.drone_minimum_lifetime, None)
