@@ -14,6 +14,11 @@ Fixed
 
 * Fixes a bug that the drone_minimum_lifetime parameter is not working as described in the documentation
 
+Added
+-----
+
+* An optional and per site configurable drone heartbeat interval has been added
+
 [0.5.0] - 2020-12-09
 ====================
 
