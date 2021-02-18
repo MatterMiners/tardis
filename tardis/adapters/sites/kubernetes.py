@@ -40,13 +40,13 @@ class KubernetesAdapter(SiteAdapter):
 
     @property
     def client(self) -> k8s_client.AppsV1Api:
-        a_configuration = k8s_client.Configuration(
-            host=self._configuration.host,
-            api_key={"authorization": self._configuration.token},
-        )
-        a_configuration.api_key_prefix["authorization"] = "Bearer"
-        a_configuration.verify_ssl = False
         if self._client is None:
+            a_configuration = k8s_client.Configuration(
+                host=self._configuration.host,
+                api_key={"authorization": self._configuration.token},
+            )
+            a_configuration.api_key_prefix["authorization"] = "Bearer"
+            a_configuration.verify_ssl = False
             self._client = k8s_client.AppsV1Api(k8s_client.ApiClient(a_configuration))
         return self._client
 
