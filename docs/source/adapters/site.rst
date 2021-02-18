@@ -494,6 +494,75 @@ Available machine type configuration options
               Memory: 62
               Disk: 480
 
+Kubernetes Site Adapter
+-----------------------
+
+.. content-tabs:: left-col
+
+    The :py:class:`~tardis.adapters.sites.kubernetes.KubernetesAdapter` implements an interface to the Kubernetes API.
+    The following general adapter configuration options are available.
+
+Available adapter configuration options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. content-tabs:: left-col
+
+    +---------------------+---------------------------------------------------------------------+-----------------+
+    | Option              | Short Description                                                   | Requirement     |
+    +=====================+=====================================================================+=================+
+    | host                | The end point of the Kubernetes Cluster.                            |  **Required**   |
+    +---------------------+---------------------------------------------------------------------+-----------------+
+    | token               | Barer token used to authenticate yourself.                          |  **Required**   |
+    +---------------------+---------------------------------------------------------------------+-----------------+
+
+    To create a token refer to: `Kubernetes documentation`_
+
+    .. _Kubernetes documentation: https://developer.openstack.org/api-ref/compute/#create-server
+
+Available machine type configuration options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. content-tabs:: left-col
+
+    +----------------+--------------------------------------------------------------------------+-----------------+
+    | Option         | Short Description                                                        | Requirement     |
+    +================+==========================================================================+=================+
+    | namespace      | Name of the namespace to run in.                                         |  **Required**   |
+    +----------------+--------------------------------------------------------------------------+-----------------+
+    | image          | Image for the pods.                                                      |  **Required**   |
+    +----------------+--------------------------------------------------------------------------+-----------------+
+    | label          | Label to be assigned to your pods.                                       |  **Required**   |
+    +----------------+--------------------------------------------------------------------------+-----------------+
+    | args           | Arguments for the containers that run in your pods                       |  **Optional**   |
+    +----------------+--------------------------------------------------------------------------+-----------------+
+
+.. content-tabs:: right-col
+
+    .. rubric:: Example configuration
+
+    .. code-block:: yaml
+
+        Sites:
+          - name: Kube-site
+            adapter: Kubernetes
+            quota: 10
+
+
+        Kube-site:
+          host: https://127.0.0.1:443
+          token: 31ada4fd-adec-460c-809a-9e56ceb75269
+          MachineTypes:
+            - example
+          MachineTypeConfiguration:
+            example:
+              namespace: default
+              image: busybox:1.26.1
+              label: busybox
+              args: ["sleep", "3600"]
+          MachineMetaData:
+            example:
+              Cores: 2
+              Memory: 400Mi
 
 .. content-tabs:: left-col
 

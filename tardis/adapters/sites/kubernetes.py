@@ -66,7 +66,7 @@ class KubernetesAdapter(SiteAdapter):
         )
         container = k8s_client.V1Container(
             image=self.machine_type_configuration.image,
-            args=self.machine_type_configuration.args.split(","),
+            args=self.machine_type_configuration.args,
             name=resource_attributes.drone_uuid,
             resources=k8s_client.V1ResourceRequirements(
                 requests={
@@ -81,7 +81,7 @@ class KubernetesAdapter(SiteAdapter):
             spec=spec,
         )
         response_temp = await self.client.create_namespaced_deployment(
-            namespace="default", body=body
+            namespace=self.machine_type_configuration.namespace, body=body
         )
         response = {
             "uid": response_temp.metadata.uid,
@@ -95,7 +95,8 @@ class KubernetesAdapter(SiteAdapter):
     ) -> AttributeDict:
         try:
             response_temp = await self.client.read_namespaced_deployment(
-                name=resource_attributes.drone_uuid, namespace="default"
+                name=resource_attributes.drone_uuid,
+                namespace=self.machine_type_configuration.namespace,
             )
             response_uid = response_temp.metadata.uid
             response_name = response_temp.metadata.name
@@ -112,18 +113,21 @@ class KubernetesAdapter(SiteAdapter):
 
     async def stop_resource(self, resource_attributes: AttributeDict):
         body = await self.client.read_namespaced_deployment(
-            name=resource_attributes.drone_uuid, namespace="default"
+            name=resource_attributes.drone_uuid,
+            namespace=self.machine_type_configuration.namespace,
         )
         body.spec.replicas = 0
         response = await self.client.replace_namespaced_deployment(
-            name=resource_attributes.drone_uuid, namespace="default", body=body
+            name=resource_attributes.drone_uuid,
+            namespace=self.machine_type_configuration.namespace,
+            body=body,
         )
         return response
 
     async def terminate_resource(self, resource_attributes: AttributeDict):
         response = await self.client.delete_namespaced_deployment(
             name=resource_attributes.drone_uuid,
-            namespace="default",
+            namespace=self.machine_type_configuration.namespace,
             body=k8s_client.V1DeleteOptions(
                 propagation_policy="Foreground", grace_period_seconds=5
             ),

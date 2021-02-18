@@ -38,7 +38,10 @@ class TestKubernetesStackAdapter(TestCase):
         test_site_config.token = "31ada4fd-adec-460c-809a-9e56ceb75269"
         test_site_config.MachineTypeConfiguration = AttributeDict(
             test2large=AttributeDict(
-                image="busybox:1.26.1", label="busybox", args="sleep,3600"
+                namespace="default",
+                image="busybox:1.26.1",
+                label="busybox",
+                args=["sleep", "3600"],
             )
         )
         test_site_config.MachineMetaData = AttributeDict(
