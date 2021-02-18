@@ -20,7 +20,7 @@ class TestKubernetesStackAdapter(TestCase):
         )
         cls.mock_config = cls.mock_config_patcher.start()
         cls.mock_kubernetes_api_patcher = patch(
-            "tardis.adapters.sites.kubernetes.client.AppsV1Api"
+            "tardis.adapters.sites.kubernetes.k8s_client.AppsV1Api"
         )
         cls.mock_kubernetes_api = cls.mock_kubernetes_api_patcher.start()
 
@@ -32,7 +32,9 @@ class TestKubernetesStackAdapter(TestCase):
     def setUp(self):
         config = self.mock_config.return_value
         test_site_config = config.TestSite
-        test_site_config.host = "https://172.16.254.1:6443"
+        # Endpoint of Kube cluster
+        test_site_config.host = "https://127.0.0.1:443"
+        # Barer token we are going to use to authenticate
         test_site_config.token = "31ada4fd-adec-460c-809a-9e56ceb75269"
         test_site_config.MachineTypeConfiguration = AttributeDict(
             test2large=AttributeDict(
@@ -80,7 +82,7 @@ class TestKubernetesStackAdapter(TestCase):
             return_value=self.create_return_value
         )
 
-        list2 = [
+        condition_list = [
             client.V1DeploymentCondition(
                 status="True",
                 type="Progressing",
@@ -90,24 +92,11 @@ class TestKubernetesStackAdapter(TestCase):
         self.read_return_value = client.V1Deployment(
             metadata=client.V1ObjectMeta(name="testsite-089123", uid="123456"),
             spec=spec,
-            status=client.V1DeploymentStatus(conditions=list2),
+            status=client.V1DeploymentStatus(conditions=condition_list),
         )
 
         kubernetes_api.read_namespaced_deployment.return_value = async_return(
             return_value=self.read_return_value
-        )
-
-        list1 = [
-            client.V1Deployment(
-                metadata=client.V1ObjectMeta(name="testsite-089123", uid="123456"),
-                spec=spec,
-            )
-        ]
-
-        self.list_return_value = client.AppsV1beta1DeploymentList(items=list1)
-
-        kubernetes_api.list_namespaced_deployment.return_value = async_return(
-            return_value=self.list_return_value
         )
 
         kubernetes_api.replace_namespaced_deployment.return_value = async_return(
@@ -168,10 +157,6 @@ class TestKubernetesStackAdapter(TestCase):
                 drone_uuid="testsite-089123",
                 resource_status=ResourceStatus.Running,
             ),
-        )
-
-        self.mock_kubernetes_api.return_value.list_namespaced_deployment.assert_called_with(  # noqa: B950
-            namespace="default"
         )
 
         self.mock_kubernetes_api.return_value.read_namespaced_deployment.assert_called_with(  # noqa: B950
