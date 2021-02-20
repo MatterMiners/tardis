@@ -14,6 +14,10 @@ logger = logging.getLogger("cobald.runtime.tardis.interfaces.site")
 
 
 class SiteConfigurationModel(BaseModel):
+    """
+    pydantic BaseModel for the input validation of the generic site configuration
+    """
+
     name: str
     adapter: str
     quota: Optional[int] = inf
@@ -102,10 +106,14 @@ class SiteAdapter(metaclass=ABCMeta):
 
     @property
     def drone_minimum_lifetime(self) -> [int, None]:
-        try:
-            return self.site_configuration.drone_minimum_lifetime
-        except AttributeError:
-            return None
+        """
+        Property that returns the configuration parameter drone_minimum_lifetime.
+        It describes the minimum lifetime before a drone is automatically going
+        into draining mode.
+        :return: The minimum lifetime of the drone
+        :rtype: int, None
+        """
+        return self.site_configuration.drone_minimum_lifetime
 
     def drone_uuid(self, uuid: str) -> str:
         """
@@ -221,6 +229,20 @@ class SiteAdapter(metaclass=ABCMeta):
     @property
     @cache
     def site_configuration(self) -> AttributeDict:
+        """
+        Property that returns the generic site configuration. This corresponds
+        to the Sites section in the yaml configuration. For example:
+        .. code-block::
+
+            Sites:
+              - name: MySiteName_1
+                adapter: MyAdapter2Use
+                quota: 123
+                drone_minimum_lifetime: 3600
+
+        :return: The generic site configuration
+        :rtype: AttributeDict
+        """
         for site_configuration in Configuration().Sites:
             if site_configuration.name == self.site_name:
                 return AttributeDict(
