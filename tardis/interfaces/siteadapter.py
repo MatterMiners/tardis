@@ -4,7 +4,7 @@ from ..utilities.attributedict import AttributeDict
 from abc import ABCMeta, abstractmethod
 from cobald.utility.primitives import infinity as inf
 from enum import Enum
-from functools import cache
+from functools import lru_cache
 from pydantic import BaseModel, conint, validator
 from typing import Optional
 
@@ -227,7 +227,7 @@ class SiteAdapter(metaclass=ABCMeta):
         raise NotImplementedError
 
     @property
-    @cache
+    @lru_cache(maxsize=None)
     def site_configuration(self) -> AttributeDict:
         """
         Property that returns the generic site configuration. This corresponds
