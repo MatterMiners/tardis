@@ -137,9 +137,12 @@ TEST_RESOURCE_STATE_TRANSLATION_RESPONSE = "\n\n".join(
 
 
 class TestMoabAdapter(TestCase):
+    mock_config_patcher = None
+    mock_executor_patcher = None
+
     @classmethod
     def setUpClass(cls):
-        cls.mock_config_patcher = patch("tardis.adapters.sites.moab.Configuration")
+        cls.mock_config_patcher = patch("tardis.interfaces.siteadapter.Configuration")
         cls.mock_config = cls.mock_config_patcher.start()
         cls.mock_executor_patcher = patch("tardis.adapters.sites.moab.ShellExecutor")
         cls.mock_executor = cls.mock_executor_patcher.start()

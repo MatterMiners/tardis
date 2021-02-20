@@ -22,9 +22,12 @@ import logging
 
 
 class TestOpenStackAdapter(TestCase):
+    mock_config_patcher = None
+    mock_openstack_api_patcher = None
+
     @classmethod
     def setUpClass(cls):
-        cls.mock_config_patcher = patch("tardis.adapters.sites.openstack.Configuration")
+        cls.mock_config_patcher = patch("tardis.interfaces.siteadapter.Configuration")
         cls.mock_config = cls.mock_config_patcher.start()
         cls.mock_openstack_api_patcher = patch(
             "tardis.adapters.sites.openstack.NovaClient"

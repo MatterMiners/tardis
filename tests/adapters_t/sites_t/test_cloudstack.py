@@ -21,9 +21,7 @@ import logging
 class TestCloudStackAdapter(TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.mock_config_patcher = patch(
-            "tardis.adapters.sites.cloudstack.Configuration"
-        )
+        cls.mock_config_patcher = patch("tardis.interfaces.siteadapter.Configuration")
         cls.mock_config = cls.mock_config_patcher.start()
         cls.mock_cloudstack_api_patcher = patch(
             "tardis.adapters.sites.cloudstack.CloudStack"
