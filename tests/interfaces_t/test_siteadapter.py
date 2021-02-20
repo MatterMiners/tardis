@@ -3,8 +3,10 @@ from tardis.utilities.attributedict import AttributeDict
 
 from ..utilities.utilities import run_async
 
+from cobald.utility.primitives import infinity as inf
 from unittest import TestCase
 from unittest.mock import patch
+from pydantic.error_wrappers import ValidationError
 
 import logging
 
@@ -76,16 +78,25 @@ class TestSiteAdapter(TestCase):
     def test_drone_minimum_lifetime(self):
         self.assertEqual(self.site_adapter.drone_minimum_lifetime, None)
 
+        # lru_cache needs to be cleared before manipulating site configuration
+        # noinspection PyUnresolvedReferences
+        SiteAdapter.site_configuration.fget.cache_clear()
+
         self.config.Sites[0]["drone_minimum_lifetime"] = 10
         self.assertEqual(self.site_adapter.drone_minimum_lifetime, 10)
+
+        # noinspection PyUnresolvedReferences
+        SiteAdapter.site_configuration.fget.cache_clear()
+
+        self.config.Sites[0]["drone_minimum_lifetime"] = -1
+        with self.assertRaises(ValidationError):
+            # noinspection PyStatementEffect
+            self.site_adapter.drone_minimum_lifetime
 
     def test_drone_uuid(self):
         self.assertEqual(
             "testsite-test123", self.site_adapter.drone_uuid(uuid="test123")
         )
-
-    def test_site_configuration(self):
-        self.assertEqual(self.site_adapter.site_configuration, self.config.Sites[0])
 
     def test_handle_exception(self):
         with self.assertRaises(NotImplementedError):
@@ -141,17 +152,21 @@ class TestSiteAdapter(TestCase):
             AttributeDict(Cores=128, Memory=512, Disk=100),
         )
 
+        # noinspection PyUnresolvedReferences
         del self.site_adapter._machine_type
 
         with self.assertRaises(AttributeError):
+            # noinspection PyStatementEffect
             self.site_adapter.machine_meta_data
 
     def test_machine_type(self):
         self.assertEqual(self.site_adapter.machine_type, "TestMachineType")
 
+        # noinspection PyUnresolvedReferences
         del self.site_adapter._machine_type
 
         with self.assertRaises(AttributeError):
+            # noinspection PyStatementEffect
             self.site_adapter.machine_type
 
     def test_machine_type_configuration(self):
@@ -160,20 +175,74 @@ class TestSiteAdapter(TestCase):
             AttributeDict(test_id="abc123"),
         )
 
+        # noinspection PyUnresolvedReferences
         del self.site_adapter._machine_type
 
         with self.assertRaises(AttributeError):
+            # noinspection PyStatementEffect
             self.site_adapter.machine_type_configuration
 
     def test_resource_status(self):
         with self.assertRaises(NotImplementedError):
             run_async(self.site_adapter.resource_status, dict())
 
+    def test_site_configuration(self):
+        self.assertEqual(
+            self.site_adapter.site_configuration,
+            AttributeDict(
+                name="TestSite",
+                adapter="TestSite",
+                quota=1,
+                drone_minimum_lifetime=None,
+            ),
+        )
+
+        # noinspection PyUnresolvedReferences
+        SiteAdapter.site_configuration.fget.cache_clear()
+
+        del self.config.Sites[0]["quota"]
+
+        self.assertEqual(
+            self.site_adapter.site_configuration,
+            AttributeDict(
+                name="TestSite",
+                adapter="TestSite",
+                quota=inf,
+                drone_minimum_lifetime=None,
+            ),
+        )
+
+        # noinspection PyUnresolvedReferences
+        SiteAdapter.site_configuration.fget.cache_clear()
+
+        self.config.Sites[0]["extra"] = "Should fail!"
+
+        with self.assertRaises(ValidationError):
+            self.assertEqual(
+                self.site_adapter.site_configuration,
+                AttributeDict(
+                    name="TestSite",
+                    adapter="TestSite",
+                    quota=inf,
+                    drone_minimum_lifetime=None,
+                ),
+            )
+
+        # noinspection PyUnresolvedReferences
+        SiteAdapter.site_configuration.fget.cache_clear()
+
+        self.config.Sites[0]["quota"] = 0
+
+        with self.assertRaises(ValidationError):
+            # noinspection PyStatementEffect
+            self.site_adapter.site_configuration
+
     def test_site_name(self):
         self.assertEqual(self.site_adapter.site_name, "TestSite")
         del self.site_adapter._site_name
 
         with self.assertRaises(AttributeError):
+            # noinspection PyStatementEffect
             self.site_adapter.site_name
 
     def test_stop_resource(self):

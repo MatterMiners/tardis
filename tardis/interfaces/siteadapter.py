@@ -2,12 +2,30 @@ from ..configuration.configuration import Configuration
 from ..utilities.attributedict import AttributeDict
 
 from abc import ABCMeta, abstractmethod
+from cobald.utility.primitives import infinity as inf
 from enum import Enum
 from functools import cache
+from pydantic import BaseModel, conint, validator
+from typing import Optional
 
 import logging
 
 logger = logging.getLogger("cobald.runtime.tardis.interfaces.site")
+
+
+class SiteConfigurationModel(BaseModel):
+    name: str
+    adapter: str
+    quota: Optional[int] = inf
+    drone_minimum_lifetime: Optional[conint(gt=0)] = None
+
+    class Config:
+        extra = "forbid"
+
+    @validator("quota")
+    def quota_validator(cls, quota: Optional[int]):  # noqa B902
+        assert quota != 0, "Zero quota is not a reasonable value"
+        return quota
 
 
 class ResourceStatus(Enum):
@@ -101,13 +119,6 @@ class SiteAdapter(metaclass=ABCMeta):
         :rtype: str
         """
         return f"{self.site_name.lower()}-{uuid}"
-
-    @property
-    @cache
-    def site_configuration(self) -> AttributeDict:
-        for site in Configuration().Sites:
-            if site.name == self.site_name:
-                return site
 
     @abstractmethod
     def handle_exceptions(self):
@@ -206,6 +217,15 @@ class SiteAdapter(metaclass=ABCMeta):
         :rtype: AttributeDict
         """
         raise NotImplementedError
+
+    @property
+    @cache
+    def site_configuration(self) -> AttributeDict:
+        for site_configuration in Configuration().Sites:
+            if site_configuration.name == self.site_name:
+                return AttributeDict(
+                    SiteConfigurationModel(**site_configuration).dict()
+                )
 
     @property
     def site_name(self) -> str:
