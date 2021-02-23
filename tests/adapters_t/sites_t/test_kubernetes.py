@@ -1,5 +1,6 @@
 from tardis.adapters.sites.kubernetes import KubernetesAdapter
 from tardis.exceptions.tardisexceptions import TardisError
+from kubernetes_asyncio.client.rest import ApiException as K8SApiException
 from tardis.utilities.attributedict import AttributeDict
 from tardis.interfaces.siteadapter import ResourceStatus
 from tests.utilities.utilities import async_return
@@ -47,15 +48,12 @@ class TestKubernetesStackAdapter(TestCase):
         test_site_config.MachineMetaData = AttributeDict(
             test2large=AttributeDict(Cores="2", Memory="400Mi")
         )
-
         kubernetes_api = self.mock_kubernetes_api.return_value
-
         spec = client.V1DeploymentSpec(
             replicas=1,
             selector=client.V1LabelSelector(match_labels={"app": "busybox"}),
             template=client.V1PodTemplateSpec(),
         )
-
         container = client.V1Container(
             image="busybox:1.26.1",
             args=["sleep", "3600"],
@@ -64,54 +62,55 @@ class TestKubernetesStackAdapter(TestCase):
                 requests={"cpu": "2", "memory": "400Mi"}
             ),
         )
-
         spec.template.metadata = client.V1ObjectMeta(
             name="busybox",
             labels={"app": "busybox"},
         )
-
         spec.template.spec = client.V1PodSpec(containers=[container])
         self.body = client.V1Deployment(
             metadata=client.V1ObjectMeta(name="testsite-089123"),
             spec=spec,
         )
-
         self.create_return_value = client.V1Deployment(
             metadata=client.V1ObjectMeta(name="testsite-089123", uid="123456"),
             spec=spec,
         )
-
         kubernetes_api.create_namespaced_deployment.return_value = async_return(
             return_value=self.create_return_value
         )
-
         condition_list = [
             client.V1DeploymentCondition(
                 status="True",
                 type="Progressing",
             )
         ]
-
         self.read_return_value = client.V1Deployment(
             metadata=client.V1ObjectMeta(name="testsite-089123", uid="123456"),
             spec=spec,
             status=client.V1DeploymentStatus(conditions=condition_list),
         )
-
         kubernetes_api.read_namespaced_deployment.return_value = async_return(
             return_value=self.read_return_value
         )
-
         kubernetes_api.replace_namespaced_deployment.return_value = async_return(
             return_value=None
         )
-
         kubernetes_api.delete_namespaced_deployment.return_value = async_return(
             return_value=None
         )
-
         self.kubernetes_adapter = KubernetesAdapter(
             machine_type="test2large", site_name="TestSite"
+        )
+
+    def update_read_side_effect(self, exception):
+        kubernetes_api = self.mock_kubernetes_api.return_value
+        kubernetes_api.read_namespaced_deployment.side_effect = exception
+
+    def update_read_return(self, replicas):
+        kubernetes_api = self.mock_kubernetes_api.return_value
+        self.read_return_value.spec.replicas = replicas
+        kubernetes_api.read_namespaced_deployment.return_value = async_return(
+            return_value=self.read_return_value
         )
 
     def tearDown(self):
@@ -161,13 +160,40 @@ class TestKubernetesStackAdapter(TestCase):
                 resource_status=ResourceStatus.Running,
             ),
         )
-
         self.mock_kubernetes_api.return_value.read_namespaced_deployment.assert_called_with(  # noqa: B950
             name="testsite-089123", namespace="default"
         )
+        self.update_read_return(replicas=0)
+        self.assertEqual(
+            run_async(
+                self.kubernetes_adapter.resource_status,
+                resource_attributes=AttributeDict(
+                    drone_uuid="testsite-089123", remote_resource_uuid="123456"
+                ),
+            ),
+            AttributeDict(
+                remote_resource_uuid="123456",
+                drone_uuid="testsite-089123",
+                resource_status=ResourceStatus.Stopped,
+            ),
+        )
+        self.update_read_side_effect(exception=K8SApiException)
+        self.assertEqual(
+            run_async(
+                self.kubernetes_adapter.resource_status,
+                resource_attributes=AttributeDict(
+                    drone_uuid="testsite-089123", remote_resource_uuid="123456"
+                ),
+            ),
+            AttributeDict(
+                remote_resource_uuid="123456",
+                drone_uuid="testsite-089123",
+                resource_status=ResourceStatus.Deleted,
+            ),
+        )
+        self.update_read_side_effect(exception=None)
 
     def test_stop_resource(self):
-
         self.body.metadata.uid = "123456"
         self.body.status = client.V1DeploymentStatus(
             conditions=[
@@ -177,16 +203,13 @@ class TestKubernetesStackAdapter(TestCase):
                 )
             ]
         )
-
         run_async(
             self.kubernetes_adapter.stop_resource,
             resource_attributes=AttributeDict(drone_uuid="testsite-089123"),
         )
-
         self.mock_kubernetes_api.return_value.read_namespaced_deployment.assert_called_with(  # noqa: B950
             name="testsite-089123", namespace="default"
         )
-
         self.mock_kubernetes_api.return_value.replace_namespaced_deployment.assert_called_with(  # noqa: B950
             name="testsite-089123", namespace="default", body=self.body
         )
@@ -196,7 +219,6 @@ class TestKubernetesStackAdapter(TestCase):
             self.kubernetes_adapter.terminate_resource,
             resource_attributes=AttributeDict(drone_uuid="testsite-089123"),
         )
-
         self.mock_kubernetes_api.return_value.delete_namespaced_deployment.assert_called_with(  # noqa: B950
             name="testsite-089123",
             namespace="default",
