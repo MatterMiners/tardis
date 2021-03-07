@@ -24,6 +24,7 @@ class KubernetesAdapter(SiteAdapter):
             created=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%S%z"),
             updated=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%S%z"),
             type=lambda x, translator=StaticMapping(
+                Booting=ResourceStatus.Booting,
                 Progressing=ResourceStatus.Running,
                 Available=ResourceStatus.Running,
                 Stopped=ResourceStatus.Stopped,
@@ -86,7 +87,7 @@ class KubernetesAdapter(SiteAdapter):
         response = {
             "uid": response_temp.metadata.uid,
             "name": response_temp.metadata.name,
-            "type": "Progressing",
+            "type": "Booting",
         }
         return self.handle_response(response)
 
@@ -103,7 +104,10 @@ class KubernetesAdapter(SiteAdapter):
             if response_temp.spec.replicas == 0:
                 response_type = "Stopped"
             else:
-                response_type = response_temp.status.conditions[0].type
+                if response_temp.status.unavailable_replicas is not None:
+                    response_type = "Booting"
+                else:
+                    response_type = response_temp.status.conditions[0].type
         except K8SApiException:
             response_uid = resource_attributes.remote_resource_uuid
             response_name = resource_attributes.drone_uuid

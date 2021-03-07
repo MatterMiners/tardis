@@ -106,9 +106,10 @@ class TestKubernetesStackAdapter(TestCase):
         kubernetes_api = self.mock_kubernetes_api.return_value
         kubernetes_api.read_namespaced_deployment.side_effect = exception
 
-    def update_read_return(self, replicas):
+    def update_read_return(self, replicas, unavailable_replicas):
         kubernetes_api = self.mock_kubernetes_api.return_value
         self.read_return_value.spec.replicas = replicas
+        self.read_return_value.status.unavailable_replicas = unavailable_replicas
         kubernetes_api.read_namespaced_deployment.return_value = async_return(
             return_value=self.read_return_value
         )
@@ -127,7 +128,7 @@ class TestKubernetesStackAdapter(TestCase):
             AttributeDict(
                 remote_resource_uuid="123456",
                 drone_uuid="testsite-089123",
-                resource_status=ResourceStatus.Running,
+                resource_status=ResourceStatus.Booting,
             ),
         )
         self.mock_kubernetes_api.return_value.create_namespaced_deployment.assert_called_with(  # noqa: B950
@@ -163,7 +164,7 @@ class TestKubernetesStackAdapter(TestCase):
         self.mock_kubernetes_api.return_value.read_namespaced_deployment.assert_called_with(  # noqa: B950
             name="testsite-089123", namespace="default"
         )
-        self.update_read_return(replicas=0)
+        self.update_read_return(replicas=0, unavailable_replicas=None)
         self.assertEqual(
             run_async(
                 self.kubernetes_adapter.resource_status,
@@ -175,6 +176,20 @@ class TestKubernetesStackAdapter(TestCase):
                 remote_resource_uuid="123456",
                 drone_uuid="testsite-089123",
                 resource_status=ResourceStatus.Stopped,
+            ),
+        )
+        self.update_read_return(replicas=1, unavailable_replicas=1)
+        self.assertEqual(
+            run_async(
+                self.kubernetes_adapter.resource_status,
+                resource_attributes=AttributeDict(
+                    drone_uuid="testsite-089123", remote_resource_uuid="123456"
+                ),
+            ),
+            AttributeDict(
+                remote_resource_uuid="123456",
+                drone_uuid="testsite-089123",
+                resource_status=ResourceStatus.Booting,
             ),
         )
         self.update_read_side_effect(exception=K8SApiException)
