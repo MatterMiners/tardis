@@ -517,7 +517,7 @@ Available adapter configuration options
 
     To create a token refer to: `Kubernetes documentation`_
 
-    .. _Kubernetes documentation: https://developer.openstack.org/api-ref/compute/#create-server
+    .. _Kubernetes documentation: https://kubernetes.io/docs/tasks/access-application-cluster/access-cluster/
 
 Available machine type configuration options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -527,13 +527,13 @@ Available machine type configuration options
     +----------------+--------------------------------------------------------------------------+-----------------+
     | Option         | Short Description                                                        | Requirement     |
     +================+==========================================================================+=================+
-    | namespace      | Name of the namespace to run in.                                         |  **Required**   |
+    | namespace      | Namespace for pods to run in.                                            |  **Required**   |
     +----------------+--------------------------------------------------------------------------+-----------------+
     | image          | Image for the pods.                                                      |  **Required**   |
     +----------------+--------------------------------------------------------------------------+-----------------+
     | label          | Label to be assigned to your pods.                                       |  **Required**   |
     +----------------+--------------------------------------------------------------------------+-----------------+
-    | args           | Arguments for the containers that run in your pods                       |  **Optional**   |
+    | args           | Arguments for the containers that run in your pods .                     |  **Optional**   |
     +----------------+--------------------------------------------------------------------------+-----------------+
 
 .. content-tabs:: right-col
