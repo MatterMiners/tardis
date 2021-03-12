@@ -192,7 +192,7 @@ class TestKubernetesStackAdapter(TestCase):
                 resource_status=ResourceStatus.Booting,
             ),
         )
-        self.update_read_side_effect(exception=K8SApiException)
+        self.update_read_side_effect(exception=K8SApiException(status=404))
         self.assertEqual(
             run_async(
                 self.kubernetes_adapter.resource_status,
