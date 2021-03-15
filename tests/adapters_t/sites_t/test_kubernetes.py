@@ -206,6 +206,14 @@ class TestKubernetesStackAdapter(TestCase):
                 resource_status=ResourceStatus.Deleted,
             ),
         )
+        self.update_read_side_effect(exception=K8SApiException(status=500))
+        with self.assertRaises(K8SApiException):
+            run_async(
+                self.kubernetes_adapter.resource_status,
+                resource_attributes=AttributeDict(
+                    drone_uuid="testsite-089123", remote_resource_uuid="123456"
+                ),
+            )
         self.update_read_side_effect(exception=None)
 
     def test_stop_resource(self):

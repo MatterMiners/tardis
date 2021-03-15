@@ -109,10 +109,11 @@ class KubernetesAdapter(SiteAdapter):
                 else:
                     response_type = response_temp.status.conditions[0].type
         except K8SApiException as ex:
-            if ex.status == 404:
-                response_uid = resource_attributes.remote_resource_uuid
-                response_name = resource_attributes.drone_uuid
-                response_type = "Deleted"
+            if ex.status != 404:
+                raise
+            response_uid = resource_attributes.remote_resource_uuid
+            response_name = resource_attributes.drone_uuid
+            response_type = "Deleted"
         response = {"uid": response_uid, "name": response_name, "type": response_type}
         return self.handle_response(response)
 
