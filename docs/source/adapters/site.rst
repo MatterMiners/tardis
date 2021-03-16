@@ -512,7 +512,7 @@ Available adapter configuration options
     +=====================+=====================================================================+=================+
     | host                | The end point of the Kubernetes Cluster.                            |  **Required**   |
     +---------------------+---------------------------------------------------------------------+-----------------+
-    | token               | Barer token used to authenticate yourself.                          |  **Required**   |
+    | token               | Bearer token used to authenticate yourself.                         |  **Required**   |
     +---------------------+---------------------------------------------------------------------+-----------------+
 
     To create a token refer to: `Kubernetes documentation`_
