@@ -227,7 +227,7 @@ class SiteAdapter(metaclass=ABCMeta):
         raise NotImplementedError
 
     @property
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=16)
     def site_configuration(self) -> AttributeDict:
         """
         Property that returns the generic site configuration. This corresponds
