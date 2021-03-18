@@ -55,7 +55,7 @@ class SiteAdapter(metaclass=ABCMeta):
     def configuration(self) -> AttributeDict:
         """
         Property to provide access to SiteAdapter specific configuration.
-        :return: returns the Site Adapte specific configuration
+        :return: returns the Site Adapter specific configuration
         :rtype: AttributeDict
         """
         return getattr(Configuration(), self.site_name)
