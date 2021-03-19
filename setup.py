@@ -63,6 +63,7 @@ setup(
         "elasticsearch",
         "aioprometheus",
         "kubernetes_asyncio",
+        "pydantic",
     ],
     extras_require={
         "docs": ["sphinx", "sphinx_rtd_theme", "sphinxcontrib-contentui"],

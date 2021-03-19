@@ -1,11 +1,35 @@
+from ..configuration.configuration import Configuration
 from ..utilities.attributedict import AttributeDict
 
 from abc import ABCMeta, abstractmethod
+from cobald.utility.primitives import infinity as inf
 from enum import Enum
+from functools import lru_cache
+from pydantic import BaseModel, conint, validator
+from typing import Optional
 
 import logging
 
 logger = logging.getLogger("cobald.runtime.tardis.interfaces.site")
+
+
+class SiteConfigurationModel(BaseModel):
+    """
+    pydantic BaseModel for the input validation of the generic site configuration
+    """
+
+    name: str
+    adapter: str
+    quota: Optional[int] = inf
+    drone_minimum_lifetime: Optional[conint(gt=0)] = None
+
+    class Config:
+        extra = "forbid"
+
+    @validator("quota")
+    def quota_validator(cls, quota: Optional[int]):  # noqa B902
+        assert quota != 0, "Zero quota is not a reasonable value"
+        return quota
 
 
 class ResourceStatus(Enum):
@@ -30,18 +54,11 @@ class SiteAdapter(metaclass=ABCMeta):
     @property
     def configuration(self) -> AttributeDict:
         """
-        Property to provide access to configuration of the actual
-        implementation of the SiteAdapter.
-        :return: returns the configuration of the Site Adapter
+        Property to provide access to SiteAdapter specific configuration.
+        :return: returns the Site Adapter specific configuration
         :rtype: AttributeDict
         """
-        try:
-            # noinspection PyUnresolvedReferences
-            return self._configuration
-        except AttributeError as ae:
-            raise AttributeError(
-                f"Class {self.__class__.__name__} must have an '_configuration' instance variable"  # noqa
-            ) from ae
+        return getattr(Configuration(), self.site_name)
 
     @abstractmethod
     async def deploy_resource(
@@ -57,6 +74,46 @@ class SiteAdapter(metaclass=ABCMeta):
         :rtype: AttributeDict
         """
         raise NotImplementedError
+
+    def drone_environment(
+        self, drone_uuid: str, meta_data_translation_mapping: AttributeDict
+    ) -> dict:
+        """
+        Method to get the drone environment to be exported to batch jobs
+        providing the actual resources in the overlay batch system. It
+        translates units of drone meta data into a format the overlay
+        batch system is expecting. Also, the drone_uuid is added  for matching
+        drones to actual resources provided in the overlay batch system.
+        :param drone_uuid: The unique id which is assigned to every drone on creation
+        :type drone_uuid: str
+        :param meta_data_translation_mapping: Mapping used for the meta data translation
+        :type meta_data_translation_mapping: dict
+        :return: Translated
+        :rtype: dict
+        """
+        try:
+            drone_environment = {
+                key: meta_data_translation_mapping[key] * value
+                for key, value in self.machine_meta_data.items()
+            }
+        except KeyError as ke:
+            logger.critical(f"drone_environment failed: no translation known for {ke}")
+            raise
+        else:
+            drone_environment["Uuid"] = drone_uuid
+
+        return drone_environment
+
+    @property
+    def drone_minimum_lifetime(self) -> [int, None]:
+        """
+        Property that returns the configuration parameter drone_minimum_lifetime.
+        It describes the minimum lifetime before a drone is automatically going
+        into draining mode.
+        :return: The minimum lifetime of the drone
+        :rtype: int, None
+        """
+        return self.site_configuration.drone_minimum_lifetime
 
     def drone_uuid(self, uuid: str) -> str:
         """
@@ -117,42 +174,6 @@ class SiteAdapter(metaclass=ABCMeta):
 
         return translated_response
 
-    def drone_environment(
-        self, drone_uuid: str, meta_data_translation_mapping: AttributeDict
-    ) -> dict:
-        """
-        Method to get the drone environment to be exported to batch jobs
-        providing the actual resources in the overlay batch system. It
-        translates units of drone meta data into a format the overlay
-        batch system is expecting. Also, the drone_uuid is added  for matching
-        drones to actual resources provided in the overlay batch system.
-        :param drone_uuid: The unique id which is assigned to every drone on creation
-        :type drone_uuid: str
-        :param meta_data_translation_mapping: Mapping used for the meta data translation
-        :type meta_data_translation_mapping: dict
-        :return: Translated
-        :rtype: dict
-        """
-        try:
-            drone_environment = {
-                key: meta_data_translation_mapping[key] * value
-                for key, value in self.machine_meta_data.items()
-            }
-        except KeyError as ke:
-            logger.critical(f"drone_environment failed: no translation known for {ke}")
-            raise
-        else:
-            drone_environment["Uuid"] = drone_uuid
-
-        return drone_environment
-
-    @property
-    def drone_minimum_lifetime(self) -> [int, None]:
-        try:
-            return self.configuration.drone_minimum_lifetime
-        except AttributeError:
-            return None
-
     @property
     def machine_meta_data(self) -> AttributeDict:
         """
@@ -204,6 +225,29 @@ class SiteAdapter(metaclass=ABCMeta):
         :rtype: AttributeDict
         """
         raise NotImplementedError
+
+    @property
+    @lru_cache(maxsize=16)
+    def site_configuration(self) -> AttributeDict:
+        """
+        Property that returns the generic site configuration. This corresponds
+        to the Sites section in the yaml configuration. For example:
+        .. code-block::
+
+            Sites:
+              - name: MySiteName_1
+                adapter: MyAdapter2Use
+                quota: 123
+                drone_minimum_lifetime: 3600
+
+        :return: The generic site configuration
+        :rtype: AttributeDict
+        """
+        for site_configuration in Configuration().Sites:
+            if site_configuration.name == self.site_name:
+                return AttributeDict(
+                    SiteConfigurationModel(**site_configuration).dict()
+                )
 
     @property
     def site_name(self) -> str:

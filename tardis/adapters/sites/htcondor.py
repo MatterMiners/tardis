@@ -1,4 +1,3 @@
-from ...configuration.configuration import Configuration
 from ...exceptions.executorexceptions import CommandExecutionFailure
 from ...exceptions.tardisexceptions import TardisError
 from ...exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
@@ -60,10 +59,9 @@ htcondor_status_codes = {
 
 class HTCondorAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
-        self._configuration = getattr(Configuration(), site_name)
         self._machine_type = machine_type
         self._site_name = site_name
-        self._executor = getattr(self._configuration, "executor", ShellExecutor())
+        self._executor = getattr(self.configuration, "executor", ShellExecutor())
 
         key_translator = StaticMapping(
             remote_resource_uuid="ClusterId",
@@ -89,7 +87,7 @@ class HTCondorAdapter(SiteAdapter):
 
         self._htcondor_queue = AsyncCacheMap(
             update_coroutine=partial(htcondor_queue_updater, self._executor),
-            max_age=self._configuration.max_age * 60,
+            max_age=self.configuration.max_age * 60,
         )
 
     async def deploy_resource(

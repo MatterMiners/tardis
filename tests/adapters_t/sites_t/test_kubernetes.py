@@ -19,9 +19,7 @@ class TestKubernetesStackAdapter(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.mock_config_patcher = patch(
-            "tardis.adapters.sites.kubernetes.Configuration"
-        )
+        cls.mock_config_patcher = patch("tardis.interfaces.siteadapter.Configuration")
         cls.mock_config = cls.mock_config_patcher.start()
         cls.mock_kubernetes_api_patcher = patch(
             "tardis.adapters.sites.kubernetes.k8s_client.AppsV1Api"
