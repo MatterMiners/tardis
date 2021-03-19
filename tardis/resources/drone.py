@@ -69,11 +69,11 @@ class Drone(Pool):
         self._demand = value
 
     @property
-    def drone_heartbeat_interval(self) -> int:
+    def heartbeat_interval(self) -> int:
         return self.site_agent.drone_heartbeat_interval
 
     @property
-    def drone_minimum_lifetime(self) -> [int, None]:
+    def minimum_lifetime(self) -> [int, None]:
         return self.site_agent.drone_minimum_lifetime
 
     @property
@@ -102,7 +102,7 @@ class Drone(Pool):
                 )
                 self._demand = 0
                 return
-            await asyncio.sleep(self.drone_heartbeat_interval)
+            await asyncio.sleep(self.heartbeat_interval)
 
     def register_plugins(self, observer: Union[List[Plugin], Plugin]) -> None:
         self._plugins.append(observer)

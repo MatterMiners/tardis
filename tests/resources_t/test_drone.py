@@ -55,14 +55,14 @@ class TestDrone(TestCase):
         self.assertEqual(self.drone.demand, 0)
 
     def test_heartbeat_interval(self):
-        self.assertEqual(self.drone.drone_heartbeat_interval, 60)
+        self.assertEqual(self.drone.heartbeat_interval, 60)
         self.mock_site_agent.drone_heartbeat_interval = 10
-        self.assertEqual(self.drone.drone_heartbeat_interval, 10)
+        self.assertEqual(self.drone.heartbeat_interval, 10)
 
     def test_life_time(self):
-        self.assertIsNone(self.drone.drone_minimum_lifetime, None)
+        self.assertIsNone(self.drone.minimum_lifetime, None)
         self.mock_site_agent.drone_minimum_lifetime = 3600
-        self.assertEqual(self.drone.drone_minimum_lifetime, 3600)
+        self.assertEqual(self.drone.minimum_lifetime, 3600)
 
     def test_maximum_demand(self):
         self.assertEqual(self.drone.maximum_demand, 8)
