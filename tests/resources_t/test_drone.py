@@ -82,8 +82,8 @@ class TestDrone(TestCase):
     def test_site_agent(self):
         self.assertEqual(self.drone.site_agent, self.mock_site_agent)
 
-    @patch("tardis.resources.drone.asyncio.sleep", async_return)
-    def test_run(self):
+    @patch("tardis.resources.drone.asyncio.sleep")
+    def test_run(self, mocked_asyncio_sleep=async_return()):
         mocked_down_state = MagicMock(spec=DownState)
         mocked_down_state.run.return_value = async_return()
 
@@ -95,8 +95,13 @@ class TestDrone(TestCase):
 
         run_async(self.drone.set_state, mocked_state)
         self.drone.demand = 8
+        self.mock_site_agent.drone_heartbeat_interval = 10
         with self.assertLogs(level=DEBUG):
             run_async(self.drone.run)
+
+        mocked_asyncio_sleep.assert_called_once_with(
+            self.mock_site_agent.drone_heartbeat_interval
+        )
 
         self.assertIsInstance(self.drone.state, DownState)
         self.assertEqual(self.drone.demand, 0)
