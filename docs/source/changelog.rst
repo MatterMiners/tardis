@@ -21,6 +21,11 @@ Fixed
 * Fixes a bug that the drone_minimum_lifetime parameter is not working as described in the documentation
 * Fixes a bug in the HTCondor Site Adapter which leads to wrong requirements when using non HTCondor OBS
 
+Added
+-----
+
+* Enable support for `msub` command line options in the Moab site adapter
+
 [0.5.0] - 2020-12-09
 ====================
 

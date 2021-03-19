@@ -1,0 +1,7 @@
+category: added
+summary: "Enable support for `msub` command line options in the Moab site adapter"
+description: |
+  `msub` command line option can now be added to the `MachineTypeConfiguration` of the
+  Moab site adapter. `short` and `long` option are supported via yaml MappingNodes.
+pull requests:
+- 161
