@@ -25,6 +25,7 @@ Added
 -----
 
 * Enable support for `msub` command line options in the Moab site adapter
+* Added a new site adapter to use Kubernetes clusters as resource provider
 
 [0.5.0] - 2020-12-09
 ====================

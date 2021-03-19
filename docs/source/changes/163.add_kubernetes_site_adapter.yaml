@@ -1,0 +1,9 @@
+category: added
+summary: "Added a new site adapter to use Kubernetes clusters as resource provider"
+description: |
+  A new Kubernetes site adapter has been added to `TARDIS` using Kubernetes deployments to deploy Drone on Kubernetes
+  clusters using its API.
+issues:
+  - 50
+pull requests:
+  - 163
