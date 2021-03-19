@@ -83,7 +83,8 @@ class TestDrone(TestCase):
         self.assertEqual(self.drone.site_agent, self.mock_site_agent)
 
     @patch("tardis.resources.drone.asyncio.sleep")
-    def test_run(self, mocked_asyncio_sleep=async_return()):
+    def test_run(self, mocked_asyncio_sleep):
+        mocked_asyncio_sleep.side_effect = async_return
         mocked_down_state = MagicMock(spec=DownState)
         mocked_down_state.run.return_value = async_return()
 
