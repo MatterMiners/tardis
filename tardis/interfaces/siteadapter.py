@@ -107,10 +107,13 @@ class SiteAdapter(metaclass=ABCMeta):
 
     @property
     def drone_heartbeat_interval(self) -> int:
-        try:
-            return self.site_configuration.drone_heartbeat_interval
-        except AttributeError:
-            return 60
+        """
+        Property that returns the configuration parameter drone_heartbeat_interval.
+        It describes the time between two consecutive updates of the drone status.
+        :return: The heartbeat interval of the drone
+        :rtype: int
+        """
+        return self.site_configuration.drone_heartbeat_interval
 
     @property
     def drone_minimum_lifetime(self) -> [int, None]:
