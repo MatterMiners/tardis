@@ -40,7 +40,7 @@ class Drone(Pool):
         self.resource_attributes = AttributeDict(
             site_name=self._site_agent.site_name,
             machine_type=self.site_agent.machine_type,
-            machine_meta_data_translation_mapping=self.batch_system_agent.machine_meta_data_translation_mapping,  # noqa B950
+            obs_machine_meta_data_translation_mapping=self.batch_system_agent.machine_meta_data_translation_mapping,  # noqa B950
             remote_resource_uuid=remote_resource_uuid,
             created=created or datetime.now(),
             updated=updated or datetime.now(),

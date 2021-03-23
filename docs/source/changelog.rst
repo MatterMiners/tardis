@@ -1,4 +1,4 @@
-.. Created by changelog.py at 2021-03-22, command
+.. Created by changelog.py at 2021-03-23, command
    '/Users/giffler/.cache/pre-commit/repor6pnmwlm/py_env-python3.9/bin/changelog docs/source/changes compile --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
@@ -6,7 +6,7 @@
 CHANGELOG
 #########
 
-[Unreleased] - 2021-03-22
+[Unreleased] - 2021-03-23
 =========================
 
 Added
@@ -18,6 +18,7 @@ Fixed
 -----
 
 * Fixes a bug that the drone_minimum_lifetime parameter is not working as described in the documentation
+* Fixes a bug in the HTCondor Site Adapter which leads to wrong requirements when using non HTCondor OBS
 
 [0.5.0] - 2020-12-09
 ====================

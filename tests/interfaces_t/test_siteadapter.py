@@ -65,7 +65,7 @@ class TestSiteAdapter(TestCase):
         )
 
         with self.assertLogs(
-            logger="cobald.runtime.tardis.interfaces.site", level=logging.CRITICAL
+            logger="cobald.runtime.tardis.utilities.utils", level=logging.CRITICAL
         ), self.assertRaises(KeyError):
             self.site_adapter.drone_environment(
                 drone_uuid="test-123",
