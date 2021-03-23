@@ -12,7 +12,9 @@ CHANGELOG
 Added
 -----
 
+* Enable support for `msub` command line options in the Moab site adapter
 * An optional and per site configurable drone heartbeat interval has been added
+* Added a new site adapter to use Kubernetes clusters as resource provider
 
 Fixed
 -----
@@ -20,12 +22,6 @@ Fixed
 * Fixes a bug that get_resource_ratios raised a ValueError
 * Fixes a bug that the drone_minimum_lifetime parameter is not working as described in the documentation
 * Fixes a bug in the HTCondor Site Adapter which leads to wrong requirements when using non HTCondor OBS
-
-Added
------
-
-* Enable support for `msub` command line options in the Moab site adapter
-* Added a new site adapter to use Kubernetes clusters as resource provider
 
 [0.5.0] - 2020-12-09
 ====================
