@@ -99,7 +99,7 @@ class HTCondorAdapter(SiteAdapter):
 
         drone_environment = self.drone_environment(
             resource_attributes.drone_uuid,
-            resource_attributes.machine_meta_data_translation_mapping,
+            resource_attributes.obs_machine_meta_data_translation_mapping,
         )
 
         submit_jdl = jdl_template.substitute(

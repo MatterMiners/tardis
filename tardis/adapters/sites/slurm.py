@@ -110,7 +110,7 @@ class SlurmAdapter(SiteAdapter):
         sbatch_cmdline_option_string = submit_cmd_option_formatter(
             self.sbatch_cmdline_options(
                 resource_attributes.drone_uuid,
-                resource_attributes.machine_meta_data_translation_mapping,
+                resource_attributes.obs_machine_meta_data_translation_mapping,
             )
         )
 
