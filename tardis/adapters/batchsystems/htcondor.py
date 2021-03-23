@@ -172,14 +172,13 @@ class HTCondorAdapter(BatchSystemAdapter):
         await self._htcondor_status.update_status()
         try:
             htcondor_status = self._htcondor_status[drone_uuid]
-        except KeyError:
-            return {}
-        else:
             return (
                 float(value)
                 for key, value in htcondor_status.items()
                 if key in self.ratios.keys()
             )
+        except (KeyError, ValueError):
+            return {}
 
     async def get_allocation(self, drone_uuid: str) -> float:
         """
