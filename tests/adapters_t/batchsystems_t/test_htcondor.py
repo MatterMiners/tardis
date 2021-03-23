@@ -161,6 +161,7 @@ class TestHTCondorAdapter(TestCase):
             [],
         )
         self.mock_async_run_command.assert_called_with(self.command)
+        self.mock_async_run_command.reset_mock()
 
         self.assertEqual(
             run_async(
@@ -169,6 +170,7 @@ class TestHTCondorAdapter(TestCase):
             [],
         )
         self.mock_async_run_command.assert_called_with(self.command)
+        self.mock_async_run_command.reset_mock()
 
         self.assertEqual(
             run_async(
