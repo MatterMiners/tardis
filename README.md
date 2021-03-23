@@ -1,4 +1,5 @@
-[![Build Status](https://travis-ci.org/MatterMiners/tardis.svg?branch=master)](https://travis-ci.org/MatterMiners/tardis)
+[![Build Status](https://github.com/MatterMiners/tardis/actions/workflows/unittests.yml/badge.svg)](https://github.com/MatterMiners/tardis/actions/workflows/unittests.yml)
+[![Verification](https://github.com/MatterMiners/tardis/actions/workflows/verification.yml/badge.svg)](https://github.com/MatterMiners/tardis/actions/workflows/verification.yml)
 [![codecov](https://codecov.io/gh/MatterMiners/tardis/branch/master/graph/badge.svg)](https://codecov.io/gh/MatterMiners/tardis)
 [![Documentation Status](https://readthedocs.org/projects/cobald-tardis/badge/?version=latest)](https://cobald-tardis.readthedocs.io/en/latest/?badge=latest)
 [![Development and Help Chat](https://badges.gitter.im/MatterMiners.png)](https://gitter.im/MatterMiners/community)
