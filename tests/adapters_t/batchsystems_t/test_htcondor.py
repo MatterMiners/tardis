@@ -57,6 +57,8 @@ class TestHTCondorAdapter(TestCase):
                 f"test_drained\tslot1@test\tDrained\tIdle\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",  # noqa: B950
                 f"test_owner\tslot1@test\tOwner\tIdle\tundefined\t{self.cpu_ratio}\t{self.memory_ratio}",  # noqa: B950
                 f"test_uuid_plus\tslot1@test_uuid@test\tUnclaimed\tIdle\ttest_uuid\t{self.cpu_ratio}\t{self.memory_ratio}",  # noqa: B950
+                f"test_undefined\tslot1@test\tUnclaimed\tIdle\tundefined\tundefined\t{self.memory_ratio}",  # noqa: B950
+                f"test_error\tslot1@test\tUnclaimed\tIdle\tundefined\terror\t{self.memory_ratio}",  # noqa: B950
                 "exoscale-26d361290f\tslot1@exoscale-26d361290f\tUnclaimed\tIdle\tundefined\t0.125\t0.125",  # noqa: B950
             ]
         )
@@ -156,7 +158,23 @@ class TestHTCondorAdapter(TestCase):
             run_async(
                 self.htcondor_adapter.get_resource_ratios, drone_uuid="not_exists"
             ),
-            {},
+            [],
+        )
+        self.mock_async_run_command.assert_called_with(self.command)
+
+        self.assertEqual(
+            run_async(
+                self.htcondor_adapter.get_resource_ratios, drone_uuid="test_undefined"
+            ),
+            [],
+        )
+        self.mock_async_run_command.assert_called_with(self.command)
+
+        self.assertEqual(
+            run_async(
+                self.htcondor_adapter.get_resource_ratios, drone_uuid="test_error"
+            ),
+            [],
         )
 
     def test_get_resource_ratios_without_options(self):
