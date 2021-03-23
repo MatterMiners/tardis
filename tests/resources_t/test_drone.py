@@ -33,6 +33,7 @@ class TestDrone(TestCase):
     def setUp(self) -> None:
         self.mock_site_agent.machine_meta_data = AttributeDict(Cores=8)
         self.mock_site_agent.drone_minimum_lifetime = None
+        self.mock_site_agent.drone_heartbeat_interval = 60
         self.mock_plugin = MagicMock(spec=Plugin)()
         self.mock_plugin.notify.return_value = async_return()
         self.drone = Drone(
@@ -53,10 +54,15 @@ class TestDrone(TestCase):
         self.drone.demand = 0
         self.assertEqual(self.drone.demand, 0)
 
+    def test_heartbeat_interval(self):
+        self.assertEqual(self.drone.heartbeat_interval, 60)
+        self.mock_site_agent.drone_heartbeat_interval = 10
+        self.assertEqual(self.drone.heartbeat_interval, 10)
+
     def test_life_time(self):
-        self.assertIsNone(self.drone.drone_minimum_lifetime, None)
+        self.assertIsNone(self.drone.minimum_lifetime, None)
         self.mock_site_agent.drone_minimum_lifetime = 3600
-        self.assertEqual(self.drone.drone_minimum_lifetime, 3600)
+        self.assertEqual(self.drone.minimum_lifetime, 3600)
 
     def test_maximum_demand(self):
         self.assertEqual(self.drone.maximum_demand, 8)
@@ -76,8 +82,9 @@ class TestDrone(TestCase):
     def test_site_agent(self):
         self.assertEqual(self.drone.site_agent, self.mock_site_agent)
 
-    @patch("tardis.resources.drone.asyncio.sleep", async_return)
-    def test_run(self):
+    @patch("tardis.resources.drone.asyncio.sleep")
+    def test_run(self, mocked_asyncio_sleep):
+        mocked_asyncio_sleep.side_effect = async_return
         mocked_down_state = MagicMock(spec=DownState)
         mocked_down_state.run.return_value = async_return()
 
@@ -89,8 +96,13 @@ class TestDrone(TestCase):
 
         run_async(self.drone.set_state, mocked_state)
         self.drone.demand = 8
+        self.mock_site_agent.drone_heartbeat_interval = 10
         with self.assertLogs(level=DEBUG):
             run_async(self.drone.run)
+
+        mocked_asyncio_sleep.assert_called_once_with(
+            self.mock_site_agent.drone_heartbeat_interval
+        )
 
         self.assertIsInstance(self.drone.state, DownState)
         self.assertEqual(self.drone.demand, 0)

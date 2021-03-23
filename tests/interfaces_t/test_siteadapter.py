@@ -75,6 +75,24 @@ class TestSiteAdapter(TestCase):
                 ),
             )
 
+    def test_drone_heartbeat_interval(self):
+        self.assertEqual(self.site_adapter.drone_heartbeat_interval, 60)
+
+        # lru_cache needs to be cleared before manipulating site configuration
+        # noinspection PyUnresolvedReferences
+        SiteAdapter.site_configuration.fget.cache_clear()
+
+        self.config.Sites[0]["drone_heartbeat_interval"] = 10
+        self.assertEqual(self.site_adapter.drone_heartbeat_interval, 10)
+
+        # noinspection PyUnresolvedReferences
+        SiteAdapter.site_configuration.fget.cache_clear()
+
+        self.config.Sites[0]["drone_heartbeat_interval"] = -1
+        with self.assertRaises(ValidationError):
+            # noinspection PyStatementEffect
+            self.site_adapter.drone_heartbeat_interval
+
     def test_drone_minimum_lifetime(self):
         self.assertEqual(self.site_adapter.drone_minimum_lifetime, None)
 
@@ -194,6 +212,7 @@ class TestSiteAdapter(TestCase):
                 adapter="TestSite",
                 quota=1,
                 drone_minimum_lifetime=None,
+                drone_heartbeat_interval=60,
             ),
         )
 
@@ -209,6 +228,7 @@ class TestSiteAdapter(TestCase):
                 adapter="TestSite",
                 quota=inf,
                 drone_minimum_lifetime=None,
+                drone_heartbeat_interval=60,
             ),
         )
 
@@ -225,6 +245,7 @@ class TestSiteAdapter(TestCase):
                     adapter="TestSite",
                     quota=inf,
                     drone_minimum_lifetime=None,
+                    drone_heartbeat_interval=60,
                 ),
             )
 

@@ -23,6 +23,11 @@ class TestSiteAgent(TestCase):
         self.site_agent.drone_uuid(uuid="test")
         self.site_adapter.drone_uuid.assert_called_with(uuid="test")
 
+    def test_drone_heartbeat_interval(self):
+        self.site_adapter.drone_heartbeat_interval.return_value = 60
+        self.assertEqual(self.site_agent.drone_heartbeat_interval(), 60)
+        self.site_adapter.drone_heartbeat_interval.assert_called_with()
+
     def test_drone_minimum_lifetime(self):
         self.site_adapter.drone_minimum_lifetime.return_value = None
         self.assertIsNone(self.site_agent.drone_minimum_lifetime())

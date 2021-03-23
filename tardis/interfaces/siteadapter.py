@@ -22,6 +22,7 @@ class SiteConfigurationModel(BaseModel):
     adapter: str
     quota: Optional[int] = inf
     drone_minimum_lifetime: Optional[conint(gt=0)] = None
+    drone_heartbeat_interval: Optional[conint(ge=0)] = 60
 
     class Config:
         extra = "forbid"
@@ -103,6 +104,16 @@ class SiteAdapter(metaclass=ABCMeta):
             drone_environment["Uuid"] = drone_uuid
 
         return drone_environment
+
+    @property
+    def drone_heartbeat_interval(self) -> int:
+        """
+        Property that returns the configuration parameter drone_heartbeat_interval.
+        It describes the time between two consecutive updates of the drone status.
+        :return: The heartbeat interval of the drone
+        :rtype: int
+        """
+        return self.site_configuration.drone_heartbeat_interval
 
     @property
     def drone_minimum_lifetime(self) -> [int, None]:

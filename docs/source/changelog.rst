@@ -1,4 +1,4 @@
-.. Created by changelog.py at 2021-03-18, command
+.. Created by changelog.py at 2021-03-22, command
    '/Users/giffler/.cache/pre-commit/repor6pnmwlm/py_env-python3.9/bin/changelog docs/source/changes compile --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
@@ -6,8 +6,13 @@
 CHANGELOG
 #########
 
-[Unreleased] - 2021-03-18
+[Unreleased] - 2021-03-22
 =========================
+
+Added
+-----
+
+* An optional and per site configurable drone heartbeat interval has been added
 
 Fixed
 -----
