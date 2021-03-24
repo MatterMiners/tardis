@@ -1,4 +1,4 @@
-.. Created by changelog.py at 2021-03-22, command
+.. Created by changelog.py at 2021-03-24, command
    '/Users/giffler/.cache/pre-commit/repor6pnmwlm/py_env-python3.9/bin/changelog docs/source/changes compile --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
@@ -6,7 +6,7 @@
 CHANGELOG
 #########
 
-[Unreleased] - 2021-03-22
+[Unreleased] - 2021-03-24
 =========================
 
 Added
@@ -17,6 +17,7 @@ Added
 Fixed
 -----
 
+* Fixes a bug that get_resource_ratios raised a ValueError
 * Fixes a bug that the drone_minimum_lifetime parameter is not working as described in the documentation
 
 [0.5.0] - 2020-12-09
