@@ -34,7 +34,7 @@ CONDOR_SUSPEND_FAILED_OUTPUT = """Couldn't find/suspend all jobs in cluster 1351
 CONDOR_SUSPEND_FAILED_MESSAGE = """Run command condor_suspend 1351043 via
 ShellExecutor failed"""
 
-CONDOR_SUBMIT_JDL = """executable = start_pilot.sh
+CONDOR_SUBMIT_JDL_CONDOR_OBS = """executable = start_pilot.sh
 transfer_input_files = setup_pilot.sh
 output = logs/$(cluster).$(process).out
 error = logs/$(cluster).$(process).err
@@ -43,6 +43,22 @@ log = logs/cluster.log
 accounting_group=tardis
 
 environment=TardisDroneCores=8;TardisDroneMemory=32768;TardisDroneDisk=167772160;TardisDroneUuid=test-123
+
+request_cpus=8
+request_memory=32768
+request_disk=167772160
+
+queue 1"""  # noqa: B950
+
+CONDOR_SUBMIT_JDL_SPARK_OBS = """executable = start_pilot.sh
+transfer_input_files = setup_pilot.sh
+output = logs/$(cluster).$(process).out
+error = logs/$(cluster).$(process).err
+log = logs/cluster.log
+
+accounting_group=tardis
+
+environment=TardisDroneCores=8;TardisDroneMemory=32;TardisDroneDisk=160;TardisDroneUuid=test-123
 
 request_cpus=8
 request_memory=32768
@@ -94,12 +110,12 @@ class TestHTCondorSiteAdapter(TestCase):
         )
 
     @mock_executor_run_command(stdout=CONDOR_SUBMIT_OUTPUT)
-    def test_deploy_resource(self):
+    def test_deploy_resource_htcondor_obs(self):
         response = run_async(
             self.adapter.deploy_resource,
             AttributeDict(
                 drone_uuid="test-123",
-                machine_meta_data_translation_mapping=AttributeDict(
+                obs_machine_meta_data_translation_mapping=AttributeDict(
                     Cores=1,
                     Memory=1024,
                     Disk=1024 * 1024,
@@ -111,7 +127,24 @@ class TestHTCondorSiteAdapter(TestCase):
         self.assertFalse(response.updated - datetime.now() > timedelta(seconds=1))
 
         self.mock_executor.return_value.run_command.assert_called_with(
-            "condor_submit", stdin_input=CONDOR_SUBMIT_JDL
+            "condor_submit", stdin_input=CONDOR_SUBMIT_JDL_CONDOR_OBS
+        )
+        self.mock_executor.reset()
+
+        run_async(
+            self.adapter.deploy_resource,
+            AttributeDict(
+                drone_uuid="test-123",
+                obs_machine_meta_data_translation_mapping=AttributeDict(
+                    Cores=1,
+                    Memory=1,
+                    Disk=1,
+                ),
+            ),
+        )
+
+        self.mock_executor.return_value.run_command.assert_called_with(
+            "condor_submit", stdin_input=CONDOR_SUBMIT_JDL_SPARK_OBS
         )
         self.mock_executor.reset()
 
@@ -125,7 +158,7 @@ class TestHTCondorSiteAdapter(TestCase):
                     self.adapter.deploy_resource,
                     AttributeDict(
                         drone_uuid="test-123",
-                        machine_meta_data_translation_mapping=AttributeDict(
+                        obs_machine_meta_data_translation_mapping=AttributeDict(
                             Cores=1,
                             Memory=1024,
                             Disk=1024 * 1024,

@@ -1,5 +1,6 @@
 from ..configuration.configuration import Configuration
 from ..utilities.attributedict import AttributeDict
+from ..utilities.utils import machine_meta_data_translation
 
 from abc import ABCMeta, abstractmethod
 from cobald.utility.primitives import infinity as inf
@@ -92,16 +93,10 @@ class SiteAdapter(metaclass=ABCMeta):
         :return: Translated
         :rtype: dict
         """
-        try:
-            drone_environment = {
-                key: meta_data_translation_mapping[key] * value
-                for key, value in self.machine_meta_data.items()
-            }
-        except KeyError as ke:
-            logger.critical(f"drone_environment failed: no translation known for {ke}")
-            raise
-        else:
-            drone_environment["Uuid"] = drone_uuid
+        drone_environment = machine_meta_data_translation(
+            self.machine_meta_data, meta_data_translation_mapping
+        )
+        drone_environment["Uuid"] = drone_uuid
 
         return drone_environment
 

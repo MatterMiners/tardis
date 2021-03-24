@@ -7,7 +7,7 @@ from ...utilities.asynccachemap import AsyncCacheMap
 from ...utilities.attributedict import AttributeDict
 from ...utilities.staticmapping import StaticMapping
 from ...utilities.executors.shellexecutor import ShellExecutor
-from ...utilities.utils import csv_parser
+from ...utilities.utils import csv_parser, machine_meta_data_translation
 
 from contextlib import contextmanager
 from datetime import datetime
@@ -58,6 +58,10 @@ htcondor_status_codes = {
 
 
 class HTCondorAdapter(SiteAdapter):
+    htcondor_machine_meta_data_translation_mapping = AttributeDict(
+        Cores=1, Memory=1024, Disk=1024 * 1024
+    )
+
     def __init__(self, machine_type: str, site_name: str):
         self._machine_type = machine_type
         self._site_name = site_name
@@ -99,11 +103,14 @@ class HTCondorAdapter(SiteAdapter):
 
         drone_environment = self.drone_environment(
             resource_attributes.drone_uuid,
-            resource_attributes.machine_meta_data_translation_mapping,
+            resource_attributes.obs_machine_meta_data_translation_mapping,
         )
 
         submit_jdl = jdl_template.substitute(
-            drone_environment,
+            machine_meta_data_translation(
+                self.machine_meta_data,
+                self.htcondor_machine_meta_data_translation_mapping,
+            ),
             Environment=";".join(
                 f"TardisDrone{key}={value}" for key, value in drone_environment.items()
             ),
