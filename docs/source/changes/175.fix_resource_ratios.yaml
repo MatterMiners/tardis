@@ -1,0 +1,10 @@
+category: fixed
+summary: "Fixes a bug that get_resource_ratios raised a ValueError"
+description: |
+    In case one of the resource ratios is `undefined` or even has the value `error`
+    a `ValueError` or `TypeError` could occur. In case one of those errors occurs,
+    an empty list is returned.
+pull requests:
+  - 175
+issues:
+  - 168
