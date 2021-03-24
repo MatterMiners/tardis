@@ -68,7 +68,8 @@ setup(
     extras_require={
         "docs": ["sphinx", "sphinx_rtd_theme", "sphinxcontrib-contentui"],
         "test": TESTS_REQUIRE,
-        "contrib": ["flake8", "flake8-bugbear", "black"] + TESTS_REQUIRE,
+        "contrib": ["flake8", "flake8-bugbear", "black; implementation_name=='cpython'"]
+        + TESTS_REQUIRE,
     },
     tests_require=TESTS_REQUIRE,
     zip_safe=False,
