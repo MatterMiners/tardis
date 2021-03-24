@@ -91,8 +91,8 @@ class SqliteRegistry(Plugin):
             ],
         }
 
-        with self.connect() as connection:
-            with connection:
+        with self.connect() as connection:  # contextmanager closes connection
+            with connection:  # context manager commits or rollbacks transactions
                 cursor = connection.cursor()
                 cursor.execute("PRAGMA foreign_keys = ON")
                 cursor.execute("PRAGMA locking_mode = EXCLUSIVE")
@@ -115,8 +115,8 @@ class SqliteRegistry(Plugin):
         await self.async_execute(sql_query, bind_parameters)
 
     def execute(self, sql_query: str, bind_parameters: dict):
-        with self.connect() as connection:
-            with connection:
+        with self.connect() as connection:  # context manager closes connection
+            with connection:  # context manager commits or rollbacks transactions
                 connection.row_factory = lambda cur, row: {
                     col[0]: row[idx] for idx, col in enumerate(cur.description)
                 }
