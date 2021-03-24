@@ -20,4 +20,4 @@ jobs:
         flake8 tardis tests setup.py
     - name: Format with black
       run: |
-        black tardis tests setup.py --diff --check
+        black tardis tests setup.py --diff --check --target-version py36
