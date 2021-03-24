@@ -55,8 +55,8 @@ class KubernetesAdapter(SiteAdapter):
     def hpa_client(self) -> hpa_client.AutoscalingV1Api:
         if self._hpa_client is None:
             a_configuration = hpa_client.Configuration(
-                host=self._configuration.host,
-                api_key={"authorization": self._configuration.token},
+                host=self.configuration.host,
+                api_key={"authorization": self.configuration.token},
             )
             a_configuration.api_key_prefix["authorization"] = "Bearer"
             a_configuration.verify_ssl = False
