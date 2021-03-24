@@ -56,7 +56,8 @@ class SqliteRegistry(Plugin):
             self._db_file, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES
         )
         try:
-            yield con
+            with con:  # context manager to commit or rollback transactions
+                yield con
         finally:
             con.close()
 
@@ -91,22 +92,21 @@ class SqliteRegistry(Plugin):
             ],
         }
 
-        with self.connect() as connection:  # contextmanager closes connection
-            with connection:  # context manager commits or rollbacks transactions
-                cursor = connection.cursor()
-                cursor.execute("PRAGMA foreign_keys = ON")
-                cursor.execute("PRAGMA locking_mode = EXCLUSIVE")
-                cursor.execute("PRAGMA journal_mode = WAL")
-                for table_name, columns in tables.items():
-                    cursor.execute(
-                        f"create table if not exists {table_name} ({', '.join(columns)})"  # noqa b950
-                    )
+        with self.connect() as connection:
+            cursor = connection.cursor()
+            cursor.execute("PRAGMA foreign_keys = ON")
+            cursor.execute("PRAGMA locking_mode = EXCLUSIVE")
+            cursor.execute("PRAGMA journal_mode = WAL")
+            for table_name, columns in tables.items():
+                cursor.execute(
+                    f"create table if not exists {table_name} ({', '.join(columns)})"  # noqa b950
+                )
 
-                for state in State.get_all_states():
-                    cursor.execute(
-                        "INSERT OR IGNORE INTO ResourceStates(state) VALUES (?)",
-                        (state,),
-                    )
+            for state in State.get_all_states():
+                cursor.execute(
+                    "INSERT OR IGNORE INTO ResourceStates(state) VALUES (?)",
+                    (state,),
+                )
 
     async def delete_resource(self, bind_parameters: dict):
         sql_query = """DELETE FROM Resources
@@ -115,15 +115,14 @@ class SqliteRegistry(Plugin):
         await self.async_execute(sql_query, bind_parameters)
 
     def execute(self, sql_query: str, bind_parameters: dict):
-        with self.connect() as connection:  # context manager closes connection
-            with connection:  # context manager commits or rollbacks transactions
-                connection.row_factory = lambda cur, row: {
-                    col[0]: row[idx] for idx, col in enumerate(cur.description)
-                }
-                cursor = connection.cursor()
-                cursor.execute(sql_query, bind_parameters)
-                logger.debug(f"{sql_query},{bind_parameters} executed")
-                return cursor.fetchall()
+        with self.connect() as connection:
+            connection.row_factory = lambda cur, row: {
+                col[0]: row[idx] for idx, col in enumerate(cur.description)
+            }
+            cursor = connection.cursor()
+            cursor.execute(sql_query, bind_parameters)
+            logger.debug(f"{sql_query},{bind_parameters} executed")
+            return cursor.fetchall()
 
     def get_resources(self, site_name: str, machine_type: str):
         sql_query = """
