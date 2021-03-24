@@ -25,11 +25,16 @@ class TestKubernetesStackAdapter(TestCase):
             "tardis.adapters.sites.kubernetes.k8s_client.AppsV1Api"
         )
         cls.mock_kubernetes_api = cls.mock_kubernetes_api_patcher.start()
+        cls.mock_kubernetes_hpa_patcher = patch(
+            "tardis.adapters.sites.kubernetes.hpa_client.AutoscalingV1Api"
+        )
+        cls.mock_kubernetes_hpa = cls.mock_kubernetes_hpa_patcher.start()
 
     @classmethod
     def tearDownClass(cls):
         cls.mock_config_patcher.stop()
         cls.mock_kubernetes_api_patcher.stop()
+        cls.mock_kubernetes_hpa_patcher.stop()
 
     def setUp(self):
         config = self.mock_config.return_value
@@ -44,12 +49,17 @@ class TestKubernetesStackAdapter(TestCase):
                 image="busybox:1.26.1",
                 label="busybox",
                 args=["sleep", "3600"],
+                hpa="True",
+                min_replicas="1",
+                max_replicas="2",
+                cpu_utilization="50",
             )
         )
         test_site_config.MachineMetaData = AttributeDict(
             test2large=AttributeDict(Cores="2", Memory="400Mi")
         )
         kubernetes_api = self.mock_kubernetes_api.return_value
+        kubernetes_hpa = self.mock_kubernetes_hpa.return_value
         spec = client.V1DeploymentSpec(
             replicas=1,
             selector=client.V1LabelSelector(match_labels={"app": "busybox"}),
@@ -98,6 +108,12 @@ class TestKubernetesStackAdapter(TestCase):
         )
         kubernetes_api.delete_namespaced_deployment.return_value = async_return(
             return_value=None
+        )
+        kubernetes_hpa.create_namespaced_horizontal_pod_autoscaler.return_value = (
+            async_return(return_value=None)
+        )
+        kubernetes_hpa.delete_namespaced_horizontal_pod_autoscaler.return_value = (
+            async_return(return_value=None)
         )
         self.kubernetes_adapter = KubernetesAdapter(
             machine_type="test2large", site_name="TestSite"
