@@ -4,6 +4,7 @@ from ..interfaces.plugin import Plugin
 from ..interfaces.state import State
 
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 import asyncio
 import logging
 import sqlite3
@@ -49,10 +50,15 @@ class SqliteRegistry(Plugin):
             self.thread_pool_executor, self.execute, sql_query, bind_parameters
         )
 
+    @contextmanager
     def connect(self):
-        return sqlite3.connect(
+        con = sqlite3.connect(
             self._db_file, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES
         )
+        try:
+            yield con
+        finally:
+            con.close()
 
     def _deploy_db_schema(self):
         tables = {
@@ -86,19 +92,21 @@ class SqliteRegistry(Plugin):
         }
 
         with self.connect() as connection:
-            cursor = connection.cursor()
-            cursor.execute("PRAGMA foreign_keys = ON")
-            cursor.execute("PRAGMA locking_mode = EXCLUSIVE")
-            cursor.execute("PRAGMA journal_mode = WAL")
-            for table_name, columns in tables.items():
-                cursor.execute(
-                    f"create table if not exists {table_name} ({', '.join(columns)})"
-                )
+            with connection:
+                cursor = connection.cursor()
+                cursor.execute("PRAGMA foreign_keys = ON")
+                cursor.execute("PRAGMA locking_mode = EXCLUSIVE")
+                cursor.execute("PRAGMA journal_mode = WAL")
+                for table_name, columns in tables.items():
+                    cursor.execute(
+                        f"create table if not exists {table_name} ({', '.join(columns)})"  # noqa b950
+                    )
 
-            for state in State.get_all_states():
-                cursor.execute(
-                    "INSERT OR IGNORE INTO ResourceStates(state) VALUES (?)", (state,)
-                )
+                for state in State.get_all_states():
+                    cursor.execute(
+                        "INSERT OR IGNORE INTO ResourceStates(state) VALUES (?)",
+                        (state,),
+                    )
 
     async def delete_resource(self, bind_parameters: dict):
         sql_query = """DELETE FROM Resources
@@ -108,13 +116,14 @@ class SqliteRegistry(Plugin):
 
     def execute(self, sql_query: str, bind_parameters: dict):
         with self.connect() as connection:
-            connection.row_factory = lambda cur, row: {
-                col[0]: row[idx] for idx, col in enumerate(cur.description)
-            }
-            cursor = connection.cursor()
-            cursor.execute(sql_query, bind_parameters)
-            logger.debug(f"{sql_query},{bind_parameters} executed")
-            return cursor.fetchall()
+            with connection:
+                connection.row_factory = lambda cur, row: {
+                    col[0]: row[idx] for idx, col in enumerate(cur.description)
+                }
+                cursor = connection.cursor()
+                cursor.execute(sql_query, bind_parameters)
+                logger.debug(f"{sql_query},{bind_parameters} executed")
+                return cursor.fetchall()
 
     def get_resources(self, site_name: str, machine_type: str):
         sql_query = """
