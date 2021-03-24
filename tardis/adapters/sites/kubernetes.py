@@ -107,7 +107,7 @@ class KubernetesAdapter(SiteAdapter):
             spec = hpa_client.V1HorizontalPodAutoscalerSpec(
                 max_replicas=self.machine_type_configuration.max_replicas,
                 min_replicas=self.machine_type_configuration.min_replicas,
-                target_cpu_utilization_percentage=self.machine_type_configuration.cpu_utilization,
+                target_cpu_utilization_percentage=self.machine_type_configuration.cpu_utilization, # noqa: B950
                 scale_target_ref=hpa_client.V1CrossVersionObjectReference(
                     api_version="apps/v1",
                     kind="Deployment",
