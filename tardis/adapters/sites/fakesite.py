@@ -1,4 +1,3 @@
-from ...configuration.configuration import Configuration
 from ...exceptions.tardisexceptions import TardisError
 from ...interfaces.siteadapter import ResourceStatus
 from ...interfaces.siteadapter import SiteAdapter
@@ -16,11 +15,10 @@ import asyncio
 
 class FakeSiteAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str) -> None:
-        self._configuration = getattr(Configuration(), site_name)
         self._machine_type = machine_type
         self._site_name = site_name
-        self._api_response_delay = self._configuration.api_response_delay
-        self._resource_boot_time = self._configuration.resource_boot_time
+        self._api_response_delay = self.configuration.api_response_delay
+        self._resource_boot_time = self.configuration.resource_boot_time
 
         key_translator = StaticMapping(
             remote_resource_uuid="remote_resource_uuid",

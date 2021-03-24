@@ -14,11 +14,12 @@ from kubernetes_asyncio import client
 
 
 class TestKubernetesStackAdapter(TestCase):
+    mock_config_patcher = None
+    mock_kubernetes_api_patcher = None
+
     @classmethod
     def setUpClass(cls):
-        cls.mock_config_patcher = patch(
-            "tardis.adapters.sites.kubernetes.Configuration"
-        )
+        cls.mock_config_patcher = patch("tardis.interfaces.siteadapter.Configuration")
         cls.mock_config = cls.mock_config_patcher.start()
         cls.mock_kubernetes_api_patcher = patch(
             "tardis.adapters.sites.kubernetes.k8s_client.AppsV1Api"
@@ -117,7 +118,8 @@ class TestKubernetesStackAdapter(TestCase):
     def tearDown(self):
         self.mock_kubernetes_api.reset_mock()
 
-    def test_deploy_resource(self):
+    @patch("kubernetes_asyncio.client.rest.aiohttp")
+    def test_deploy_resource(self, mocked_aiohttp):
         self.assertEqual(
             run_async(
                 self.kubernetes_adapter.deploy_resource,
@@ -147,7 +149,8 @@ class TestKubernetesStackAdapter(TestCase):
     def test_site_name(self):
         self.assertEqual(self.kubernetes_adapter.site_name, "TestSite")
 
-    def test_resource_status(self):
+    @patch("kubernetes_asyncio.client.rest.aiohttp")
+    def test_resource_status(self, mocked_aiohttp):
         self.assertEqual(
             run_async(
                 self.kubernetes_adapter.resource_status,
@@ -206,9 +209,18 @@ class TestKubernetesStackAdapter(TestCase):
                 resource_status=ResourceStatus.Deleted,
             ),
         )
+        self.update_read_side_effect(exception=K8SApiException(status=500))
+        with self.assertRaises(K8SApiException):
+            run_async(
+                self.kubernetes_adapter.resource_status,
+                resource_attributes=AttributeDict(
+                    drone_uuid="testsite-089123", remote_resource_uuid="123456"
+                ),
+            )
         self.update_read_side_effect(exception=None)
 
-    def test_stop_resource(self):
+    @patch("kubernetes_asyncio.client.rest.aiohttp")
+    def test_stop_resource(self, mocked_aiohttp):
         self.body.metadata.uid = "123456"
         self.body.status = client.V1DeploymentStatus(
             conditions=[
@@ -229,7 +241,8 @@ class TestKubernetesStackAdapter(TestCase):
             name="testsite-089123", namespace="default", body=self.body
         )
 
-    def test_terminate_resource(self):
+    @patch("kubernetes_asyncio.client.rest.aiohttp")
+    def test_terminate_resource(self, mocked_aiohttp):
         run_async(
             self.kubernetes_adapter.terminate_resource,
             resource_attributes=AttributeDict(drone_uuid="testsite-089123"),

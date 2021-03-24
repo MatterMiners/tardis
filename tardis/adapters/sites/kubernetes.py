@@ -1,7 +1,6 @@
 from kubernetes_asyncio import client as k8s_client
 from kubernetes_asyncio import client as hpa_client
 from kubernetes_asyncio.client.rest import ApiException as K8SApiException
-from ...configuration.configuration import Configuration
 from ...exceptions.tardisexceptions import TardisError
 from ...interfaces.siteadapter import SiteAdapter
 from ...interfaces.siteadapter import ResourceStatus
@@ -15,7 +14,6 @@ from contextlib import contextmanager
 
 class KubernetesAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
-        self._configuration = getattr(Configuration(), site_name)
         self._machine_type = machine_type
         self._site_name = site_name
         key_translator = StaticMapping(
@@ -45,8 +43,8 @@ class KubernetesAdapter(SiteAdapter):
     def client(self) -> k8s_client.AppsV1Api:
         if self._client is None:
             a_configuration = k8s_client.Configuration(
-                host=self._configuration.host,
-                api_key={"authorization": self._configuration.token},
+                host=self.configuration.host,
+                api_key={"authorization": self.configuration.token},
             )
             a_configuration.api_key_prefix["authorization"] = "Bearer"
             a_configuration.verify_ssl = False
@@ -143,10 +141,11 @@ class KubernetesAdapter(SiteAdapter):
                 else:
                     response_type = response_temp.status.conditions[0].type
         except K8SApiException as ex:
-            if ex.status == 404:
-                response_uid = resource_attributes.remote_resource_uuid
-                response_name = resource_attributes.drone_uuid
-                response_type = "Deleted"
+            if ex.status != 404:
+                raise
+            response_uid = resource_attributes.remote_resource_uuid
+            response_name = resource_attributes.drone_uuid
+            response_type = "Deleted"
         response = {"uid": response_uid, "name": response_name, "type": response_type}
         return self.handle_response(response)
 

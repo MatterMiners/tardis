@@ -4,7 +4,7 @@ from simple_rest_client.exceptions import AuthError
 from simple_rest_client.exceptions import ClientError
 from aiohttp import ClientConnectionError
 from aiohttp import ContentTypeError
-from tardis.configuration.configuration import Configuration
+
 from tardis.exceptions.tardisexceptions import TardisAuthError
 from tardis.exceptions.tardisexceptions import TardisDroneCrashed
 from tardis.exceptions.tardisexceptions import TardisError
@@ -27,17 +27,16 @@ logger = logging.getLogger("cobald.runtime.tardis.adapters.sites.openstack")
 
 class OpenStackAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
-        self._configuration = getattr(Configuration(), site_name)
         self._machine_type = machine_type
         self._site_name = site_name
 
         auth = AuthPassword(
-            auth_url=self._configuration.auth_url,
-            username=self._configuration.username,
-            password=self._configuration.password,
-            project_name=self._configuration.project_name,
-            user_domain_name=self._configuration.user_domain_name,
-            project_domain_name=self._configuration.project_domain_name,
+            auth_url=self.configuration.auth_url,
+            username=self.configuration.username,
+            password=self.configuration.password,
+            project_name=self.configuration.project_name,
+            user_domain_name=self.configuration.user_domain_name,
+            project_domain_name=self.configuration.project_domain_name,
         )
 
         self.nova = NovaClient(session=auth)

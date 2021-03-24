@@ -45,9 +45,9 @@ async def check_minimum_lifetime(
     state_transition, drone: "Drone", current_state: Type[State]
 ):
     if (
-        drone.drone_minimum_lifetime
+        drone.minimum_lifetime
         and (datetime.now() - drone.resource_attributes.updated).total_seconds()
-        > drone.drone_minimum_lifetime
+        > drone.minimum_lifetime
     ):
         raise StopProcessing(last_result=DrainState())
     return state_transition

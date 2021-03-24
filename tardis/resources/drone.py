@@ -40,7 +40,7 @@ class Drone(Pool):
         self.resource_attributes = AttributeDict(
             site_name=self._site_agent.site_name,
             machine_type=self.site_agent.machine_type,
-            machine_meta_data_translation_mapping=self.batch_system_agent.machine_meta_data_translation_mapping,  # noqa B950
+            obs_machine_meta_data_translation_mapping=self.batch_system_agent.machine_meta_data_translation_mapping,  # noqa B950
             remote_resource_uuid=remote_resource_uuid,
             created=created or datetime.now(),
             updated=updated or datetime.now(),
@@ -69,7 +69,11 @@ class Drone(Pool):
         self._demand = value
 
     @property
-    def drone_minimum_lifetime(self) -> [int, None]:
+    def heartbeat_interval(self) -> int:
+        return self.site_agent.drone_heartbeat_interval
+
+    @property
+    def minimum_lifetime(self) -> [int, None]:
         return self.site_agent.drone_minimum_lifetime
 
     @property
@@ -98,7 +102,7 @@ class Drone(Pool):
                 )
                 self._demand = 0
                 return
-            await asyncio.sleep(60)
+            await asyncio.sleep(self.heartbeat_interval)
 
     def register_plugins(self, observer: Union[List[Plugin], Plugin]) -> None:
         self._plugins.append(observer)

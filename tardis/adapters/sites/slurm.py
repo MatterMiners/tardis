@@ -1,4 +1,3 @@
-from ...configuration.configuration import Configuration
 from ...exceptions.executorexceptions import CommandExecutionFailure
 from ...exceptions.tardisexceptions import TardisError
 from ...exceptions.tardisexceptions import TardisTimeout
@@ -49,26 +48,25 @@ async def slurm_status_updater(executor):
 
 class SlurmAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
-        self._configuration = getattr(Configuration(), site_name)
         self._machine_type = machine_type
         self._site_name = site_name
 
         try:
             self._startup_command = self.machine_type_configuration.StartupCommand
         except AttributeError:
-            if not hasattr(self._configuration, "StartupCommand"):
+            if not hasattr(self.configuration, "StartupCommand"):
                 raise
             warnings.warn(
                 "StartupCommand has been moved to the machine_type_configuration!",
                 DeprecationWarning,
             )
-            self._startup_command = self._configuration.StartupCommand
+            self._startup_command = self.configuration.StartupCommand
 
-        self._executor = getattr(self._configuration, "executor", ShellExecutor())
+        self._executor = getattr(self.configuration, "executor", ShellExecutor())
 
         self._slurm_status = AsyncCacheMap(
             update_coroutine=partial(slurm_status_updater, self._executor),
-            max_age=self._configuration.StatusUpdate * 60,
+            max_age=self.configuration.StatusUpdate * 60,
         )
 
         key_translator = StaticMapping(
@@ -112,7 +110,7 @@ class SlurmAdapter(SiteAdapter):
         sbatch_cmdline_option_string = submit_cmd_option_formatter(
             self.sbatch_cmdline_options(
                 resource_attributes.drone_uuid,
-                resource_attributes.machine_meta_data_translation_mapping,
+                resource_attributes.obs_machine_meta_data_translation_mapping,
             )
         )
 

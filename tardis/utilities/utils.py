@@ -7,6 +7,9 @@ from io import StringIO
 from typing import List, Tuple
 
 import csv
+import logging
+
+logger = logging.getLogger("cobald.runtime.tardis.utilities.utils")
 
 
 async def async_run_command(
@@ -80,6 +83,30 @@ def csv_parser(
                 key: value if value not in replacements.keys() else replacements[value]
                 for key, value in row.items()
             }
+
+
+def machine_meta_data_translation(
+    machine_meta_data: AttributeDict, meta_data_translation_mapping: AttributeDict
+):
+    """
+    Helper function to translate units of the machine_meta_data to match the
+    units required by the overlay batch system
+    :param machine_meta_data: Machine Meta Data (Cores, Memory, Disk)
+    :param meta_data_translation_mapping: Map used for the translation of meta
+           data, contains conversion factors
+    :return:
+    :rtype: dict
+    """
+    try:
+        return {
+            key: meta_data_translation_mapping[key] * value
+            for key, value in machine_meta_data.items()
+        }
+    except KeyError as ke:
+        logger.critical(
+            f"machine_meta_data_translation failed: no translation known for {ke}"
+        )
+        raise
 
 
 def submit_cmd_option_formatter(options: AttributeDict) -> str:

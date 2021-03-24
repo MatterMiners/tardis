@@ -79,7 +79,7 @@ class TestSlurmAdapter(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.mock_config_patcher = patch("tardis.adapters.sites.slurm.Configuration")
+        cls.mock_config_patcher = patch("tardis.interfaces.siteadapter.Configuration")
         cls.mock_config = cls.mock_config_patcher.start()
         cls.mock_executor_patcher = patch("tardis.adapters.sites.slurm.ShellExecutor")
         cls.mock_executor = cls.mock_executor_patcher.start()
@@ -162,7 +162,7 @@ class TestSlurmAdapter(TestCase):
             resource_attributes=AttributeDict(
                 machine_type="test2large",
                 site_name="TestSite",
-                machine_meta_data_translation_mapping=AttributeDict(
+                obs_machine_meta_data_translation_mapping=AttributeDict(
                     Cores=1,
                     Memory=1000,
                     Disk=1000,
@@ -199,7 +199,7 @@ class TestSlurmAdapter(TestCase):
             resource_attributes=AttributeDict(
                 machine_type="test2large",
                 site_name="TestSite",
-                machine_meta_data_translation_mapping=AttributeDict(
+                obs_machine_meta_data_translation_mapping=AttributeDict(
                     Cores=1,
                     Memory=1000,
                     Disk=1000,

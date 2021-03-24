@@ -1,4 +1,3 @@
-from tardis.configuration.configuration import Configuration
 from tardis.exceptions.tardisexceptions import TardisTimeout
 from tardis.exceptions.tardisexceptions import TardisError
 from tardis.exceptions.tardisexceptions import TardisQuotaExceeded
@@ -25,15 +24,15 @@ logger = logging.getLogger("cobald.runtime.tardis.adapters.sites.cloudstack")
 
 class CloudStackAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
-        self._configuration = getattr(Configuration(), site_name)
-        self.cloud_stack_client = CloudStack(
-            end_point=self._configuration.end_point,
-            api_key=self._configuration.api_key,
-            api_secret=self._configuration.api_secret,
-            event_loop=runtime._meta_runner.runners[asyncio].event_loop,
-        )
         self._machine_type = machine_type
         self._site_name = site_name
+
+        self.cloud_stack_client = CloudStack(
+            end_point=self.configuration.end_point,
+            api_key=self.configuration.api_key,
+            api_secret=self.configuration.api_secret,
+            event_loop=runtime._meta_runner.runners[asyncio].event_loop,
+        )
 
         key_translator = StaticMapping(
             remote_resource_uuid="id", drone_uuid="name", resource_status="state"

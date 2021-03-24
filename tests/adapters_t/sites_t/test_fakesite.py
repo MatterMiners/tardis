@@ -16,7 +16,7 @@ class TestFakeSiteAdapter(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.mock_config_patcher = patch("tardis.adapters.sites.fakesite.Configuration")
+        cls.mock_config_patcher = patch("tardis.interfaces.siteadapter.Configuration")
         cls.mock_config = cls.mock_config_patcher.start()
 
     @classmethod
