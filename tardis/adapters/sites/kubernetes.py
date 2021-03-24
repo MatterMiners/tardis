@@ -1,4 +1,5 @@
 from kubernetes_asyncio import client as k8s_client
+from kubernetes_asyncio import client as hpa_client
 from kubernetes_asyncio.client.rest import ApiException as K8SApiException
 from ...configuration.configuration import Configuration
 from ...exceptions.tardisexceptions import TardisError
@@ -38,6 +39,7 @@ class KubernetesAdapter(SiteAdapter):
             translator_functions=translator_functions,
         )
         self._client = None
+        self._hpa_client = None
 
     @property
     def client(self) -> k8s_client.AppsV1Api:
@@ -50,6 +52,20 @@ class KubernetesAdapter(SiteAdapter):
             a_configuration.verify_ssl = False
             self._client = k8s_client.AppsV1Api(k8s_client.ApiClient(a_configuration))
         return self._client
+
+    @property
+    def hpa_client(self) -> hpa_client.AutoscalingV1Api:
+        if self._hpa_client is None:
+            a_configuration = hpa_client.Configuration(
+                host=self._configuration.host,
+                api_key={"authorization": self._configuration.token},
+            )
+            a_configuration.api_key_prefix["authorization"] = "Bearer"
+            a_configuration.verify_ssl = False
+            self._hpa_client = hpa_client.AutoscalingV1Api(
+                hpa_client.ApiClient(a_configuration)
+            )
+        return self._hpa_client
 
     async def deploy_resource(
         self, resource_attributes: AttributeDict
@@ -89,6 +105,24 @@ class KubernetesAdapter(SiteAdapter):
             "name": response_temp.metadata.name,
             "type": "Booting",
         }
+        if self.machine_type_configuration.hpa:
+            spec = hpa_client.V1HorizontalPodAutoscalerSpec(
+                max_replicas=self.machine_type_configuration.max_replicas,
+                min_replicas=self.machine_type_configuration.min_replicas,
+                target_cpu_utilization_percentage=self.machine_type_configuration.cpu_utilization,
+                scale_target_ref=hpa_client.V1CrossVersionObjectReference(
+                    api_version="apps/v1",
+                    kind="Deployment",
+                    name=resource_attributes.drone_uuid,
+                ),
+            )
+            dep = hpa_client.V1HorizontalPodAutoscaler(
+                metadata=hpa_client.V1ObjectMeta(name=resource_attributes.drone_uuid),
+                spec=spec,
+            )
+            await self.hpa_client.create_namespaced_horizontal_pod_autoscaler(
+                namespace=self.machine_type_configuration.namespace, body=dep
+            )
         return self.handle_response(response)
 
     async def resource_status(
@@ -137,6 +171,11 @@ class KubernetesAdapter(SiteAdapter):
                 propagation_policy="Foreground", grace_period_seconds=5
             ),
         )
+        if self.machine_type_configuration.hpa:
+            await self.hpa_client.delete_namespaced_horizontal_pod_autoscaler(
+                name=resource_attributes.drone_uuid,
+                namespace=self.machine_type_configuration.namespace,
+            )
         return response
 
     @contextmanager
