@@ -47,7 +47,6 @@ class TestKubernetesStackAdapter(TestCase):
             test2large=AttributeDict(
                 namespace="default",
                 image="busybox:1.26.1",
-                label="busybox",
                 args=["sleep", "3600"],
                 hpa="True",
                 min_replicas="1",
@@ -62,7 +61,7 @@ class TestKubernetesStackAdapter(TestCase):
         kubernetes_hpa = self.mock_kubernetes_hpa.return_value
         spec = client.V1DeploymentSpec(
             replicas=1,
-            selector=client.V1LabelSelector(match_labels={"app": "busybox"}),
+            selector=client.V1LabelSelector(match_labels={"app": "testsite-089123"}),
             template=client.V1PodTemplateSpec(),
         )
         container = client.V1Container(
@@ -74,8 +73,8 @@ class TestKubernetesStackAdapter(TestCase):
             ),
         )
         spec.template.metadata = client.V1ObjectMeta(
-            name="busybox",
-            labels={"app": "busybox"},
+            name="testsite-089123",
+            labels={"app": "testsite-089123"},
         )
         spec.template.spec = client.V1PodSpec(containers=[container])
         self.body = client.V1Deployment(

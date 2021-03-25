@@ -71,13 +71,13 @@ class KubernetesAdapter(SiteAdapter):
         spec = k8s_client.V1DeploymentSpec(
             replicas=1,
             selector=k8s_client.V1LabelSelector(
-                match_labels={"app": self.machine_type_configuration.label}
+                match_labels={"app": resource_attributes.drone_uuid}
             ),
             template=k8s_client.V1PodTemplateSpec(),
         )
         spec.template.metadata = k8s_client.V1ObjectMeta(
-            name=self.machine_type_configuration.label,
-            labels={"app": self.machine_type_configuration.label},
+            name=resource_attributes.drone_uuid,
+            labels={"app": resource_attributes.drone_uuid},
         )
         container = k8s_client.V1Container(
             image=self.machine_type_configuration.image,
