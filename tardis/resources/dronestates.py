@@ -34,10 +34,7 @@ async def batchsystem_machine_status(
 async def check_demand(state_transition, drone: "Drone", current_state: Type[State]):
     if not drone.demand:
         drone._supply = 0.0
-        if current_state in (BootingState,):
-            raise StopProcessing(last_result=CleanupState())  # static state transition
-        else:
-            raise StopProcessing(last_result=DrainState())  # static state transition
+        raise StopProcessing(last_result=DrainState())  # static state transition
     return state_transition
 
 

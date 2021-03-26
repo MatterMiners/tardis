@@ -165,7 +165,7 @@ class TestDroneStates(TestCase):
         self.drone.demand = 0.0
         self.drone.state.return_value = BootingState()
         run_async(self.drone.state.return_value.run, self.drone)
-        self.assertIsInstance(self.drone.state, CleanupState)
+        self.assertIsInstance(self.drone.state, DrainState)
         self.assertEqual(self.drone._supply, 0.0)
 
     def test_integrate_state(self):
