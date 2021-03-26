@@ -1,0 +1,12 @@
+category: fixed
+summary: "Improves race issue during state transition of released drones in `BootingState`"
+description: |
+    Drones are sometimes removed after payload has started running (race issue). Instead of deleting drones in
+    `BootingState`, we would propose to execute a `condor_drain` first. Therefore, we changed the state transistions
+    from `BootingState` -> `CleanupState` by `BootingState`-> `DrainState`. Still we do not catch cases where the drone
+    is still in `BootingState`, while executing `condor_drain` and the `condor_status` update does not happen before
+    the `condor_rm` is executed. So it is just an improvement and not a fix of the race condition.
+pull requests:
+  - 181
+issues:
+  - 172
