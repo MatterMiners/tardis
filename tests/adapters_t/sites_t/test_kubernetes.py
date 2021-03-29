@@ -16,6 +16,7 @@ from kubernetes_asyncio import client
 class TestKubernetesStackAdapter(TestCase):
     mock_config_patcher = None
     mock_kubernetes_api_patcher = None
+    mock_kubernetes_hpa_patcher = None
 
     @classmethod
     def setUpClass(cls):
@@ -166,7 +167,7 @@ class TestKubernetesStackAdapter(TestCase):
 
     @patch("kubernetes_asyncio.client.rest.aiohttp")
     def test_resource_status(self, mocked_aiohttp):
-	    self.update_read_return(replicas=1, available_replicas=1)
+        self.update_read_return(replicas=1, available_replicas=1)
         self.assertEqual(
             run_async(
                 self.kubernetes_adapter.resource_status,
