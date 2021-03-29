@@ -122,10 +122,10 @@ class TestKubernetesStackAdapter(TestCase):
         kubernetes_api = self.mock_kubernetes_api.return_value
         kubernetes_api.read_namespaced_deployment.side_effect = exception
 
-    def update_read_return(self, replicas, unavailable_replicas):
+    def update_read_return(self, replicas, available_replicas):
         kubernetes_api = self.mock_kubernetes_api.return_value
         self.read_return_value.spec.replicas = replicas
-        self.read_return_value.status.unavailable_replicas = unavailable_replicas
+        self.read_return_value.status.available_replicas = available_replicas
         kubernetes_api.read_namespaced_deployment.return_value = async_return(
             return_value=self.read_return_value
         )
@@ -166,6 +166,7 @@ class TestKubernetesStackAdapter(TestCase):
 
     @patch("kubernetes_asyncio.client.rest.aiohttp")
     def test_resource_status(self, mocked_aiohttp):
+	    self.update_read_return(replicas=1, available_replicas=1)
         self.assertEqual(
             run_async(
                 self.kubernetes_adapter.resource_status,
@@ -182,7 +183,7 @@ class TestKubernetesStackAdapter(TestCase):
         self.mock_kubernetes_api.return_value.read_namespaced_deployment.assert_called_with(  # noqa: B950
             name="testsite-089123", namespace="default"
         )
-        self.update_read_return(replicas=0, unavailable_replicas=None)
+        self.update_read_return(replicas=0, available_replicas=1)
         self.assertEqual(
             run_async(
                 self.kubernetes_adapter.resource_status,
@@ -196,7 +197,7 @@ class TestKubernetesStackAdapter(TestCase):
                 resource_status=ResourceStatus.Stopped,
             ),
         )
-        self.update_read_return(replicas=1, unavailable_replicas=1)
+        self.update_read_return(replicas=1, available_replicas=None)
         self.assertEqual(
             run_async(
                 self.kubernetes_adapter.resource_status,

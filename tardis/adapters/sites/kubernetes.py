@@ -136,7 +136,7 @@ class KubernetesAdapter(SiteAdapter):
             if response_temp.spec.replicas == 0:
                 response_type = "Stopped"
             else:
-                if response_temp.status.unavailable_replicas is not None:
+                if response_temp.status.available_replicas is None:
                     response_type = "Booting"
                 else:
                     response_type = response_temp.status.conditions[0].type
