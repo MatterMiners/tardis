@@ -171,10 +171,14 @@ class KubernetesAdapter(SiteAdapter):
             ),
         )
         if self.machine_type_configuration.hpa:
-            await self.hpa_client.delete_namespaced_horizontal_pod_autoscaler(
-                name=resource_attributes.drone_uuid,
-                namespace=self.machine_type_configuration.namespace,
-            )
+            try:
+                await self.hpa_client.delete_namespaced_horizontal_pod_autoscaler(
+                    name=resource_attributes.drone_uuid,
+                    namespace=self.machine_type_configuration.namespace,
+                )
+            except K8SApiException as ex:
+                if ex.status != 404:
+                    raise
         return response
 
     @contextmanager
