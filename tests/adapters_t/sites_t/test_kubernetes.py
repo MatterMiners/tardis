@@ -131,6 +131,10 @@ class TestKubernetesStackAdapter(TestCase):
             return_value=self.read_return_value
         )
 
+    def update_delete_side_effect(self, exception):
+        kubernetes_api = self.mock_kubernetes_api.return_value
+        kubernetes_api.delete_namespaced_deployment.side_effect = exception
+
     def update_delete_hpa_side_effect(self, exception):
         kubernetes_hpa = self.mock_kubernetes_hpa.return_value
         kubernetes_hpa.delete_namespaced_horizontal_pod_autoscaler.side_effect = (
@@ -277,6 +281,13 @@ class TestKubernetesStackAdapter(TestCase):
                 propagation_policy="Foreground", grace_period_seconds=5
             ),
         )
+        self.update_delete_side_effect(exception=K8SApiException(status=500))
+        with self.assertRaises(K8SApiException):
+            run_async(
+                self.kubernetes_adapter.terminate_resource,
+                resource_attributes=AttributeDict(drone_uuid="testsite-089123"),
+            )
+        self.update_delete_side_effect(exception=None)
         self.update_delete_hpa_side_effect(exception=K8SApiException(status=500))
         with self.assertRaises(K8SApiException):
             run_async(

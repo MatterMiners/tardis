@@ -163,13 +163,18 @@ class KubernetesAdapter(SiteAdapter):
         return response
 
     async def terminate_resource(self, resource_attributes: AttributeDict):
-        response = await self.client.delete_namespaced_deployment(
-            name=resource_attributes.drone_uuid,
-            namespace=self.machine_type_configuration.namespace,
-            body=k8s_client.V1DeleteOptions(
-                propagation_policy="Foreground", grace_period_seconds=5
-            ),
-        )
+        response = None
+        try:
+            response = await self.client.delete_namespaced_deployment(
+                name=resource_attributes.drone_uuid,
+                namespace=self.machine_type_configuration.namespace,
+                body=k8s_client.V1DeleteOptions(
+                    propagation_policy="Foreground", grace_period_seconds=5
+                ),
+            )
+        except K8SApiException as ex:
+            if ex.status != 404:
+                raise
         if self.machine_type_configuration.hpa:
             try:
                 await self.hpa_client.delete_namespaced_horizontal_pod_autoscaler(
