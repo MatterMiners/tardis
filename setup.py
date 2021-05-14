@@ -12,7 +12,7 @@ with open(os.path.join(repo_base_dir, "tardis", "__about__.py")) as about_file:
 with open(os.path.join(repo_base_dir, "README.md"), "r") as read_me:
     long_description = read_me.read()
 
-TESTS_REQUIRE = ["flake8"]
+TESTS_REQUIRE = ["flake8", "httpx"]
 
 
 def get_cryptography_version():
@@ -80,7 +80,8 @@ setup(
         "pydantic",
         "asyncstdlib",
         "fastapi",
-        "uvicorn[server]",
+        "python-jose",
+        "uvicorn[standard]",
     ],
     extras_require={
         "docs": [
