@@ -30,7 +30,7 @@ and bind mount it to `/etc/condor/tokens.d`. HTCondor is automatically using the
 docker run -v $PWD/tokens.d:/etc/condor/tokens.d matterminers/cobald-tardis-htcondor:latest
 ```
 
-Since `COBald/TARDIS` uses the `condor_status` command, the token added needs the at least the `ALLOW_READ` privilege to 
+Since `COBald/TARDIS` uses the `condor_status` command, the token added needs at least the `ALLOW_READ` privilege to 
 access the HTCondor Collector and to query the status of resources.
 
 In addition, `COBalD/TARDIS` uses the `condor_drain` command to release under utilized resources. Therefore, a second 
