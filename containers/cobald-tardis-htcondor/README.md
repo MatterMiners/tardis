@@ -24,7 +24,7 @@ is also true for read-only operations like calling `condor_status`.
 This docker image supports the ID tokens authentication method introduced with the HTCondor 9.0 series. 
 
 In order to use ID tokens add any tokens provided by the operator of the overlay batch system to a `tokens.d` directory
-and bind mount it to `/etc/condor/tokens.d`. HTCondor is automatically uses these tokens to authenticate against the pool.
+and bind mount it to `/etc/condor/tokens.d`. HTCondor automatically uses these tokens to authenticate against the pool.
 
 ```bash
 docker run -v $PWD/tokens.d:/etc/condor/tokens.d matterminers/cobald-tardis-htcondor:latest

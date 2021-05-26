@@ -1,11 +1,11 @@
 pipeline:
-  - __type__: cobald.controller.linear.LinearController
+  - !LinearController
     low_utilisation: 0.90
     high_allocation: 0.90
     rate: 1
-  - __type__: cobald.decorator.limiter.Limiter
+  - !Limiter
     minimum: 1
-  - __type__: cobald.decorator.logger.Logger
+  - !Logger
     name: 'changes'
   - __type__: tardis.resources.poolfactory.create_composite_pool
 logging:
