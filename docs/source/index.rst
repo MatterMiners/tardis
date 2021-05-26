@@ -296,7 +296,7 @@ HTCondor Token Support
 
     Starting with the production release series 9.0, HTCondor introduces a new security configuration, which is no
     longer host-based. The security configuration is now user-based and requires authentication to access the HTCondor
-    pool. This is also true for read-only operations like calling `condor_status`. Therefore, this docker images
+    pool. This is also true for read-only operations such as `condor_status`. Therefore, this docker image
     supports the `IDTOKENS` authentication method introduced with the HTCondor 9.0 series.
 
     In order to use ID tokens, add any tokens provided by the operator of the overlay batch system to a `tokens.d`
