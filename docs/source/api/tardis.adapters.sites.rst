@@ -15,6 +15,7 @@ Submodules
    tardis.adapters.sites.cloudstack
    tardis.adapters.sites.fakesite
    tardis.adapters.sites.htcondor
+   tardis.adapters.sites.kubernetes
    tardis.adapters.sites.moab
    tardis.adapters.sites.openstack
    tardis.adapters.sites.slurm
