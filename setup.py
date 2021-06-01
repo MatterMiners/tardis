@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages
 import os
+import ssl
 
 repo_base_dir = os.path.abspath(os.path.dirname(__file__))
 
@@ -12,6 +13,14 @@ with open(os.path.join(repo_base_dir, "README.md"), "r") as read_me:
     long_description = read_me.read()
 
 TESTS_REQUIRE = ["flake8"]
+
+
+def get_cryptography_version():
+    if ssl.OPENSSL_VERSION_INFO < (1, 1, 0):
+        return "cryptography<3.2"  # to support openssl<1.1 (Centos 7)"
+    else:
+        return "cryptography"
+
 
 setup(
     name=package_about["__package__"],
@@ -53,7 +62,9 @@ setup(
     keywords=package_about["__keywords__"],
     packages=find_packages(exclude=["tests"]),
     install_requires=[
-        "aiohttp",
+        "aiohttp<4.0; python_version<'3.7'",  # to support python3.6 (Centos 7)
+        "aiohttp; python_version>='3.7'",
+        get_cryptography_version(),
         "CloudStackAIO",
         "PyYAML",
         "AsyncOpenStackClient",
