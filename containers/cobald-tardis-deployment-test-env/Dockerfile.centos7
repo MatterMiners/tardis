@@ -1,0 +1,16 @@
+FROM centos:7
+LABEL maintainer="Manuel Giffels <giffels@gmail.com>"
+
+RUN yum -y install epel-release curl && yum clean all
+
+RUN curl -sL https://rpm.nodesource.com/setup_12.x | bash -
+
+RUN yum -y update \
+    && yum -y install git \
+                      python3 \
+                      gcc \
+                      python3-devel \
+                      nodejs \
+    && yum clean all
+
+SHELL [ "/bin/bash", "--noprofile", "--norc", "-e", "-o", "pipefail", "-c" ]
