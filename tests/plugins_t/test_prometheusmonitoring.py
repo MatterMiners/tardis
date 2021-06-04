@@ -8,7 +8,7 @@ from unittest import TestCase
 from unittest.mock import Mock
 from unittest.mock import patch
 
-from ..utilities.utilities import run_async
+from ..utilities.utilities import get_free_port, run_async
 
 
 class TestPrometheusMonitoring(TestCase):
@@ -27,7 +27,7 @@ class TestPrometheusMonitoring(TestCase):
     def setUp(self):
         self.config = self.mock_config.return_value
         self.config.Plugins.PrometheusMonitoring.addr = "127.0.0.1"
-        self.config.Plugins.PrometheusMonitoring.port = 1234
+        self.config.Plugins.PrometheusMonitoring.port = get_free_port()
 
         self.plugin = PrometheusMonitoring()
 

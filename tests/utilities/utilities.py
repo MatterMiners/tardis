@@ -1,11 +1,20 @@
 from tardis.utilities.attributedict import AttributeDict
 import asyncio
+import socket
 
 
 def async_return(*args, return_value=None, **kwargs):
     f = asyncio.Future()
     f.set_result(return_value)
     return f
+
+
+def get_free_port():  # from https://gist.github.com/dbrgn/3979133
+    s = socket.socket()
+    s.bind(("", 0))
+    port = s.getsockname()[1]
+    s.close()
+    return port
 
 
 def mock_executor_run_command(stdout, stderr="", exit_code=0, raise_exception=None):
