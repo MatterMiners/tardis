@@ -1,0 +1,17 @@
+FROM ubuntu:18.04
+LABEL maintainer="Manuel Giffels <giffels@gmail.com>"
+
+RUN apt-get update && apt-get upgrade -y \
+    && apt-get install -y gcc g++ make curl dirmngr \
+    apt-transport-https lsb-release ca-certificates \
+    python3 python3-pip\
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -
+
+RUN apt-get install -y nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+SHELL [ "/bin/bash", "--noprofile", "--norc", "-e", "-o", "pipefail", "-c" ]

@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        os_container: ['centos7', 'centos8', 'ubuntu20_04']
+        os_container: ['centos7', 'centos8', 'ubuntu20_04', 'ubuntu18_04']
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
@@ -34,7 +34,7 @@ jobs:
     strategy:
       matrix:
         branches: ['master']
-        os_container: ['centos7', 'centos8', 'ubuntu20_04']
+        os_container: ['centos7', 'centos8', 'ubuntu20_04', 'ubuntu18_04']
     container: matterminers/cobald-tardis-deployment-test-env:${{ matrix.os_container }}
     steps:
       - uses: actions/checkout@v2
