@@ -1,4 +1,4 @@
-name: Deployment Tests
+name: Nightly Deployment Tests
 
 on:
   schedule:
@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        os_container: ['centos7', 'centos8']
+        os_container: ['centos7', 'centos8', 'ubuntu20_04']
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
@@ -23,16 +23,37 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
+          pull: true
+          cache-from: type=registry,ref=matterminers/cobald-tardis-deployment-test-env:${{ matrix.os_container }}
+          cache-to: type=inline
           file: containers/cobald-tardis-deployment-test-env/Dockerfile.${{ matrix.os_container }}
           tags: matterminers/cobald-tardis-deployment-test-env:${{ matrix.os_container }}
-  deployment:
+  deployment-linux:
     needs: docker-builds
     runs-on: ubuntu-latest
     strategy:
       matrix:
         branches: ['master']
-        os_container: ['centos7', 'centos8']
+        os_container: ['centos7', 'centos8', 'ubuntu20_04']
     container: matterminers/cobald-tardis-deployment-test-env:${{ matrix.os_container }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ matrix.branches }}
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install .[contrib]
+          pip install coverage codecov
+      - name: Test with unittest
+        run: |
+          coverage run -m unittest -v
+  deployment-macos:
+    strategy:
+      matrix:
+        platform: ['macos-11', 'macos-10.15']
+        branches: ['master']
+    runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v2
         with:
