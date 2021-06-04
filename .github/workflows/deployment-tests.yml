@@ -1,11 +1,14 @@
-name: Nightly Deployment Tests
+name: Deployment Tests
 
 on:
+  push:
+  pull_request:
   schedule:
     - cron: '0 0 * * *'
 
 jobs:
   docker-builds:
+    if: github.event.schedule
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -23,23 +26,19 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          pull: true
-          cache-from: type=registry,ref=matterminers/cobald-tardis-deployment-test-env:${{ matrix.os_container }}
-          cache-to: type=inline
           file: containers/cobald-tardis-deployment-test-env/Dockerfile.${{ matrix.os_container }}
           tags: matterminers/cobald-tardis-deployment-test-env:${{ matrix.os_container }}
   deployment-linux:
     needs: docker-builds
+    if: |
+      always() && (needs.docker-builds.result == 'success' || needs.docker-builds.result == 'skipped')
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        branches: ['master']
         os_container: ['centos7', 'centos8', 'ubuntu20_04', 'ubuntu18_04']
     container: matterminers/cobald-tardis-deployment-test-env:${{ matrix.os_container }}
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ matrix.branches }}
       - name: Install dependencies on ${{ matrix.os_container }}
         run: |
           python3 -m pip install --upgrade pip
@@ -52,12 +51,9 @@ jobs:
     strategy:
       matrix:
         platform: ['macos-11', 'macos-10.15']
-        branches: ['master']
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ matrix.branches }}
       - name: Install dependencies on ${{ matrix.platform }}
         run: |
           python3 -m pip install --upgrade pip
