@@ -30,8 +30,9 @@ jobs:
           tags: matterminers/cobald-tardis-deployment-test-env:${{ matrix.os_container }}
   deployment-linux:
     needs: docker-builds
-    if: |
-      always() && (needs.docker-builds.result == 'success' || needs.docker-builds.result == 'skipped')
+    if: always() && (needs.docker-builds.result == 'success' || needs.docker-builds.result == 'skipped')
+      # Needs to be commented when testing locally with act, since it is not yet supported.
+      # https://github.com/nektos/act/pull/629
     runs-on: ubuntu-latest
     strategy:
       matrix:
