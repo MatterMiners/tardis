@@ -8,7 +8,7 @@ on:
 
 jobs:
   docker-builds:
-    if: github.event.schedule
+    if: github.event.schedule && github.repository == 'MatterMiners/tardis'
     runs-on: ubuntu-latest
     strategy:
       matrix:
