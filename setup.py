@@ -87,6 +87,6 @@ setup(
     test_suite="tests",
     project_urls={
         "Bug Reports": "https://github.com/matterminers/tardis/issues",
-        "Source": "https://github.com/materminers/tardis",
+        "Source": "https://github.com/matterminers/tardis",
     },
 )
