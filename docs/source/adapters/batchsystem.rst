@@ -160,24 +160,33 @@ SLURM Batch System Adapter
     .. code-block:: yaml
 
         options:
-          partition: express
+          long:
+            partition: express
 
-    translates into ``sinfo ... --partition express``.
+    translates into ``sinfo ... --partition=express`` and
+
+    .. code-block:: yaml
+
+        options:
+          short:
+            p: express
+
+    to ``sinfo ... -p express``.
 
 Available configuration options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. content-tabs:: left-col
 
-    +----------------+-------------------------------------------------------------------+-----------------+
-    | Option         | Short Description                                                 | Requirement     |
-    +================+===================================================================+=================+
-    | adapter        | Name of the adapter (Slurm)                                       |  **Required**   |
-    +----------------+-------------------------------------------------------------------+-----------------+
-    | max_age        | Maximum age of the cached ``sinfo`` information in minutes        |  **Required**   |
-    +----------------+-------------------------------------------------------------------+-----------------+
-    | options        | Additional command line options to add to the ``sinfo`` command   |  **Optional**   |
-    +----------------+-------------------------------------------------------------------+-----------------+
+    +----------------+---------------------------------------------------------------------------------------------------------------------------+-----------------+
+    | Option         | Short Description                                                                                                         | Requirement     |
+    +================+===========================================================================================================================+=================+
+    | adapter        | Name of the adapter (Slurm)                                                                                               |  **Required**   |
+    +----------------+---------------------------------------------------------------------------------------------------------------------------+-----------------+
+    | max_age        | Maximum age of the cached ``sinfo`` information in minutes                                                                |  **Required**   |
+    +----------------+---------------------------------------------------------------------------------------------------------------------------+-----------------+
+    | options        | Additional command line options to add to the ``sinfo`` command. `long` and `short` arguments are supported (see example) |  **Optional**   |
+    +----------------+---------------------------------------------------------------------------------------------------------------------------+-----------------+
 
 .. content-tabs:: right-col
 
@@ -189,6 +198,7 @@ Available configuration options
             adapter: Slurm
             max_age: 1
             options:
+              long:
                 partition: express
 
 .. content-tabs:: left-col
