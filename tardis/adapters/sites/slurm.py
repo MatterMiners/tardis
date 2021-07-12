@@ -190,7 +190,7 @@ class SlurmAdapter(SiteAdapter):
             ),
             long=AttributeDict(
                 **sbatch_options.get("long", AttributeDict()),
-                mem=f"{self.machine_meta_data.Memory}gb",
+                mem=f"{int(self.machine_meta_data.Memory * 1000)}mb",
                 export=f"SLURM_Walltime={walltime},{drone_environment}",
             ),
         )
