@@ -151,7 +151,13 @@ SLURM Batch System Adapter
 
 .. content-tabs:: left-col
 
-    Additional options for the ``sinfo`` call can be added by using the ``options`` option.
+    Additional arguments for the ``sinfo`` call can be appended by adding the ``options`` MappingNode. This supports
+    both ``long`` and ``short`` arguments.
+
+    .. Note::
+
+        The alignment of colons in the examples to the right is a simple coincidence and for parsing ``yaml`` only the
+        indentation is crucial.
 
 .. content-tabs:: right-col
 
