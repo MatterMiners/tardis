@@ -157,18 +157,20 @@ class TestSlurmAdapter(TestCase):
         expected_resource_attributes.update(
             created=datetime.now(), updated=datetime.now()
         )
-        returned_resource_attributes = run_async(
-            self.slurm_adapter.deploy_resource,
-            resource_attributes=AttributeDict(
-                machine_type="test2large",
-                site_name="TestSite",
-                obs_machine_meta_data_translation_mapping=AttributeDict(
-                    Cores=1,
-                    Memory=1000,
-                    Disk=1000,
-                ),
-                drone_uuid="testsite-1390065",
+
+        resource_attributes = AttributeDict(
+            machine_type="test2large",
+            site_name="TestSite",
+            obs_machine_meta_data_translation_mapping=AttributeDict(
+                Cores=1,
+                Memory=1000,
+                Disk=1000,
             ),
+            drone_uuid="testsite-1390065",
+        )
+
+        returned_resource_attributes = run_async(
+            self.slurm_adapter.deploy_resource, resource_attributes
         )
 
         self.assertLess(
@@ -184,6 +186,26 @@ class TestSlurmAdapter(TestCase):
 
         self.mock_executor.return_value.run_command.assert_called_with(
             "sbatch -p normal -N 1 -n 20 -t 60 --mem=62000mb --export=SLURM_Walltime=60,TardisDroneCores=20,TardisDroneMemory=62000,TardisDroneDisk=100000,TardisDroneUuid=testsite-1390065 pilot.sh"  # noqa: B950
+        )
+
+        self.mock_executor.reset_mock()
+
+        self.test_site_config.MachineMetaData.test2large.Memory = 2.5
+
+        run_async(self.slurm_adapter.deploy_resource, resource_attributes)
+
+        self.mock_executor.return_value.run_command.assert_called_with(
+            "sbatch -p normal -N 1 -n 20 -t 60 --mem=2500mb --export=SLURM_Walltime=60,TardisDroneCores=20,TardisDroneMemory=2500,TardisDroneDisk=100000,TardisDroneUuid=testsite-1390065 pilot.sh"  # noqa: B950
+        )
+
+        self.mock_executor.reset_mock()
+
+        self.test_site_config.MachineMetaData.test2large.Memory = 2.546372129
+
+        run_async(self.slurm_adapter.deploy_resource, resource_attributes)
+
+        self.mock_executor.return_value.run_command.assert_called_with(
+            "sbatch -p normal -N 1 -n 20 -t 60 --mem=2546mb --export=SLURM_Walltime=60,TardisDroneCores=20,TardisDroneMemory=2546,TardisDroneDisk=100000,TardisDroneUuid=testsite-1390065 pilot.sh"  # noqa: B950
         )
 
     @mock_executor_run_command(TEST_DEPLOY_RESOURCE_RESPONSE)

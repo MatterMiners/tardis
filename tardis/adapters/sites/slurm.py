@@ -174,7 +174,9 @@ class SlurmAdapter(SiteAdapter):
         walltime = self.machine_type_configuration.Walltime
 
         drone_environment = ",".join(
-            f"TardisDrone{key}={value}"
+            f"TardisDrone{key}={int(value)}"
+            if isinstance(value, float)
+            else f"TardisDrone{key}={value}"
             for key, value in self.drone_environment(
                 drone_uuid, machine_meta_data_translation_mapping
             ).items()
@@ -190,6 +192,9 @@ class SlurmAdapter(SiteAdapter):
             ),
             long=AttributeDict(
                 **sbatch_options.get("long", AttributeDict()),
+                # slurm does not accept floating point variables for memory,
+                # therefore use internally megabytes and convert it to an integer
+                # to allow for request i.e. 2.5 GB in the machine meta data
                 mem=f"{int(self.machine_meta_data.Memory * 1000)}mb",
                 export=f"SLURM_Walltime={walltime},{drone_environment}",
             ),
