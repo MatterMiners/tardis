@@ -2,7 +2,9 @@ from ...configuration.configuration import Configuration
 from ...exceptions.executorexceptions import CommandExecutionFailure
 from ...interfaces.batchsystemadapter import BatchSystemAdapter
 from ...interfaces.batchsystemadapter import MachineStatus
+from ...interfaces.executor import Executor
 from ...utilities.executors.shellexecutor import ShellExecutor
+from ...utilities.utils import async_run_command
 from ...utilities.utils import htcondor_cmd_option_formatter
 from ...utilities.utils import csv_parser
 from ...utilities.asynccachemap import AsyncCacheMap
@@ -17,7 +19,7 @@ logger = logging.getLogger("cobald.runtime.tardis.adapters.batchsystem.htcondor"
 
 
 async def htcondor_status_updater(
-    options: AttributeDict, attributes: AttributeDict, executor=ShellExecutor
+    options: AttributeDict, attributes: AttributeDict, executor: Executor
 ) -> dict:
     """
     Helper function to call ``condor_status -af`` asynchronously and to translate
@@ -47,9 +49,9 @@ async def htcondor_status_updater(
 
     try:
         logger.debug(f"HTCondor status update is running. Command: {cmd}")
-        condor_status = await executor.run_command(cmd)
+        condor_status = await async_run_command(cmd, executor)
         for row in csv_parser(
-            input_csv=condor_status.stdout,
+            input_csv=condor_status,
             fieldnames=tuple(attributes.keys()),
             delimiter="\t",
             replacements=dict(undefined=None),
@@ -137,7 +139,7 @@ class HTCondorAdapter(BatchSystemAdapter):
             cmd = f"condor_drain -graceful {slot_name}"
 
         try:
-            return await self._executor.run_command(cmd)
+            return await async_run_command(cmd, self._executor)
         except CommandExecutionFailure as cef:
             if cef.exit_code == 1:
                 # exit code 1: HTCondor can't connect to StartD of Drone

@@ -39,7 +39,7 @@ class TestHTCondorAdapter(TestCase):
             "tardis.adapters.batchsystems.htcondor.Configuration"
         )
         cls.mock_executor_patcher = patch(
-            "tardis.adapters.batchsystems.slurm.ShellExecutor"
+            "tardis.adapters.batchsystems.htcondor.ShellExecutor"
         )
         cls.mock_executor = cls.mock_executor_patcher.start()
         cls.mock_config = cls.mock_config_patcher.start()
@@ -130,7 +130,7 @@ class TestHTCondorAdapter(TestCase):
 
         self.mock_executor.return_value.run_command.side_effect = None
 
-    @mock_executor_run_command(stdout=CONDOR_RETURN)
+    #  @mock_executor_run_command(stdout=CONDOR_RETURN)
     def test_drain_machine_without_options(self):
         self.setup_config_mock()
         self.htcondor_adapter = HTCondorAdapter()

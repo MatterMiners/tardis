@@ -12,7 +12,6 @@ from tardis.exceptions.executorexceptions import CommandExecutionFailure
 
 from functools import partial
 
-#  from unittest.mock import MagicMock, patch
 from unittest.mock import patch
 from unittest import TestCase
 
@@ -197,6 +196,7 @@ class TestSlurmAdapter(TestCase):
                         slurm_status_updater,
                         self.config.BatchSystem.options,
                         attributes,
+                        self.mock_executor.return_value,
                     )
                 )
                 self.mock_executor.return_value.run_command.assert_called_with(
