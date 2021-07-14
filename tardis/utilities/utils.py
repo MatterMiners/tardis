@@ -4,7 +4,7 @@ from ..exceptions.executorexceptions import CommandExecutionFailure
 from ..interfaces.executor import Executor
 
 from io import StringIO
-from typing import List, Tuple
+from typing import Any, List, Tuple, Type
 
 import csv
 import logging
@@ -131,3 +131,10 @@ def submit_cmd_option_formatter(options: AttributeDict) -> str:
             option_string += tmp_option_string
 
     return option_string.strip()
+
+
+def convert_to(value: Any, convert_to_type: Type, default: Any = None):
+    try:
+        return convert_to_type(value)
+    except ValueError:
+        return default

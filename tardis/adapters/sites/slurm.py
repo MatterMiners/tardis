@@ -9,8 +9,7 @@ from ...utilities.attributedict import AttributeDict
 from ...utilities.attributedict import convert_to_attribute_dict
 from ...utilities.executors.shellexecutor import ShellExecutor
 from ...utilities.asynccachemap import AsyncCacheMap
-from ...utilities.utils import csv_parser
-from ...utilities.utils import submit_cmd_option_formatter
+from ...utilities.utils import convert_to, csv_parser, submit_cmd_option_formatter
 
 from asyncio import TimeoutError
 from contextlib import contextmanager
@@ -174,9 +173,7 @@ class SlurmAdapter(SiteAdapter):
         walltime = self.machine_type_configuration.Walltime
 
         drone_environment = ",".join(
-            f"TardisDrone{key}={int(value)}"
-            if isinstance(value, float)
-            else f"TardisDrone{key}={value}"
+            f"TardisDrone{key}={convert_to(value, int, value)}"
             for key, value in self.drone_environment(
                 drone_uuid, machine_meta_data_translation_mapping
             ).items()
