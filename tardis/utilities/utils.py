@@ -4,7 +4,8 @@ from ..exceptions.executorexceptions import CommandExecutionFailure
 from ..interfaces.executor import Executor
 
 from io import StringIO
-from typing import Any, List, Tuple, Type
+from typing import Any, Callable, List, TypeVar, Tuple
+
 
 import csv
 import logging
@@ -133,7 +134,13 @@ def submit_cmd_option_formatter(options: AttributeDict) -> str:
     return option_string.strip()
 
 
-def convert_to(value: Any, convert_to_type: Type, default: Any = None):
+T = TypeVar("T")
+sentinel = object()
+
+
+def convert_to(
+    value: Any, convert_to_type: Callable[[Any], T], default: Any = sentinel
+) -> T:
     try:
         return convert_to_type(value)
     except ValueError:
