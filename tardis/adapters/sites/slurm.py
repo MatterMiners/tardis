@@ -9,8 +9,7 @@ from ...utilities.attributedict import AttributeDict
 from ...utilities.attributedict import convert_to_attribute_dict
 from ...utilities.executors.shellexecutor import ShellExecutor
 from ...utilities.asynccachemap import AsyncCacheMap
-from ...utilities.utils import csv_parser
-from ...utilities.utils import submit_cmd_option_formatter
+from ...utilities.utils import convert_to, csv_parser, submit_cmd_option_formatter
 
 from asyncio import TimeoutError
 from contextlib import contextmanager
@@ -174,7 +173,7 @@ class SlurmAdapter(SiteAdapter):
         walltime = self.machine_type_configuration.Walltime
 
         drone_environment = ",".join(
-            f"TardisDrone{key}={value}"
+            f"TardisDrone{key}={convert_to(value, int, value)}"
             for key, value in self.drone_environment(
                 drone_uuid, machine_meta_data_translation_mapping
             ).items()
@@ -190,7 +189,12 @@ class SlurmAdapter(SiteAdapter):
             ),
             long=AttributeDict(
                 **sbatch_options.get("long", AttributeDict()),
-                mem=f"{self.machine_meta_data.Memory}gb",
+                # slurm does not accept floating point variables for memory,
+                # therefore use internally megabytes and convert it to an integer
+                # to allow for request i.e. 2.5 GB in the machine meta data. According
+                # to http://cern.ch/go/x7p8 SLURM is using factors of 1024 to convert
+                # between memory units
+                mem=f"{int(self.machine_meta_data.Memory * 1024)}mb",
                 export=f"SLURM_Walltime={walltime},{drone_environment}",
             ),
         )

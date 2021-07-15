@@ -43,8 +43,8 @@ jobs:
       - name: Install dependencies on ${{ matrix.os_container }}
         run: |
           python3 -m pip install --upgrade pip
-          pip install .[contrib]
-          pip install coverage codecov
+          python3 -m pip install .[contrib]
+          python3 -m pip install coverage codecov
       - name: Test with unittest on ${{ matrix.os_container }}
         run: |
           coverage run -m unittest -v
@@ -58,8 +58,8 @@ jobs:
       - name: Install dependencies on ${{ matrix.platform }}
         run: |
           python3 -m pip install --upgrade pip
-          pip install .[contrib]
-          pip install coverage codecov
+          python3 -m pip install .[contrib]
+          python3 -m pip install coverage codecov
       - name: Test with unittest on ${{ matrix.platform }}
         run: |
           coverage run -m unittest -v
