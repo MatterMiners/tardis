@@ -4,7 +4,6 @@ from ...interfaces.batchsystemadapter import BatchSystemAdapter
 from ...interfaces.batchsystemadapter import MachineStatus
 from ...interfaces.executor import Executor
 from ...utilities.executors.shellexecutor import ShellExecutor
-from ...utilities.utils import async_run_command
 from ...utilities.utils import htcondor_cmd_option_formatter
 from ...utilities.utils import csv_parser
 from ...utilities.asynccachemap import AsyncCacheMap
@@ -49,9 +48,9 @@ async def htcondor_status_updater(
 
     try:
         logger.debug(f"HTCondor status update is running. Command: {cmd}")
-        condor_status = await async_run_command(cmd, executor)
+        condor_status = await executor.run_command(cmd)
         for row in csv_parser(
-            input_csv=condor_status,
+            input_csv=condor_status.stdout,
             fieldnames=tuple(attributes.keys()),
             delimiter="\t",
             replacements=dict(undefined=None),
@@ -139,7 +138,7 @@ class HTCondorAdapter(BatchSystemAdapter):
             cmd = f"condor_drain -graceful {slot_name}"
 
         try:
-            return await async_run_command(cmd, self._executor)
+            return await self._executor.run_command(cmd)
         except CommandExecutionFailure as cef:
             if cef.exit_code == 1:
                 # exit code 1: HTCondor can't connect to StartD of Drone

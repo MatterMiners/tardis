@@ -11,7 +11,6 @@ from ...exceptions.executorexceptions import CommandExecutionFailure
 from ...interfaces.batchsystemadapter import BatchSystemAdapter
 from ...interfaces.batchsystemadapter import MachineStatus
 from ...interfaces.executor import Executor
-from ...utilities.utils import async_run_command
 from ...utilities.utils import submit_cmd_option_formatter
 from ...utilities.utils import csv_parser
 from ...utilities.executors.shellexecutor import ShellExecutor
@@ -46,9 +45,9 @@ async def slurm_status_updater(
 
     try:
         logging.debug(f"SLURM status update is running. Command: {cmd}")
-        status = await async_run_command(cmd, executor)
+        status = await executor.run_command(cmd)
         for row in csv_parser(
-            input_csv=status,
+            input_csv=status.stdout,
             fieldnames=tuple(attributes.keys()),
             delimiter=" ",
             replacements=dict(undefined=None),
@@ -134,7 +133,7 @@ class SlurmAdapter(BatchSystemAdapter):
 
         cmd = f"scontrol update NodeName={machine} State=DRAIN Reason='COBalD/TARDIS'"
 
-        return await async_run_command(cmd, self._executor)
+        return await self._executor.run_command(cmd)
 
     async def integrate_machine(self, drone_uuid: str) -> None:
         """
