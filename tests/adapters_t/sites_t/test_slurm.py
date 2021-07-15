@@ -163,8 +163,8 @@ class TestSlurmAdapter(TestCase):
             site_name="TestSite",
             obs_machine_meta_data_translation_mapping=AttributeDict(
                 Cores=1,
-                Memory=1000,
-                Disk=1000,
+                Memory=1024,
+                Disk=1024,
             ),
             drone_uuid="testsite-1390065",
         )
@@ -185,7 +185,7 @@ class TestSlurmAdapter(TestCase):
         )
 
         self.mock_executor.return_value.run_command.assert_called_with(
-            "sbatch -p normal -N 1 -n 20 -t 60 --mem=62000mb --export=SLURM_Walltime=60,TardisDroneCores=20,TardisDroneMemory=62000,TardisDroneDisk=100000,TardisDroneUuid=testsite-1390065 pilot.sh"  # noqa: B950
+            "sbatch -p normal -N 1 -n 20 -t 60 --mem=63488mb --export=SLURM_Walltime=60,TardisDroneCores=20,TardisDroneMemory=63488,TardisDroneDisk=102400,TardisDroneUuid=testsite-1390065 pilot.sh"  # noqa: B950
         )
 
         self.mock_executor.reset_mock()
@@ -195,7 +195,7 @@ class TestSlurmAdapter(TestCase):
         run_async(self.slurm_adapter.deploy_resource, resource_attributes)
 
         self.mock_executor.return_value.run_command.assert_called_with(
-            "sbatch -p normal -N 1 -n 20 -t 60 --mem=2500mb --export=SLURM_Walltime=60,TardisDroneCores=20,TardisDroneMemory=2500,TardisDroneDisk=100000,TardisDroneUuid=testsite-1390065 pilot.sh"  # noqa: B950
+            "sbatch -p normal -N 1 -n 20 -t 60 --mem=2560mb --export=SLURM_Walltime=60,TardisDroneCores=20,TardisDroneMemory=2560,TardisDroneDisk=102400,TardisDroneUuid=testsite-1390065 pilot.sh"  # noqa: B950
         )
 
         self.mock_executor.reset_mock()
@@ -205,7 +205,7 @@ class TestSlurmAdapter(TestCase):
         run_async(self.slurm_adapter.deploy_resource, resource_attributes)
 
         self.mock_executor.return_value.run_command.assert_called_with(
-            "sbatch -p normal -N 1 -n 20 -t 60 --mem=2546mb --export=SLURM_Walltime=60,TardisDroneCores=20,TardisDroneMemory=2546,TardisDroneDisk=100000,TardisDroneUuid=testsite-1390065 pilot.sh"  # noqa: B950
+            "sbatch -p normal -N 1 -n 20 -t 60 --mem=2607mb --export=SLURM_Walltime=60,TardisDroneCores=20,TardisDroneMemory=2607,TardisDroneDisk=102400,TardisDroneUuid=testsite-1390065 pilot.sh"  # noqa: B950
         )
 
     @mock_executor_run_command(TEST_DEPLOY_RESOURCE_RESPONSE)
@@ -231,7 +231,7 @@ class TestSlurmAdapter(TestCase):
         )
 
         self.mock_executor.return_value.run_command.assert_called_with(
-            "sbatch -p normal -N 1 -n 20 -t 60 --gres=tmp:1G --mem=62000mb --export=SLURM_Walltime=60,TardisDroneCores=20,TardisDroneMemory=62000,TardisDroneDisk=100000,TardisDroneUuid=testsite-1390065 pilot.sh"  # noqa: B950
+            "sbatch -p normal -N 1 -n 20 -t 60 --gres=tmp:1G --mem=63488mb --export=SLURM_Walltime=60,TardisDroneCores=20,TardisDroneMemory=62000,TardisDroneDisk=100000,TardisDroneUuid=testsite-1390065 pilot.sh"  # noqa: B950
         )
 
     def test_machine_meta_data(self):

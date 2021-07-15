@@ -191,8 +191,10 @@ class SlurmAdapter(SiteAdapter):
                 **sbatch_options.get("long", AttributeDict()),
                 # slurm does not accept floating point variables for memory,
                 # therefore use internally megabytes and convert it to an integer
-                # to allow for request i.e. 2.5 GB in the machine meta data
-                mem=f"{int(self.machine_meta_data.Memory * 1000)}mb",
+                # to allow for request i.e. 2.5 GB in the machine meta data. According
+                # to http://cern.ch/go/x7p8 SLURM is using factors of 1024 to convert
+                # between memory units
+                mem=f"{int(self.machine_meta_data.Memory * 1024)}mb",
                 export=f"SLURM_Walltime={walltime},{drone_environment}",
             ),
         )
