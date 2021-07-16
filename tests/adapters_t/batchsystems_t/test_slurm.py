@@ -15,18 +15,16 @@ from functools import partial
 from unittest.mock import patch
 from unittest import TestCase
 
-SINFO_RETURN = "\n".join(
-    [
-        "mixed      2/2/0/4   6000    24000   VM-1   host-10-18-1-1",
-        "mixed      3/1/0/4   15853   22011   VM-2   host-10-18-1-2",
-        "mixed      1/3/0/4   18268   22011   VM-3   host-10-18-1-4",
-        "mixed      3/1/0/4   17803   22011   VM-4   host-10-18-1-7",
-        "draining   0/4/0/4   17803   22011   draining_m   draining_m",
-        "idle       0/4/0/4   17803   22011   idle_m   idle_m",
-        "drained    0/4/0/4   17803   22011   drained_m   drained_m",
-        "powerup    0/4/0/4   17803   22011   pwr_up_m   pwr_up_m",
-    ]
-)
+SINFO_RETURN = """\
+mixed      2/2/0/4   6000    24000   VM-1   host-10-18-1-1
+mixed      3/1/0/4   15853   22011   VM-2   host-10-18-1-2
+mixed      1/3/0/4   18268   22011   VM-3   host-10-18-1-4
+mixed      3/1/0/4   17803   22011   VM-4   host-10-18-1-7
+draining   0/4/0/4   17803   22011   draining_m   draining_m
+idle       0/4/0/4   17803   22011   idle_m   idle_m
+drained    0/4/0/4   17803   22011   drained_m   drained_m
+powerup    0/4/0/4   17803   22011   pwr_up_m   pwr_up_m\
+"""
 
 
 class TestSlurmAdapter(TestCase):
