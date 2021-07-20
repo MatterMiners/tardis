@@ -133,7 +133,7 @@ class SlurmAdapter(BatchSystemAdapter):
 
         cmd = f"scontrol update NodeName={machine} State=DRAIN Reason='COBalD/TARDIS'"
 
-        return await self._executor.run_command(cmd)
+        await self._executor.run_command(cmd)
 
     async def integrate_machine(self, drone_uuid: str) -> None:
         """

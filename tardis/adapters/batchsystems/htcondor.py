@@ -138,7 +138,7 @@ class HTCondorAdapter(BatchSystemAdapter):
             cmd = f"condor_drain -graceful {slot_name}"
 
         try:
-            return await self._executor.run_command(cmd)
+            await self._executor.run_command(cmd)
         except CommandExecutionFailure as cef:
             if cef.exit_code == 1:
                 # exit code 1: HTCondor can't connect to StartD of Drone
