@@ -1,0 +1,7 @@
+category: added
+summary: "Added support for executors in batchsystem adapters"
+description: |
+  Allows users to specify an executor (ShellExecutor or SSHExecutor, default is the first) for the Slurm and HTCondor
+  batch system adapters.
+pull requests:
+- 198
