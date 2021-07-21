@@ -1,0 +1,8 @@
+category: fixed
+summary: "Fixed pypy support of TARDIS"
+description: |
+  Refactoring the SQlite plugin code in order to fix the pypy support of TARDIS. Enabling unittests running on pypy.
+pull requests:
+- 180
+issues:
+- 179
