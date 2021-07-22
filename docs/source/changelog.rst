@@ -16,6 +16,7 @@ Added
 * An optional and per site configurable drone heartbeat interval has been added
 * Added support for executors in batchsystem adapters
 * Added a new site adapter to use Kubernetes clusters as resource provider
+* Added TARDIS docker iamges to matterminers@dockerhub
 
 Fixed
 -----
