@@ -22,6 +22,7 @@ Fixed
 
 * Fixed pypy support of TARDIS
 * Fixes a bug that get_resource_ratios raised a ValueError
+* Fixed installation issues on Centos 7
 * Fixes a bug that the drone_minimum_lifetime parameter is not working as described in the documentation
 * Fixes a bug in the HTCondor Site Adapter which leads to wrong requirements when using non HTCondor OBS
 
