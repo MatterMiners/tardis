@@ -12,9 +12,9 @@ CHANGELOG
 Added
 -----
 
-* Added support for executors in batchsystem adapters
 * Enable support for `msub` command line options in the Moab site adapter
 * An optional and per site configurable drone heartbeat interval has been added
+* Added support for executors in batchsystem adapters
 * Added a new site adapter to use Kubernetes clusters as resource provider
 
 Fixed
