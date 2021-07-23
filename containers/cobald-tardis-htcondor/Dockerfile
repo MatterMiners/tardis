@@ -17,7 +17,8 @@ RUN yum -y update \
                       python3-devel \
     && yum clean all
 
-RUN python3 -m pip install --no-cache-dir git+$SOURCE_REPO_URL@$SOURCE_BRANCH
+RUN python3 -m pip install --no-cache-dir --upgrade pip \
+    && python3 -m pip install --no-cache-dir git+$SOURCE_REPO_URL@$SOURCE_BRANCH
 
 WORKDIR /srv
 
