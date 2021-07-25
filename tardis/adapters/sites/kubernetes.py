@@ -15,6 +15,7 @@ import logging
 
 logger = logging.getLogger("cobald.runtime.tardis.adapters.sites.kubernetes")
 
+
 class KubernetesAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
         self._machine_type = machine_type
