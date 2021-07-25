@@ -267,6 +267,58 @@ Running your instance in Docker
 
         This path must contain a valid `cobald.yml` file. The persistent database will then be stored on the local machine.
 
+Running your instance using HTCondor as overlay batch system in Docker
+======================================================================
+
+.. content-tabs:: left-col
+
+    For your convenience and for systems without pre-compiled HTCondor support a ready to use docker container is
+    provided via Dockerhub.
+
+    You can configure ``COBalD``/``TARDIS`` as described in this documentation and bind mount the directory containing
+    the configuration into the containers `/srv` directory.
+
+    .. note::
+
+        This path must contain at least a valid `cobald.yml` file.
+
+.. content-tabs:: right-col
+
+    .. code-block::
+
+        docker run -v $PWD/configuration:/srv matterminers/cobald-tardis-htcondor:latest
+
+
+HTCondor Token Support
+----------------------
+
+.. content-tabs:: left-col
+
+    Starting with the production release series 9.0, HTCondor introduces a new security configuration, which is no
+    longer host-based. The security configuration is now user-based and requires authentication to access the HTCondor
+    pool. This is also true for read-only operations such as `condor_status`. Therefore, this docker image
+    supports the `IDTOKENS` authentication method introduced with the HTCondor 9.0 series.
+
+    In order to use ID tokens, add any tokens provided by the operator of the overlay batch system to a `tokens.d`
+    directory and bind mount it to `/etc/condor/tokens.d`. HTCondor is automatically using them to authenticate against
+    the pool.
+
+.. content-tabs:: right-col
+
+    .. code-block::
+
+        docker run -v $PWD/configuration:/srv -v $PWD/tokens.d:/etc/condor/tokens.d matterminers/cobald-tardis-htcondor:latest
+
+.. content-tabs:: left-col
+
+    .. note::
+        Since ``COBalD``/``TARDIS`` uses the `condor_status` command, the token added needs at least the `ALLOW_READ`
+        privilege to access the HTCondor Collector and to query the status of resources.
+
+        In addition, ``COBalD``/``TARDIS`` uses the `condor_drain` command to release under utilized resources.
+        Therefore, a second token to access the HTCondor StartD of the Drone is needed.
+
+        Usually, both tokens are provided by the operator of the HTCondor overlay batch system.
 
 Indices and tables
 ==================

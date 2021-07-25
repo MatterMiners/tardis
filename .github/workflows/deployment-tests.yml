@@ -1,0 +1,65 @@
+name: Deployment Tests
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  docker-builds:
+    if: github.event.schedule && github.repository == 'MatterMiners/tardis'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os_container: ['centos7', 'centos8', 'rockylinux8', 'ubuntu20_04', 'ubuntu18_04']
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          file: containers/cobald-tardis-deployment-test-env/Dockerfile.${{ matrix.os_container }}
+          tags: matterminers/cobald-tardis-deployment-test-env:${{ matrix.os_container }}
+  deployment-linux:
+    needs: docker-builds
+    if: always() && (needs.docker-builds.result == 'success' || needs.docker-builds.result == 'skipped')
+      # Needs to be commented when testing locally with act, since it is not yet supported.
+      # https://github.com/nektos/act/pull/629
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os_container: ['centos7', 'centos8', 'rockylinux8', 'ubuntu20_04', 'ubuntu18_04']
+    container: matterminers/cobald-tardis-deployment-test-env:${{ matrix.os_container }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies on ${{ matrix.os_container }}
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install .[contrib]
+          python3 -m pip install coverage codecov
+      - name: Test with unittest on ${{ matrix.os_container }}
+        run: |
+          coverage run -m unittest -v
+  deployment-macos:
+    strategy:
+      matrix:
+        platform: ['macos-10.15']
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies on ${{ matrix.platform }}
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install .[contrib]
+          python3 -m pip install coverage codecov
+      - name: Test with unittest on ${{ matrix.platform }}
+        run: |
+          coverage run -m unittest -v

@@ -1,33 +1,13 @@
 from .attributedict import AttributeDict
-from .executors.shellexecutor import ShellExecutor
-from ..exceptions.executorexceptions import CommandExecutionFailure
-from ..interfaces.executor import Executor
 
 from io import StringIO
-from typing import List, Tuple
+from typing import Any, Callable, List, TypeVar, Tuple
+
 
 import csv
 import logging
 
 logger = logging.getLogger("cobald.runtime.tardis.utilities.utils")
-
-
-async def async_run_command(
-    cmd: str, shell_executor: Executor = ShellExecutor()
-) -> str:
-    try:
-        response = await shell_executor.run_command(cmd)
-    except CommandExecutionFailure as ef:
-        # Potentially due to a Python bug, if waitpid(0) is called somewhere else,
-        # the message "WARNING:asyncio:Unknown child process pid 2960761,
-        # will report returncode 255 appears"
-        # However the command succeeded
-
-        if ef.exit_code == 255:
-            return ef.stdout
-        raise
-    else:
-        return response.stdout
 
 
 def cmd_option_formatter(options: AttributeDict, prefix: str, separator: str) -> str:
@@ -131,3 +111,16 @@ def submit_cmd_option_formatter(options: AttributeDict) -> str:
             option_string += tmp_option_string
 
     return option_string.strip()
+
+
+T = TypeVar("T")
+sentinel = object()
+
+
+def convert_to(
+    value: Any, convert_to_type: Callable[[Any], T], default: Any = sentinel
+) -> T:
+    try:
+        return convert_to_type(value)
+    except ValueError:
+        return default
