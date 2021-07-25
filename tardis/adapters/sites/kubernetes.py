@@ -11,6 +11,9 @@ from functools import partial
 from datetime import datetime
 from contextlib import contextmanager
 
+import logging
+
+logger = logging.getLogger("cobald.runtime.tardis.adapters.sites.kubernetes")
 
 class KubernetesAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
@@ -174,6 +177,7 @@ class KubernetesAdapter(SiteAdapter):
             )
         except K8SApiException as ex:
             if ex.status != 404:
+                logger.warning(f"deleting deployment failed")
                 raise
         if self.machine_type_configuration.hpa:
             try:
@@ -183,6 +187,7 @@ class KubernetesAdapter(SiteAdapter):
                 )
             except K8SApiException as ex:
                 if ex.status != 404:
+                    logger.warning(f"deleting hpa failed")
                     raise
         return response
 
