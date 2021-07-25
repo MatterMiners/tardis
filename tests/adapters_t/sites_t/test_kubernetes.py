@@ -27,7 +27,7 @@ class TestKubernetesStackAdapter(TestCase):
         )
         cls.mock_kubernetes_api = cls.mock_kubernetes_api_patcher.start()
         cls.mock_kubernetes_hpa_patcher = patch(
-            "tardis.adapters.sites.kubernetes.hpa_client.AutoscalingV1Api"
+            "tardis.adapters.sites.kubernetes.k8s_client.AutoscalingV1Api"
         )
         cls.mock_kubernetes_hpa = cls.mock_kubernetes_hpa_patcher.start()
 
