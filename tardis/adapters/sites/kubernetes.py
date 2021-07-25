@@ -177,7 +177,7 @@ class KubernetesAdapter(SiteAdapter):
             )
         except K8SApiException as ex:
             if ex.status != 404:
-                logger.warning(f"deleting deployment failed")
+                logger.warning(f"deleting deployment failed: {ex}")
                 raise
         if self.machine_type_configuration.hpa:
             try:
@@ -187,7 +187,7 @@ class KubernetesAdapter(SiteAdapter):
                 )
             except K8SApiException as ex:
                 if ex.status != 404:
-                    logger.warning(f"deleting hpa failed")
+                    logger.warning(f"deleting hpa failed: {ex}")
                     raise
         return response
 
