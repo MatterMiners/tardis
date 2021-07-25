@@ -309,4 +309,3 @@ class TestKubernetesStackAdapter(TestCase):
 
         for to_raise, to_catch in matrix:
             test_exception_handling(to_raise, to_catch)
-            
