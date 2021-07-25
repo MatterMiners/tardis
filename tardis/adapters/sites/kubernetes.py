@@ -56,14 +56,16 @@ class KubernetesAdapter(SiteAdapter):
 
     @property
     def hpa_client(self) -> k8s_client.AutoscalingV1Api:
-        if self.hpa_client is None:
+        if self._hpa_client is None:
             a_configuration = k8s_client.Configuration(
                 host=self.configuration.host,
                 api_key={"authorization": self.configuration.token},
             )
             a_configuration.api_key_prefix["authorization"] = "Bearer"
             a_configuration.verify_ssl = False
-            self._hpa_client = k8s_client.AutoscalingV1Api(k8s_client.ApiClient(a_configuration))
+            self._hpa_client = k8s_client.AutoscalingV1Api(
+                k8s_client.ApiClient(a_configuration)
+            )
         return self._hpa_client
 
     async def deploy_resource(
