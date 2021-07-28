@@ -146,6 +146,7 @@ class KubernetesAdapter(SiteAdapter):
                     response_type = response_temp.status.conditions[0].type
         except K8SApiException as ex:
             if ex.status != 404:
+                logger.warning(f"Retrieving deployment status failed: {ex}")
                 raise
             response_uid = resource_attributes.remote_resource_uuid
             response_name = resource_attributes.drone_uuid
