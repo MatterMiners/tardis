@@ -56,7 +56,7 @@ class TestKubernetesStackAdapter(TestCase):
             )
         )
         test_site_config.MachineMetaData = AttributeDict(
-            test2large=AttributeDict(Cores="2", Memory="400Mi")
+            test2large=AttributeDict(Cores=2, Memory=4)
         )
         kubernetes_api = self.mock_kubernetes_api.return_value
         kubernetes_hpa = self.mock_kubernetes_hpa.return_value
@@ -70,7 +70,7 @@ class TestKubernetesStackAdapter(TestCase):
             args=["sleep", "3600"],
             name="testsite-089123",
             resources=client.V1ResourceRequirements(
-                requests={"cpu": "2", "memory": "400Mi"}
+                requests={"cpu": 2, "memory": 4000000000}
             ),
         )
         spec.template.metadata = client.V1ObjectMeta(
@@ -166,7 +166,7 @@ class TestKubernetesStackAdapter(TestCase):
     def test_machine_meta_data(self):
         self.assertEqual(
             self.kubernetes_adapter.machine_meta_data,
-            AttributeDict(Cores="2", Memory="400Mi"),
+            AttributeDict(Cores=2, Memory=4),
         )
 
     def test_machine_type(self):

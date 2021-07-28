@@ -5,6 +5,7 @@ from ...interfaces.siteadapter import SiteAdapter
 from ...interfaces.siteadapter import ResourceStatus
 from ...utilities.attributedict import AttributeDict
 from ...utilities.staticmapping import StaticMapping
+from ...utilities.utils import convert_to
 
 from functools import partial
 from datetime import datetime
@@ -89,7 +90,7 @@ class KubernetesAdapter(SiteAdapter):
             resources=k8s_client.V1ResourceRequirements(
                 requests={
                     "cpu": self.machine_meta_data.Cores,
-                    "memory": self.machine_meta_data.Memory,
+                    "memory": convert_to(self.machine_meta_data.Memory * 1e09, int),
                 }
             ),
         )
