@@ -72,6 +72,11 @@ class TestKubernetesStackAdapter(TestCase):
             resources=client.V1ResourceRequirements(
                 requests={"cpu": 2, "memory": 4000000000}
             ),
+            env=[
+                client.V1EnvVar(name="TardisDroneCores", value="2"),
+                client.V1EnvVar(name="TardisDroneMemory", value="4096"),
+                client.V1EnvVar(name="TardisDroneUuid", value="testsite-089123"),
+            ],
         )
         spec.template.metadata = client.V1ObjectMeta(
             name="testsite-089123",
@@ -150,7 +155,11 @@ class TestKubernetesStackAdapter(TestCase):
             run_async(
                 self.kubernetes_adapter.deploy_resource,
                 resource_attributes=AttributeDict(
-                    drone_uuid="testsite-089123", remote_resource_uuid="123456"
+                    drone_uuid="testsite-089123",
+                    remote_resource_uuid="123456",
+                    obs_machine_meta_data_translation_mapping=AttributeDict(
+                        Cores=1, Memory=1024, Disk=1024 * 1024
+                    ),
                 ),
             ),
             AttributeDict(

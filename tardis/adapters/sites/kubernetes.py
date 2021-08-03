@@ -72,6 +72,11 @@ class KubernetesAdapter(SiteAdapter):
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
+        drone_environment = self.drone_environment(
+            resource_attributes.drone_uuid,
+            resource_attributes.obs_machine_meta_data_translation_mapping,
+        )
+
         spec = k8s_client.V1DeploymentSpec(
             replicas=1,
             selector=k8s_client.V1LabelSelector(
@@ -93,6 +98,10 @@ class KubernetesAdapter(SiteAdapter):
                     "memory": convert_to(self.machine_meta_data.Memory * 1e09, int),
                 }
             ),
+            env=[
+                k8s_client.V1EnvVar(name=f"TardisDrone{key}", value=str(value))
+                for key, value in drone_environment.items()
+            ],
         )
         spec.template.spec = k8s_client.V1PodSpec(containers=[container])
         body = k8s_client.V1Deployment(
