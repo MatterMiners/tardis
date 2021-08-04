@@ -70,7 +70,10 @@ class TestKubernetesStackAdapter(TestCase):
             args=["sleep", "3600"],
             name="testsite-089123",
             resources=client.V1ResourceRequirements(
-                requests={"cpu": 2, "memory": 4000000000}
+                requests={
+                    "cpu": test_site_config.MachineMetaData.test2large.Cores,
+                    "memory": test_site_config.MachineMetaData.test2large.Memory * 1e9,
+                }
             ),
             env=[
                 client.V1EnvVar(name="TardisDroneCores", value="2"),
