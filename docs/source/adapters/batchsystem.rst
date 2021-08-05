@@ -97,6 +97,8 @@ Available configuration options
 
 .. content-tabs:: left-col
 
+    .. |executor| replace:: :ref:`executor<ref_executors>`
+
     +----------------+-------------------------------------------------------------------------+-----------------+
     | Option         | Short Description                                                       | Requirement     |
     +================+=========================================================================+=================+
