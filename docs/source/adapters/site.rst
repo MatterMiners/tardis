@@ -59,6 +59,10 @@ Available configuration options
     * `MachineTypeMetaData` containing a MappingNode for each machine type specifying the amount of Cores, Memory and Disk
       available
 
+    .. note::
+        The amount of memory and disk space is always specified in units of Gigabytes (GB) in `TARDIS`. The amount of
+        cores is equivalent to the number of single core job slots provided by a machine.
+
 .. container:: content-tabs right-col
 
     .. rubric:: Example configuration
