@@ -5,6 +5,7 @@ from ...interfaces.siteadapter import SiteAdapter
 from ...interfaces.siteadapter import ResourceStatus
 from ...utilities.attributedict import AttributeDict
 from ...utilities.staticmapping import StaticMapping
+from ...utilities.utils import convert_to
 
 from functools import partial
 from datetime import datetime
@@ -71,6 +72,11 @@ class KubernetesAdapter(SiteAdapter):
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
+        drone_environment = self.drone_environment(
+            resource_attributes.drone_uuid,
+            resource_attributes.obs_machine_meta_data_translation_mapping,
+        )
+
         spec = k8s_client.V1DeploymentSpec(
             replicas=1,
             selector=k8s_client.V1LabelSelector(
@@ -89,9 +95,13 @@ class KubernetesAdapter(SiteAdapter):
             resources=k8s_client.V1ResourceRequirements(
                 requests={
                     "cpu": self.machine_meta_data.Cores,
-                    "memory": self.machine_meta_data.Memory,
+                    "memory": convert_to(self.machine_meta_data.Memory * 1e09, int),
                 }
             ),
+            env=[
+                k8s_client.V1EnvVar(name=f"TardisDrone{key}", value=str(value))
+                for key, value in drone_environment.items()
+            ],
         )
         spec.template.spec = k8s_client.V1PodSpec(containers=[container])
         body = k8s_client.V1Deployment(
@@ -145,6 +155,7 @@ class KubernetesAdapter(SiteAdapter):
                     response_type = response_temp.status.conditions[0].type
         except K8SApiException as ex:
             if ex.status != 404:
+                logger.warning(f"Retrieving deployment status failed: {ex}")
                 raise
             response_uid = resource_attributes.remote_resource_uuid
             response_name = resource_attributes.drone_uuid

@@ -56,7 +56,7 @@ class TestKubernetesStackAdapter(TestCase):
             )
         )
         test_site_config.MachineMetaData = AttributeDict(
-            test2large=AttributeDict(Cores="2", Memory="400Mi")
+            test2large=AttributeDict(Cores=2, Memory=4)
         )
         kubernetes_api = self.mock_kubernetes_api.return_value
         kubernetes_hpa = self.mock_kubernetes_hpa.return_value
@@ -70,8 +70,16 @@ class TestKubernetesStackAdapter(TestCase):
             args=["sleep", "3600"],
             name="testsite-089123",
             resources=client.V1ResourceRequirements(
-                requests={"cpu": "2", "memory": "400Mi"}
+                requests={
+                    "cpu": test_site_config.MachineMetaData.test2large.Cores,
+                    "memory": test_site_config.MachineMetaData.test2large.Memory * 1e9,
+                }
             ),
+            env=[
+                client.V1EnvVar(name="TardisDroneCores", value="2"),
+                client.V1EnvVar(name="TardisDroneMemory", value="4096"),
+                client.V1EnvVar(name="TardisDroneUuid", value="testsite-089123"),
+            ],
         )
         spec.template.metadata = client.V1ObjectMeta(
             name="testsite-089123",
@@ -150,7 +158,11 @@ class TestKubernetesStackAdapter(TestCase):
             run_async(
                 self.kubernetes_adapter.deploy_resource,
                 resource_attributes=AttributeDict(
-                    drone_uuid="testsite-089123", remote_resource_uuid="123456"
+                    drone_uuid="testsite-089123",
+                    remote_resource_uuid="123456",
+                    obs_machine_meta_data_translation_mapping=AttributeDict(
+                        Cores=1, Memory=1024, Disk=1024 * 1024
+                    ),
                 ),
             ),
             AttributeDict(
@@ -166,7 +178,7 @@ class TestKubernetesStackAdapter(TestCase):
     def test_machine_meta_data(self):
         self.assertEqual(
             self.kubernetes_adapter.machine_meta_data,
-            AttributeDict(Cores="2", Memory="400Mi"),
+            AttributeDict(Cores=2, Memory=4),
         )
 
     def test_machine_type(self):
@@ -237,14 +249,15 @@ class TestKubernetesStackAdapter(TestCase):
             ),
         )
         self.update_read_side_effect(exception=K8SApiException(status=500))
-        with self.assertRaises(K8SApiException):
-            run_async(
-                self.kubernetes_adapter.resource_status,
-                resource_attributes=AttributeDict(
-                    drone_uuid="testsite-089123", remote_resource_uuid="123456"
-                ),
-            )
-        self.update_read_side_effect(exception=None)
+        with self.assertLogs(level=logging.WARNING):
+            with self.assertRaises(K8SApiException):
+                run_async(
+                    self.kubernetes_adapter.resource_status,
+                    resource_attributes=AttributeDict(
+                        drone_uuid="testsite-089123", remote_resource_uuid="123456"
+                    ),
+                )
+            self.update_read_side_effect(exception=None)
 
     @patch("kubernetes_asyncio.client.rest.aiohttp")
     def test_stop_resource(self, mocked_aiohttp):
@@ -282,18 +295,20 @@ class TestKubernetesStackAdapter(TestCase):
             ),
         )
         self.update_delete_side_effect(exception=K8SApiException(status=500))
-        with self.assertRaises(K8SApiException):
-            run_async(
-                self.kubernetes_adapter.terminate_resource,
-                resource_attributes=AttributeDict(drone_uuid="testsite-089123"),
-            )
+        with self.assertLogs(level=logging.WARNING):
+            with self.assertRaises(K8SApiException):
+                run_async(
+                    self.kubernetes_adapter.terminate_resource,
+                    resource_attributes=AttributeDict(drone_uuid="testsite-089123"),
+                )
         self.update_delete_side_effect(exception=None)
         self.update_delete_hpa_side_effect(exception=K8SApiException(status=500))
-        with self.assertRaises(K8SApiException):
-            run_async(
-                self.kubernetes_adapter.terminate_resource,
-                resource_attributes=AttributeDict(drone_uuid="testsite-089123"),
-            )
+        with self.assertLogs(level=logging.WARNING):
+            with self.assertRaises(K8SApiException):
+                run_async(
+                    self.kubernetes_adapter.terminate_resource,
+                    resource_attributes=AttributeDict(drone_uuid="testsite-089123"),
+                )
         self.update_delete_hpa_side_effect(exception=None)
 
     def test_exception_handling(self):

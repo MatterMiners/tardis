@@ -573,7 +573,7 @@ Available machine type configuration options
           MachineMetaData:
             example:
               Cores: 2
-              Memory: 400Mi
+              Memory: 4
 
 .. content-tabs:: left-col
 
