@@ -2,7 +2,8 @@ category: fixed
 summary: "Fixed installation issues on Centos 7"
 description: |
   Pinned version of the cryptography package to support OpenSSL < 1.1.0 and aiohttp to support Python 3.6.
-pull requests:
-- 186
 issues:
 - 184
+pull requests:
+- 186
+version: 0.6.0

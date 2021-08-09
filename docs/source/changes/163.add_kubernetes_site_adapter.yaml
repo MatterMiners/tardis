@@ -4,6 +4,7 @@ description: |
   A new Kubernetes site adapter has been added to `TARDIS` using Kubernetes deployments to deploy Drone on Kubernetes
   clusters using its API.
 issues:
-  - 50
+- 50
 pull requests:
-  - 163
+- 163
+version: 0.6.0

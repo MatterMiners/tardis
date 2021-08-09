@@ -4,3 +4,4 @@ description: |
   TARDIS docker images have been added to simplify deployments and tests.
 pull requests:
 - 185
+version: 0.6.0

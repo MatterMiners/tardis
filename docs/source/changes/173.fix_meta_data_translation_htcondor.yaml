@@ -1,12 +1,14 @@
 category: fixed
-summary: "Fixes a bug in the HTCondor Site Adapter which leads to wrong requirements when using non HTCondor OBS"
+summary: "Fixes a bug in the HTCondor Site Adapter which leads to wrong requirements\
+  \ when using non HTCondor OBS"
 description: |
   The HTCondor Site Adapter takes a wrong `machine_meta_data_translation_mapping` into account in some circumstances.
   Due to a bug introduced in #157, the HTCondor Site Adapter uses the `machine_meta_data_translation_mapping` of the
   Batchsystem Adapter (OBS). In case the OBS is also HTCondor or the OBS has the same translations it does not have any
   affect. However, in case the OBS is using different units for memory and disk space --hence different translation
   mappings-- the requested Drones have wrong requirements.
-pull requests:
-  - 173
 issues:
-  - 170
+- 170
+pull requests:
+- 173
+version: 0.6.0

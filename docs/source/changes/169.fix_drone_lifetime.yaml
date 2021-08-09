@@ -1,11 +1,13 @@
 category: fixed
-summary: "Fixes a bug that the drone_minimum_lifetime parameter is not working as described in the documentation"
+summary: "Fixes a bug that the drone_minimum_lifetime parameter is not working as\
+  \ described in the documentation"
 description: |
-    The `drone_minimum_lifetime` parameter is not working as expected and described in the documentation.
-    `drone_minimum_lifetime` is meant to be a generic site parameter. However the code is trying to look it up in the
-    site adapter specific section of the configuration. Since default values are applied if the parameter is not
-    present, it remains probably unnoted by users.
-pull requests:
-  - 169
+  The `drone_minimum_lifetime` parameter is not working as expected and described in the documentation.
+  `drone_minimum_lifetime` is meant to be a generic site parameter. However the code is trying to look it up in the
+  site adapter specific section of the configuration. Since default values are applied if the parameter is not
+  present, it remains probably unnoted by users.
 issues:
-  - 167
+- 167
+pull requests:
+- 169
+version: 0.6.0

@@ -5,3 +5,4 @@ description: |
   Moab site adapter. `short` and `long` option are supported via yaml MappingNodes.
 pull requests:
 - 161
+version: 0.6.0
