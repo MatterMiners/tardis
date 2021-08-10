@@ -71,10 +71,11 @@ def machine_meta_data_translation(
     """
     Helper function to translate units of the machine_meta_data to match the
     units required by the overlay batch system
+
     :param machine_meta_data: Machine Meta Data (Cores, Memory, Disk)
     :param meta_data_translation_mapping: Map used for the translation of meta
            data, contains conversion factors
-    :return:
+    :return: Converted meta data with units expected by the OBS
     :rtype: dict
     """
     try:
