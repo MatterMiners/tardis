@@ -1,5 +1,5 @@
 category: added
-summary: "Added TARDIS docker iamges to matterminers@dockerhub"
+summary: "Added TARDIS docker images to matterminers@dockerhub"
 description: |
   TARDIS docker images have been added to simplify deployments and tests.
 pull requests:
