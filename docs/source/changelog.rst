@@ -1,4 +1,4 @@
-.. Created by changelog.py at 2021-08-09, command
+.. Created by changelog.py at 2021-08-10, command
    '/Users/giffler/.cache/pre-commit/repor6pnmwlm/py_env-python3.9/bin/changelog docs/source/changes compile --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
@@ -15,9 +15,9 @@ Added
 * Added support for Kubernetes horizontal pod autoscaler
 * Enable support for `msub` command line options in the Moab site adapter
 * An optional and per site configurable drone heartbeat interval has been added
-* Added support for executors in batchsystem adapters
+* Added support for executors in batch system adapters
 * Added a new site adapter to use Kubernetes clusters as resource provider
-* Added TARDIS docker iamges to matterminers@dockerhub
+* Added TARDIS docker images to matterminers@dockerhub
 
 Fixed
 -----

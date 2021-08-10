@@ -9,6 +9,7 @@ description: |
   mappings-- the requested Drones have wrong requirements.
 issues:
 - 170
+- 153
 pull requests:
 - 173
 version: 0.6.0
