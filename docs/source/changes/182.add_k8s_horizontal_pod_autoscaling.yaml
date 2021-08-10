@@ -1,0 +1,7 @@
+category: added
+summary: "Added support for Kubernetes horizontal pod autoscaler"
+description: |
+  Enable automated scaling of Kubernetes deployments using the horizontal pod autoscaler.
+pull requests:
+- 182
+version: 0.6.0

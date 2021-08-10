@@ -1,4 +1,4 @@
-.. Created by changelog.py at 2021-08-05, command
+.. Created by changelog.py at 2021-08-10, command
    '/Users/giffler/.cache/pre-commit/repor6pnmwlm/py_env-python3.9/bin/changelog docs/source/changes compile --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
@@ -6,18 +6,25 @@
 CHANGELOG
 #########
 
-[Unreleased] - 2021-08-05
-=========================
+[0.6.0] - 2021-08-09
+====================
 
 Added
 -----
 
+* Added support for Kubernetes horizontal pod autoscaler
+* Enable support for `msub` command line options in the Moab site adapter
 * An optional and per site configurable drone heartbeat interval has been added
+* Added support for executors in batch system adapters
+* Added a new site adapter to use Kubernetes clusters as resource provider
+* Added TARDIS docker images to matterminers@dockerhub
 
 Fixed
 -----
 
+* Fixed pypy support of TARDIS
 * Fixes a bug that get_resource_ratios raised a ValueError
+* Fixed installation issues on Centos 7
 * Fixes a bug that the drone_minimum_lifetime parameter is not working as described in the documentation
 * Fixes a bug in the HTCondor Site Adapter which leads to wrong requirements when using non HTCondor OBS
 
