@@ -9,14 +9,20 @@ import asyncio
 
 @service(flavour=asyncio)
 class RestService(object):
-    def __init__(self, secrets=None, **fast_api_args):
-        self._secrets = secrets or {}
+    def __init__(self, algorithm="HS256", secret_key=None, **fast_api_args):
+        self._algorithm = algorithm
+        self._secret_key = secret_key
         self._config = Config("tardis.rest.app:app", **fast_api_args)
 
     @property
     @lru_cache(maxsize=16)
-    def secrets(self):
-        return self._secrets
+    def algorithm(self):
+        return self._algorithm
+
+    @property
+    @lru_cache(maxsize=16)
+    def secret_key(self):
+        return self._secret_key
 
     async def run(self):
         await Server(config=self._config).serve()

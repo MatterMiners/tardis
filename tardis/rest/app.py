@@ -1,7 +1,9 @@
 from . import crud
 from . import database
+from . import security
 from ..plugins.sqliteregistry import SqliteRegistry
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query, Security
+
 
 app = FastAPI()
 
@@ -10,6 +12,7 @@ app = FastAPI()
 async def get_state(
     drone_uuid: str = Query(..., regex=r"^\S+-[A-Fa-f0-9]{10}$"),
     sql_registry: SqliteRegistry = Depends(database.get_sql_registry()),
+    _: str = Security(security.check_authorization, scopes=["user:read"]),
 ):
     query_result = await crud.get_resource_state(sql_registry, drone_uuid)
     try:
