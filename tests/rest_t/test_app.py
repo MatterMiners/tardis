@@ -63,7 +63,29 @@ class TestApp(TestCase):
 
         self.mock_crud.get_resource_state.return_value = async_return(return_value=[])
         response = run_async(
-            self.client.get, "/state/test-invalid", headers=self.headers
+            self.client.get, "/state/test-1234567890", headers=self.headers
         )
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {"detail": "Drone not found"})
+
+        response = run_async(
+            self.client.get, "/state/test-invalid", headers=self.headers
+        )
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(
+            response.json(),
+            {
+                "detail": [
+                    {
+                        "ctx": {"pattern": "^\\S+-[A-Fa-f0-9]{10}$"},
+                        "loc": ["path", "drone_uuid"],
+                        "msg": 'string does not match regex "^\\S+-[A-Fa-f0-9]{10}$"',
+                        "type": "value_error.str.regex",
+                    }
+                ]
+            },
+        )
+
+        response = run_async(self.client.get, "/state", headers=self.headers)
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json(), {"detail": "Not Found"})
