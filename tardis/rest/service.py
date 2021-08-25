@@ -9,7 +9,7 @@ import asyncio
 
 @service(flavour=asyncio)
 class RestService(object):
-    def __init__(self, algorithm="HS256", secret_key=None, **fast_api_args):
+    def __init__(self, secret_key, algorithm="HS256", **fast_api_args):
         self._algorithm = algorithm
         self._secret_key = secret_key
         self._config = Config("tardis.rest.app:app", **fast_api_args)
