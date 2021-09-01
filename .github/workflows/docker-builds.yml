@@ -17,7 +17,18 @@ jobs:
       - uses: actions/checkout@v2
       - name: Get containers to build
         id: get_containers
-        run: python3 -c 'import json; import os; os.chdir("containers"); print("::set-output name=containers::%s" % json.dumps([os.path.normpath(dirpath) for dirpath, dirnames, filenames in os.walk(".") if "Dockerfile" in filenames]))'
+        run: |
+           python3 -c '
+           import json
+           import pathlib
+           print(
+               "::set-output name=containers::%s"
+               % json.dumps([
+                       str(path.parent.relative_to("containers"))
+                       for path in pathlib.Path("containers").glob("**/Dockerfile")
+                   ]
+           ))
+           '
     outputs:
       containers: ${{ steps.get_containers.outputs.containers }}
 
