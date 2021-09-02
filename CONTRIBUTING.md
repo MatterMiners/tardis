@@ -10,6 +10,9 @@ and that means we try to chase every single bug.
 However, there is so little time in a day --
 so please help us help you!
 
+In case you find a security vulnerability, do *NOT* open an issue.
+Email matterminers@lists.kit.edu instead.
+
 * Avoid reporting issues that are already being worked on:
   * *Exclude version issues:*
     Test whether the issue also occurs with the most recent version of TARDIS.
