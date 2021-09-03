@@ -1,4 +1,0 @@
-#!/bin/bash
-SOURCE_REPO_URL=$(git remote get-url origin)
-SOURCE_REPO_HTTPS_URL=${SOURCE_REPO_URL/git@github.com:/https:\/\/github.com\/}
-docker build --build-arg SOURCE_BRANCH=$SOURCE_BRANCH --build-arg SOURCE_REPO_URL=${SOURCE_REPO_HTTPS_URL} -f $DOCKERFILE_PATH -t $IMAGE_NAME .
