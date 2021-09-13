@@ -80,7 +80,6 @@ def create_composite_pool(configuration: str = None) -> WeightedComposite:
                     Standardiser(
                         FactoryPool(*check_pointed_drones, factory=drone_factory),
                         minimum=cpu_cores,
-                        granularity=cpu_cores,
                     ),
                     name=f"{site.name.lower()}_{machine_type.lower()}",
                 )
