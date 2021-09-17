@@ -100,7 +100,7 @@ class TestPoolFactory(TestCase):
         self.assertEqual(
             mock_standardiser.mock_calls,
             [
-                call(mock_factory_pool(), minimum=cpu_cores, granularity=cpu_cores),
+                call(mock_factory_pool(), minimum=cpu_cores),
                 call(mock_weighted_composite(), maximum=self.config.Sites[0].quota),
             ],
         )
