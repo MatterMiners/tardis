@@ -140,7 +140,7 @@ class HTCondorAdapter(SiteAdapter):
             if (
                 self._htcondor_queue.last_update - resource_attributes.created
             ).total_seconds() < 0:
-                raise TardisResourceStatusUpdateFailed
+                raise TardisResourceStatusUpdateFailed from None
             else:
                 return AttributeDict(resource_status=ResourceStatus.Deleted)
         else:

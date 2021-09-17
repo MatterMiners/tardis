@@ -94,9 +94,9 @@ class CloudStackAdapter(SiteAdapter):
             yield
         except asyncio.TimeoutError as te:
             raise TardisTimeout from te
-        except ClientConnectionError:
+        except ClientConnectionError as err:
             logger.warning("Connection reset error")
-            raise TardisResourceStatusUpdateFailed
+            raise TardisResourceStatusUpdateFailed from err
         except CloudStackClientException as ce:
             log_msg = (
                 f"Error code: {ce.error_code}, error text: {ce.error_text}, "
@@ -104,7 +104,7 @@ class CloudStackAdapter(SiteAdapter):
             )
             if ce.error_code == 535:
                 logger.warning(f"Quota exceeded: {log_msg}")
-                raise TardisQuotaExceeded
+                raise TardisQuotaExceeded from ce
             elif ce.error_code == 500:
                 if "timed out" in ce.response["message"]:
                     logger.warning(f"Timed out: {log_msg}")

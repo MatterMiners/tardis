@@ -143,7 +143,7 @@ class SlurmAdapter(SiteAdapter):
                 # In case the created timestamp is after last update timestamp of the
                 # asynccachemap, no decision about the current state can be given,
                 # since map is updated asynchronously. Just retry later on.
-                raise TardisResourceStatusUpdateFailed
+                raise TardisResourceStatusUpdateFailed from None
             else:
                 resource_status = {
                     "JobID": resource_attributes.remote_resource_uuid,
@@ -209,7 +209,7 @@ class SlurmAdapter(SiteAdapter):
             yield
         except CommandExecutionFailure as ex:
             logger.warning("Execute command failed: %s" % str(ex))
-            raise TardisResourceStatusUpdateFailed
+            raise TardisResourceStatusUpdateFailed from ex
         except TardisResourceStatusUpdateFailed:
             raise
         except TimeoutError as te:

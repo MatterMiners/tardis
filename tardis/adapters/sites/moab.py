@@ -157,11 +157,11 @@ class MoabAdapter(SiteAdapter):
         try:
             resource_uuid = resource_attributes.remote_resource_uuid
             resource_status = self._moab_status[str(resource_uuid)]
-        except KeyError:
+        except KeyError as err:
             if (
                 self._moab_status._last_update - resource_attributes.created
             ).total_seconds() < 0:
-                raise TardisResourceStatusUpdateFailed
+                raise TardisResourceStatusUpdateFailed from err
             else:
                 resource_status = {
                     "JobID": resource_attributes.remote_resource_uuid,
@@ -234,7 +234,7 @@ class MoabAdapter(SiteAdapter):
             raise TardisTimeout from te
         except asyncssh.Error as exc:
             logger.warning("SSH connection failed: " + str(exc))
-            raise TardisResourceStatusUpdateFailed
+            raise TardisResourceStatusUpdateFailed from exc
         except IndexError as ide:
             raise TardisResourceStatusUpdateFailed from ide
         except TardisResourceStatusUpdateFailed:
