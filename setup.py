@@ -73,7 +73,7 @@ setup(
         "asyncssh",
         "aiotelegraf",
         "elasticsearch",
-        "aioprometheus",
+        "aioprometheus>=21.9.0",
         "kubernetes_asyncio",
         "pydantic",
     ],
