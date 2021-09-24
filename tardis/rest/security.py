@@ -24,7 +24,9 @@ oauth2_scheme = OAuth2PasswordBearer(
 )
 
 
-def create_access_token(user_name, scopes, expires_delta: Optional[timedelta] = None):
+def create_access_token(
+    user_name: str, scopes: List[str], expires_delta: Optional[timedelta] = None
+) -> str:
     to_encode = {"sub": user_name, "scopes": scopes}
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
@@ -36,7 +38,7 @@ def create_access_token(user_name, scopes, expires_delta: Optional[timedelta] = 
 
 def check_authorization(
     security_scopes: SecurityScopes, token: str = Depends(oauth2_scheme)
-):
+) -> TokenData:
     if security_scopes.scopes:
         authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
     else:
@@ -66,7 +68,7 @@ def check_authorization(
 
 
 @lru_cache(maxsize=1)
-def get_algorithm():
+def get_algorithm() -> str:
     try:
         rest_service = Configuration().Services.restapi
     except AttributeError:
@@ -76,7 +78,7 @@ def get_algorithm():
 
 
 @lru_cache(maxsize=1)
-def get_secret_key():
+def get_secret_key() -> str:
     try:
         rest_service = Configuration().Services.restapi
     except AttributeError:
