@@ -59,12 +59,12 @@ async def resource_status(state_transition, drone: "Drone", current_state: Type[
             await drone.site_agent.resource_status(drone.resource_attributes)
         )
         logger.debug(f"Resource attributes: {drone.resource_attributes}")
-    except (TardisAuthError, TardisTimeout, TardisResourceStatusUpdateFailed):
+    except (TardisAuthError, TardisTimeout, TardisResourceStatusUpdateFailed) as err:
         #  Retry to get current state of the resource
-        raise StopProcessing(last_result=current_state())
-    except TardisDroneCrashed:
+        raise StopProcessing(last_result=current_state()) from err
+    except TardisDroneCrashed as tdc:
         #  Try to cleanup crashed resources
-        raise StopProcessing(last_result=CleanupState())
+        raise StopProcessing(last_result=CleanupState()) from tdc
     else:
         return state_transition[drone.resource_attributes.resource_status]()
 

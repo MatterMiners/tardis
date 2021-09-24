@@ -105,14 +105,14 @@ class OpenStackAdapter(SiteAdapter):
             raise TardisTimeout from te
         except AuthError as ae:
             raise TardisAuthError from ae
-        except ContentTypeError:
+        except ContentTypeError as cte:
             logger.warning("OpenStack: content Type Error")
-            raise TardisResourceStatusUpdateFailed
-        except ClientError:
+            raise TardisResourceStatusUpdateFailed from cte
+        except ClientError as ce:
             logger.warning("REST client error")
-            raise TardisDroneCrashed
-        except ClientConnectionError:
+            raise TardisDroneCrashed from ce
+        except ClientConnectionError as cde:
             logger.warning("Connection reset error")
-            raise TardisResourceStatusUpdateFailed
+            raise TardisResourceStatusUpdateFailed from cde
         except Exception as ex:
             raise TardisError from ex
