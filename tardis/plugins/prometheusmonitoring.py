@@ -5,7 +5,8 @@ from ..interfaces.siteadapter import ResourceStatus
 from ..utilities.attributedict import AttributeDict
 
 import logging
-from aioprometheus import Service, Gauge
+from aioprometheus.service import Service
+from aioprometheus import Gauge
 
 logger = logging.getLogger("cobald.runtime.tardis.plugins.prometheusmonitoring")
 
@@ -36,7 +37,6 @@ class PrometheusMonitoring(Plugin):
         }
 
         for gauge in self._gauges.values():
-            self._svr.register(gauge)
             gauge.set({}, 0)
 
     async def start(self):
