@@ -25,13 +25,21 @@ oauth2_scheme = OAuth2PasswordBearer(
 
 
 def create_access_token(
-    user_name: str, scopes: List[str], expires_delta: Optional[timedelta] = None
+    user_name: str,
+    scopes: List[str],
+    expires_delta: Optional[timedelta] = None,
+    secret_key: Optional[str] = None,
+    algorithm: Optional[str] = None,
 ) -> str:
     to_encode = {"sub": user_name, "scopes": scopes}
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
         to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, get_secret_key(), algorithm=get_algorithm())
+    encoded_jwt = jwt.encode(
+        to_encode,
+        secret_key or get_secret_key(),
+        algorithm=algorithm or get_algorithm(),
+    )
 
     return encoded_jwt
 

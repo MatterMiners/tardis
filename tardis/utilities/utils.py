@@ -1,5 +1,6 @@
 from .attributedict import AttributeDict
 
+from contextlib import contextmanager
 from io import StringIO
 from typing import Any, Callable, List, TypeVar, Tuple
 
@@ -63,6 +64,13 @@ def csv_parser(
                 key: value if value not in replacements.keys() else replacements[value]
                 for key, value in row.items()
             }
+
+
+@contextmanager
+def disable_logging(level):
+    logging.disable(level)
+    yield
+    logging.disable(logging.NOTSET)
 
 
 def machine_meta_data_translation(

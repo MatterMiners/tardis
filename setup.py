@@ -50,6 +50,9 @@ setup(
         "Programming Language :: Python :: 3.10",
     ],
     entry_points={
+        "console_scripts": [
+            "generate_token = tardis.rest.token_generator.__main__:generate_token_cli"
+        ],
         "cobald.config.yaml_constructors": [
             "TardisPoolFactory = tardis.resources.poolfactory:create_composite_pool",
             "TardisPeriodicValue = tardis.utilities.simulators.periodicvalue:PeriodicValue",  # noqa: B950
@@ -82,6 +85,7 @@ setup(
         "fastapi",
         "python-jose",
         "uvicorn[standard]",
+        "typer",
     ],
     extras_require={
         "docs": [
