@@ -3,6 +3,7 @@ from ...utilities.utils import disable_logging
 from cobald.daemon.core.config import load
 
 from pathlib import Path
+from typing import List
 import logging
 import typer
 
@@ -11,7 +12,7 @@ def generate_token(
     user_name: str = typer.Option(
         ..., help="User name to include in the generated token"
     ),
-    scopes: list[str] = typer.Option(
+    scopes: List[str] = typer.Option(
         ["user:read"], help="Security scopes associated with the generated token"
     ),
     config_file: Path = typer.Option(
