@@ -35,7 +35,7 @@ class TestSecurity(TestCase):
         self.algorithm = "HS256"
 
         self.infinite_read_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0Iiwic2NvcGVzIjpbInVzZXI6cmVhZCJdfQ.qO2ikdmETwmK-mzsKUEIL1QA47LF-OgCXNssGIarPLM"  # noqa B950
-        self.limited_read_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0Iiwic2NvcGVzIjpbInVzZXI6cmVhZCJdLCJleHAiOjQ1MDB9.IaR0nQfwunu5KgJU-pLPFlAv1whq2nWIpF-qLvmZNDI"  # noqa B950
+        self.limited_read_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0Iiwic2NvcGVzIjpbInVzZXI6cmVhZCJdLCJleHAiOjkwMH0.rP-2IlCoEDTMeo5D70FuQ7jfLoQpRYSSAlU-zIIo2iw"  # noqa B950
         self.infinite_rw_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0Iiwic2NvcGVzIjpbInVzZXI6cmVhZCIsInVzZXI6d3JpdGUiXX0.vFUbHA5BFOCgWmjBWUTS5PRLDmKuvGmWk81_FtKFCA0"  # noqa B950
         config = self.mock_config.return_value
         config.Services.restapi.secret_key = self.secret_key
@@ -48,7 +48,6 @@ class TestSecurity(TestCase):
 
     @patch("tardis.rest.security.datetime")
     def test_create_access_token(self, mocked_datetime):
-        mocked_datetime.utcnow.return_value = datetime.fromtimestamp(0)
         self.clear_lru_cache()
 
         token = create_access_token(user_name="test", scopes=["user:read"])
@@ -69,6 +68,7 @@ class TestSecurity(TestCase):
         )
 
         self.clear_lru_cache()
+        mocked_datetime.utcnow.return_value = datetime.utcfromtimestamp(0)
         token = create_access_token(
             user_name="test",
             scopes=["user:read"],
