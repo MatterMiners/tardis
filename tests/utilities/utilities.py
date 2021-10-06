@@ -4,7 +4,8 @@ import socket
 
 
 def async_return(*args, return_value=None, **kwargs):
-    f = asyncio.Future()
+    loop = asyncio.get_event_loop_policy().get_event_loop()
+    f = loop.create_future()
     f.set_result(return_value)
     return f
 
@@ -36,5 +37,5 @@ def mock_executor_run_command(stdout, stderr="", exit_code=0, raise_exception=No
 
 
 def run_async(coroutine, *args, **kwargs):
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_event_loop_policy().get_event_loop()
     return loop.run_until_complete(coroutine(*args, **kwargs))
