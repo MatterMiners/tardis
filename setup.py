@@ -84,7 +84,7 @@ setup(
         "asyncstdlib",
         "fastapi",
         "python-jose",
-        "uvicorn[standard]",
+        "uvicorn[standard]<=0.14.0",  # to support python3.6 (Centos 7)
         "typer",
     ],
     extras_require={

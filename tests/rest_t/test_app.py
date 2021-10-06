@@ -1,3 +1,4 @@
+from tardis.rest.security import get_algorithm, get_secret_key
 from ..utilities.utilities import async_return, run_async
 
 from httpx import AsyncClient
@@ -41,6 +42,11 @@ class TestApp(TestCase):
     def tearDown(self) -> None:
         run_async(self.client.aclose)
 
+    @staticmethod
+    def clear_lru_cache():
+        get_algorithm.cache_clear()
+        get_secret_key.cache_clear()
+
     @property
     def headers(self):
         token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0YXJkaXMiLCJzY29wZXMiOlsidXNlcjpyZWFkIl19.l2xDqxEQOLYQq6cDX7RGDcT1XvyupRcBUpvvW1l4yeM"  # noqa B950
@@ -48,6 +54,7 @@ class TestApp(TestCase):
         return {"accept": "application/json", "Authorization": token}
 
     def test_get_state(self):
+        self.clear_lru_cache()
         self.mock_crud.get_resource_state.return_value = async_return(
             return_value=[{"drone_uuid": "test-0123456789", "state": "AvailableState"}]
         )
