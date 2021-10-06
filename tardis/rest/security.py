@@ -1,4 +1,5 @@
 from ..configuration.configuration import Configuration
+from ..exceptions.tardisexceptions import TardisError
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
@@ -80,7 +81,9 @@ def get_algorithm() -> str:
     try:
         rest_service = Configuration().Services.restapi
     except AttributeError:
-        pass
+        raise TardisError(
+            "TARDIS RestService not configured while accessing algorithm!"
+        ) from None
     else:
         return rest_service.algorithm
 
@@ -90,6 +93,8 @@ def get_secret_key() -> str:
     try:
         rest_service = Configuration().Services.restapi
     except AttributeError:
-        pass
+        raise TardisError(
+            "TARDIS RestService not configured while accessing secret_key!"
+        ) from None
     else:
         return rest_service.secret_key
