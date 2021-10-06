@@ -18,5 +18,5 @@ async def get_state(
     try:
         query_result = query_result[0]
     except IndexError:
-        raise HTTPException(status_code=404, detail="Drone not found")
+        raise HTTPException(status_code=404, detail="Drone not found") from None
     return query_result

@@ -57,12 +57,12 @@ def check_authorization(
         username: str = payload.get("sub")
         token_scopes = payload.get("scopes", [])
         token_data = TokenData(scopes=token_scopes, username=username)
-    except (JWTError, ValidationError):
+    except (JWTError, ValidationError) as err:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": authenticate_value},
-        )
+        ) from err
 
     for scope in security_scopes.scopes:
         if scope not in token_data.scopes:
@@ -70,7 +70,7 @@ def check_authorization(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Not enough permissions",
                 headers={"WWW-Authenticate": authenticate_value},
-            )
+            ) from None
 
     return token_data
 
