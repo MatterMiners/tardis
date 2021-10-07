@@ -11,6 +11,7 @@ RUN yum -y update \
                       gcc \
                       python38-devel \
                       nodejs \
+                      glibc-langpack-en \
     && yum clean all
 
 SHELL [ "/bin/bash", "--noprofile", "--norc", "-e", "-o", "pipefail", "-c" ]
