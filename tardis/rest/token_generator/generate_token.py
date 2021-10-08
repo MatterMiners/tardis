@@ -1,4 +1,4 @@
-from ..security import create_access_token
+from ..app.security import create_access_token
 from ...utilities.utils import disable_logging
 from cobald.daemon.core.config import load
 

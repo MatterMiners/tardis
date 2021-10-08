@@ -16,7 +16,7 @@ class RestService(object):
         # necessary to avoid that the TARDIS' logger configuration is overwritten!
         if "log_config" not in fast_api_args:
             fast_api_args["log_config"] = None
-        self._config = Config("tardis.rest.app:app", **fast_api_args)
+        self._config = Config("tardis.rest.app.main:app", **fast_api_args)
 
     @property
     @lru_cache(maxsize=16)

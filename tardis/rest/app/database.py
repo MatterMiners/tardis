@@ -1,4 +1,4 @@
-from ..plugins.sqliteregistry import SqliteRegistry
+from ...plugins.sqliteregistry import SqliteRegistry
 
 
 def get_sql_registry():

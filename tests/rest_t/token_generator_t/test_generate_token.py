@@ -1,5 +1,5 @@
 from tardis.rest.token_generator.generate_token import generate_token
-from tardis.rest.security import get_algorithm, get_secret_key
+from tardis.rest.app.security import get_algorithm, get_secret_key
 
 from typer.testing import CliRunner
 from typer import Typer
@@ -13,7 +13,7 @@ class TestGenerateToken(TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.mock_config_patcher = patch("tardis.rest.security.Configuration")
+        cls.mock_config_patcher = patch("tardis.rest.app.security.Configuration")
         cls.mock_config = cls.mock_config_patcher.start()
 
         cls.mock_cobald_config_loader_patcher = patch(

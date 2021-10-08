@@ -1,5 +1,5 @@
 from tardis.exceptions.tardisexceptions import TardisError
-from tardis.rest.security import (
+from tardis.rest.app.security import (
     create_access_token,
     check_authorization,
     get_algorithm,
@@ -21,7 +21,7 @@ class TestSecurity(TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.mock_config_patcher = patch("tardis.rest.security.Configuration")
+        cls.mock_config_patcher = patch("tardis.rest.app.security.Configuration")
         cls.mock_config = cls.mock_config_patcher.start()
 
     @classmethod
@@ -46,7 +46,7 @@ class TestSecurity(TestCase):
         get_algorithm.cache_clear()
         get_secret_key.cache_clear()
 
-    @patch("tardis.rest.security.datetime")
+    @patch("tardis.rest.app.security.datetime")
     def test_create_access_token(self, mocked_datetime):
         self.clear_lru_cache()
 
@@ -111,7 +111,7 @@ class TestSecurity(TestCase):
             self.assertEqual(he.exception.status_code, status.HTTP_401_UNAUTHORIZED)
             self.assertEqual(he.exception.detail, "Could not validate credentials")
 
-    @patch("tardis.rest.security.jwt")
+    @patch("tardis.rest.app.security.jwt")
     def test_check_authorization_jwt_error(self, mocked_jwt):
         mocked_jwt.decode.side_effect = JWTError
 

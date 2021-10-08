@@ -1,5 +1,5 @@
-from ..configuration.configuration import Configuration
-from ..exceptions.tardisexceptions import TardisError
+from ...configuration.configuration import Configuration
+from ...exceptions.tardisexceptions import TardisError
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
