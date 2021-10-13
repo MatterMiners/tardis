@@ -29,3 +29,22 @@ class TestRestService(TestCase):
     def test_algorithm(self):
         self.assertEqual(self.rest_service.algorithm, self.algorithm)
         self.assertEqual(RestService(secret_key=self.secret_key).algorithm, "HS256")
+
+    def test_get_user(self):
+        self.assertIsNone(self.rest_service.get_user(user_name="test"))
+
+        user = {
+            "user_name": "test",
+            "hashed_password": "1234abcd",
+            "scopes": ["user:read"],
+        }
+
+        rest_service = RestService(
+            algorithm=self.algorithm,
+            secret_key=self.secret_key,
+            users=[user],
+        )
+
+        self.assertEqual(rest_service.get_user(user_name="test"), user)
+
+        self.assertIsNone(rest_service.get_user(user_name="NotExists"))

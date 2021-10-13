@@ -86,6 +86,8 @@ setup(
         "python-jose",
         "uvicorn[standard]<=0.14.0",  # to support python3.6 (Centos 7)
         "typer",
+        "bcrypt",
+        "python-multipart",
     ],
     extras_require={
         "docs": [

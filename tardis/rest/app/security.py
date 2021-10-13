@@ -1,6 +1,7 @@
 from ...configuration.configuration import Configuration
 from ...exceptions.tardisexceptions import TardisError
 
+from bcrypt import checkpw, gensalt, hashpw
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from jose import JWTError, jwt
@@ -12,8 +13,17 @@ from typing import List, Optional
 
 
 class TokenData(BaseModel):
-    username: Optional[str] = None
+    user_name: Optional[str] = None
     scopes: List[str] = []
+
+
+class UserCredentials(BaseModel):
+    user_name: str
+    hashed_password: str
+    scopes: List[str]
+
+    class Config:
+        extra = "forbid"
 
 
 oauth2_scheme = OAuth2PasswordBearer(
@@ -55,9 +65,9 @@ def check_authorization(
 
     try:
         payload = jwt.decode(token, get_secret_key(), algorithms=[get_algorithm()])
-        username: str = payload.get("sub")
+        user_name: str = payload.get("sub")
         token_scopes = payload.get("scopes", [])
-        token_data = TokenData(scopes=token_scopes, username=username)
+        token_data = TokenData(scopes=token_scopes, user_name=user_name)
     except (JWTError, ValidationError) as err:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -74,6 +84,16 @@ def check_authorization(
             ) from None
 
     return token_data
+
+
+def check_authentication(user_name: str, password: str) -> UserCredentials:
+    user = get_user(user_name)
+    if not user:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+    if checkpw(password.encode(), user.hashed_password.encode()):
+        return user
+    else:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
 
 
 @lru_cache(maxsize=1)
@@ -98,3 +118,20 @@ def get_secret_key() -> str:
         ) from None
     else:
         return rest_service.secret_key
+
+
+@lru_cache(maxsize=16)
+def get_user(user_name: str) -> [None, UserCredentials]:
+    try:
+        rest_service = Configuration().Services.restapi
+    except AttributeError:
+        raise TardisError(
+            "TARDIS RestService not configured while accessing user credentials"
+        ) from None
+    else:
+        return rest_service.get_user(user_name)
+
+
+def hash_password(password: str) -> bytes:
+    salt = gensalt()
+    return hashpw(password.encode(), salt)
