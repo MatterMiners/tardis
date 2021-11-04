@@ -41,7 +41,6 @@ class TelegrafMonitoring(Plugin):
         :return: None
         """
         logger.debug(f"Drone: {str(resource_attributes)} has changed state to {state}")
-        await self.client.connect()
         data = dict(
             state=str(state),
             created=datetime.timestamp(resource_attributes.created),
@@ -51,5 +50,9 @@ class TelegrafMonitoring(Plugin):
             site_name=resource_attributes.site_name,
             machine_type=resource_attributes.machine_type,
         )
-        self.client.metric(self.metric, data, tags=tags)
-        await self.client.close()
+        try:
+            await self.client.connect()
+            self.client.metric(self.metric, data, tags=tags)
+            await self.client.close()
+        except OSError as e:
+            logger.warn(f"sending data to telegraf failed: {str(e)}")
