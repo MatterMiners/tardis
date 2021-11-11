@@ -26,6 +26,7 @@ class TelegrafMonitoring(Plugin):
         default_tags = dict(tardis_machine_name=platform.node())
         default_tags.update(getattr(config, "default_tags", {}))
         self.metric = getattr(config, "metric", "tardis_data")
+        self.skip_errors = getattr(config, "skip_errors", False)
 
         self.client = aiotelegraf.Client(host=host, port=port, tags=default_tags)
 
@@ -40,6 +41,12 @@ class TelegrafMonitoring(Plugin):
         :type resource_attributes: AttributeDict
         :return: None
         """
+
+        async def send(data: dict, tags: dict) -> None:
+            await self.client.connect()
+            self.client.metric(self.metric, data, tags=tags)
+            await self.client.close()
+
         logger.debug(f"Drone: {str(resource_attributes)} has changed state to {state}")
         data = dict(
             state=str(state),
@@ -50,9 +57,10 @@ class TelegrafMonitoring(Plugin):
             site_name=resource_attributes.site_name,
             machine_type=resource_attributes.machine_type,
         )
-        try:
-            await self.client.connect()
-            self.client.metric(self.metric, data, tags=tags)
-            await self.client.close()
-        except OSError as e:
-            logger.warn(f"sending data to telegraf failed: {str(e)}")
+        if self.skip_errors:
+            try:
+                await send(data, tags)
+            except OSError as e:
+                logger.warn(f"sending data to telegraf failed: {str(e)}")
+        else:
+            await send(data, tags)
