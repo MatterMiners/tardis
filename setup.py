@@ -74,7 +74,7 @@ setup(
         "CloudStackAIO",
         "PyYAML",
         "AsyncOpenStackClient",
-        "cobald>=0.12.1",
+        "cobald>=0.12.3",
         "asyncssh",
         "aiotelegraf",
         "elasticsearch",

@@ -1,5 +1,6 @@
 from .app.security import UserCredentials
 from cobald.daemon import service
+from cobald.daemon.plugins import yaml_tag
 
 from uvicorn.config import Config
 from uvicorn.server import Server
@@ -10,6 +11,7 @@ import asyncio
 
 
 @service(flavour=asyncio)
+@yaml_tag(eager=True)
 class RestService(object):
     def __init__(
         self,
