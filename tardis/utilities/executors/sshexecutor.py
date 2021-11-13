@@ -54,6 +54,7 @@ class SSHExecutor(Executor):
 
     @property
     def lock(self):
+        """Lock protecting the connection"""
         # Create lock once tardis event loop is running.
         # To avoid got Future <Future pending> attached to a different loop exception
         if self._lock is None:
@@ -75,8 +76,10 @@ class SSHExecutor(Executor):
                 stderr=pe.stderr,
             ) from pe
         except asyncssh.ChannelOpenError as coe:
-            # Broken connection will be replaced by a new connection during next call
-            self._ssh_connection = None
+            # clear broken connection to be replaced by a new connection during next run
+            async with self.lock:
+                if ssh_connection is self._ssh_connection:
+                    self._ssh_connection = None
             raise CommandExecutionFailure(
                 message=f"Could not run command {command} due to SSH failure: {coe}",
                 exit_code=255,
