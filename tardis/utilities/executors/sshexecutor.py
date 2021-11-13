@@ -5,6 +5,22 @@ from ..attributedict import AttributeDict
 
 import asyncio
 import asyncssh
+import asyncstdlib as a
+
+
+async def probe_max_session(connection: asyncssh.SSHClientConnection):
+    """
+    Probe the sshd `MaxSessions`, i.e. the multiplexing limit per connection
+    """
+    sessions = 0
+    async with a.ExitStack() as aes:
+        try:
+            while True:
+                await aes.enter_context(await connection.create_process())
+                sessions += 1
+        except asyncssh.ChannelOpenError:
+            pass
+    return sessions
 
 
 @enable_yaml_load("!SSHExecutor")
