@@ -1,3 +1,4 @@
+from typing import Optional
 from ...configuration.utilities import enable_yaml_load
 from ...exceptions.executorexceptions import CommandExecutionFailure
 from ...interfaces.executor import Executor
@@ -27,7 +28,10 @@ async def probe_max_session(connection: asyncssh.SSHClientConnection):
 class SSHExecutor(Executor):
     def __init__(self, **parameters):
         self._parameters = parameters
-        self._ssh_connection = None
+        # the current SSH connection or None if it must be (re-)established
+        self._ssh_connection: Optional[asyncssh.SSHClientConnection] = None
+        # the bound on MaxSession running concurrently
+        self._session_bound: Optional[asyncio.Semaphore] = None
         self._lock = None
 
     async def _establish_connection(self):
@@ -44,13 +48,26 @@ class SSHExecutor(Executor):
         return await asyncssh.connect(**self._parameters)
 
     @property
-    async def ssh_connection(self):
+    @a.contextmanager
+    async def bounded_connection(self):
+        """
+        Get the current connection with a single reserved session slot
+
+        This is a context manager that guards the current
+        :py:class:`~asyncssh.SSHClientConnection`
+        so that only `MaxSessions` commands run at once.
+        """
         if self._ssh_connection is None:
             async with self.lock:
-                # check that connection has not yet been initialize in a different task
+                # check that connection has not been initialized in a different task
                 while self._ssh_connection is None:
                     self._ssh_connection = await self._establish_connection()
-        return self._ssh_connection
+                    max_session = await probe_max_session(self._ssh_connection)
+                    self._session_bound = asyncio.Semaphore(value=max_session)
+        assert self._ssh_connection is not None
+        assert self._session_bound is not None
+        async with self._session_bound:
+            yield self._ssh_connection
 
     @property
     def lock(self):
@@ -62,33 +79,33 @@ class SSHExecutor(Executor):
         return self._lock
 
     async def run_command(self, command, stdin_input=None):
-        ssh_connection = await self.ssh_connection
-        try:
-            response = await ssh_connection.run(
-                command, check=True, input=stdin_input and stdin_input.encode()
-            )
-        except asyncssh.ProcessError as pe:
-            raise CommandExecutionFailure(
-                message=f"Run command {command} via SSHExecutor failed",
-                exit_code=pe.exit_status,
-                stdin=stdin_input,
-                stdout=pe.stdout,
-                stderr=pe.stderr,
-            ) from pe
-        except asyncssh.ChannelOpenError as coe:
-            # clear broken connection to be replaced by a new connection during next run
-            async with self.lock:
+        async with self.bounded_connection as ssh_connection:
+            try:
+                response = await ssh_connection.run(
+                    command, check=True, input=stdin_input and stdin_input.encode()
+                )
+            except asyncssh.ProcessError as pe:
+                raise CommandExecutionFailure(
+                    message=f"Run command {command} via SSHExecutor failed",
+                    exit_code=pe.exit_status,
+                    stdin=stdin_input,
+                    stdout=pe.stdout,
+                    stderr=pe.stderr,
+                ) from pe
+            except asyncssh.ChannelOpenError as coe:
+                # clear broken connection to get it replaced
+                # by a new connection during next command
                 if ssh_connection is self._ssh_connection:
                     self._ssh_connection = None
-            raise CommandExecutionFailure(
-                message=f"Could not run command {command} due to SSH failure: {coe}",
-                exit_code=255,
-                stdout="",
-                stderr="SSH Broken Connection",
-            ) from coe
-        else:
-            return AttributeDict(
-                stdout=response.stdout,
-                stderr=response.stderr,
-                exit_code=response.exit_status,
-            )
+                raise CommandExecutionFailure(
+                    message=f"Could not run command {command} due to SSH failure: {coe}",
+                    exit_code=255,
+                    stdout="",
+                    stderr="SSH Broken Connection",
+                ) from coe
+            else:
+                return AttributeDict(
+                    stdout=response.stdout,
+                    stderr=response.stderr,
+                    exit_code=response.exit_status,
+                )
