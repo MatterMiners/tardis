@@ -27,7 +27,7 @@ class UserCredentials(BaseModel):
 
 
 oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="token",
+    tokenUrl="login/access-token",
     scopes={
         "user:read": "Read access to database",
         "user:write": "Write access to database.",
