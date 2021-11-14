@@ -103,18 +103,16 @@ class TestSSHExecutor(TestCase):
         self.mock_asyncssh.connect.side_effect = None
 
     def test_connection_property(self):
-        async def helper_coroutine():
-            return await self.executor.ssh_connection
+        async def force_connection():
+            async with self.executor.bounded_connection as connection:
+                return connection
 
         self.assertIsNone(self.executor._ssh_connection)
-        run_async(helper_coroutine)
-
+        run_async(force_connection)
         self.assertIsInstance(self.executor._ssh_connection, MockConnection)
-
         current_ssh_connection = self.executor._ssh_connection
-
-        run_async(helper_coroutine)
-
+        run_async(force_connection)
+        # make sure the connection is not needlessly replaced
         self.assertEqual(self.executor._ssh_connection, current_ssh_connection)
 
     def test_lock(self):
