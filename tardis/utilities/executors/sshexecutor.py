@@ -66,8 +66,9 @@ class SSHExecutor(Executor):
                     self._session_bound = asyncio.Semaphore(value=max_session)
         assert self._ssh_connection is not None
         assert self._session_bound is not None
-        async with self._session_bound:
-            yield self._ssh_connection
+        bound, session = self._session_bound, self._ssh_connection
+        async with bound:
+            yield session
 
     @property
     def lock(self):
