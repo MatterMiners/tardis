@@ -98,7 +98,9 @@ class SSHExecutor(Executor):
                 if ssh_connection is self._ssh_connection:
                     self._ssh_connection = None
                 raise CommandExecutionFailure(
-                    message=f"Could not run command {command} due to SSH failure: {coe}",
+                    message=(
+                        f"Could not run command {command} due to SSH failure: {coe}"
+                    ),
                     exit_code=255,
                     stdout="",
                     stderr="SSH Broken Connection",
