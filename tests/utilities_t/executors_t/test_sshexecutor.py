@@ -11,6 +11,7 @@ from unittest.mock import patch
 import asyncio
 import yaml
 import contextlib
+import asyncstdlib as a
 
 
 class MockConnection(object):
@@ -22,7 +23,7 @@ class MockConnection(object):
     @contextlib.contextmanager
     def _multiplex_session(self):
         if self.current_sessions >= self.max_sessions:
-            raise ChannelOpenError(code=2, reason='open failed')
+            raise ChannelOpenError(code=2, reason="open failed")
         self.current_sessions += 1
         try:
             yield
@@ -30,12 +31,20 @@ class MockConnection(object):
             self.current_sessions -= 1
 
     async def run(self, command, input=None, **kwargs):
-        with self._multiplex_session:
+        with self._multiplex_session():
             if self.exception:
                 raise self.exception
             return AttributeDict(
                 stdout=input and input.decode(), stderr="TestError", exit_status=0
             )
+
+    async def create_process(self):
+        @a.contextmanager
+        async def fake_process():
+            with self._multiplex_session():
+                yield
+
+        return fake_process()
 
 
 class TestSSHExecutor(TestCase):
