@@ -1,6 +1,6 @@
 from tests.utilities.utilities import async_return, run_async
 from tardis.utilities.attributedict import AttributeDict
-from tardis.utilities.executors.sshexecutor import SSHExecutor
+from tardis.utilities.executors.sshexecutor import SSHExecutor, probe_max_session
 from tardis.exceptions.executorexceptions import CommandExecutionFailure
 
 from asyncssh import ChannelOpenError, ConnectionLost, DisconnectError, ProcessError
@@ -45,6 +45,18 @@ class MockConnection(object):
                 yield
 
         return fake_process()
+
+
+class TestSSHExecutorUtilities(TestCase):
+    def test_max_sessions(self):
+        with self.subTest(sessions="default"):
+            self.assertEqual(10, run_async(probe_max_session, MockConnection()))
+        for expected in (1, 9, 11, 20, 100):
+            with self.subTest(sessions=expected):
+                self.assertEqual(
+                    expected,
+                    run_async(probe_max_session, MockConnection(None, expected)),
+                )
 
 
 class TestSSHExecutor(TestCase):
