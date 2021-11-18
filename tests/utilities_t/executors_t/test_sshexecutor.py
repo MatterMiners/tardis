@@ -144,11 +144,11 @@ class TestSSHExecutor(TestCase):
         async def is_queued(n: int):
             """Check whether the n'th command runs is queued or immediately"""
             background = [
-                asyncio.create_task(self.executor.run_command("sleep 5"))
+                asyncio.ensure_future(self.executor.run_command("sleep 5"))
                 for _ in range(n - 1)
             ]
             # probe can only finish in time if it is not queued
-            probe = asyncio.create_task(self.executor.run_command("sleep 0.01"))
+            probe = asyncio.ensure_future(self.executor.run_command("sleep 0.01"))
             await asyncio.sleep(0.05)
             queued = not probe.done()
             for task in background + [probe]:
