@@ -6,7 +6,10 @@ from ..attributedict import AttributeDict
 
 import asyncio
 import asyncssh
-import asyncstdlib as a
+from asyncstdlib import (
+    ExitStack as AsyncExitStack,
+    contextmanager as asynccontextmanager,
+)
 
 
 async def probe_max_session(connection: asyncssh.SSHClientConnection):
@@ -18,7 +21,7 @@ async def probe_max_session(connection: asyncssh.SSHClientConnection):
     # - it should stay open without a separate task to manage it
     # - it should reliably and promptly clean up when done probing
     # `create_process` is a bit heavy but does all that.
-    async with a.ExitStack() as aes:
+    async with AsyncExitStack() as aes:
         try:
             while True:
                 await aes.enter_context(await connection.create_process())
@@ -52,7 +55,7 @@ class SSHExecutor(Executor):
         return await asyncssh.connect(**self._parameters)
 
     @property
-    @a.contextmanager
+    @asynccontextmanager
     async def bounded_connection(self):
         """
         Get the current connection with a single reserved session slot
