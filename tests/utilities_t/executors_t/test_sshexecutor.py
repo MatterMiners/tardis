@@ -34,6 +34,11 @@ class MockConnection(object):
         with self._multiplex_session():
             if self.exception:
                 raise self.exception
+            if command.startswith("sleep"):
+                _, duration = command.split()
+                await asyncio.sleep(float(duration))
+            elif command != "Test":
+                raise ValueError(f"Unsupported mock command: {command}")
             return AttributeDict(
                 stdout=input and input.decode(), stderr="TestError", exit_status=0
             )
