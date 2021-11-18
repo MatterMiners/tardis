@@ -14,6 +14,10 @@ async def probe_max_session(connection: asyncssh.SSHClientConnection):
     Probe the sshd `MaxSessions`, i.e. the multiplexing limit per connection
     """
     sessions = 0
+    # It does not actually matter what kind of session we open here, but:
+    # - it should stay open without a separate task to manage it
+    # - it should reliably and promptly clean up when done probing
+    # `create_process` is a bit heavy but does all that.
     async with a.ExitStack() as aes:
         try:
             while True:
