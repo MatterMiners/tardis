@@ -142,11 +142,12 @@ class TestSSHExecutor(TestCase):
         # There is no way to directly count how many "commands" are running at once:
         # if we do something "while" `run_command` is active, we don't know whether
         # it actually runs or is queued.
+        #
         # This approach exploits that MaxSessions queueing will start n=MaxSessions
         # commands immediately, but the n+1'th command will run `delay` seconds later.
         # As each command adds itself and then waits for `delay / 2` before removing
         # itself, there is a window of roughly [delay, delay * 1.5] during which all
-        # n sessions are counted.
+        # first n sessions are counted.
         # Note that for this to work, `delay` must be larger than `asyncio`'s task
         # switching speed.
         async def count_sessions():
