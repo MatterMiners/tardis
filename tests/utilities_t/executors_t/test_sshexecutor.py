@@ -14,8 +14,11 @@ import contextlib
 from asyncstdlib import contextmanager as asynccontextmanager
 
 
+DEFAULT_MAX_SESSIONS = 10
+
+
 class MockConnection(object):
-    def __init__(self, exception=None, __max_sessions=10, **kwargs):
+    def __init__(self, exception=None, __max_sessions=DEFAULT_MAX_SESSIONS, **kwargs):
         self.exception = exception and exception(**kwargs)
         self.max_sessions = __max_sessions
         self.current_sessions = 0
@@ -55,7 +58,9 @@ class MockConnection(object):
 class TestSSHExecutorUtilities(TestCase):
     def test_max_sessions(self):
         with self.subTest(sessions="default"):
-            self.assertEqual(10, run_async(probe_max_session, MockConnection()))
+            self.assertEqual(
+                DEFAULT_MAX_SESSIONS, run_async(probe_max_session, MockConnection())
+            )
         for expected in (1, 9, 11, 20, 100):
             with self.subTest(sessions=expected):
                 self.assertEqual(
