@@ -135,6 +135,38 @@ class TestSSHExecutor(TestCase):
     def test_lock(self):
         self.assertIsInstance(self.executor.lock, asyncio.Lock)
 
+    def test_connection_queueing(self):
+        async def max_sessions(tries: int):
+            return max(await asyncio.gather(*(count_sessions() for _ in range(tries))))
+
+        # There is no way to directly count how many "commands" are running at once:
+        # if we do something "while" `run_command` is active, we don't know whether
+        # it actually runs or is queued.
+        # This approach exploits that MaxSessions queueing will start n=MaxSessions
+        # commands immediately, but the n+1'th command will run `delay` seconds later.
+        # As each command adds itself and then waits for `delay / 2` before removing
+        # itself, there is a window of roughly [delay, delay * 1.5] during which all
+        # n sessions are counted.
+        # Note that for this to work, `delay` must be larger than `asyncio`'s task
+        # switching speed.
+        async def count_sessions():
+            nonlocal current_sessions
+            delay = 0.05
+            await self.executor.run_command(f"sleep {delay}")
+            current_sessions += 1
+            await asyncio.sleep(delay / 2)
+            count = current_sessions
+            current_sessions -= 1
+            return count
+
+        current_sessions = 0
+        for sessions in (1, 8, 12, 20):
+            with self.subTest(sessions=sessions):
+                self.assertEqual(
+                    min(sessions, 10),
+                    run_async(max_sessions, sessions),
+                )
+
     def test_run_command(self):
         self.assertIsNone(run_async(self.executor.run_command, command="Test").stdout)
         self.mock_asyncssh.connect.assert_called_with(
