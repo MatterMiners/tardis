@@ -11,7 +11,7 @@ from unittest.mock import patch
 import asyncio
 import yaml
 import contextlib
-import asyncstdlib as a
+from asyncstdlib import contextmanager as asynccontextmanager
 
 
 class MockConnection(object):
@@ -44,7 +44,7 @@ class MockConnection(object):
             )
 
     async def create_process(self):
-        @a.contextmanager
+        @asynccontextmanager
         async def fake_process():
             with self._multiplex_session():
                 yield
