@@ -141,36 +141,25 @@ class TestSSHExecutor(TestCase):
         self.assertIsInstance(self.executor.lock, asyncio.Lock)
 
     def test_connection_queueing(self):
-        async def max_sessions(tries: int):
-            return max(await asyncio.gather(*(count_sessions() for _ in range(tries))))
+        async def is_queued(n: int):
+            """Check whether the n'th command runs is queued or immediately"""
+            background = [
+                asyncio.create_task(self.executor.run_command("sleep 5"))
+                for _ in range(n - 1)
+            ]
+            # probe can only finish in time if it is not queued
+            probe = asyncio.create_task(self.executor.run_command("sleep 0.01"))
+            await asyncio.sleep(0.05)
+            queued = not probe.done()
+            for task in background + [probe]:
+                task.cancel()
+            return queued
 
-        # There is no way to directly count how many "commands" are running at once:
-        # if we do something "while" `run_command` is active, we don't know whether
-        # it actually runs or is queued.
-        #
-        # This approach exploits that MaxSessions queueing will start n=MaxSessions
-        # commands immediately, but the n+1'th command will run `delay` seconds later.
-        # As each command adds itself and then waits for `delay / 2` before removing
-        # itself, there is a window of roughly [delay, delay * 1.5] during which all
-        # first n sessions are counted.
-        # Note that for this to work, `delay` must be larger than `asyncio`'s task
-        # switching speed.
-        async def count_sessions():
-            nonlocal current_sessions
-            delay = 0.05
-            await self.executor.run_command(f"sleep {delay}")
-            current_sessions += 1
-            await asyncio.sleep(delay / 2)
-            count = current_sessions
-            current_sessions -= 1
-            return count
-
-        current_sessions = 0
-        for sessions in (1, 8, 12, 20):
+        for sessions in (1, 8, 10, 12, 20):
             with self.subTest(sessions=sessions):
                 self.assertEqual(
-                    min(sessions, 10),
-                    run_async(max_sessions, sessions),
+                    sessions > DEFAULT_MAX_SESSIONS,
+                    run_async(is_queued, sessions),
                 )
 
     def test_run_command(self):
