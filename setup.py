@@ -77,6 +77,7 @@ setup(
         "aioprometheus>=21.9.0",
         "kubernetes_asyncio",
         "pydantic",
+        "asyncstdlib",
     ],
     extras_require={
         "docs": [
