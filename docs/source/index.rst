@@ -14,6 +14,7 @@ Welcome to the TARDIS documentation!
    adapters/site
    executors/executors
    plugins/plugins
+   services/services
    CONTRIBUTING.md
    changelog
    Module Index <api/modules>
