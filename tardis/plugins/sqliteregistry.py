@@ -65,9 +65,10 @@ class SqliteRegistry(Plugin):
         tables = {
             "MachineTypes": [
                 "machine_type_id INTEGER PRIMARY KEY AUTOINCREMENT",
-                "machine_type VARCHAR(255) UNIQUE",
+                "machine_type VARCHAR(255)",
                 "site_id INTEGER",
                 "FOREIGN KEY(site_id) REFERENCES Sites(site_id)",
+                "CONSTRAINT unique_machine_type_per_site UNIQUE (machine_type, site_id)",  # noqa B950
             ],
             "Resources": [
                 "id INTEGER PRIMARY KEY AUTOINCREMENT,"

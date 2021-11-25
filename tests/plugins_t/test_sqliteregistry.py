@@ -16,9 +16,12 @@ import sqlite3
 
 
 class TestSqliteRegistry(TestCase):
+    mock_config_patcher = None
+
     @classmethod
     def setUpClass(cls):
         cls.test_site_name = "MyGreatTestSite"
+        cls.other_test_site_name = "MyOtherTestSite"
         cls.test_machine_type = "MyGreatTestMachineType"
         cls.tables_in_db = {"MachineTypes", "Resources", "ResourceStates", "Sites"}
         cls.test_resource_attributes = {
@@ -90,8 +93,11 @@ class TestSqliteRegistry(TestCase):
 
     def test_add_machine_types(self):
         registry = SqliteRegistry()
-        registry.add_site(self.test_site_name)
-        registry.add_machine_types(self.test_site_name, self.test_machine_type)
+        test_site_names = (self.test_site_name, self.other_test_site_name)
+
+        for site_name in test_site_names:
+            registry.add_site(site_name)
+            registry.add_machine_types(site_name, self.test_machine_type)
 
         with sqlite3.connect(self.test_db) as connection:
             cursor = connection.cursor()
@@ -99,8 +105,16 @@ class TestSqliteRegistry(TestCase):
                 """SELECT MachineTypes.machine_type, Sites.site_name FROM MachineTypes
                               JOIN Sites ON MachineTypes.site_id=Sites.site_id"""
             )
-            for row in cursor:
-                self.assertEqual(row, (self.test_machine_type, self.test_site_name))
+            machine_types = cursor.fetchall()
+
+            self.assertEqual(
+                len(test_site_names),
+                len(machine_types),
+                msg="Number of rows added to the database is different from the"
+                " numbers of rows retrieved from the database!",
+            )
+            for machine_type, site_name in zip(machine_types, test_site_names):
+                self.assertEqual(machine_type, (self.test_machine_type, site_name))
 
     def test_add_site(self):
         registry = SqliteRegistry()
