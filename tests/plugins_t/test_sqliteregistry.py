@@ -1,3 +1,5 @@
+import logging
+
 from tardis.resources.dronestates import BootingState
 from tardis.resources.dronestates import IntegrateState
 from tardis.resources.dronestates import DownState
@@ -91,21 +93,28 @@ class TestSqliteRegistry(TestCase):
         config.Sites = [AttributeDict(name=self.test_site_name)]
         getattr(config, self.test_site_name).MachineTypes = [self.test_machine_type]
 
+        self.registry = SqliteRegistry()
+
+    def execute_db_query(self, sql_query):
+        with sqlite3.connect(self.test_db) as connection:
+            cursor = connection.cursor()
+            cursor.execute(sql_query)
+
+            return cursor.fetchall()
+
     def test_add_machine_types(self):
-        registry = SqliteRegistry()
         test_site_names = (self.test_site_name, self.other_test_site_name)
 
         for site_name in test_site_names:
-            registry.add_site(site_name)
-            registry.add_machine_types(site_name, self.test_machine_type)
+            self.registry.add_site(site_name)
+            self.registry.add_machine_types(site_name, self.test_machine_type)
 
-        with sqlite3.connect(self.test_db) as connection:
-            cursor = connection.cursor()
-            cursor.execute(
-                """SELECT MachineTypes.machine_type, Sites.site_name FROM MachineTypes
-                              JOIN Sites ON MachineTypes.site_id=Sites.site_id"""
+        def check_db_content():
+            machine_types = self.execute_db_query(
+                sql_query="""SELECT MachineTypes.machine_type, Sites.site_name
+                             FROM MachineTypes
+                             JOIN Sites ON MachineTypes.site_id=Sites.site_id"""
             )
-            machine_types = cursor.fetchall()
 
             self.assertEqual(
                 len(test_site_names),
@@ -113,30 +122,52 @@ class TestSqliteRegistry(TestCase):
                 msg="Number of rows added to the database is different from the"
                 " numbers of rows retrieved from the database!",
             )
-            for machine_type, site_name in zip(machine_types, test_site_names):
-                self.assertEqual(machine_type, (self.test_machine_type, site_name))
+
+            self.assertListEqual(
+                [(self.test_machine_type, site_name) for site_name in test_site_names],
+                machine_types,
+            )
+
+        check_db_content()
+
+        with self.assertLogs(
+            logger="cobald.runtime.tardis.plugins.sqliteregistry", level=logging.DEBUG
+        ):
+            self.registry.add_machine_types(self.test_site_name, self.test_machine_type)
+
+        check_db_content()
 
     def test_add_site(self):
-        registry = SqliteRegistry()
-        registry.add_site(self.test_site_name)
+        test_site_names = (self.test_site_name, self.other_test_site_name)
+        self.registry.add_site(test_site_names[0])
 
-        with sqlite3.connect(self.test_db) as connection:
-            cursor = connection.cursor()
-            cursor.execute("SELECT site_name FROM Sites")
-            for row in cursor:
-                self.assertEqual(row[0], self.test_site_name)
+        def check_db_content():
+            for row, site_name in zip(
+                self.execute_db_query("SELECT site_name FROM Sites"), test_site_names
+            ):
+                self.assertEqual(row[0], site_name)
+
+        check_db_content()
+
+        with self.assertLogs(
+            logger="cobald.runtime.tardis.plugins.sqliteregistry", level=logging.DEBUG
+        ):
+            self.registry.add_site(test_site_names[0])
+
+        check_db_content()
+
+        self.registry.add_site(test_site_names[1])
+
+        check_db_content()
 
     def test_connect(self):
-        SqliteRegistry()
-
-        with sqlite3.connect(self.test_db) as connection:
-            cursor = connection.cursor()
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
-            created_tables = {
-                table_name[0]
-                for table_name in cursor.fetchall()
-                if table_name[0] != "sqlite_sequence"
-            }
+        created_tables = {
+            table_name[0]
+            for table_name in self.execute_db_query(
+                sql_query="SELECT name FROM sqlite_master WHERE type='table'"
+            )
+            if table_name[0] != "sqlite_sequence"
+        }
         self.assertEqual(created_tables, self.tables_in_db)
 
     def test_double_schema_deployment(self):
@@ -145,13 +176,12 @@ class TestSqliteRegistry(TestCase):
 
     @patch("tardis.plugins.sqliteregistry.logging", Mock())
     def test_get_resources(self):
-        registry = SqliteRegistry()
-        registry.add_site(self.test_site_name)
-        registry.add_machine_types(self.test_site_name, self.test_machine_type)
-        run_async(registry.notify, BootingState(), self.test_resource_attributes)
+        self.registry.add_site(self.test_site_name)
+        self.registry.add_machine_types(self.test_site_name, self.test_machine_type)
+        run_async(self.registry.notify, BootingState(), self.test_resource_attributes)
 
         self.assertListEqual(
-            registry.get_resources(
+            self.registry.get_resources(
                 site_name=self.test_site_name, machine_type=self.test_machine_type
             ),
             [self.test_get_resources_result],
@@ -159,43 +189,98 @@ class TestSqliteRegistry(TestCase):
 
     @patch("tardis.plugins.sqliteregistry.logging", Mock())
     def test_notify(self):
-        def fetch_row(db):
-            with sqlite3.connect(db) as connection:
-                cursor = connection.cursor()
-                cursor.execute(
-                    """SELECT R.remote_resource_uuid, R.drone_uuid, RS.state,
+        def fetch_all():
+            return self.execute_db_query(
+                sql_query="""SELECT R.remote_resource_uuid, R.drone_uuid, RS.state,
                 S.site_name, MT.machine_type, R.created, R.updated
                 FROM Resources R
                 JOIN ResourceStates RS ON R.state_id = RS.state_id
                 JOIN Sites S ON R.site_id = S.site_id
                 JOIN MachineTypes MT ON R.machine_type_id = MT.machine_type_id"""
-                )
-                return cursor.fetchone()
+            )
 
-        registry = SqliteRegistry()
-        registry.add_site(self.test_site_name)
-        registry.add_machine_types(self.test_site_name, self.test_machine_type)
+        self.registry.add_site(self.test_site_name)
+        self.registry.add_machine_types(self.test_site_name, self.test_machine_type)
 
-        run_async(registry.notify, BootingState(), self.test_resource_attributes)
+        run_async(self.registry.notify, BootingState(), self.test_resource_attributes)
 
-        self.assertEqual(self.test_notify_result, fetch_row(self.test_db))
+        self.assertEqual([self.test_notify_result], fetch_all())
+
+        with self.assertRaises(sqlite3.IntegrityError) as ie:
+            run_async(
+                self.registry.notify, BootingState(), self.test_resource_attributes
+            )
+        self.assertTrue("UNIQUE constraint failed" in str(ie.exception))
 
         run_async(
-            registry.notify, IntegrateState(), self.test_updated_resource_attributes
+            self.registry.notify,
+            IntegrateState(),
+            self.test_updated_resource_attributes,
         )
 
-        self.assertEqual(self.test_updated_notify_result, fetch_row(self.test_db))
+        self.assertEqual([self.test_updated_notify_result], fetch_all())
 
-        run_async(registry.notify, DownState(), self.test_updated_resource_attributes)
+        run_async(
+            self.registry.notify, DownState(), self.test_updated_resource_attributes
+        )
 
-        self.assertIsNone(fetch_row(self.test_db))
+        self.assertListEqual([], fetch_all())
+
+    def test_insert_resources(self):
+        def fetch_all():
+            return self.execute_db_query(
+                sql_query="""SELECT R.remote_resource_uuid, R.drone_uuid, RS.state,
+                S.site_name, MT.machine_type, R.created, R.updated
+                FROM Resources R
+                JOIN ResourceStates RS ON R.state_id = RS.state_id
+                JOIN Sites S ON R.site_id = S.site_id
+                JOIN MachineTypes MT ON R.machine_type_id = MT.machine_type_id"""
+            )
+
+        test_site_names = (self.test_site_name, self.other_test_site_name)
+        for site_name in test_site_names:
+            self.registry.add_site(site_name)
+            self.registry.add_machine_types(site_name, self.test_machine_type)
+
+        bind_parameters = dict(state="BootingState", **self.test_resource_attributes)
+
+        run_async(self.registry.insert_resource, bind_parameters)
+
+        self.assertListEqual([self.test_notify_result], fetch_all())
+
+        with self.assertRaises(sqlite3.IntegrityError) as ie:
+            run_async(self.registry.insert_resource, bind_parameters)
+        self.assertTrue("UNIQUE constraint failed" in str(ie.exception))
+
+        self.assertListEqual([self.test_notify_result], fetch_all())
+
+        # Test same remote_resource_uuids on different sites
+        bind_parameters = dict(state="BootingState", **self.test_resource_attributes)
+        bind_parameters["drone_uuid"] = f"{self.other_test_site_name}-045285abef1"
+        bind_parameters["site_name"] = self.other_test_site_name
+
+        run_async(self.registry.insert_resource, bind_parameters)
+
+        other_test_notify_result = (
+            self.test_resource_attributes["remote_resource_uuid"],
+            f"{self.other_test_site_name}-045285abef1",
+            str(BootingState()),
+            self.other_test_site_name,
+            self.test_resource_attributes["machine_type"],
+            str(self.test_resource_attributes["created"]),
+            str(self.test_resource_attributes["updated"]),
+        )
+
+        self.assertListEqual(
+            [self.test_notify_result, other_test_notify_result], fetch_all()
+        )
 
     def test_resource_status(self):
-        SqliteRegistry()
-
-        with sqlite3.connect(self.test_db) as connection:
-            cursor = connection.cursor()
-            cursor.execute("SELECT state FROM ResourceStates")
-            status = {row[0] for row in cursor.fetchall()}
+        status = {
+            row[0]
+            for row in self.execute_db_query(
+                sql_query="SELECT state FROM ResourceStates"
+            )
+        }
 
         self.assertEqual(status, {state for state in State.get_all_states()})
