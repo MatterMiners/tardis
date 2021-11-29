@@ -210,7 +210,7 @@ class TestSqliteRegistry(TestCase):
             run_async(
                 self.registry.notify, BootingState(), self.test_resource_attributes
             )
-        self.assertTrue("UNIQUE constraint failed" in str(ie.exception))
+        self.assertTrue("unique" in str(ie.exception).lower())
 
         run_async(
             self.registry.notify,
@@ -250,7 +250,7 @@ class TestSqliteRegistry(TestCase):
 
         with self.assertRaises(sqlite3.IntegrityError) as ie:
             run_async(self.registry.insert_resource, bind_parameters)
-        self.assertTrue("UNIQUE constraint failed" in str(ie.exception))
+        self.assertTrue("unique" in str(ie.exception).lower())
 
         self.assertListEqual([self.test_notify_result], fetch_all())
 
