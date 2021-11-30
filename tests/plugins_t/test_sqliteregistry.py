@@ -109,6 +109,8 @@ class TestSqliteRegistry(TestCase):
             self.registry.add_site(site_name)
             self.registry.add_machine_types(site_name, self.test_machine_type)
 
+        # Database content has to be checked several times
+        # Define inline function to re-use code
         def check_db_content():
             machine_types = self.execute_db_query(
                 sql_query="""SELECT MachineTypes.machine_type, Sites.site_name
@@ -141,6 +143,8 @@ class TestSqliteRegistry(TestCase):
         test_site_names = (self.test_site_name, self.other_test_site_name)
         self.registry.add_site(test_site_names[0])
 
+        # Database content has to be checked several times
+        # Define inline function to re-use code
         def check_db_content():
             for row, site_name in zip(
                 self.execute_db_query("SELECT site_name FROM Sites"), test_site_names
@@ -189,6 +193,8 @@ class TestSqliteRegistry(TestCase):
 
     @patch("tardis.plugins.sqliteregistry.logging", Mock())
     def test_notify(self):
+        # Database has to be queried multiple times
+        # Define inline function to re-use code
         def fetch_all():
             return self.execute_db_query(
                 sql_query="""SELECT R.remote_resource_uuid, R.drone_uuid, RS.state,
@@ -227,6 +233,8 @@ class TestSqliteRegistry(TestCase):
         self.assertListEqual([], fetch_all())
 
     def test_insert_resources(self):
+        # Database has to be queried multiple times
+        # Define inline function to re-use code
         def fetch_all():
             return self.execute_db_query(
                 sql_query="""SELECT R.remote_resource_uuid, R.drone_uuid, RS.state,
@@ -242,7 +250,8 @@ class TestSqliteRegistry(TestCase):
             self.registry.add_site(site_name)
             self.registry.add_machine_types(site_name, self.test_machine_type)
 
-        bind_parameters = dict(state="BootingState", **self.test_resource_attributes)
+        bind_parameters = {"state": "BootingState"}
+        bind_parameters.update(self.test_resource_attributes)
 
         run_async(self.registry.insert_resource, bind_parameters)
 
@@ -255,7 +264,8 @@ class TestSqliteRegistry(TestCase):
         self.assertListEqual([self.test_notify_result], fetch_all())
 
         # Test same remote_resource_uuids on different sites
-        bind_parameters = dict(state="BootingState", **self.test_resource_attributes)
+        bind_parameters = {"state": "BootingState"}
+        bind_parameters.update(self.test_resource_attributes)
         bind_parameters["drone_uuid"] = f"{self.other_test_site_name}-045285abef1"
         bind_parameters["site_name"] = self.other_test_site_name
 
