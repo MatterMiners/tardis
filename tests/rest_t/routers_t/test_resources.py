@@ -75,7 +75,7 @@ class TestResources(TestCaseRouters):
             return_value=full_expected_resources
         )
 
-        response = run_async(self.client.get, "/resources", headers=self.headers)
+        response = run_async(self.client.get, "/resources/", headers=self.headers)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json(),
