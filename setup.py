@@ -51,7 +51,8 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "generate_token = tardis.rest.token_generator.__main__:generate_token_cli"
+            "generate_token = tardis.rest.token_generator.__main__:generate_token_cli",
+            "hash_credentials = tardis.rest.hash_credentials.__main__:hash_credentials_cli",  # noqa: B950
         ],
         "cobald.config.yaml_constructors": [
             "TardisPoolFactory = tardis.resources.poolfactory:create_composite_pool",
