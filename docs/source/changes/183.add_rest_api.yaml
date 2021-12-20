@@ -1,0 +1,8 @@
+category: added
+summary: "Introduce a TARDIS REST API to query the state of resources from SqlRegistry"
+description: |
+  Introduction of a REST API to query the state of resources from the SqlRegistry. The REST API is using the FastApi 
+  framework in combination with an uvicorn ASGI server. JSON Web Token and OAuth2 scopes are supported for 
+  authentication and authorization.
+pull requests:
+- 183

@@ -9,6 +9,11 @@ CHANGELOG
 [Unreleased] - 2021-12-20
 =========================
 
+Added
+-----
+
+* Introduce a TARDIS REST API to query the state of resources from SqlRegistry
+
 Changed
 -------
 
