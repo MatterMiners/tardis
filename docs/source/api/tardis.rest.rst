@@ -13,6 +13,7 @@ Subpackages
    :maxdepth: 4
 
    tardis.rest.app
+   tardis.rest.hash_credentials
    tardis.rest.token_generator
 
 Submodules
