@@ -1,4 +1,4 @@
-from typing import TypeVar, Generic, Protocol, Iterable, List, Tuple, Optional
+from typing import TypeVar, Generic, Protocol, Iterable, List, Tuple, Optional, Union
 import asyncio
 import time
 import sys
@@ -42,6 +42,23 @@ class BulkExecution(Generic[T, R]):
     :param bulk_delay: maximum age in seconds of tasks before executing them
     :param concurrent: how often the `command` may be executed at the same time
 
+    Each :py:class:`~.BulkExecution` represents a different ``command``
+    (for example, ``rm`` and ``mkdir``) collecting similar tasks (for example,
+    ``rm foo`` and ``rm bar`` to ``rm foo bar``). The ``command`` is an arbitrary
+    async callable and can freely decide how to handle its tasks. The
+    :py:class:`~.BulkExecution` takes care of collecting individual tasks,
+    partitioning them to bulks, and translating the results of bulk execution
+    back to individual tasks.
+
+    Both ``bulk_size`` and ``bulk_delay`` control how long to queue tasks at most
+    before starting to execute them. The ``concurrent`` parameter controls whether
+    and how many bulks may run at once; when concurrency is low or disabled, tasks
+    may be waiting for execution even past ``bulk_size`` and ``bulk_delay``.
+    Possible values for ``concurrent`` are
+    :py:data:`False` (no concurrency, only one ``command`` at once),
+    either of :py:data:`True` or :py:data:`None` (unlimited concurrency),
+    or an integer above 0 to set a precise concurrency limit.
+
     .. note::
 
         If the ``command`` requires additional arguments,
@@ -53,13 +70,23 @@ class BulkExecution(Generic[T, R]):
         command: BulkCommand[T, R],
         bulk_size: int,
         bulk_delay: float,
-        concurrent: Optional[int] = None,
+        concurrent: Union[int, bool, None] = True,
     ):
         self._command = command
         self._bulk_size = bulk_size
         self._bulk_delay = bulk_delay
         # synchronized counter for active commands
-        self._concurrent = asyncio.Semaphore(value=concurrent or sys.maxsize)
+        if concurrent is False:
+            self._concurrent = asyncio.BoundedSemaphore(value=1)
+        elif concurrent is None or concurrent is True:
+            self._concurrent = asyncio.BoundedSemaphore(value=sys.maxsize)
+        elif not isinstance(concurrent, int) or concurrent <= 0:
+            raise ValueError(
+                "'concurrent' must be one of True, False, None or an integer above 0"
+                f", got {concurrent} instead"
+            )
+        else:
+            self._concurrent = asyncio.Semaphore(value=concurrent)
         # queue of outstanding tasks
         self._queue_ = None
         # task handling dispatch from queue to command execution
@@ -79,10 +106,12 @@ class BulkExecution(Generic[T, R]):
         return self._queue_
 
     def _ensure_worker(self):
+        """Ensure there is a worker to dispatch tasks for command execution"""
         if self._master_worker is None:
             self._master_worker = asyncio.create_task(self._bulk_dispatch())
 
     async def _bulk_dispatch(self):
+        """Collect tasks into bulks and dispatch them for command execution"""
         while True:
             await asyncio.sleep(0)
             tasks, futures = zip(
@@ -94,6 +123,7 @@ class BulkExecution(Generic[T, R]):
             asyncio.create_task(self._bulk_execute(tasks, futures))
 
     async def _bulk_execute(self, tasks: List[T], futures: List[asyncio.Future[R]]):
+        """Execute several ``tasks`` in bulk and set their ``futures``' result"""
         try:
             results = await self._command(tasks)
         except Exception as task_exception:
