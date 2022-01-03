@@ -78,6 +78,7 @@ setup(
         "kubernetes_asyncio",
         "pydantic",
         "asyncstdlib",
+        "typing_extensions",
     ],
     extras_require={
         "docs": [

@@ -1,4 +1,5 @@
-from typing import Optional, Protocol
+from typing import Optional
+from typing_extensions import Protocol
 from abc import ABCMeta, abstractmethod
 
 
