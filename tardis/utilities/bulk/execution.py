@@ -15,7 +15,7 @@ class BulkCommand(Protocol[T, R]):
         ...
 
 
-async def _read(queue: asyncio.Queue[T], max_items: int, max_age: float) -> List[T]:
+async def _read(queue: "asyncio.Queue[T]", max_items: int, max_age: float) -> List[T]:
     """Read at most ``max_items`` items during ``max_age`` seconds from the ``queue``"""
     results = []
     deadline = time.monotonic() + max_age
@@ -100,7 +100,7 @@ class BulkExecution(Generic[T, R]):
         return await result
 
     @property
-    def _queue(self) -> asyncio.Queue[Tuple[T, asyncio.Future[R]]]:
+    def _queue(self) -> "asyncio.Queue[Tuple[T, asyncio.Future[R]]]":
         if self._queue_ is None:
             self._queue_ = asyncio.Queue()
         return self._queue_
