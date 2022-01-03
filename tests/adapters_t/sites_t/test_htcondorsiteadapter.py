@@ -25,8 +25,8 @@ CONDOR_Q_OUTPUT_HELD = "test\t5\t1351043\t0"
 CONDOR_Q_OUTPUT_TRANSFERING_OUTPUT = "test\t6\t1351043\t0"
 CONDOR_Q_OUTPUT_SUSPENDED = "test\t7\t1351043\t0"
 
-CONDOR_RM_OUTPUT = """All jobs in cluster 1351043 have been marked for removal"""
-CONDOR_RM_FAILED_OUTPUT = """Couldn't find/remove all jobs in cluster 1351043"""
+CONDOR_RM_OUTPUT = "Job 1351043.0 marked for removal"
+CONDOR_RM_FAILED_OUTPUT = "Job 1351043.0 not found"
 CONDOR_RM_FAILED_MESSAGE = """Run command condor_rm 1351043 via ShellExecutor failed"""
 
 CONDOR_SUSPEND_OUTPUT = """All jobs in cluster 1351043 have been suspended"""
@@ -312,16 +312,7 @@ class TestHTCondorSiteAdapter(TestCase):
         )
         self.assertEqual(response.remote_resource_uuid, "1351043")
 
-    @mock_executor_run_command(
-        stdout="",
-        raise_exception=CommandExecutionFailure(
-            message=CONDOR_RM_FAILED_MESSAGE,
-            exit_code=1,
-            stderr=CONDOR_RM_FAILED_OUTPUT,
-            stdout="",
-            stdin="",
-        ),
-    )
+    @mock_executor_run_command(stdout=CONDOR_RM_FAILED_OUTPUT)
     def test_terminate_resource_failed_redo(self):
         with self.assertRaises(TardisResourceStatusUpdateFailed):
             run_async(

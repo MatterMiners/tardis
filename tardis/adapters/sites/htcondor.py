@@ -1,12 +1,15 @@
+from typing import Iterable, Tuple
 from ...exceptions.executorexceptions import CommandExecutionFailure
 from ...exceptions.tardisexceptions import TardisError
 from ...exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from ...interfaces.siteadapter import SiteAdapter
 from ...interfaces.siteadapter import ResourceStatus
+from ...interfaces.executor import Executor
 from ...utilities.asynccachemap import AsyncCacheMap
 from ...utilities.attributedict import AttributeDict
 from ...utilities.staticmapping import StaticMapping
 from ...utilities.executors.shellexecutor import ShellExecutor
+from ...utilities.bulk.execution import BulkExecution
 from ...utilities.utils import csv_parser, machine_meta_data_translation
 
 from contextlib import contextmanager
@@ -44,6 +47,31 @@ async def htcondor_queue_updater(executor):
         return htcondor_queue
 
 
+async def condor_rm(
+    resource_attributes: Tuple[AttributeDict], executor: Executor
+) -> Iterable[bool]:
+    command = "condor_rm " + " ".join(
+        # remove jobs by Cluster+JobID for graceful misses
+        f"{resource.remote_resource_uuid}.0"
+        for resource in resource_attributes
+    )
+    response = await executor.run_command(command)
+    # Removed jobs are in stdout, failures in stderr
+    # stdout: Job 15540.0 marked for removal
+    # stderr: Job 12.3 not found
+    # stdout: Job 12.0 marked for removal
+    # stderr: Job 15535.0 not found
+    removed_jobs = {
+        line.strip().split()[1]
+        for line in response.stdout.splitlines()
+        if line.endswith("marked for removal")
+    }
+    return (
+        f"{resource.remote_resource_uuid}.0" in removed_jobs
+        for resource in resource_attributes
+    )
+
+
 # According to https://htcondor.readthedocs.io/en/latest/classad-attributes/
 # job-classad-attributes.html
 htcondor_status_codes = {
@@ -62,10 +90,21 @@ class HTCondorAdapter(SiteAdapter):
         Cores=1, Memory=1024, Disk=1024 * 1024
     )
 
-    def __init__(self, machine_type: str, site_name: str):
+    def __init__(
+        self,
+        machine_type: str,
+        site_name: str,
+        bulk_size: int = 100,
+        bulk_delay: int = 1,
+    ):
         self._machine_type = machine_type
         self._site_name = site_name
         self._executor = getattr(self.configuration, "executor", ShellExecutor())
+        self._condor_rm = BulkExecution(
+            partial(condor_rm, executor=self._executor),
+            size=bulk_size,
+            delay=bulk_delay,
+        )
 
         key_translator = StaticMapping(
             remote_resource_uuid="ClusterId",
@@ -173,9 +212,11 @@ class HTCondorAdapter(SiteAdapter):
         )
 
     async def terminate_resource(self, resource_attributes: AttributeDict):
-        return await self._apply_condor_command(
-            resource_attributes, condor_command="condor_rm"
-        )
+        if await self._condor_rm.execute(resource_attributes):
+            return self.handle_response(
+                AttributeDict(ClusterId=resource_attributes.remote_resource_uuid)
+            )
+        raise TardisResourceStatusUpdateFailed
 
     @staticmethod
     def create_timestamps():
