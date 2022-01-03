@@ -11,7 +11,7 @@ R = TypeVar("R")
 class BulkCommand(Protocol[T, R]):
     """Protocol of callables suitable for :py:class:`~.BulkExecution`"""
 
-    async def __call__(self, __tasks: Iterable[T]) -> Optional[Iterable[R]]:
+    async def __call__(self, __tasks: Tuple[T]) -> Optional[Iterable[R]]:
         ...
 
 
@@ -38,8 +38,8 @@ class BulkExecution(Generic[T, R]):
     Framework for queueing and executing several tasks via bulk commands
 
     :param command: async callable that executes several tasks
-    :param bulk_size: maximum number of tasks to execute in one bulk
-    :param bulk_delay: maximum age in seconds of tasks before executing them
+    :param size: maximum number of tasks to execute in one bulk
+    :param delay: maximum age in seconds of tasks before executing them
     :param concurrent: how often the `command` may be executed at the same time
 
     Each :py:class:`~.BulkExecution` represents a different ``command``
@@ -50,10 +50,10 @@ class BulkExecution(Generic[T, R]):
     partitioning them to bulks, and translating the results of bulk execution
     back to individual tasks.
 
-    Both ``bulk_size`` and ``bulk_delay`` control how long to queue tasks at most
+    Both ``size`` and ``delay`` control how long to queue tasks at most
     before starting to execute them. The ``concurrent`` parameter controls whether
     and how many bulks may run at once; when concurrency is low or disabled, tasks
-    may be waiting for execution even past ``bulk_size`` and ``bulk_delay``.
+    may be waiting for execution even past ``size`` and ``delay``.
     Possible values for ``concurrent`` are
     :py:data:`False` (no concurrency, only one ``command`` at once),
     either of :py:data:`True` or :py:data:`None` (unlimited concurrency),
@@ -68,13 +68,13 @@ class BulkExecution(Generic[T, R]):
     def __init__(
         self,
         command: BulkCommand[T, R],
-        bulk_size: int,
-        bulk_delay: float,
+        size: int,
+        delay: float,
         concurrent: Union[int, bool, None] = True,
     ):
         self._command = command
-        self._bulk_size = bulk_size
-        self._bulk_delay = bulk_delay
+        self._size = size
+        self._delay = delay
         # synchronized counter for active commands
         if concurrent is False:
             self._concurrent = asyncio.BoundedSemaphore(value=1)
@@ -114,15 +114,16 @@ class BulkExecution(Generic[T, R]):
         """Collect tasks into bulks and dispatch them for command execution"""
         while True:
             await asyncio.sleep(0)
-            tasks, futures = zip(
-                *(await _read(self._queue, self._bulk_size, self._bulk_delay))
-            )
-            if not tasks:
+            bulk = list(zip(*(await _read(self._queue, self._size, self._delay))))
+            if not bulk:
                 continue
+            tasks, futures = bulk
             await self._concurrent.acquire()
-            asyncio.create_task(self._bulk_execute(tasks, futures))
+            asyncio.create_task(self._bulk_execute(tuple(tasks), futures))
 
-    async def _bulk_execute(self, tasks: List[T], futures: List[asyncio.Future[R]]):
+    async def _bulk_execute(
+        self, tasks: Tuple[T, ...], futures: List[asyncio.Future[R]]
+    ) -> None:
         """Execute several ``tasks`` in bulk and set their ``futures``' result"""
         try:
             results = await self._command(tasks)
