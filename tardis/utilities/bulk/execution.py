@@ -77,17 +77,19 @@ class BulkExecution(Generic[T, R]):
         self._size = size
         self._delay = delay
         # synchronized counter for active commands
-        if concurrent is False:
-            self._concurrent = asyncio.BoundedSemaphore(value=1)
-        elif concurrent is None or concurrent is True:
-            self._concurrent = asyncio.BoundedSemaphore(value=sys.maxsize)
-        elif not isinstance(concurrent, int) or concurrent <= 0:
+        self._concurrent_ = None
+        self._concurrency = (
+            1
+            if concurrent is False
+            else sys.maxsize
+            if concurrent is None or concurrent is True
+            else concurrent
+        )
+        if not isinstance(self._concurrency, int) or self._concurrency <= 0:
             raise ValueError(
                 "'concurrent' must be one of True, False, None or an integer above 0"
                 f", got {concurrent} instead"
             )
-        else:
-            self._concurrent = asyncio.Semaphore(value=concurrent)
         # queue of outstanding tasks
         self._queue_ = None
         # task handling dispatch from queue to command execution
@@ -99,6 +101,12 @@ class BulkExecution(Generic[T, R]):
         await self._queue.put((task, result))
         self._ensure_worker()
         return await result
+
+    @property
+    def _concurrent(self) -> "asyncio.BoundedSemaphore":
+        if self._concurrent_ is None:
+            self._concurrent_ = asyncio.BoundedSemaphore(value=self._concurrency)
+        return self._concurrent_
 
     @property
     def _queue(self) -> "asyncio.Queue[Tuple[T, asyncio.Future[R]]]":
