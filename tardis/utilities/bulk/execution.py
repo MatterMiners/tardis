@@ -117,7 +117,7 @@ class BulkExecution(Generic[T, R]):
     def _ensure_worker(self):
         """Ensure there is a worker to dispatch tasks for command execution"""
         if self._master_worker is None:
-            self._master_worker = asyncio.create_task(self._bulk_dispatch())
+            self._master_worker = asyncio.ensure_future(self._bulk_dispatch())
 
     async def _bulk_dispatch(self):
         """Collect tasks into bulks and dispatch them for command execution"""
@@ -128,7 +128,7 @@ class BulkExecution(Generic[T, R]):
                 continue
             tasks, futures = bulk
             await self._concurrent.acquire()
-            asyncio.create_task(self._bulk_execute(tuple(tasks), futures))
+            asyncio.ensure_future(self._bulk_execute(tuple(tasks), futures))
 
     async def _bulk_execute(
         self, tasks: Tuple[T, ...], futures: "List[asyncio.Future[R]]"
