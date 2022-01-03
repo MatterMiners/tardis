@@ -97,7 +97,7 @@ class BulkExecution(Generic[T, R]):
 
     async def execute(self, task: T) -> R:
         """Execute a ``task`` in bulk and return the result"""
-        result: asyncio.Future[R] = asyncio.Future()
+        result: "asyncio.Future[R]" = asyncio.Future()
         await self._queue.put((task, result))
         self._ensure_worker()
         return await result
@@ -131,7 +131,7 @@ class BulkExecution(Generic[T, R]):
             asyncio.create_task(self._bulk_execute(tuple(tasks), futures))
 
     async def _bulk_execute(
-        self, tasks: Tuple[T, ...], futures: List[asyncio.Future[R]]
+        self, tasks: Tuple[T, ...], futures: "List[asyncio.Future[R]]"
     ) -> None:
         """Execute several ``tasks`` in bulk and set their ``futures``' result"""
         try:
