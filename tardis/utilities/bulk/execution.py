@@ -88,7 +88,7 @@ class BulkExecution(Generic[T, R]):
         if not isinstance(self._concurrency, int) or self._concurrency <= 0:
             raise ValueError(
                 "'concurrent' must be one of True, False, None or an integer above 0"
-                f", got {concurrent} instead"
+                f", got {concurrent!r} instead"
             )
         # queue of outstanding tasks
         self._queue_ = None
