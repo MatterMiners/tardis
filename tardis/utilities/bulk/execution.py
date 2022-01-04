@@ -136,12 +136,17 @@ class BulkExecution(Generic[T, R]):
         """Execute several ``tasks`` in bulk and set their ``futures``' result"""
         try:
             results = await self._command(tasks)
+            # make sure we can cleanly match input to output
+            results = [None] * len(futures) if results is None else list(results)
+            if len(results) != len(futures):
+                raise RuntimeError(
+                    f"bulk command {self._command} provided {len(results)} results"
+                    f", expected {len(futures)} results or 'None'"
+                )
         except Exception as task_exception:
             for future in futures:
                 future.set_exception(task_exception)
         else:
-            if results is None:
-                results = [None] * len(futures)
             for future, result in zip(futures, results):
                 future.set_result(result)
         finally:
