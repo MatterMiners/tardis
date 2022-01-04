@@ -94,12 +94,12 @@ class HTCondorAdapter(SiteAdapter):
         self,
         machine_type: str,
         site_name: str,
-        bulk_size: int = 100,
-        bulk_delay: int = 1,
     ):
         self._machine_type = machine_type
         self._site_name = site_name
         self._executor = getattr(self.configuration, "executor", ShellExecutor())
+        bulk_size = getattr(self.configuration, "bulk_size", 100)
+        bulk_delay = getattr(self.configuration, "bulk_delay", 1.0)
         self._condor_rm = BulkExecution(
             partial(condor_rm, executor=self._executor),
             size=bulk_size,
