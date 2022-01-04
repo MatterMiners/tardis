@@ -1,4 +1,4 @@
-from typing import Iterable, Tuple
+from typing import Iterable, Tuple, Awaitable
 from ...exceptions.executorexceptions import CommandExecutionFailure
 from ...exceptions.tardisexceptions import TardisError
 from ...exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
@@ -23,6 +23,14 @@ import re
 logger = logging.getLogger("cobald.runtime.tardis.adapters.sites.htcondor")
 
 
+# TODO: Remove this once the old-style UUIDs are deprecated
+def _job_id(resource_uuid: str) -> str:
+    """
+    Normalize single "ClusterID" and bulk "ClusterID.ProcID" UUIDs to job IDs
+    """
+    return resource_uuid if "." in resource_uuid else f"{resource_uuid}.0"
+
+
 async def htcondor_queue_updater(executor):
     attributes = dict(
         Owner="Owner", JobStatus="JobStatus", ClusterId="ClusterId", ProcId="ProcId"
@@ -43,31 +51,93 @@ async def htcondor_queue_updater(executor):
             delimiter="\t",
             replacements=dict(undefined=None),
         ):
-            htcondor_queue[row["ClusterId"]] = row
+            row["JobId"] = f"{row['ClusterId']}.{row['ProcId']}"
+            htcondor_queue[row["JobId"]] = row
         return htcondor_queue
 
 
-async def condor_rm(
-    resource_attributes: Tuple[AttributeDict], executor: Executor
-) -> Iterable[bool]:
-    command = "condor_rm " + " ".join(
-        # remove jobs by Cluster+JobID for graceful misses
-        f"{resource.remote_resource_uuid}.0"
-        for resource in resource_attributes
-    )
-    response = await executor.run_command(command)
-    # Removed jobs are in stdout, failures in stderr
-    # stdout: Job 15540.0 marked for removal
-    # stderr: Job 12.3 not found
-    # stdout: Job 12.0 marked for removal
-    # stderr: Job 15535.0 not found
-    removed_jobs = {
-        line.strip().split()[1]
+JDL = str
+# search the Job ID in a submit Proc line
+SUBMIT_ID_PATTERN = re.compile(r"Proc\s(\d+\.\d+)")
+
+
+async def condor_submit(
+    resource_jdls: Tuple[JDL, ...], executor: Executor
+) -> Iterable[str]:
+    """Submit a number of resources from their JDL, reporting the new Job ID for each"""
+    # verbose submit gives an ordered listing of class ads, such as
+    # ** Proc 15556.0:
+    # Args = "150"
+    # ClusterId = 15556
+    # ...
+    # ProcId = 0
+    # QDate = 1641289701
+    # ...
+    #
+    # ** Proc 15556.1:
+    # ...
+    command = f"condor_submit -verbose -maxjobs {len(resource_jdls)}"
+    response = await executor.run_command(command, stdin_input="\n".join(resource_jdls))
+    job_ids = [
+        SUBMIT_ID_PATTERN.search(line).group(1)
         for line in response.stdout.splitlines()
-        if line.endswith("marked for removal")
+        if line.startswith("** Proc")
+    ]
+    return job_ids
+
+
+# condor_rm and condor_suspend are actually the same tool under the hood
+# they only differ in the method called on the Schedd and their success message
+def condor_rm(
+    resource_attributes: Tuple[AttributeDict, ...], executor: Executor
+) -> Awaitable[Iterable[bool]]:
+    """Remove a number of resources, indicating success for each"""
+    return condor_tool(resource_attributes, executor, "condor_rm", "marked for removal")
+
+
+def condor_suspend(
+    resource_attributes: Tuple[AttributeDict, ...], executor: Executor
+) -> Awaitable[Iterable[bool]]:
+    """Remove a number of resources, indicating success for each"""
+    return condor_tool(resource_attributes, executor, "condor_suspend", "suspended")
+
+
+# search the Job ID in a remove/suspend mark line
+TOOL_ID_PATTERN = re.compile(r"Job\s(\d+\.\d+)")
+
+
+async def condor_tool(
+    resource_attributes: Tuple[AttributeDict, ...],
+    executor: Executor,
+    command: str,
+    success_message: str,
+) -> Iterable[bool]:
+    command = (
+        command
+        + " "
+        + " ".join(
+            _job_id(resource.remote_resource_uuid) for resource in resource_attributes
+        )
+    )
+    try:
+        response = await executor.run_command(command)
+    except CommandExecutionFailure as cef:
+        # the tool fails if none of the jobs are found – because they all just shut down
+        # report graceful failure for all
+        if cef.exit_code == 1 and "not found" in cef.stderr:
+            return [False] * len(resource_attributes)
+        raise
+    # successes are in stdout, failures in stderr, both in argument order
+    # stdout: Job 15540.0 marked for removal
+    # stderr: Job 15612.0 not found
+    # stderr: Job 15535.0 marked for removal
+    success_jobs = {
+        TOOL_ID_PATTERN.search(line).group(1)
+        for line in response.stdout.splitlines()
+        if line.endswith(success_message)
     }
     return (
-        f"{resource.remote_resource_uuid}.0" in removed_jobs
+        _job_id(resource.remote_resource_uuid) in success_jobs
         for resource in resource_attributes
     )
 
@@ -100,14 +170,17 @@ class HTCondorAdapter(SiteAdapter):
         self._executor = getattr(self.configuration, "executor", ShellExecutor())
         bulk_size = getattr(self.configuration, "bulk_size", 100)
         bulk_delay = getattr(self.configuration, "bulk_delay", 1.0)
-        self._condor_rm = BulkExecution(
-            partial(condor_rm, executor=self._executor),
-            size=bulk_size,
-            delay=bulk_delay,
+        self._condor_submit, self._condor_suspend, self._condor_rm = (
+            BulkExecution(
+                partial(tool, executor=self._executor),
+                size=bulk_size,
+                delay=bulk_delay,
+            )
+            for tool in (condor_submit, condor_suspend, condor_rm)
         )
 
         key_translator = StaticMapping(
-            remote_resource_uuid="ClusterId",
+            remote_resource_uuid="JobId",
             resource_status="JobStatus",
             created="created",
             updated="updated",
@@ -155,13 +228,8 @@ class HTCondorAdapter(SiteAdapter):
             ),
         )
 
-        response = await self._executor.run_command(
-            "condor_submit", stdin_input=submit_jdl
-        )
-        pattern = re.compile(
-            r"^.*?(?P<Jobs>\d+).*?(?P<ClusterId>\d+).$", flags=re.MULTILINE
-        )
-        response = AttributeDict(pattern.search(response.stdout).groupdict())
+        job_id = await self._condor_submit.execute(submit_jdl)
+        response = AttributeDict(JobId=job_id)
         response.update(self.create_timestamps())
         return self.handle_response(response)
 
@@ -185,36 +253,21 @@ class HTCondorAdapter(SiteAdapter):
         else:
             return self.handle_response(resource_status)
 
-    async def _apply_condor_command(
-        self, resource_attributes: AttributeDict, condor_command: str
-    ):
-        command = f"{condor_command} {resource_attributes.remote_resource_uuid}"
-        try:
-            response = await self._executor.run_command(command)
-        except CommandExecutionFailure as cef:
-            if cef.exit_code == 1 and "Couldn't find" in cef.stderr:
-                # Happens if condor_suspend/condor_rm is called in the moment
-                # the drone is shutting down itself. Repeat the procedure until
-                # resource has vanished from condor_q call
-                raise TardisResourceStatusUpdateFailed from cef
-            raise
-        pattern = re.compile(r"^.*?(?P<ClusterId>\d+).*$", flags=re.MULTILINE)
-        response = AttributeDict(pattern.search(response.stdout).groupdict())
-        return self.handle_response(response)
-
     async def stop_resource(self, resource_attributes: AttributeDict):
         """
         Stopping machines is equivalent to suspending jobs in HTCondor,
         therefore condor_suspend is called!
         """
-        return await self._apply_condor_command(
-            resource_attributes, condor_command="condor_suspend"
-        )
+        if await self._condor_suspend.execute(resource_attributes):
+            return self.handle_response(
+                AttributeDict(JobId=resource_attributes.remote_resource_uuid)
+            )
+        raise TardisResourceStatusUpdateFailed
 
     async def terminate_resource(self, resource_attributes: AttributeDict):
         if await self._condor_rm.execute(resource_attributes):
             return self.handle_response(
-                AttributeDict(ClusterId=resource_attributes.remote_resource_uuid)
+                AttributeDict(JobId=resource_attributes.remote_resource_uuid)
             )
         raise TardisResourceStatusUpdateFailed
 
