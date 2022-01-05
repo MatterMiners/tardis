@@ -12,7 +12,7 @@ R = TypeVar("R")
 class BulkCommand(Protocol[T, R]):
     """Protocol of callables suitable for :py:class:`~.BulkExecution`"""
 
-    async def __call__(self, __tasks: Tuple[T]) -> Optional[Iterable[R]]:
+    async def __call__(self, *__tasks: Tuple[T]) -> Optional[Iterable[R]]:
         ...
 
 
@@ -140,7 +140,7 @@ class BulkExecution(Generic[T, R]):
     ) -> None:
         """Execute several ``tasks`` in bulk and set their ``futures``' result"""
         try:
-            results = await self._command(tasks)
+            results = await self._command(*tasks)
             # make sure we can cleanly match input to output
             results = [None] * len(futures) if results is None else list(results)
             if len(results) != len(futures):

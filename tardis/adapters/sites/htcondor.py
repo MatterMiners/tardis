@@ -62,7 +62,7 @@ SUBMIT_ID_PATTERN = re.compile(r"Proc\s(\d+\.\d+)")
 
 
 async def condor_submit(
-    resource_jdls: Tuple[JDL, ...], executor: Executor
+    *resource_jdls: JDL, executor: Executor
 ) -> Iterable[str]:
     """Submit a number of resources from their JDL, reporting the new Job ID for each"""
     # verbose submit gives an ordered listing of class ads, such as
@@ -89,14 +89,14 @@ async def condor_submit(
 # condor_rm and condor_suspend are actually the same tool under the hood
 # they only differ in the method called on the Schedd and their success message
 def condor_rm(
-    resource_attributes: Tuple[AttributeDict, ...], executor: Executor
+    *resource_attributes: AttributeDict, executor: Executor
 ) -> Awaitable[Iterable[bool]]:
     """Remove a number of resources, indicating success for each"""
     return condor_tool(resource_attributes, executor, "condor_rm", "marked for removal")
 
 
 def condor_suspend(
-    resource_attributes: Tuple[AttributeDict, ...], executor: Executor
+    *resource_attributes: AttributeDict, executor: Executor
 ) -> Awaitable[Iterable[bool]]:
     """Remove a number of resources, indicating success for each"""
     return condor_tool(resource_attributes, executor, "condor_suspend", "suspended")
