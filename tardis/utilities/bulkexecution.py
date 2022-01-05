@@ -100,15 +100,22 @@ class BulkExecution(Generic[T, R]):
             if concurrent is None or concurrent is True
             else concurrent
         )
-        if not isinstance(self._concurrency, int) or self._concurrency <= 0:
-            raise ValueError(
-                "'concurrent' must be one of True, False, None or an integer above 0"
-                f", got {concurrent!r} instead"
-            )
         # queue of outstanding tasks
         self._queue_ = None
         # task handling dispatch from queue to command execution
         self._master_worker: Optional[asyncio.Task] = None
+        self._verify_settings()
+
+    def _verify_settings(self):
+        if not isinstance(self._size, int) or self._size <= 0:
+            raise ValueError(f"expected 'size' > 0, got {self._size!r} instead")
+        if self._delay <= 0:
+            raise ValueError(f"expected 'delay' > 0, got {self._delay!r} instead")
+        if not isinstance(self._concurrency, int) or self._concurrency <= 0:
+            raise ValueError(
+                "'concurrent' must be one of True, False, None or an integer above 0"
+                f", got {self._concurrency!r} instead"
+            )
 
     async def __call__(self, __task: T) -> R:
         """Execute a ``task`` in bulk and return the result"""
