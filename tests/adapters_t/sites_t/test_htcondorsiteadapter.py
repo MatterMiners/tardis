@@ -149,7 +149,7 @@ class TestHTCondorSiteAdapter(TestCase):
         self.assertFalse(response.created - datetime.now() > timedelta(seconds=1))
         self.assertFalse(response.updated - datetime.now() > timedelta(seconds=1))
 
-        _, kwargs = self.mock_executor.return_value.run_command.call_args[1]
+        _, kwargs = self.mock_executor.return_value.run_command.call_args
         self.assertEqual(
             kwargs["stdin_input"],
             CONDOR_SUBMIT_JDL_CONDOR_OBS,
@@ -168,7 +168,7 @@ class TestHTCondorSiteAdapter(TestCase):
             ),
         )
 
-        _, kwargs = self.mock_executor.return_value.run_command.call_args[1]
+        _, kwargs = self.mock_executor.return_value.run_command.call_args
         self.assertEqual(
             kwargs["stdin_input"],
             CONDOR_SUBMIT_JDL_SPARK_OBS,
