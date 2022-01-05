@@ -9,7 +9,7 @@ from ...utilities.asynccachemap import AsyncCacheMap
 from ...utilities.attributedict import AttributeDict
 from ...utilities.staticmapping import StaticMapping
 from ...utilities.executors.shellexecutor import ShellExecutor
-from ...utilities.bulk.execution import BulkExecution
+from ...utilities.bulkexecution import BulkExecution
 from ...utilities.utils import csv_parser, machine_meta_data_translation
 
 from contextlib import contextmanager
