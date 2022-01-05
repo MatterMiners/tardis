@@ -43,8 +43,13 @@ class BulkExecution(Generic[T, R]):
     :param delay: maximum age in seconds of tasks before executing them
     :param concurrent: how often the `command` may be executed at the same time
 
-    Each :py:class:`~.BulkExecution` represents a different ``command``
-    (for example, ``rm`` and ``mkdir``) collecting similar tasks (for example,
+    Given some bulk-task callable ``(T, ...) -> (R, ...)`` (the ``command``),
+    :py:class:`~.BulkExecution` represents a single-task callable ``(T) -> R``.
+    Single-task calls are buffered for a moment according to ``size`` and ``delay``,
+    then executed in bulk with ``concurrent`` calls to ``command``.
+
+    Each :py:class:`~.BulkExecution` should represent a different ``command``
+    (for example, ``rm`` or ``mkdir``) collecting similar tasks (for example,
     ``rm foo`` and ``rm bar`` to ``rm foo bar``). The ``command`` is an arbitrary
     async callable and can freely decide how to handle its tasks. The
     :py:class:`~.BulkExecution` takes care of collecting individual tasks,
