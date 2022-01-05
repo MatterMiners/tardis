@@ -27,7 +27,7 @@ async def _read(queue: "asyncio.Queue[T]", max_items: int, max_age: float) -> Li
     """Read at most ``max_items`` items during ``max_age`` seconds from the ``queue``"""
     results = []
     deadline = time.monotonic() + max_age
-    while len(results) < max_items and time.monotonic() < deadline:
+    while len(results) < max_items:
         try:
             if queue.empty():
                 item = await asyncio.wait_for(queue.get(), deadline - time.monotonic())
@@ -38,6 +38,9 @@ async def _read(queue: "asyncio.Queue[T]", max_items: int, max_age: float) -> Li
         else:
             results.append(item)
             queue.task_done()
+        # check deadline late so that we cannot stall if the delay is very low
+        if time.monotonic() > deadline:
+            break
     return results
 
 
