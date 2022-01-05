@@ -149,8 +149,9 @@ class TestHTCondorSiteAdapter(TestCase):
         self.assertFalse(response.created - datetime.now() > timedelta(seconds=1))
         self.assertFalse(response.updated - datetime.now() > timedelta(seconds=1))
 
+        _, kwargs = self.mock_executor.return_value.run_command.call_args[1]
         self.assertEqual(
-            self.mock_executor.return_value.run_command.call_args[1]["stdin_input"],
+            kwargs["stdin_input"],
             CONDOR_SUBMIT_JDL_CONDOR_OBS,
         )
         self.mock_executor.reset()
@@ -167,8 +168,9 @@ class TestHTCondorSiteAdapter(TestCase):
             ),
         )
 
+        _, kwargs = self.mock_executor.return_value.run_command.call_args[1]
         self.assertEqual(
-            self.mock_executor.return_value.run_command.call_args[1]["stdin_input"],
+            kwargs["stdin_input"],
             CONDOR_SUBMIT_JDL_SPARK_OBS,
         )
         self.mock_executor.reset()
@@ -205,49 +207,56 @@ class TestHTCondorSiteAdapter(TestCase):
     @mock_executor_run_command(stdout=CONDOR_Q_OUTPUT_IDLE)
     def test_resource_status_idle(self):
         response = run_async(
-            self.adapter.resource_status, AttributeDict(remote_resource_uuid="1351043.0")
+            self.adapter.resource_status,
+            AttributeDict(remote_resource_uuid="1351043.0"),
         )
         self.assertEqual(response.resource_status, ResourceStatus.Booting)
 
     @mock_executor_run_command(stdout=CONDOR_Q_OUTPUT_RUN)
     def test_resource_status_run(self):
         response = run_async(
-            self.adapter.resource_status, AttributeDict(remote_resource_uuid="1351043.0")
+            self.adapter.resource_status,
+            AttributeDict(remote_resource_uuid="1351043.0"),
         )
         self.assertEqual(response.resource_status, ResourceStatus.Running)
 
     @mock_executor_run_command(stdout=CONDOR_Q_OUTPUT_REMOVING)
     def test_resource_status_removing(self):
         response = run_async(
-            self.adapter.resource_status, AttributeDict(remote_resource_uuid="1351043.0")
+            self.adapter.resource_status,
+            AttributeDict(remote_resource_uuid="1351043.0"),
         )
         self.assertEqual(response.resource_status, ResourceStatus.Running)
 
     @mock_executor_run_command(stdout=CONDOR_Q_OUTPUT_COMPLETED)
     def test_resource_status_completed(self):
         response = run_async(
-            self.adapter.resource_status, AttributeDict(remote_resource_uuid="1351043.0")
+            self.adapter.resource_status,
+            AttributeDict(remote_resource_uuid="1351043.0"),
         )
         self.assertEqual(response.resource_status, ResourceStatus.Deleted)
 
     @mock_executor_run_command(stdout=CONDOR_Q_OUTPUT_HELD)
     def test_resource_status_held(self):
         response = run_async(
-            self.adapter.resource_status, AttributeDict(remote_resource_uuid="1351043.0")
+            self.adapter.resource_status,
+            AttributeDict(remote_resource_uuid="1351043.0"),
         )
         self.assertEqual(response.resource_status, ResourceStatus.Error)
 
     @mock_executor_run_command(stdout=CONDOR_Q_OUTPUT_TRANSFERING_OUTPUT)
     def test_resource_status_transfering_output(self):
         response = run_async(
-            self.adapter.resource_status, AttributeDict(remote_resource_uuid="1351043.0")
+            self.adapter.resource_status,
+            AttributeDict(remote_resource_uuid="1351043.0"),
         )
         self.assertEqual(response.resource_status, ResourceStatus.Running)
 
     @mock_executor_run_command(stdout=CONDOR_Q_OUTPUT_SUSPENDED)
     def test_resource_status_unexpanded(self):
         response = run_async(
-            self.adapter.resource_status, AttributeDict(remote_resource_uuid="1351043.0")
+            self.adapter.resource_status,
+            AttributeDict(remote_resource_uuid="1351043.0"),
         )
         self.assertEqual(response.resource_status, ResourceStatus.Stopped)
 
