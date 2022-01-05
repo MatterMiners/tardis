@@ -61,9 +61,7 @@ JDL = str
 SUBMIT_ID_PATTERN = re.compile(r"Proc\s(\d+\.\d+)")
 
 
-async def condor_submit(
-    *resource_jdls: JDL, executor: Executor
-) -> Iterable[str]:
+async def condor_submit(*resource_jdls: JDL, executor: Executor) -> Iterable[str]:
     """Submit a number of resources from their JDL, reporting the new Job ID for each"""
     # verbose submit gives an ordered listing of class ads, such as
     # ** Proc 15556.0:
