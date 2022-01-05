@@ -95,7 +95,7 @@ class BulkExecution(Generic[T, R]):
         # task handling dispatch from queue to command execution
         self._master_worker: Optional[asyncio.Task] = None
 
-    async def execute(self, task: T) -> R:
+    async def __call__(self, task: T) -> R:
         """Execute a ``task`` in bulk and return the result"""
         result: "asyncio.Future[R]" = asyncio.Future()
         await self._queue.put((task, result))

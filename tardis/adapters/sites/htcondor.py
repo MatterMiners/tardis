@@ -228,7 +228,7 @@ class HTCondorAdapter(SiteAdapter):
             ),
         )
 
-        job_id = await self._condor_submit.execute(submit_jdl)
+        job_id = await self._condor_submit(submit_jdl)
         response = AttributeDict(JobId=job_id)
         response.update(self.create_timestamps())
         return self.handle_response(response)
@@ -258,14 +258,14 @@ class HTCondorAdapter(SiteAdapter):
         Stopping machines is equivalent to suspending jobs in HTCondor,
         therefore condor_suspend is called!
         """
-        if await self._condor_suspend.execute(resource_attributes):
+        if await self._condor_suspend(resource_attributes):
             return self.handle_response(
                 AttributeDict(JobId=resource_attributes.remote_resource_uuid)
             )
         raise TardisResourceStatusUpdateFailed
 
     async def terminate_resource(self, resource_attributes: AttributeDict):
-        if await self._condor_rm.execute(resource_attributes):
+        if await self._condor_rm(resource_attributes):
             return self.handle_response(
                 AttributeDict(JobId=resource_attributes.remote_resource_uuid)
             )
