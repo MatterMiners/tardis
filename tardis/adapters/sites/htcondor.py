@@ -78,12 +78,11 @@ async def condor_submit(
     # ...
     command = f"condor_submit -verbose -maxjobs {len(resource_jdls)}"
     response = await executor.run_command(command, stdin_input="\n".join(resource_jdls))
-    job_ids = [
+    return (
         SUBMIT_ID_PATTERN.search(line).group(1)
         for line in response.stdout.splitlines()
         if line.startswith("** Proc")
-    ]
-    return job_ids
+    )
 
 
 # condor_rm and condor_suspend are actually the same tool under the hood
