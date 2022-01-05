@@ -10,9 +10,16 @@ R = TypeVar("R")
 
 
 class BulkCommand(Protocol[T, R]):
-    """Protocol of callables suitable for :py:class:`~.BulkExecution`"""
+    """
+    Protocol of callables suitable for :py:class:`~.BulkExecution`
 
-    async def __call__(self, *__tasks: Tuple[T]) -> Optional[Iterable[R]]:
+    A bulk command must take an arbitrary number of tasks and is expected to provide
+    an iterable of one result per task. Alternatively, it may provide a single
+    :py:data:`None` value to indicate that there is no result. An unhandled
+    :py:class:`Exception` means that all tasks failed with that :py:class:`Exception`.
+    """
+
+    async def __call__(self, *__tasks: T) -> Optional[Iterable[R]]:
         ...
 
 
