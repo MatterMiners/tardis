@@ -127,7 +127,7 @@ class AsyncBulkCall(Generic[T, R]):
             await self._concurrent.acquire()
             asyncio.ensure_future(self._bulk_execute(tuple(tasks), futures))
 
-    async def _get_bulk(self) -> List[Tuple[T, asyncio.Future[R]]]:
+    async def _get_bulk(self) -> "List[Tuple[T, asyncio.Future[R]]]":
         """Fetch the next bulk from the internal queue"""
         results = []
         max_items, queue = self._size, self._queue
