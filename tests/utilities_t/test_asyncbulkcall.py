@@ -1,6 +1,7 @@
 import asyncio
 import time
 import sys
+from platform import python_implementation
 from unittest import TestCase
 
 from tardis.utilities.asyncbulkcall import AsyncBulkCall
@@ -48,7 +49,8 @@ class TestAsyncBulkCall(TestCase):
         result = run_async(self.execute, execution, count=2048)
         after = time.monotonic()
         # PyPy can have a huge overhead before the JIT has warmed up
-        self.assertLess(after - before, bulk_delay * 10)
+        grace = 5 if python_implementation() != "PyPy" else 25
+        self.assertLess(after - before, bulk_delay * grace)
         self.assertEqual(result, [(i, 0) for i in range(2048)])
 
     def test_delay_tiny(self):
