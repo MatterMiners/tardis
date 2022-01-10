@@ -23,27 +23,6 @@ class BulkCommand(Protocol[T, R]):
         ...
 
 
-async def _read(queue: "asyncio.Queue[T]", max_items: int, max_age: float) -> List[T]:
-    """Read at most ``max_items`` items during ``max_age`` seconds from the ``queue``"""
-    results = []
-    deadline = time.monotonic() + max_age
-    while len(results) < max_items:
-        try:
-            if queue.empty():
-                item = await asyncio.wait_for(queue.get(), deadline - time.monotonic())
-            else:
-                item = queue.get_nowait()
-        except asyncio.TimeoutError:
-            break
-        else:
-            results.append(item)
-            queue.task_done()
-        # check deadline late so that we cannot stall if the delay is very low
-        if time.monotonic() > deadline:
-            break
-    return results
-
-
 class AsyncBulkCall(Generic[T, R]):
     """
     Framework for queueing and executing several tasks via bulk commands
@@ -145,12 +124,35 @@ class AsyncBulkCall(Generic[T, R]):
         """Collect tasks into bulks and dispatch them for command execution"""
         while True:
             await asyncio.sleep(0)
-            bulk = list(zip(*(await _read(self._queue, self._size, self._delay))))
+            bulk = list(zip(*(await self._get_bulk())))
             if not bulk:
                 continue
             tasks, futures = bulk
             await self._concurrent.acquire()
             asyncio.ensure_future(self._bulk_execute(tuple(tasks), futures))
+
+    async def _get_bulk(self) -> List[Tuple[T, asyncio.Future[R]]]:
+        """Fetch the next bulk from the internal queue"""
+        results = []
+        max_items, queue = self._size, self._queue
+        deadline = time.monotonic() + self._delay
+        while len(results) < max_items:
+            try:
+                if queue.empty():
+                    item = await asyncio.wait_for(
+                        queue.get(), deadline - time.monotonic()
+                    )
+                else:
+                    item = queue.get_nowait()
+            except asyncio.TimeoutError:
+                break
+            else:
+                results.append(item)
+                queue.task_done()
+            # check deadline late so that we cannot stall if the delay is very low
+            if time.monotonic() > deadline:
+                break
+        return results
 
     async def _bulk_execute(
         self, tasks: Tuple[T, ...], futures: "List[asyncio.Future[R]]"
