@@ -44,7 +44,7 @@ async def _read(queue: "asyncio.Queue[T]", max_items: int, max_age: float) -> Li
     return results
 
 
-class BulkExecution(Generic[T, R]):
+class AsyncBulkCall(Generic[T, R]):
     """
     Framework for queueing and executing several tasks via bulk commands
 

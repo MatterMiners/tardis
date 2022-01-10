@@ -9,7 +9,7 @@ from ...utilities.asynccachemap import AsyncCacheMap
 from ...utilities.attributedict import AttributeDict
 from ...utilities.staticmapping import StaticMapping
 from ...utilities.executors.shellexecutor import ShellExecutor
-from ...utilities.bulkexecution import BulkExecution
+from ...utilities.asyncbulkcall import AsyncBulkCall
 from ...utilities.utils import csv_parser, machine_meta_data_translation
 
 from contextlib import contextmanager
@@ -168,7 +168,7 @@ class HTCondorAdapter(SiteAdapter):
         bulk_size = getattr(self.configuration, "bulk_size", 100)
         bulk_delay = getattr(self.configuration, "bulk_delay", 1.0)
         self._condor_submit, self._condor_suspend, self._condor_rm = (
-            BulkExecution(
+            AsyncBulkCall(
                 partial(tool, executor=self._executor),
                 size=bulk_size,
                 delay=bulk_delay,
