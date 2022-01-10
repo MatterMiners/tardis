@@ -100,8 +100,14 @@ class TestDrone(TestCase):
         with self.assertLogs(level=DEBUG):
             run_async(self.drone.run)
 
-        mocked_asyncio_sleep.assert_called_once_with(
-            self.mock_site_agent.drone_heartbeat_interval
+        # duration skipped via asyncio.sleep
+        # use the `sum` to avoid `asyncio.sleep(0)` context switches to skew the result
+        mock_elapsed = sum(
+            args[0] for args, _ in
+            mocked_asyncio_sleep.call_args_list
+        )
+        self.assertEqual(
+            mock_elapsed, self.mock_site_agent.drone_heartbeat_interval
         )
 
         self.assertIsInstance(self.drone.state, DownState)
