@@ -42,16 +42,16 @@ class TestAsyncBulkCall(TestCase):
 
     def test_bulk_delay(self):
         """Test that bulks are formed by delay"""
-        bulk_delay = 0.1
+        test_size, bulk_delay = 1024, 0.1
         # check that delay forces a bulk if the size is too large to be reached
         execution = AsyncBulkCall(CallCounter(), size=2 ** 32, delay=bulk_delay)
         before = time.monotonic()
-        result = run_async(self.execute, execution, count=1024)
+        result = run_async(self.execute, execution, count=test_size)
         after = time.monotonic()
         # PyPy can have a huge overhead before the JIT has warmed up
         grace = 5 if python_implementation() != "PyPy" else 25
         self.assertLess(after - before, bulk_delay * grace)
-        self.assertEqual(result, [(i, 0) for i in range(2048)])
+        self.assertEqual(result, [(i, 0) for i in range(test_size)])
 
     def test_delay_tiny(self):
         """Test that a tiny delay cannot stall execution"""
