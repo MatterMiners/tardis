@@ -47,7 +47,8 @@ class TestAsyncBulkCall(TestCase):
         before = time.monotonic()
         result = run_async(self.execute, execution, count=2048)
         after = time.monotonic()
-        self.assertLess(after - before, bulk_delay * 4)
+        # PyPy can have a huge overhead before the JIT has warmed up
+        self.assertLess(after - before, bulk_delay * 10)
         self.assertEqual(result, [(i, 0) for i in range(2048)])
 
     def test_delay_tiny(self):
