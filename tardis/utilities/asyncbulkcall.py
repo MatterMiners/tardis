@@ -4,6 +4,8 @@ import asyncio
 import time
 import sys
 
+from backports.cached_property import cached_property
+
 
 T = TypeVar("T")
 R = TypeVar("R")
@@ -70,8 +72,6 @@ class AsyncBulkCall(Generic[T, R]):
         self._command = command
         self._size = size
         self._delay = delay
-        # synchronized counter for active commands
-        self._concurrent_ = None
         self._concurrency = (
             1
             if concurrent is False
@@ -79,11 +79,19 @@ class AsyncBulkCall(Generic[T, R]):
             if concurrent is None or concurrent is True
             else concurrent
         )
-        # queue of outstanding tasks
-        self._queue_ = None
         # task handling dispatch from queue to command execution
         self._master_worker: Optional[asyncio.Task] = None
         self._verify_settings()
+
+    @cached_property
+    def _concurrent(self) -> "asyncio.BoundedSemaphore":
+        """synchronized counter for active commands"""
+        return asyncio.BoundedSemaphore(value=self._concurrency)
+
+    @cached_property
+    def _queue(self) -> "asyncio.Queue[Tuple[T, asyncio.Future[R]]]":
+        """queue of outstanding tasks"""
+        return asyncio.Queue()
 
     def _verify_settings(self):
         if not isinstance(self._size, int) or self._size <= 0:
@@ -102,18 +110,6 @@ class AsyncBulkCall(Generic[T, R]):
         await self._queue.put((__task, result))
         self._ensure_worker()
         return await result
-
-    @property
-    def _concurrent(self) -> "asyncio.BoundedSemaphore":
-        if self._concurrent_ is None:
-            self._concurrent_ = asyncio.BoundedSemaphore(value=self._concurrency)
-        return self._concurrent_
-
-    @property
-    def _queue(self) -> "asyncio.Queue[Tuple[T, asyncio.Future[R]]]":
-        if self._queue_ is None:
-            self._queue_ = asyncio.Queue()
-        return self._queue_
 
     def _ensure_worker(self):
         """Ensure there is a worker to dispatch tasks for command execution"""

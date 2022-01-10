@@ -79,6 +79,7 @@ setup(
         "pydantic",
         "asyncstdlib",
         "typing_extensions",
+        "backports.cached_property",
     ],
     extras_require={
         "docs": [
