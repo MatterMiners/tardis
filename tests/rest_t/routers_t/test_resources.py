@@ -12,7 +12,7 @@ class TestResources(TestCaseRouters):
         )
 
         response = run_async(
-            self.client.get, "/resources/state/test-0123456789", headers=self.headers
+            self.client.get, "/resources/test-0123456789/state", headers=self.headers
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -22,13 +22,13 @@ class TestResources(TestCaseRouters):
 
         self.mock_crud.get_resource_state.return_value = async_return(return_value=[])
         response = run_async(
-            self.client.get, "/resources/state/test-1234567890", headers=self.headers
+            self.client.get, "/resources/test-1234567890/state", headers=self.headers
         )
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {"detail": "Drone not found"})
 
         response = run_async(
-            self.client.get, "/resources/state/test-invalid", headers=self.headers
+            self.client.get, "/resources/test-invalid/state", headers=self.headers
         )
         self.assertEqual(response.status_code, 422)
         self.assertEqual(

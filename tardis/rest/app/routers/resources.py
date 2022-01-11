@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Security
 router = APIRouter(prefix="/resources", tags=["resources"])
 
 
-@router.get("/state/{drone_uuid}", description="Get current state of a resource")
+@router.get("/{drone_uuid}/state", description="Get current state of a resource")
 async def get_resource_state(
     drone_uuid: str = Path(..., regex=r"^\S+-[A-Fa-f0-9]{10}$"),
     sql_registry: SqliteRegistry = Depends(database.get_sql_registry()),
