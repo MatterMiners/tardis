@@ -13,7 +13,7 @@ def generate_token(
         ..., help="User name to include in the generated token"
     ),
     scopes: List[str] = typer.Option(
-        ["user:read"], help="Security scopes associated with the generated token"
+        ["resources:get"], help="Security scopes associated with the generated token"
     ),
     config_file: Path = typer.Option(
         None, help="Path to the COBalD/TARDIS yaml configuration"

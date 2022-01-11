@@ -55,7 +55,7 @@ class TestGenerateToken(TestCase):
             in result.stdout
         )
 
-        expected_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0Iiwic2NvcGVzIjpbInVzZXI6cmVhZCJdfQ.DffmcJT9l3UcwTzjnHS0x3h4XjFALKm5L_ubcF6onMQ"  # noqa: B950
+        expected_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0Iiwic2NvcGVzIjpbInJlc291cmNlczpnZXQiXX0.JtjroDVX2FlHI-DFO3XErRutDjvcZwbZF4Bqx736JTc"  # noqa: B950
 
         result = self.runner.invoke(
             self.app,

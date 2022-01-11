@@ -38,16 +38,16 @@ class TestSecurity(TestCase):
         )
         self.algorithm = "HS256"
 
-        self.infinite_read_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0Iiwic2NvcGVzIjpbInVzZXI6cmVhZCJdfQ.qO2ikdmETwmK-mzsKUEIL1QA47LF-OgCXNssGIarPLM"  # noqa B950
-        self.limited_read_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0Iiwic2NvcGVzIjpbInVzZXI6cmVhZCJdLCJleHAiOjkwMH0.rP-2IlCoEDTMeo5D70FuQ7jfLoQpRYSSAlU-zIIo2iw"  # noqa B950
-        self.infinite_rw_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0Iiwic2NvcGVzIjpbInVzZXI6cmVhZCIsInVzZXI6d3JpdGUiXX0.vFUbHA5BFOCgWmjBWUTS5PRLDmKuvGmWk81_FtKFCA0"  # noqa B950
+        self.infinite_resources_get_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0Iiwic2NvcGVzIjpbInJlc291cmNlczpnZXQiXX0.FTzUlLfPgb2WXFUSPSoUsvqHI67QtSO2Boash_6eVBg"  # noqa B950
+        self.limited_resources_get_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0Iiwic2NvcGVzIjpbInJlc291cmNlczpnZXQiXSwiZXhwIjo5MDB9.nN4wmo7S5wHq3LcnYTL0J2Z1wIqBCPOHkOe_lSBmDS0"  # noqa B950
+        self.infinite_resources_get_update_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0Iiwic2NvcGVzIjpbInJlc291cmNlczpnZXQiLCJyZXNvdXJjZXM6cHV0Il19.KzwdGOo8mp90MlkdcBr_3eZ4KxH35Vi-Eu_hTFGFOWU"  # noqa B950
 
         def mocked_get_user(user_name):
             if user_name == "test":
                 return AttributeDict(
                     user_name="test",
                     hashed_password="$2b$12$Gkl8KYNGRMhx4kB0bKJnyuRuzOrx3LZlWf1CReIsDk9HyWoUGBihG",  # noqa B509
-                    scopes=["user:read"],
+                    scopes=["resources:get"],
                 )
             return None
 
@@ -66,62 +66,68 @@ class TestSecurity(TestCase):
     def test_create_access_token(self, mocked_datetime):
         self.clear_lru_cache()
 
-        token = create_access_token(user_name="test", scopes=["user:read"])
-        self.assertEqual(token, self.infinite_read_token)
+        token = create_access_token(user_name="test", scopes=["resources:get"])
+
+        self.assertEqual(token, self.infinite_resources_get_token)
 
         self.clear_lru_cache()
 
         token = create_access_token(
             user_name="test",
-            scopes=["user:read"],
+            scopes=["resources:get"],
             secret_key="c2ac5e498f6287c58fa941d0d2cfaf2dc271762a7ba03dcfc3ceb91bb1895d05",  # noqa B950
             algorithm=self.algorithm,
         )
 
         self.assertEqual(
             token,
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0Iiwic2NvcGVzIjpbInVzZXI6cmVhZCJdfQ.qlqyNAoZD0DGO5ib5jyfcNULDsrLo_YkPjiIqJWNTs0",  # noqa B950
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0Iiwic2NvcGVzIjpbInJlc291cmNlczpnZXQiXX0.bpEZ-l6yC4A7mHV1OjK6WUBeFrjCGMQ7kN9ElXGORe4",  # noqa B950
         )
 
         self.clear_lru_cache()
         mocked_datetime.utcnow.return_value = datetime.utcfromtimestamp(0)
         token = create_access_token(
             user_name="test",
-            scopes=["user:read"],
+            scopes=["resources:get"],
             expires_delta=timedelta(minutes=15),
         )
 
-        self.assertEqual(token, self.limited_read_token)
+        self.assertEqual(token, self.limited_resources_get_token)
 
         self.clear_lru_cache()
         token = create_access_token(
-            user_name="test", scopes=["user:read", "user:write"]
+            user_name="test", scopes=["resources:get", "resources:put"]
         )
 
-        self.assertEqual(token, self.infinite_rw_token)
+        self.assertEqual(token, self.infinite_resources_get_update_token)
 
     def test_check_authorization(self):
         self.clear_lru_cache()
-        security_scopes = SecurityScopes(["user:read"])
-        token_data = check_authorization(security_scopes, self.infinite_read_token)
+        security_scopes = SecurityScopes(["resources:get"])
+        token_data = check_authorization(
+            security_scopes, self.infinite_resources_get_token
+        )
 
         self.assertEqual(
             token_data, TokenData(scopes=security_scopes.scopes, user_name="test")
         )
 
-        security_scopes = SecurityScopes(["user:write"])
+        security_scopes = SecurityScopes(["resources:put"])
         with self.assertRaises(HTTPException) as he:
-            check_authorization(security_scopes, self.infinite_read_token)
+            check_authorization(security_scopes, self.infinite_resources_get_token)
         self.assertEqual(he.exception.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(he.exception.detail, "Not enough permissions")
 
-        token_data = check_authorization(security_scopes, self.infinite_rw_token)
+        token_data = check_authorization(
+            security_scopes, self.infinite_resources_get_update_token
+        )
         self.assertEqual(
-            token_data, TokenData(scopes=["user:read", "user:write"], user_name="test")
+            token_data,
+            TokenData(scopes=["resources:get", "resources:put"], user_name="test"),
         )
 
         security_scopes = SecurityScopes()
-        check_authorization(security_scopes, self.infinite_read_token)
+        check_authorization(security_scopes, self.infinite_resources_get_token)
 
         with self.assertRaises(HTTPException) as he:
             check_authorization(security_scopes, "1234567890abdcef")
@@ -133,7 +139,7 @@ class TestSecurity(TestCase):
         mocked_jwt.decode.side_effect = JWTError
 
         with self.assertRaises(HTTPException) as he:
-            check_authorization(SecurityScopes(), self.infinite_read_token)
+            check_authorization(SecurityScopes(), self.infinite_resources_get_token)
         self.assertEqual(he.exception.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(he.exception.detail, "Could not validate credentials")
 
@@ -158,7 +164,7 @@ class TestSecurity(TestCase):
             check_authentication(user_name="test", password="test"),
             {
                 "hashed_password": "$2b$12$Gkl8KYNGRMhx4kB0bKJnyuRuzOrx3LZlWf1CReIsDk9HyWoUGBihG",  # noqa B509
-                "scopes": ["user:read"],
+                "scopes": ["resources:get"],
                 "user_name": "test",
             },
         )
@@ -189,7 +195,7 @@ class TestSecurity(TestCase):
             get_user("test"),
             {
                 "hashed_password": "$2b$12$Gkl8KYNGRMhx4kB0bKJnyuRuzOrx3LZlWf1CReIsDk9HyWoUGBihG",  # noqa B509
-                "scopes": ["user:read"],
+                "scopes": ["resources:get"],
                 "user_name": "test",
             },
         )

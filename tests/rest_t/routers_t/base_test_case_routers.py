@@ -40,7 +40,7 @@ class TestCaseRouters(TestCase):
         self.config.Services.restapi.get_user.return_value = AttributeDict(
             user_name="test",
             hashed_password="$2b$12$Gkl8KYNGRMhx4kB0bKJnyuRuzOrx3LZlWf1CReIsDk9HyWoUGBihG",  # noqa B509
-            scopes=["user:read"],
+            scopes=["resources:get"],
         )
 
         from tardis.rest.app.main import (
@@ -61,6 +61,6 @@ class TestCaseRouters(TestCase):
     @property
     def headers(
         self,
-        token="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0YXJkaXMiLCJzY29wZXMiOlsidXNlcjpyZWFkIl19.l2xDqxEQOLYQq6cDX7RGDcT1XvyupRcBUpvvW1l4yeM",  # noqa B950
+        token="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0Iiwic2NvcGVzIjpbInJlc291cmNlczpnZXQiXX0.yybw7XC5GpTCHytNj2vl1nWLCgxaN7vpkIz4wF1-Pnc",  # noqa B950
     ):
         return {"accept": "application/json", "Authorization": token}

@@ -116,7 +116,7 @@ Available configuration options
               - user_name: tardis
                 hashed_password: $2b$12$c9SSllh1U6tOhIo37sDWF.kdRIU5RQAAOHL9bVYMs2.HluyFE43Uq
                 scopes:
-                 - user:read
+                 - resources:get
         Plugins:
           SqliteRegistry:
             db_file: drone_registry.db
@@ -183,7 +183,7 @@ Generate Token
 
     .. note::
 
-        For security reasons it is recommended to use non-expiring tokens only together with ``user:read`` scope.
+        For security reasons it is recommended to use non-expiring tokens only together with ``resources:get`` scope.
 
     .. table:: Options available to the `generate_token` command
 
@@ -209,15 +209,15 @@ Generate Token
 
     .. code-block:: shell
 
-        generate_token --user-name tardis --scopes user:read --config-file tardis.yml
+        generate_token --user-name tardis --scopes resources:get --config-file tardis.yml
         #alternatively
-        python -m tardis.rest.token_generator --user-name tardis --scopes user:read --config-file tardis.yml
+        python -m tardis.rest.token_generator --user-name tardis --scopes resources:get --config-file tardis.yml
 
     .. code-block:: shell
 
-        generate_token --user-name tardis --scopes user:read --secret-key ... --algorithm HS256
+        generate_token --user-name tardis --scopes resources:get --secret-key ... --algorithm HS256
         #alternatively
-        python -m tardis.rest.token_generator --user-name tardis --scopes user:read --secret-key ... --algorithm HS256
+        python -m tardis.rest.token_generator --user-name tardis --scopes resources:get --secret-key ... --algorithm HS256
 
 Hash Credentials
 """"""""""""""""

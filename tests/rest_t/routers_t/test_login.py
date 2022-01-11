@@ -54,7 +54,7 @@ class TestLogin(TestCaseRouters):
         self.assertEqual(
             response.json(),
             {
-                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0Iiwic2NvcGVzIjpbInVzZXI6cmVhZCJdLCJleHAiOjg2NDAwfQ.sBNCusXmAZiuRgKvIdNnU4iTIcAqexJqS39-mHv12mI",  # noqa B509
+                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0Iiwic2NvcGVzIjpbInJlc291cmNlczpnZXQiXSwiZXhwIjo4NjQwMH0.FBozcHL4n21BMprTP8snzniaNClpPat3hlJ1b-glgJg",  # noqa B509
                 "token_type": "bearer",
             },
         )

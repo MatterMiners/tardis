@@ -36,7 +36,7 @@ class TestRestService(TestCase):
         user = {
             "user_name": "test",
             "hashed_password": "1234abcd",
-            "scopes": ["user:read"],
+            "scopes": ["resources:get"],
         }
 
         rest_service = RestService(

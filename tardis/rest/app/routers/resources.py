@@ -10,7 +10,7 @@ router = APIRouter(prefix="/resources", tags=["resources"])
 async def get_resource_state(
     drone_uuid: str = Path(..., regex=r"^\S+-[A-Fa-f0-9]{10}$"),
     sql_registry: SqliteRegistry = Depends(database.get_sql_registry()),
-    _: str = Security(security.check_authorization, scopes=["user:read"]),
+    _: str = Security(security.check_authorization, scopes=["resources:get"]),
 ):
     query_result = await crud.get_resource_state(sql_registry, drone_uuid)
     try:
@@ -23,7 +23,7 @@ async def get_resource_state(
 @router.get("/", description="Get list of managed resources")
 async def get_resources(
     sql_registry: SqliteRegistry = Depends(database.get_sql_registry()),
-    _: str = Security(security.check_authorization, scopes=["user:read"]),
+    _: str = Security(security.check_authorization, scopes=["resources:get"]),
 ):
     query_result = await crud.get_resources(sql_registry)
     return query_result
