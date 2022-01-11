@@ -58,8 +58,18 @@ REST Service
 
     .. note::
 
+        The REST service currently supports only read access to the
+        :py:class:`~tardis.plugins.sqliteregistry.SqliteRegistry` using the ``resources:get`` OAuth2 scope. However,
+        this could be extended in the future to support also DB updates and deletions using ``resources:put`` and
+        ``resources:delete`` OAuth2 scopes. In addition, plans exists to store the ``TARDIS`` configuration in a
+        database as well and allow to use the REST service to perform configuration updates at run time.
+
+
+    .. warning::
+
         In order to enable the :py:class:`~tardis.rest.service.RestService`, the
         :py:class:`~tardis.plugins.sqliteregistry.SqliteRegistry` plugin has to be enabled as well.
+
 
 Available configuration options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
