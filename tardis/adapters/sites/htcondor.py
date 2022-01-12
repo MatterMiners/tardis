@@ -89,7 +89,9 @@ def condor_rm(
     *resource_attributes: AttributeDict, executor: Executor
 ) -> Awaitable[Iterable[bool]]:
     """Remove a number of resources, indicating success for each"""
-    return _condor_tool(resource_attributes, executor, "condor_rm", "marked for removal")
+    return _condor_tool(
+        resource_attributes, executor, "condor_rm", "marked for removal"
+    )
 
 
 def condor_suspend(
