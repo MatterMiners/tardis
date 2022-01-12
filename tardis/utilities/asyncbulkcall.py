@@ -105,7 +105,7 @@ class AsyncBulkCall(Generic[T, R]):
             )
 
     async def __call__(self, __task: T) -> R:
-        """Execute a ``task`` in bulk and return the result"""
+        """Queue a ``task`` for bulk execution and return the result when available"""
         result: "asyncio.Future[R]" = asyncio.get_event_loop().create_future()
         await self._queue.put((__task, result))
         self._ensure_worker()
