@@ -89,26 +89,33 @@ def condor_rm(
     *resource_attributes: AttributeDict, executor: Executor
 ) -> Awaitable[Iterable[bool]]:
     """Remove a number of resources, indicating success for each"""
-    return condor_tool(resource_attributes, executor, "condor_rm", "marked for removal")
+    return _condor_tool(resource_attributes, executor, "condor_rm", "marked for removal")
 
 
 def condor_suspend(
     *resource_attributes: AttributeDict, executor: Executor
 ) -> Awaitable[Iterable[bool]]:
-    """Remove a number of resources, indicating success for each"""
-    return condor_tool(resource_attributes, executor, "condor_suspend", "suspended")
+    """Suspend a number of resources, indicating success for each"""
+    return _condor_tool(resource_attributes, executor, "condor_suspend", "suspended")
 
 
 # search the Job ID in a remove/suspend mark line
 TOOL_ID_PATTERN = re.compile(r"Job\s(\d+\.\d+)")
 
 
-async def condor_tool(
+async def _condor_tool(
     resource_attributes: Tuple[AttributeDict, ...],
     executor: Executor,
     command: str,
     success_message: str,
 ) -> Iterable[bool]:
+    """
+    Generic call to modify a number of condor jobs and indicate success for each
+
+    The ``command`` and ``success_message`` should match the specific tool,
+    e.g. ``condor_rm`` reports ``Job XY.Z marked for removal`` and thus corresponds to
+    ``_condor_tool(..., "condor_rm", "marked for removal")``.
+    """
     command = (
         command
         + " "
