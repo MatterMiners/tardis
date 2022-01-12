@@ -124,8 +124,12 @@ class AsyncBulkCall(Generic[T, R]):
             if not bulk:
                 continue
             tasks, futures = bulk
+            # limit concurrent bulk execution
+            # We must make sure *here* that a new bulk can be launched, but
+            # we must release the claim *in the task* when it is done.
             await self._concurrent.acquire()
-            asyncio.ensure_future(self._bulk_execute(tuple(tasks), futures))
+            task = asyncio.ensure_future(self._bulk_execute(tuple(tasks), futures))
+            task.add_done_callback(lambda _: self._concurrent.release)
 
     async def _get_bulk(self) -> "List[Tuple[T, asyncio.Future[R]]]":
         """Fetch the next bulk from the internal queue"""
@@ -169,5 +173,3 @@ class AsyncBulkCall(Generic[T, R]):
         else:
             for future, result in zip(futures, results):
                 future.set_result(result)
-        finally:
-            self._concurrent.release()
