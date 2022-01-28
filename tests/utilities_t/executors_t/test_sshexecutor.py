@@ -149,7 +149,7 @@ class TestSSHExecutor(TestCase):
             ]
             # probe can only finish in time if it is not queued
             probe = asyncio.ensure_future(self.executor.run_command("sleep 0.01"))
-            await asyncio.sleep(0.05)
+            await asyncio.sleep(0.1)
             queued = not probe.done()
             for task in background + [probe]:
                 task.cancel()
