@@ -6,7 +6,7 @@ from uvicorn.config import Config
 from uvicorn.server import Server
 
 from functools import lru_cache
-from typing import List
+from typing import List, Optional
 import asyncio
 
 
@@ -40,7 +40,7 @@ class RestService(object):
         return self._secret_key
 
     @lru_cache(maxsize=16)
-    def get_user(self, user_name: str) -> [None, UserCredentials]:
+    def get_user(self, user_name: str) -> Optional[UserCredentials]:
         for user in self._users:
             if user["user_name"] == user_name:
                 return UserCredentials(**user)
