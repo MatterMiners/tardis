@@ -61,7 +61,7 @@ REST Service
         The REST service currently supports only read access to the
         :py:class:`~tardis.plugins.sqliteregistry.SqliteRegistry` using the ``resources:get`` OAuth2 scope. However,
         this could be extended in the future to support also DB updates and deletions using ``resources:put`` and
-        ``resources:delete`` OAuth2 scopes. In addition, plans exists to store the ``TARDIS`` configuration in a
+        ``resources:delete`` OAuth2 scopes. In addition, plans exist to store the ``TARDIS`` configuration in a
         database as well and allow to use the REST service to perform configuration updates at run time.
 
 
@@ -85,9 +85,9 @@ Available configuration options
         +----------------+-------------------------------------------------------------------+-----------------+
         | port           | Port the REST Service is listening on                             |  **Required**   |
         +----------------+-------------------------------------------------------------------+-----------------+
-        | secret_key     | 32 byte secret key to use to generate and validate JWTs           |  **Required**   |
+        | secret_key     | 32 byte secret key to generate and validate JWTs           |  **Required**   |
         +----------------+-------------------------------------------------------------------+-----------------+
-        | algorithm      | Algorithm to use generate and validate JWTs (default: HS256)      |  **Optional**   |
+        | algorithm      | Algorithm to generate and validate JWTs (default: HS256)      |  **Optional**   |
         +----------------+-------------------------------------------------------------------+-----------------+
         | users          | List of user entries allowed to use the REST service. (see below) | **Required**    |
         +----------------+-------------------------------------------------------------------+-----------------+
@@ -200,15 +200,15 @@ Generate Token
         +-----------------+-------------------------------------------------------------------------------------------+-----------------+
         | Option          | Short Description                                                                         | Requirement     |
         +=================+===========================================================================================+=================+
-        | user_name       | The user name the token include                                                           | **Required**    |
+        | user_name       | The user name the token includes                                                          | **Required**    |
         +-----------------+-------------------------------------------------------------------------------------------+-----------------+
         | scopes          | List of scopes the token should have. Comma separated list.                               | **Required**    |
         +-----------------+-------------------------------------------------------------------------------------------+-----------------+
         | config-file     | The ``COBalD/TARDIS`` configuration file containing the configuration of the REST service | **Optional**    |
         +-----------------+-------------------------------------------------------------------------------------------+-----------------+
-        | secret-key      | The secret key to be used to generate the token                                           | **Optional**    |
+        | secret-key      | The secret key to generate the token                                           | **Optional**    |
         +-----------------+-------------------------------------------------------------------------------------------+-----------------+
-        | algorithm       | The algorithm to be used to generate the token. For example ``HS256``                     | **Optional**    |
+        | algorithm       | The algorithm to generate the token. For example ``HS256``                     | **Optional**    |
         +-----------------+-------------------------------------------------------------------------------------------+-----------------+
 
     Either ``config-file`` or ``secret-key`` and ``algorithm`` needs to be specified.

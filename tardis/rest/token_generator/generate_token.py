@@ -19,9 +19,9 @@ def generate_token(
         None, help="Path to the COBalD/TARDIS yaml configuration"
     ),
     secret_key: str = typer.Option(
-        None, help="The secret key used to generate a token"
+        None, help="The secret key to generate a token"
     ),
-    algorithm: str = typer.Option(None, help="The algorithm used to generate a token"),
+    algorithm: str = typer.Option(None, help="The algorithm to generate a token"),
 ):
     if config_file:
         with disable_logging(logging.DEBUG):
