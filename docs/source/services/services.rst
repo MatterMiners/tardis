@@ -138,8 +138,8 @@ Available logging configuration options
 
     The REST service uses ``uvicorn`` as ASGI server, which provides some additional logging functionality. By default
     the access and errors logs are written into the regular ``TARDIS`` logfile. However, it can be configured to write
-    both access and error logs into a separate file. Therefore, an ``uvicorn`` logger needs to be configured. An example
-    can be found below.
+    both access and error logs into a separate file. Therefore, an ``uvicorn`` logger needs to be configured. See the
+    example logging configuration.
 
 .. content-tabs:: right-col
 
