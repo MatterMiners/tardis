@@ -1,4 +1,4 @@
-FROM rockylinux/rockylinux:8
+FROM rockylinux:8
 LABEL maintainer="Manuel Giffels <giffels@gmail.com>"
 
 RUN yum -y install epel-release curl && yum clean all
