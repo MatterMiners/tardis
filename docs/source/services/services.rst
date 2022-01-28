@@ -85,9 +85,9 @@ Available configuration options
         +----------------+-------------------------------------------------------------------+-----------------+
         | port           | Port the REST Service is listening on                             |  **Required**   |
         +----------------+-------------------------------------------------------------------+-----------------+
-        | secret_key     | 32 byte secret key to generate and validate JWTs           |  **Required**   |
+        | secret_key     | 32 byte secret key to generate and validate JWTs                  |  **Required**   |
         +----------------+-------------------------------------------------------------------+-----------------+
-        | algorithm      | Algorithm to generate and validate JWTs (default: HS256)      |  **Optional**   |
+        | algorithm      | Algorithm to generate and validate JWTs (default: HS256)          |  **Optional**   |
         +----------------+-------------------------------------------------------------------+-----------------+
         | users          | List of user entries allowed to use the REST service. (see below) | **Required**    |
         +----------------+-------------------------------------------------------------------+-----------------+
@@ -206,9 +206,9 @@ Generate Token
         +-----------------+-------------------------------------------------------------------------------------------+-----------------+
         | config-file     | The ``COBalD/TARDIS`` configuration file containing the configuration of the REST service | **Optional**    |
         +-----------------+-------------------------------------------------------------------------------------------+-----------------+
-        | secret-key      | The secret key to generate the token                                           | **Optional**    |
+        | secret-key      | The secret key to generate the token                                                      | **Optional**    |
         +-----------------+-------------------------------------------------------------------------------------------+-----------------+
-        | algorithm       | The algorithm to generate the token. For example ``HS256``                     | **Optional**    |
+        | algorithm       | The algorithm to generate the token. For example ``HS256``                                | **Optional**    |
         +-----------------+-------------------------------------------------------------------------------------------+-----------------+
 
     Either ``config-file`` or ``secret-key`` and ``algorithm`` needs to be specified.
