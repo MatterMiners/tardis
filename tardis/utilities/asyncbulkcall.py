@@ -48,12 +48,10 @@ class AsyncBulkCall(Generic[T, R]):
     back to individual tasks.
 
     Both ``size`` and ``delay`` control how long to queue tasks at most
-    before starting to execute them. The ``concurrent`` parameter controls whether
-    and how many bulks may run at once; when concurrency is low or disabled, tasks
+    before starting to execute them. The ``concurrent`` parameter controls
+    how many bulks may run at once; when concurrency is low tasks
     may be waiting for execution even past ``size`` and ``delay``.
-    Possible values for ``concurrent`` are
-    :py:data:`False` (no concurrency, only one ``command`` at once),
-    either of :py:data:`True` or :py:data:`None` (unlimited concurrency),
+    Possible values for ``concurrent`` are :py:data:`None` for unlimited concurrency
     or an integer above 0 to set a precise concurrency limit.
 
     .. note::
@@ -67,18 +65,12 @@ class AsyncBulkCall(Generic[T, R]):
         command: BulkCommand[T, R],
         size: int,
         delay: float,
-        concurrent: Union[int, bool, None] = True,
+        concurrent: Optional[int] = None,
     ):
         self._command = command
         self._size = size
         self._delay = delay
-        self._concurrency = (
-            1
-            if concurrent is False
-            else sys.maxsize
-            if concurrent is None or concurrent is True
-            else concurrent
-        )
+        self._concurrency = sys.maxsize if concurrent is None else concurrent
         # task handling dispatch from queue to command execution
         self._master_worker: Optional[asyncio.Task] = None
         self._verify_settings()
@@ -100,7 +92,7 @@ class AsyncBulkCall(Generic[T, R]):
             raise ValueError(f"expected 'delay' > 0, got {self._delay!r} instead")
         if not isinstance(self._concurrency, int) or self._concurrency <= 0:
             raise ValueError(
-                "'concurrent' must be one of True, False, None or an integer above 0"
+                "'concurrent' must be None or an integer above 0"
                 f", got {self._concurrency!r} instead"
             )
 
