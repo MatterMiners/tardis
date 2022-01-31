@@ -244,7 +244,7 @@ class HTCondorAdapter(SiteAdapter):
     ) -> AttributeDict:
         await self._htcondor_queue.update_status()
         try:
-            resource_uuid = resource_attributes.remote_resource_uuid
+            resource_uuid = _job_id(resource_attributes.remote_resource_uuid)
             resource_status = self._htcondor_queue[resource_uuid]
         except KeyError:
             # In case the created timestamp is after last update timestamp of the
