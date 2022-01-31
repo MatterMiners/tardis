@@ -175,6 +175,19 @@ class TestHTCondorSiteAdapter(TestCase):
         )
         self.mock_executor.reset()
 
+        # "queue 1" deprecation
+        with self.assertWarns(FutureWarning):
+            run_async(
+                self.adapter.deploy_resource,
+                AttributeDict(
+                    drone_uuid="test-123",
+                    obs_machine_meta_data_translation_mapping=AttributeDict(
+                        Cores=1, Memory=1, Disk=1
+                    ),
+                ),
+            )
+        self.mock_executor.reset()
+
     def test_translate_resources_raises_logs(self):
         self.adapter = HTCondorAdapter(
             machine_type="testunkownresource", site_name="TestSite"

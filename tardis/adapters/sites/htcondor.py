@@ -17,6 +17,7 @@ from datetime import datetime
 from functools import partial
 from string import Template
 
+import warnings
 import logging
 import re
 
@@ -59,6 +60,22 @@ async def htcondor_queue_updater(executor):
 JDL = str
 # search the Job ID in a submit Proc line
 SUBMIT_ID_PATTERN = re.compile(r"Proc\s(\d+\.\d+)")
+# search for job queue commands
+JDL_QUEUE_PATTERN = re.compile(r"^queue\s*\d*\s*$", flags=re.MULTILINE)
+
+
+def _submit_description(resource_jdls: Tuple[JDL, ...]) -> str:
+    commands = []
+    for jdl in resource_jdls:
+        commands.append(jdl)
+        if JDL_QUEUE_PATTERN.search(jdl):
+            warnings.warn(
+                "Condor JDL templates may not include queue commands",
+                FutureWarning,
+            )
+        else:
+            commands.append("queue 1")
+    return "\n".join(commands)
 
 
 async def condor_submit(*resource_jdls: JDL, executor: Executor) -> Iterable[str]:
@@ -75,7 +92,10 @@ async def condor_submit(*resource_jdls: JDL, executor: Executor) -> Iterable[str
     # ** Proc 15556.1:
     # ...
     command = f"condor_submit -verbose -maxjobs {len(resource_jdls)}"
-    response = await executor.run_command(command, stdin_input="\n".join(resource_jdls))
+    response = await executor.run_command(
+        command,
+        stdin_input=_submit_description(resource_jdls),
+    )
     return (
         SUBMIT_ID_PATTERN.search(line).group(1)
         for line in response.stdout.splitlines()
