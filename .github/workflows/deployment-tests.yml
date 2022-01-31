@@ -47,6 +47,7 @@ jobs:
           python3 -m pip install coverage codecov
       - name: Test with unittest on ${{ matrix.os_container }}
         run: |
+          export LANG=en_US.utf8
           coverage run -m unittest -v
   deployment-macos:
     strategy:

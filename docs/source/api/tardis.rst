@@ -19,4 +19,5 @@ Subpackages
    tardis.interfaces
    tardis.plugins
    tardis.resources
+   tardis.rest
    tardis.utilities
