@@ -111,7 +111,6 @@ class AsyncBulkCall(Generic[T, R]):
     async def _bulk_dispatch(self):
         """Collect tasks into bulks and dispatch them for command execution"""
         while True:
-            await asyncio.sleep(0)
             bulk = list(zip(*(await self._get_bulk())))
             if not bulk:
                 continue
@@ -122,13 +121,18 @@ class AsyncBulkCall(Generic[T, R]):
             await self._concurrent.acquire()
             task = asyncio.ensure_future(self._bulk_execute(tuple(tasks), futures))
             task.add_done_callback(lambda _: self._concurrent.release)
+            # yield to the event loop so that the `while True` loop does not arbitrarily
+            # delay other tasks on the fast paths for `_get_bulk` and `acquire`.
+            await asyncio.sleep(0)
 
     async def _get_bulk(self) -> "List[Tuple[T, asyncio.Future[R]]]":
         """Fetch the next bulk from the internal queue"""
-        results = []
         max_items, queue = self._size, self._queue
+        # always pull in at least one item asynchronously
+        # this avoids stalling for very low delays and efficiently waits for items
+        results = [await queue.get()]
         deadline = time.monotonic() + self._delay
-        while len(results) < max_items:
+        while len(results) < max_items and time.monotonic() < deadline:
             try:
                 if queue.empty():
                     item = await asyncio.wait_for(
@@ -141,9 +145,6 @@ class AsyncBulkCall(Generic[T, R]):
             else:
                 results.append(item)
                 queue.task_done()
-            # check deadline late so that we cannot stall if the delay is very low
-            if time.monotonic() > deadline:
-                break
         return results
 
     async def _bulk_execute(
