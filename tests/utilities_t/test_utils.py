@@ -1,7 +1,13 @@
+import logging
+
 from tardis.utilities.attributedict import AttributeDict
-from tardis.utilities.utils import htcondor_cmd_option_formatter
-from tardis.utilities.utils import csv_parser
-from tardis.utilities.utils import submit_cmd_option_formatter
+from tardis.utilities.utils import (
+    csv_parser,
+    disable_logging,
+    htcondor_cmd_option_formatter,
+    submit_cmd_option_formatter,
+)
+
 
 from unittest import TestCase
 
@@ -96,6 +102,18 @@ class TestCSVParser(TestCase):
                 NodeHost="host-2",
             ),
         )
+
+
+class TestDisableLogging(TestCase):
+    def test_disable_logging(self):
+        with self.assertLogs(level=logging.CRITICAL):
+            with disable_logging(logging.DEBUG):
+                logging.critical("Test")
+
+        with self.assertRaises(AssertionError):  # check that nothing is logged
+            with self.assertLogs(level=logging.DEBUG):
+                with disable_logging(logging.DEBUG):
+                    logging.debug("Test")
 
 
 class TestSlurmCMDOptionFormatter(TestCase):

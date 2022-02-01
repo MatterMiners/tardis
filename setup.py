@@ -12,7 +12,7 @@ with open(os.path.join(repo_base_dir, "tardis", "__about__.py")) as about_file:
 with open(os.path.join(repo_base_dir, "README.md"), "r") as read_me:
     long_description = read_me.read()
 
-TESTS_REQUIRE = ["flake8"]
+TESTS_REQUIRE = ["flake8", "httpx"]
 
 
 def get_cryptography_version():
@@ -50,10 +50,15 @@ setup(
         "Programming Language :: Python :: 3.10",
     ],
     entry_points={
+        "console_scripts": [
+            "generate_token = tardis.rest.token_generator.__main__:generate_token_cli",
+            "hash_credentials = tardis.rest.hash_credentials.__main__:hash_credentials_cli",  # noqa: B950
+        ],
         "cobald.config.yaml_constructors": [
             "TardisPoolFactory = tardis.resources.poolfactory:create_composite_pool",
             "TardisPeriodicValue = tardis.utilities.simulators.periodicvalue:PeriodicValue",  # noqa: B950
             "TardisRandomGauss = tardis.utilities.simulators.randomgauss:RandomGauss",
+            "TardisRestApi = tardis.rest.service:RestService",
             "TardisSSHExecutor = tardis.utilities.executors.sshexecutor:SSHExecutor",
             "TardisShellExecutor = tardis.utilities.executors.shellexecutor:ShellExecutor",  # noqa: B950
         ],
@@ -70,7 +75,7 @@ setup(
         "CloudStackAIO",
         "PyYAML",
         "AsyncOpenStackClient",
-        "cobald>=0.12.1",
+        "cobald>=0.12.3",
         "asyncssh",
         "aiotelegraf",
         "elasticsearch",
@@ -78,6 +83,12 @@ setup(
         "kubernetes_asyncio",
         "pydantic",
         "asyncstdlib",
+        "fastapi",
+        "python-jose",
+        "uvicorn[standard]<=0.14.0",  # to support python3.6 (Centos 7)
+        "typer",
+        "bcrypt",
+        "python-multipart",
         "typing_extensions",
         "backports.cached_property",
     ],
