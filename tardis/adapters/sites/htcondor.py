@@ -284,17 +284,17 @@ class HTCondorAdapter(SiteAdapter):
         Stopping machines is equivalent to suspending jobs in HTCondor,
         therefore condor_suspend is called!
         """
+        resource_uuid = resource_attributes.remote_resource_uuid
         if await self._condor_suspend(resource_attributes):
-            return self.handle_response(
-                AttributeDict(JobId=resource_attributes.remote_resource_uuid)
-            )
+            return self.handle_response(AttributeDict(JobId=resource_uuid))
+        logger.debug(f"condor_suspend failed for {resource_uuid}")
         raise TardisResourceStatusUpdateFailed
 
     async def terminate_resource(self, resource_attributes: AttributeDict):
+        resource_uuid = resource_attributes.remote_resource_uuid
         if await self._condor_rm(resource_attributes):
-            return self.handle_response(
-                AttributeDict(JobId=resource_attributes.remote_resource_uuid)
-            )
+            return self.handle_response(AttributeDict(JobId=resource_uuid))
+        logger.debug(f"condor_rm failed for {resource_uuid}")
         raise TardisResourceStatusUpdateFailed
 
     @staticmethod
