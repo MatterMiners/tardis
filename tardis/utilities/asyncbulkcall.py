@@ -1,4 +1,4 @@
-from typing import TypeVar, Generic, Iterable, List, Tuple, Optional, Union
+from typing import TypeVar, Generic, Iterable, List, Tuple, Optional
 from typing_extensions import Protocol
 import asyncio
 import time
