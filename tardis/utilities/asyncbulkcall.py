@@ -57,7 +57,8 @@ class AsyncBulkCall(Generic[T, R]):
     .. note::
 
         If the ``command`` requires additional arguments,
-        wrap it via :py:func:`~functools.partial`.
+        wrap it via :py:func:`~functools.partial`, for example
+        ``AsyncBulkCall(partial(async_rm, force=True), ...)``.
     """
 
     def __init__(
