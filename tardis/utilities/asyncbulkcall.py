@@ -31,7 +31,7 @@ class AsyncBulkCall(Generic[T, R]):
 
     :param command: async callable that executes several tasks
     :param size: maximum number of tasks to execute in one bulk
-    :param delay: maximum age in seconds of tasks before executing them
+    :param delay: maximum time window for tasks to execute in one bulk
     :param concurrent: how often the `command` may be executed at the same time
 
     Given some bulk-task callable ``(T, ...) -> (R, ...)`` (the ``command``),
