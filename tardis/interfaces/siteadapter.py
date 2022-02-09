@@ -157,7 +157,7 @@ class SiteAdapter(metaclass=ABCMeta):
         of the original response of the provider in keys of the common format.
         :type key_translator: dict
         :param translator_functions: A dictionary containing functions to
-        transform value of the original reponse of the provider into values of
+        transform value of the original response of the provider into values of
         the common format.
         :type translator_functions: dict
         :param additional_content: Additional content to be put into response,
