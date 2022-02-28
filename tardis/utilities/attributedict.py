@@ -1,3 +1,9 @@
+from typing import Mapping, TypeVar
+
+K = TypeVar("K")
+V = TypeVar("V")
+
+
 def convert_to_attribute_dict(obj):
     if isinstance(obj, dict):
         for key, value in obj.items():
@@ -9,7 +15,7 @@ def convert_to_attribute_dict(obj):
         return obj
 
 
-class AttributeDict(dict):
+class AttributeDict(dict, Mapping[K, V]):
     def __getattr__(self, item):
         try:
             return self[item]
