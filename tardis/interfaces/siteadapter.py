@@ -56,7 +56,7 @@ class SiteAdapterBaseModel(BaseModel):
     @validator("MachineMetaData")
     def validate_machine_meta_data(
         cls,  # noqa B902
-        machine_meta_data: AttributeDict[str, AttributeDict[str, Any]],
+        machine_meta_data: "AttributeDict[str, AttributeDict[str, Any]]",
     ):
         for machine_type, machine_meta_data_item in machine_meta_data.items():
             for entry, allowed_types in (
