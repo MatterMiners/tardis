@@ -59,7 +59,7 @@ class MoabAdapterConfigurationModel(SiteAdapterBaseModel):
     StatusUpdate: PositiveInt
     StartupCommand: Optional[str] = None
 
-    @root_validator()
+    @root_validator(allow_reuse=True)
     def deprecate_startup_command(
         cls, valuesDict: [str, Any]  # noqa B902
     ) -> Dict[str, Any]:
