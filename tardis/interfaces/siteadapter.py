@@ -53,7 +53,7 @@ class SiteAdapterBaseModel(BaseModel):
                     ) from None
         return values
 
-    @validator("MachineMetaData")
+    @validator("MachineMetaData", allow_reuse=True)
     def validate_machine_meta_data(
         cls,  # noqa B902
         machine_meta_data: "AttributeDict[str, AttributeDict[str, Any]]",
