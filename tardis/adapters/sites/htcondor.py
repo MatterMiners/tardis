@@ -1,9 +1,7 @@
-from typing import Iterable, Tuple, Awaitable
 from ...exceptions.executorexceptions import CommandExecutionFailure
 from ...exceptions.tardisexceptions import TardisError
 from ...exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
-from ...interfaces.siteadapter import SiteAdapter
-from ...interfaces.siteadapter import ResourceStatus
+from ...interfaces.siteadapter import ResourceStatus, SiteAdapter, SiteAdapterBaseModel
 from ...interfaces.executor import Executor
 from ...utilities.asynccachemap import AsyncCacheMap
 from ...utilities.attributedict import AttributeDict
@@ -12,10 +10,13 @@ from ...utilities.executors.shellexecutor import ShellExecutor
 from ...utilities.asyncbulkcall import AsyncBulkCall
 from ...utilities.utils import csv_parser, machine_meta_data_translation
 
+from pydantic import PositiveInt, PositiveFloat
+
 from contextlib import contextmanager
 from datetime import datetime
 from functools import partial
 from string import Template
+from typing import Iterable, Tuple, Awaitable, Optional
 
 import warnings
 import logging
@@ -74,7 +75,7 @@ def _submit_description(resource_jdls: Tuple[JDL, ...]) -> str:
                 FutureWarning,
             )
         else:
-            commands.append("queue 1")
+            commands.append("queue 1\n")
     return "\n".join(commands)
 
 
@@ -181,6 +182,17 @@ htcondor_status_codes = {
 }
 
 
+class HTCondorAdapterConfigurationModel(SiteAdapterBaseModel):
+    """
+    pydantic model for the input validation of the HTCondor site adapter configuration
+    """
+
+    executor: Optional[Executor] = ShellExecutor()
+    bulk_size: Optional[PositiveInt] = 100
+    bulk_delay: Optional[PositiveFloat] = 1.0
+    max_age: PositiveInt
+
+
 class HTCondorAdapter(SiteAdapter):
     htcondor_machine_meta_data_translation_mapping = AttributeDict(
         Cores=1, Memory=1024, Disk=1024 * 1024
@@ -193,9 +205,10 @@ class HTCondorAdapter(SiteAdapter):
     ):
         self._machine_type = machine_type
         self._site_name = site_name
-        self._executor = getattr(self.configuration, "executor", ShellExecutor())
-        bulk_size = getattr(self.configuration, "bulk_size", 100)
-        bulk_delay = getattr(self.configuration, "bulk_delay", 1.0)
+        self._configuration_validation_model = HTCondorAdapterConfigurationModel
+        self._executor = self.configuration.executor
+        bulk_size = self.configuration.bulk_size
+        bulk_delay = self.configuration.bulk_delay
         self._condor_submit, self._condor_suspend, self._condor_rm = (
             AsyncBulkCall(
                 partial(tool, executor=self._executor),

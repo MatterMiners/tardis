@@ -39,24 +39,26 @@ class TestKubernetesStackAdapter(TestCase):
 
     def setUp(self):
         config = self.mock_config.return_value
-        test_site_config = config.TestSite
-        # Endpoint of Kube cluster
-        test_site_config.host = "https://127.0.0.1:443"
-        # Barer token we are going to use to authenticate
-        test_site_config.token = "31ada4fd-adec-460c-809a-9e56ceb75269"
-        test_site_config.MachineTypeConfiguration = AttributeDict(
-            test2large=AttributeDict(
-                namespace="default",
-                image="busybox:1.26.1",
-                args=["sleep", "3600"],
-                hpa="True",
-                min_replicas="1",
-                max_replicas="2",
-                cpu_utilization="50",
-            )
-        )
-        test_site_config.MachineMetaData = AttributeDict(
-            test2large=AttributeDict(Cores=2, Memory=4)
+        config.TestSite = AttributeDict(
+            # Endpoint of Kube cluster
+            host="https://127.0.0.1:443",
+            # Barer token we are going to use to authenticate
+            token="31ada4fd-adec-460c-809a-9e56ceb75269",
+            MachineTypes=["test2large"],
+            MachineTypeConfiguration=AttributeDict(
+                test2large=AttributeDict(
+                    namespace="default",
+                    image="busybox:1.26.1",
+                    args=["sleep", "3600"],
+                    hpa="True",
+                    min_replicas="1",
+                    max_replicas="2",
+                    cpu_utilization="50",
+                )
+            ),
+            MachineMetaData=AttributeDict(
+                test2large=AttributeDict(Cores=2, Memory=4, Disk=1000)
+            ),
         )
         kubernetes_api = self.mock_kubernetes_api.return_value
         kubernetes_hpa = self.mock_kubernetes_hpa.return_value
@@ -71,13 +73,14 @@ class TestKubernetesStackAdapter(TestCase):
             name="testsite-089123",
             resources=client.V1ResourceRequirements(
                 requests={
-                    "cpu": test_site_config.MachineMetaData.test2large.Cores,
-                    "memory": test_site_config.MachineMetaData.test2large.Memory * 1e9,
+                    "cpu": config.TestSite.MachineMetaData.test2large.Cores,
+                    "memory": config.TestSite.MachineMetaData.test2large.Memory * 1e9,
                 }
             ),
             env=[
                 client.V1EnvVar(name="TardisDroneCores", value="2"),
                 client.V1EnvVar(name="TardisDroneMemory", value="4096"),
+                client.V1EnvVar(name="TardisDroneDisk", value="1048576000"),
                 client.V1EnvVar(name="TardisDroneUuid", value="testsite-089123"),
             ],
         )
@@ -178,7 +181,7 @@ class TestKubernetesStackAdapter(TestCase):
     def test_machine_meta_data(self):
         self.assertEqual(
             self.kubernetes_adapter.machine_meta_data,
-            AttributeDict(Cores=2, Memory=4),
+            AttributeDict(Cores=2, Memory=4, Disk=1000),
         )
 
     def test_machine_type(self):

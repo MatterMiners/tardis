@@ -4,8 +4,7 @@ from tardis.exceptions.tardisexceptions import TardisError
 from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from tardis.interfaces.siteadapter import ResourceStatus
 from tardis.utilities.attributedict import AttributeDict
-from ...utilities.utilities import mock_executor_run_command
-from ...utilities.utilities import run_async
+from ...utilities.utilities import mock_executor_run_command, run_async
 
 from datetime import datetime
 from datetime import timedelta
@@ -69,7 +68,8 @@ request_cpus=8
 request_memory=32768
 request_disk=167772160
 
-queue 1"""  # noqa: B950
+queue 1
+"""  # noqa: B950
 
 CONDOR_SUBMIT_PER_ARGUMENTS_JDL_CONDOR_OBS = """executable = start_pilot.sh
 arguments=--cores=8 --memory=32768 --disk=167772160 --uuid=test-123
@@ -100,7 +100,8 @@ request_cpus=8
 request_memory=32768
 request_disk=167772160
 
-queue 1"""  # noqa: B950
+queue 1
+"""  # noqa: B950
 
 
 class TestHTCondorSiteAdapter(TestCase):
@@ -112,7 +113,7 @@ class TestHTCondorSiteAdapter(TestCase):
         cls.mock_config_patcher = patch("tardis.interfaces.siteadapter.Configuration")
         cls.mock_config = cls.mock_config_patcher.start()
         cls.mock_executor_patcher = patch(
-            "tardis.adapters.sites.htcondor.ShellExecutor"
+            "tardis.adapters.sites.htcondor.ShellExecutor", autospec=True
         )
         cls.mock_executor = cls.mock_executor_patcher.start()
 
@@ -123,13 +124,15 @@ class TestHTCondorSiteAdapter(TestCase):
 
     def setUp(self):
         config = self.mock_config.return_value
-        test_site_config = config.TestSite
-        test_site_config.MachineMetaData = self.machine_meta_data
-        test_site_config.MachineTypeConfiguration = self.machine_type_configuration
-        test_site_config.executor = self.mock_executor.return_value
-        test_site_config.bulk_size = 100
-        test_site_config.bulk_delay = 0.1
-        test_site_config.max_age = 10
+        config.TestSite = AttributeDict(
+            MachineTypes=["test2large"],
+            MachineMetaData=self.machine_meta_data,
+            MachineTypeConfiguration=self.machine_type_configuration,
+            executor=self.mock_executor.return_value,
+            bulk_size=100,
+            bulk_delay=0.1,
+            max_age=10,
+        )
 
         self.adapter = HTCondorAdapter(machine_type="test2large", site_name="TestSite")
 
@@ -140,6 +143,7 @@ class TestHTCondorSiteAdapter(TestCase):
             test2large_args=AttributeDict(Cores=8, Memory=32, Disk=160),
             test2large_deprecated=AttributeDict(Cores=8, Memory=32, Disk=160),
             testunkownresource=AttributeDict(Cores=8, Memory=32, Disk=160, Foo=3),
+            testdeprecated=AttributeDict(Cores=8, Memory=32, Disk=160),
         )
 
     @property
@@ -149,6 +153,7 @@ class TestHTCondorSiteAdapter(TestCase):
             test2large_args=AttributeDict(jdl="tests/data/submit_per_arguments.jdl"),
             test2large_deprecated=AttributeDict(jdl="tests/data/submit_deprecated.jdl"),
             testunkownresource=AttributeDict(jdl="tests/data/submit.jdl"),
+            testdeprecated=AttributeDict(jdl="tests/data/submit_deprecated.jdl"),
         )
 
     @mock_executor_run_command(stdout=CONDOR_SUBMIT_OUTPUT)
@@ -164,6 +169,7 @@ class TestHTCondorSiteAdapter(TestCase):
                 ),
             ),
         )
+
         self.assertEqual(response.remote_resource_uuid, "1351043.0")
         self.assertFalse(response.created - datetime.now() > timedelta(seconds=1))
         self.assertFalse(response.updated - datetime.now() > timedelta(seconds=1))
@@ -173,7 +179,7 @@ class TestHTCondorSiteAdapter(TestCase):
             kwargs["stdin_input"],
             CONDOR_SUBMIT_JDL_CONDOR_OBS,
         )
-        self.mock_executor.reset()
+        self.mock_executor.reset_mock()
 
         run_async(
             self.adapter.deploy_resource,
@@ -192,7 +198,9 @@ class TestHTCondorSiteAdapter(TestCase):
             kwargs["stdin_input"],
             CONDOR_SUBMIT_JDL_SPARK_OBS,
         )
-        self.mock_executor.reset()
+        self.mock_executor.reset_mock()
+
+        adapter = HTCondorAdapter(machine_type="testdeprecated", site_name="TestSite")
 
         self.adapter = HTCondorAdapter(
             machine_type="test2large_deprecated", site_name="TestSite"
@@ -201,15 +209,22 @@ class TestHTCondorSiteAdapter(TestCase):
         # "queue 1" deprecation
         with self.assertWarns(FutureWarning):
             run_async(
-                self.adapter.deploy_resource,
+                adapter.deploy_resource,
                 AttributeDict(
                     drone_uuid="test-123",
                     obs_machine_meta_data_translation_mapping=AttributeDict(
-                        Cores=1, Memory=1, Disk=1
+                        Cores=1,
+                        Memory=1024,
+                        Disk=1024 * 1024,
                     ),
                 ),
             )
-        self.mock_executor.reset()
+        _, kwargs = self.mock_executor.return_value.run_command.call_args
+        self.assertEqual(
+            kwargs["stdin_input"],
+            CONDOR_SUBMIT_JDL_CONDOR_OBS,
+        )
+        self.mock_executor.reset_mock()
 
         self.adapter = HTCondorAdapter(
             machine_type="test2large_args", site_name="TestSite"

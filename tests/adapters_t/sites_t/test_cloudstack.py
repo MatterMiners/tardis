@@ -35,22 +35,23 @@ class TestCloudStackAdapter(TestCase):
 
     def setUp(self):
         config = self.mock_config.return_value
-        test_site_config = config.TestSite
-        test_site_config.end_point = "https://test.cloudstack.local/compute"
-        test_site_config.api_key = "1234567890abcdef"
-        test_site_config.api_secret = "fedcba0987654321"
-        test_site_config.MachineTypeConfiguration = AttributeDict(
-            test2large=AttributeDict(
-                templateid="1b0b9253-929e-4865-874b-7d2c3491987b",
-                serviceofferingid="74bfaf4e-7d67-4adf-9322-12b9a36e84f7",
-                zoneid="35eb7739-d19e-45f7-a581-4687c54d6d02",
-                keypair="MG",
-                rootdisksize=500,
-            )
-        )
-
-        test_site_config.MachineMetaData = AttributeDict(
-            test2large=AttributeDict(Cores=128)
+        config.TestSite = AttributeDict(
+            end_point="https://test.cloudstack.local/compute",
+            api_key="1234567890abcdef",
+            api_secret="fedcba0987654321",
+            MachineTypes=["test2large"],
+            MachineTypeConfiguration=AttributeDict(
+                test2large=AttributeDict(
+                    templateid="1b0b9253-929e-4865-874b-7d2c3491987b",
+                    serviceofferingid="74bfaf4e-7d67-4adf-9322-12b9a36e84f7",
+                    zoneid="35eb7739-d19e-45f7-a581-4687c54d6d02",
+                    keypair="MG",
+                    rootdisksize=500,
+                )
+            ),
+            MachineMetaData=AttributeDict(
+                test2large=AttributeDict(Cores=128, Memory=256, Disk=1000)
+            ),
         )
 
         cloudstack_api = self.mock_cloudstack_api.return_value
@@ -108,7 +109,8 @@ class TestCloudStackAdapter(TestCase):
 
     def test_machine_meta_data(self):
         self.assertEqual(
-            self.cloudstack_adapter.machine_meta_data, AttributeDict(Cores=128)
+            self.cloudstack_adapter.machine_meta_data,
+            AttributeDict(Cores=128, Memory=256, Disk=1000),
         )
 
     def test_machine_type(self):

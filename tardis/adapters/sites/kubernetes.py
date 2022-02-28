@@ -1,11 +1,12 @@
 from kubernetes_asyncio import client as k8s_client
 from kubernetes_asyncio.client.rest import ApiException as K8SApiException
 from ...exceptions.tardisexceptions import TardisError
-from ...interfaces.siteadapter import SiteAdapter
-from ...interfaces.siteadapter import ResourceStatus
+from ...interfaces.siteadapter import ResourceStatus, SiteAdapter, SiteAdapterBaseModel
 from ...utilities.attributedict import AttributeDict
 from ...utilities.staticmapping import StaticMapping
 from ...utilities.utils import convert_to
+
+from pydantic import AnyUrl
 
 from functools import partial
 from datetime import datetime
@@ -16,10 +17,20 @@ import logging
 logger = logging.getLogger("cobald.runtime.tardis.adapters.sites.kubernetes")
 
 
+class KubernetesAdapterConfigurationModel(SiteAdapterBaseModel):
+    """
+    pydantic model for the input validation of the Kubernetes site adapter configuration
+    """
+
+    host: AnyUrl
+    token: str
+
+
 class KubernetesAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
         self._machine_type = machine_type
         self._site_name = site_name
+        self._configuration_validation_model = KubernetesAdapterConfigurationModel
         key_translator = StaticMapping(
             remote_resource_uuid="uid", drone_uuid="name", resource_status="type"
         )

@@ -2,14 +2,18 @@ from tardis.exceptions.tardisexceptions import TardisTimeout
 from tardis.exceptions.tardisexceptions import TardisError
 from tardis.exceptions.tardisexceptions import TardisQuotaExceeded
 from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
-from tardis.interfaces.siteadapter import ResourceStatus
-from tardis.interfaces.siteadapter import SiteAdapter
+from tardis.interfaces.siteadapter import (
+    ResourceStatus,
+    SiteAdapter,
+    SiteAdapterBaseModel,
+)
 from tardis.utilities.attributedict import AttributeDict
 from tardis.utilities.staticmapping import StaticMapping
 
 from aiohttp import ClientConnectionError
 from CloudStackAIO.CloudStack import CloudStack
 from CloudStackAIO.CloudStack import CloudStackClientException
+from pydantic import AnyUrl
 
 from contextlib import contextmanager
 from datetime import datetime
@@ -21,10 +25,21 @@ import logging
 logger = logging.getLogger("cobald.runtime.tardis.adapters.sites.cloudstack")
 
 
+class CloudStackAdapterConfigurationModel(SiteAdapterBaseModel):
+    """
+    pydantic model for the input validation of the CloudStack site adapter configuration
+    """
+
+    end_point: AnyUrl
+    api_key: str
+    api_secret: str
+
+
 class CloudStackAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
         self._machine_type = machine_type
         self._site_name = site_name
+        self._configuration_validation_model = CloudStackAdapterConfigurationModel
 
         self.cloud_stack_client = CloudStack(
             end_point=self.configuration.end_point,

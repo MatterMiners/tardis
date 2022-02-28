@@ -2,8 +2,8 @@ from ...exceptions.executorexceptions import CommandExecutionFailure
 from ...exceptions.tardisexceptions import TardisError
 from ...exceptions.tardisexceptions import TardisTimeout
 from ...exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
-from ...interfaces.siteadapter import ResourceStatus
-from ...interfaces.siteadapter import SiteAdapter
+from ...interfaces.executor import Executor
+from ...interfaces.siteadapter import ResourceStatus, SiteAdapter, SiteAdapterBaseModel
 from ...utilities.staticmapping import StaticMapping
 from ...utilities.attributedict import AttributeDict
 from ...utilities.attributedict import convert_to_attribute_dict
@@ -11,10 +11,13 @@ from ...utilities.executors.shellexecutor import ShellExecutor
 from ...utilities.asynccachemap import AsyncCacheMap
 from ...utilities.utils import convert_to, csv_parser, submit_cmd_option_formatter
 
+from pydantic import PositiveInt, root_validator
+
 from asyncio import TimeoutError
 from contextlib import contextmanager
 from functools import partial
 from datetime import datetime
+from typing import Any, Dict, Optional
 
 import logging
 import re
@@ -45,10 +48,29 @@ async def slurm_status_updater(executor):
         return slurm_resource_status
 
 
+class SlurmAdapterConfigurationModel(SiteAdapterBaseModel):
+    """
+    pydantic model for the input validation of the Slurm site adapter configuration
+    """
+
+    executor: Optional[Executor] = ShellExecutor()
+    StatusUpdate: PositiveInt
+    StartupCommand: Optional[str] = None
+
+    @root_validator()
+    def deprecate_startup_command(
+        cls, valuesDict: [str, Any]  # noqa B902
+    ) -> Dict[str, Any]:
+        if valuesDict["StartupCommand"] is None:
+            del valuesDict["StartupCommand"]
+        return valuesDict
+
+
 class SlurmAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
         self._machine_type = machine_type
         self._site_name = site_name
+        self._configuration_validation_model = SlurmAdapterConfigurationModel
 
         try:
             self._startup_command = self.machine_type_configuration.StartupCommand
@@ -61,7 +83,7 @@ class SlurmAdapter(SiteAdapter):
             )
             self._startup_command = self.configuration.StartupCommand
 
-        self._executor = getattr(self.configuration, "executor", ShellExecutor())
+        self._executor = self.configuration.executor
 
         self._slurm_status = AsyncCacheMap(
             update_coroutine=partial(slurm_status_updater, self._executor),

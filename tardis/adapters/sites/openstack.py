@@ -4,14 +4,18 @@ from simple_rest_client.exceptions import AuthError
 from simple_rest_client.exceptions import ClientError
 from aiohttp import ClientConnectionError
 from aiohttp import ContentTypeError
+from pydantic import AnyHttpUrl, root_validator
 
 from tardis.exceptions.tardisexceptions import TardisAuthError
 from tardis.exceptions.tardisexceptions import TardisDroneCrashed
 from tardis.exceptions.tardisexceptions import TardisError
 from tardis.exceptions.tardisexceptions import TardisTimeout
 from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
-from tardis.interfaces.siteadapter import ResourceStatus
-from tardis.interfaces.siteadapter import SiteAdapter
+from tardis.interfaces.siteadapter import (
+    ResourceStatus,
+    SiteAdapter,
+    SiteAdapterBaseModel,
+)
 from tardis.utilities.attributedict import AttributeDict
 from tardis.utilities.staticmapping import StaticMapping
 
@@ -19,21 +23,77 @@ from asyncio import TimeoutError
 from contextlib import contextmanager
 from datetime import datetime
 from functools import partial
+from typing import Any, Dict, Optional
 
 import logging
 
 logger = logging.getLogger("cobald.runtime.tardis.adapters.sites.openstack")
 
 
+class OpenStackAdapterConfigurationModel(SiteAdapterBaseModel):
+    """
+    pydantic model for the input validation of the OpenStack site adapter configuration
+    """
+
+    auth_url: AnyHttpUrl
+    username: Optional[str] = None
+    password: Optional[str] = None
+    project_name: Optional[str] = None
+    user_domain_name: Optional[str] = None
+    project_domain_name: Optional[str] = None
+    application_credential_id: Optional[str] = None
+    application_credential_secret: Optional[str] = None
+
+    class Config:
+        extra = "forbid"
+
+    @root_validator
+    def validate(cls, values: Dict[str, Any]) -> Dict[str, Any]:  # noqa B902
+        username = values.get("username")
+        password = values.get("password")
+        project_name = values.get("project_name")
+        user_domain_name = values.get("user_domain_name")
+        project_domain_name = values.get("project_domain_name")
+        application_credential_id = values.get("application_credential_id")
+        application_credential_secret = values.get("application_credential_secret")
+
+        def check_option_group_exclusivity(option_group1, option_group2):
+            return (
+                all(value is not None for value in option_group1)
+                and all(value is None for value in option_group2)
+            ) or (
+                all(value is not None for value in option_group2)
+                and all(value is None for value in option_group1)
+            )
+
+        if not check_option_group_exclusivity(
+            option_group1=(application_credential_id, application_credential_secret),
+            option_group2=(
+                username,
+                password,
+                project_name,
+                user_domain_name,
+                project_domain_name,
+            ),
+        ):
+            raise ValueError(
+                "OpenStackAdapter exclusively requires either"
+                "(application_credential_id, application_credential_secret) or "
+                "(username, password, project_name, user_domain_name,"
+                "project_domain_name) to be set."
+            )
+        return values
+
+
 class OpenStackAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
         self._machine_type = machine_type
         self._site_name = site_name
+        self._configuration_validation_model = OpenStackAdapterConfigurationModel
 
         auth = AuthPassword(
             auth_url=self.configuration.auth_url,
             username=self.configuration.username,
-            password=self.configuration.password,
             project_name=self.configuration.project_name,
             user_domain_name=self.configuration.user_domain_name,
             project_domain_name=self.configuration.project_domain_name,

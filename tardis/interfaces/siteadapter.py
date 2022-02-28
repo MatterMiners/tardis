@@ -6,12 +6,82 @@ from abc import ABCMeta, abstractmethod
 from cobald.utility.primitives import infinity as inf
 from enum import Enum
 from functools import lru_cache
-from pydantic import BaseModel, conint, validator
-from typing import Optional
+from pydantic import BaseModel, conint, root_validator, validator
+from typing import Any, Callable, Dict, List, Optional
 
 import logging
 
 logger = logging.getLogger("cobald.runtime.tardis.interfaces.site")
+
+
+class SiteAdapterBaseModel(BaseModel):
+    """
+    pydantic BaseModel for the input validation of site adapters
+    """
+
+    MachineTypes: List[str]
+    MachineTypeConfiguration: AttributeDict[str, AttributeDict[str, Any]]
+    MachineMetaData: AttributeDict[
+        str, AttributeDict[str, Any]
+    ]  # Use Any to avoid automated conversion to int or float here, validate later
+
+    class Config:
+        arbitrary_types_allowed = True
+
+    @root_validator(skip_on_failure=True)  # skip if previous validator failed
+    def validate(cls, values: Dict[str, Any]) -> Dict[str, Any]:  # noqa B902
+        """
+        Validate that MachineTypeConfiguration and MachineMetaData is available
+        for each MachineType defined.
+        """
+        if "MachineTypes" not in values.keys():
+            raise ValueError() from None
+
+        for machine_type in values["MachineTypes"]:
+            for config_block in ("MachineTypeConfiguration", "MachineMetaData"):
+                try:
+                    if machine_type not in values[config_block].keys():
+                        raise ValueError(
+                            f"You have to specify {config_block} for MachineType "
+                            f"{machine_type}."
+                        )
+                except KeyError:
+                    raise ValueError(
+                        f"You have to specify {config_block} for MachineType "
+                        f"{machine_type}."
+                    ) from None
+        return values
+
+    @validator("MachineMetaData")
+    def validate_machine_meta_data(
+        cls,  # noqa B902
+        machine_meta_data: AttributeDict[str, AttributeDict[str, Any]],
+    ):
+        for machine_type, machine_meta_data_item in machine_meta_data.items():
+            for entry, allowed_types in (
+                ("Cores", (int,)),
+                ("Memory", (int, float)),
+                ("Disk", (int, float)),
+            ):
+                if entry not in machine_meta_data_item.keys():
+                    raise ValueError(
+                        f"You have to supply the {entry} entry in the "
+                        f"MachineMetaData for MachineType {machine_type}!"
+                    ) from None
+
+                # validate types here
+                if not any(
+                    isinstance(machine_meta_data_item[entry], allowed_type)
+                    for allowed_type in allowed_types
+                ):
+                    raise ValueError(
+                        f"You supplied a wrong type "
+                        f"{type(machine_meta_data_item[entry])} in the "
+                        f"MachineMetaData for machine_type {machine_type} entry "
+                        f"'{entry}: {machine_meta_data_item[entry]}'!\n"
+                        f"The allowed types are {allowed_types}"
+                    ) from None
+        return machine_meta_data
 
 
 class SiteConfigurationModel(BaseModel):
@@ -56,11 +126,31 @@ class SiteAdapter(metaclass=ABCMeta):
     @property
     def configuration(self) -> AttributeDict:
         """
-        Property to provide access to SiteAdapter specific configuration.
+        Property to provide access to SiteAdapter specific configuration and
+        perform input validation.
         :return: returns the Site Adapter specific configuration
         :rtype: AttributeDict
         """
-        return getattr(Configuration(), self.site_name)
+        configuration = getattr(Configuration(), self.site_name)
+        validated_configuration = self.configuration_validation_model(**configuration)
+        return AttributeDict(validated_configuration)
+
+    @property
+    def configuration_validation_model(self) -> Callable:
+        """
+        Property to access the configuration_validation model of a site adapter
+        implementation and ensuring that all sub-classes of the SiteAdapter have
+        a _configuration_validation_model class variable.
+        :return: The configuration validation model of a site adapter implementation.
+        :rtype: str
+        """
+        try:
+            # noinspection PyUnresolvedReferences
+            return self._configuration_validation_model
+        except AttributeError as ae:
+            raise AttributeError(
+                f"Class {self.__class__.__name__} must have an '_configuration_validation_model' instance variable"  # noqa
+            ) from ae
 
     @abstractmethod
     async def deploy_resource(

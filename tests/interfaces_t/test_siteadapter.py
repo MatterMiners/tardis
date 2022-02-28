@@ -1,4 +1,4 @@
-from tardis.interfaces.siteadapter import SiteAdapter
+from tardis.interfaces.siteadapter import SiteAdapter, SiteAdapterBaseModel
 from tardis.utilities.attributedict import AttributeDict
 
 from ..utilities.utilities import run_async
@@ -41,6 +41,7 @@ class TestSiteAdapter(TestCase):
         self.site_adapter = SiteAdapter()
         self.site_adapter._site_name = "TestSite"
         self.site_adapter._machine_type = "TestMachineType"
+        self.site_adapter._configuration_validation_model = SiteAdapterBaseModel
 
     def test_configuration(self):
         self.assertEqual(self.site_adapter.configuration, self.config.TestSite)
@@ -50,8 +51,6 @@ class TestSiteAdapter(TestCase):
             run_async(self.site_adapter.deploy_resource, dict())
 
     def test_drone_environment(self):
-        self.site_adapter._machine_type = "TestMachineType"
-
         self.assertEqual(
             AttributeDict(Cores=128, Memory=524288, Disk=104857600, Uuid="test-123"),
             self.site_adapter.drone_environment(

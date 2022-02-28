@@ -44,7 +44,7 @@ class TestAsyncBulkCall(TestCase):
         """Test that bulks are formed by delay"""
         test_size, bulk_delay = 1024, 0.1
         # check that delay forces a bulk if the size is too large to be reached
-        execution = AsyncBulkCall(CallCounter(), size=2**32, delay=bulk_delay)
+        execution = AsyncBulkCall(CallCounter(), size=2 ** 32, delay=bulk_delay)
         before = time.monotonic()
         result = run_async(self.execute, execution, count=test_size)
         after = time.monotonic()
@@ -57,7 +57,7 @@ class TestAsyncBulkCall(TestCase):
         """Test that a tiny delay cannot stall execution"""
         # sys.float_info.min is not the smallest float possible,
         # but it should be insignificant in all math
-        execution = AsyncBulkCall(CallCounter(), size=2**32, delay=sys.float_info.min)
+        execution = AsyncBulkCall(CallCounter(), size=2 ** 32, delay=sys.float_info.min)
         result = run_async(self.execute, execution, count=2048)
         self.assertEqual(result, [(i, i) for i in range(2048)])
 
