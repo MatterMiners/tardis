@@ -1,20 +1,20 @@
 from tardis.interfaces.simulator import Simulator
 from tardis.utilities.attributedict import AttributeDict
 
-from unittest.mock import Mock
+from unittest.mock import Mock, MagicMock
 import asyncio
 import socket
 
 
 def assert_awaited_once(mock: Mock):
-    if asyncio.iscoroutinefunction(mock):
+    if not isinstance(mock, MagicMock):
         return mock.assert_awaited_once()
     else:
         return mock.assert_called_once()
 
 
 def assert_awaited_with(mock: Mock, *args, **kwargs):
-    if asyncio.iscoroutinefunction(mock):
+    if not isinstance(mock, MagicMock):
         return mock.assert_awaited_with(*args, **kwargs)
     else:
         return mock.assert_called_with(*args, **kwargs)
@@ -50,8 +50,8 @@ def mock_executor_run_command(stdout, stderr="", exit_code=0, raise_exception=No
             return_value = AttributeDict(
                 stdout=stdout, stderr=stderr, exit_code=exit_code
             )
-            if asyncio.iscoroutinefunction(
-                executor.run_command
+            if not isinstance(
+                executor.run_command, MagicMock
             ):  # since python 3.8, AsyncMock is returned, no need for async_return
                 executor.run_command.return_value = return_value
             else:  # before python 3,8 MagicMock is returned, requires async_return
