@@ -78,14 +78,12 @@ class TestSiteAdapter(TestCase):
         self.assertEqual(self.site_adapter.drone_heartbeat_interval, 60)
 
         # lru_cache needs to be cleared before manipulating site configuration
-        # noinspection PyUnresolvedReferences
-        SiteAdapter.site_configuration.fget.cache_clear()
+        self.site_adapter.refresh_configuration()
 
         self.config.Sites[0]["drone_heartbeat_interval"] = 10
         self.assertEqual(self.site_adapter.drone_heartbeat_interval, 10)
 
-        # noinspection PyUnresolvedReferences
-        SiteAdapter.site_configuration.fget.cache_clear()
+        self.site_adapter.refresh_configuration()
 
         self.config.Sites[0]["drone_heartbeat_interval"] = -1
         with self.assertRaises(ValidationError):
@@ -96,14 +94,13 @@ class TestSiteAdapter(TestCase):
         self.assertEqual(self.site_adapter.drone_minimum_lifetime, None)
 
         # lru_cache needs to be cleared before manipulating site configuration
-        # noinspection PyUnresolvedReferences
-        SiteAdapter.site_configuration.fget.cache_clear()
+        self.site_adapter.refresh_configuration()
 
         self.config.Sites[0]["drone_minimum_lifetime"] = 10
         self.assertEqual(self.site_adapter.drone_minimum_lifetime, 10)
 
         # noinspection PyUnresolvedReferences
-        SiteAdapter.site_configuration.fget.cache_clear()
+        self.site_adapter.refresh_configuration()
 
         self.config.Sites[0]["drone_minimum_lifetime"] = -1
         with self.assertRaises(ValidationError):
@@ -215,8 +212,7 @@ class TestSiteAdapter(TestCase):
             ),
         )
 
-        # noinspection PyUnresolvedReferences
-        SiteAdapter.site_configuration.fget.cache_clear()
+        self.site_adapter.refresh_configuration()
 
         del self.config.Sites[0]["quota"]
 
@@ -231,8 +227,7 @@ class TestSiteAdapter(TestCase):
             ),
         )
 
-        # noinspection PyUnresolvedReferences
-        SiteAdapter.site_configuration.fget.cache_clear()
+        self.site_adapter.refresh_configuration()
 
         self.config.Sites[0]["extra"] = "Should fail!"
 
@@ -248,8 +243,7 @@ class TestSiteAdapter(TestCase):
                 ),
             )
 
-        # noinspection PyUnresolvedReferences
-        SiteAdapter.site_configuration.fget.cache_clear()
+        self.site_adapter.refresh_configuration()
 
         self.config.Sites[0]["quota"] = 0
 

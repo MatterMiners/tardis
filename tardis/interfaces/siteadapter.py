@@ -125,6 +125,7 @@ class SiteAdapter(metaclass=ABCMeta):
     """
 
     @property
+    @lru_cache(maxsize=16)
     def configuration(self) -> AttributeDict:
         """
         Property to provide access to SiteAdapter specific configuration and
@@ -307,6 +308,14 @@ class SiteAdapter(metaclass=ABCMeta):
         :rtype: AttributeDict
         """
         return self.configuration.MachineTypeConfiguration[self.machine_type]
+
+    @classmethod
+    def refresh_configuration(cls):
+        # lru_cache needs to be cleared before updating configuration
+        # noinspection PyUnresolvedReferences
+        cls.configuration.fget.cache_clear()
+        # noinspection PyUnresolvedReferences
+        cls.site_configuration.fget.cache_clear()
 
     @abstractmethod
     async def resource_status(

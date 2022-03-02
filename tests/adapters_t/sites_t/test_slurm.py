@@ -190,6 +190,7 @@ class TestSlurmAdapter(TestCase):
         )
 
         self.mock_executor.reset_mock()
+        self.slurm_adapter.refresh_configuration()
 
         self.config.TestSite.MachineMetaData.test2large.Memory = 2.5
 
@@ -200,6 +201,7 @@ class TestSlurmAdapter(TestCase):
         )
 
         self.mock_executor.reset_mock()
+        self.slurm_adapter.refresh_configuration()
 
         self.config.TestSite.MachineMetaData.test2large.Memory = 2.546372129
 
