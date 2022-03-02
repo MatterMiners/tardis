@@ -310,8 +310,14 @@ class SiteAdapter(metaclass=ABCMeta):
         return self.configuration.MachineTypeConfiguration[self.machine_type]
 
     @classmethod
-    def refresh_configuration(cls):
-        # lru_cache needs to be cleared before updating configuration
+    def refresh_configuration(cls) -> None:
+        """
+        To increase performance, the configuration and site_configuration
+        properties are cached using a lru_cache. This helper class method clears
+        those caches in order to reload a potentially changed configuration.
+        :return: Returns None
+        :rtype None
+        """
         # noinspection PyUnresolvedReferences
         cls.configuration.fget.cache_clear()
         # noinspection PyUnresolvedReferences
