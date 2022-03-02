@@ -46,6 +46,18 @@ class TestSiteAdapter(TestCase):
     def test_configuration(self):
         self.assertEqual(self.site_adapter.configuration, self.config.TestSite)
 
+    def test_configuration_validation_model(self):
+        self.assertEqual(
+            SiteAdapterBaseModel, self.site_adapter.configuration_validation_model
+        )
+
+        # noinspection PyUnresolvedReferences
+        del self.site_adapter._configuration_validation_model
+
+        with self.assertRaises(AttributeError):
+            # noinspection PyStatementEffect
+            self.site_adapter.configuration_validation_model
+
     def test_deploy_resource(self):
         with self.assertRaises(NotImplementedError):
             run_async(self.site_adapter.deploy_resource, dict())
@@ -173,6 +185,52 @@ class TestSiteAdapter(TestCase):
             # noinspection PyStatementEffect
             self.site_adapter.machine_meta_data
 
+    def test_machine_meta_data_validation(self):
+        def assert_raised_validation_error_existence(meta_data_entry):
+            self.site_adapter.refresh_configuration()
+            with self.assertRaises(ValidationError) as ve:
+                # noinspection PyStatementEffect
+                self.site_adapter.configuration
+            self.assertTrue(
+                f"You have to supply the {meta_data_entry} entry in the "
+                f"MachineMetaData for MachineType TestMachineType!"
+                in ve.exception.errors()[0]["msg"]
+            )
+
+        def assert_raised_validation_error_wrong_type(meta_data_entry):
+            self.site_adapter.refresh_configuration()
+            with self.assertRaises(ValidationError) as ve:
+                # noinspection PyStatementEffect
+                self.site_adapter.configuration
+            self.assertTrue(
+                "You supplied a wrong type <class 'str'> in the "
+                "MachineMetaData for machine_type TestMachineType entry "
+                f"'{meta_data_entry}: 123'!\n"
+                f"The allowed types are " in ve.exception.errors()[0]["msg"]
+            )
+
+        for meta_data_entry in ("Cores", "Disk", "Memory"):
+            current_meta_data_entry = getattr(
+                self.config.TestSite.MachineMetaData.TestMachineType,
+                meta_data_entry,
+            )
+            setattr(
+                self.config.TestSite.MachineMetaData.TestMachineType,
+                meta_data_entry,
+                "123",
+            )
+            assert_raised_validation_error_wrong_type(meta_data_entry)
+
+            delattr(
+                self.config.TestSite.MachineMetaData.TestMachineType, meta_data_entry
+            )
+            assert_raised_validation_error_existence(meta_data_entry)
+            setattr(
+                self.config.TestSite.MachineMetaData.TestMachineType,
+                meta_data_entry,
+                current_meta_data_entry,
+            )
+
     def test_machine_type(self):
         self.assertEqual(self.site_adapter.machine_type, "TestMachineType")
 
@@ -182,6 +240,41 @@ class TestSiteAdapter(TestCase):
         with self.assertRaises(AttributeError):
             # noinspection PyStatementEffect
             self.site_adapter.machine_type
+
+    def test_machine_type_configuration_and_meta_data_existence(self):
+        def assert_raised_validation_error(config_block):
+            self.site_adapter.refresh_configuration()
+            with self.assertRaises(ValidationError) as ve:
+                # noinspection PyStatementEffect
+                self.site_adapter.configuration
+            self.assertTrue(
+                f"You have to specify {config_block} for MachineType TestMachineType"  # noqa B950
+                in ve.exception.errors()[0]["msg"]
+            )
+
+        for config_block in ("MachineTypeConfiguration", "MachineMetaData"):
+            current_config_block = AttributeDict(
+                getattr(self.config.TestSite, config_block)
+            )
+            del getattr(self.config.TestSite, config_block).TestMachineType
+            assert_raised_validation_error(config_block)
+
+            setattr(self.config.TestSite, config_block, current_config_block)
+            delattr(self.config.TestSite, config_block)
+            assert_raised_validation_error(config_block)
+
+            setattr(self.config.TestSite, config_block, current_config_block)
+
+    def test_machine_type_validation_not_exists(self):
+        del self.config.TestSite.MachineTypes
+        self.site_adapter.refresh_configuration()
+        with self.assertRaises(ValidationError) as ve:
+            # noinspection PyStatementEffect
+            self.site_adapter.configuration
+        self.assertTrue(
+            "You have to add MachineTypes to the site configuration"
+            in ve.exception.errors()[0]["msg"]
+        )
 
     def test_machine_type_configuration(self):
         self.assertEqual(
@@ -195,6 +288,21 @@ class TestSiteAdapter(TestCase):
         with self.assertRaises(AttributeError):
             # noinspection PyStatementEffect
             self.site_adapter.machine_type_configuration
+
+    def test_refresh_configuration(self):
+        current_config = self.site_adapter.site_configuration
+        self.config.Sites[0]["quota"] = 123
+        self.assertEqual(current_config, self.site_adapter.site_configuration)
+        self.site_adapter.refresh_configuration()
+        current_config["quota"] = 123
+        self.assertEqual(current_config, self.site_adapter.site_configuration)
+
+        current_config = self.site_adapter.configuration
+        self.config.TestSite.MachineTypeConfiguration.TestMachineType.test_id = "xy789"
+        self.assertEqual(current_config, self.site_adapter.configuration)
+        self.site_adapter.refresh_configuration()
+        current_config.MachineTypeConfiguration.TestMachineType.test_id = "xy789"
+        self.assertEqual(current_config, self.site_adapter.configuration)
 
     def test_resource_status(self):
         with self.assertRaises(NotImplementedError):

@@ -28,7 +28,7 @@ class SiteAdapterBaseModel(BaseModel):
         arbitrary_types_allowed = True
 
     @root_validator(
-        skip_on_failure=True, allow_reuse=True
+        skip_on_failure=True, allow_reuse=True, pre=True
     )  # skip if previous validator failed
     def validate(cls, values: Dict[str, Any]) -> Dict[str, Any]:  # noqa B902
         """
@@ -36,7 +36,9 @@ class SiteAdapterBaseModel(BaseModel):
         for each MachineType defined.
         """
         if "MachineTypes" not in values.keys():
-            raise ValueError() from None
+            raise ValueError(
+                "You have to add MachineTypes to the site configuration"
+            ) from None
 
         for machine_type in values["MachineTypes"]:
             for config_block in ("MachineTypeConfiguration", "MachineMetaData"):
