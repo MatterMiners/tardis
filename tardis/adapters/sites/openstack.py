@@ -48,7 +48,9 @@ class OpenStackAdapterConfigurationModel(SiteAdapterBaseModel):
         extra = "forbid"
 
     @root_validator
-    def validate(cls, values: Dict[str, Any]) -> Dict[str, Any]:  # noqa B902
+    def validate_openstack_config(
+        cls, values: Dict[str, Any]  # noqa B902
+    ) -> Dict[str, Any]:
         username = values.get("username")
         password = values.get("password")
         project_name = values.get("project_name")

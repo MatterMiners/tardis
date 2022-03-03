@@ -11,6 +11,7 @@ from tests.utilities.utilities import run_async
 
 from aiohttp import ClientConnectionError
 from aiohttp import ContentTypeError
+from pydantic.error_wrappers import ValidationError
 from simple_rest_client.exceptions import AuthError
 from simple_rest_client.exceptions import ClientError
 
@@ -40,8 +41,8 @@ class TestOpenStackAdapter(TestCase):
         cls.mock_openstack_api_patcher.stop()
 
     def setUp(self):
-        config = self.mock_config.return_value
-        config.TestSite = AttributeDict(
+        self.config = self.mock_config.return_value
+        self.config.TestSite = AttributeDict(
             auth_url="https://test.nova.client.local",
             username="TestUser",
             password="test123",
@@ -93,6 +94,32 @@ class TestOpenStackAdapter(TestCase):
 
     def tearDown(self):
         self.mock_openstack_api.reset_mock()
+
+    def test_configuration_validation(self):
+        self.config.TestSite.application_credential_id = "test123"
+        self.config.TestSite.application_credential_secret = "secret123"
+        with self.assertRaises(ValidationError) as ve:
+            # noinspection PyStatementEffect
+            OpenStackAdapter(machine_type="test2large", site_name="TestSite")
+        self.assertEqual(
+            "OpenStackAdapter exclusively requires either"
+            "(application_credential_id, application_credential_secret) or "
+            "(username, password, project_name, user_domain_name,"
+            "project_domain_name) to be set.",
+            ve.exception.errors()[0]["msg"],
+        )
+
+        for variable in (
+            "username",
+            "password",
+            "project_name",
+            "user_domain_name",
+            "project_domain_name",
+        ):
+            delattr(self.config.TestSite, variable)
+
+        # noinspection PyStatementEffect
+        OpenStackAdapter(machine_type="test2large", site_name="TestSite")
 
     def test_deploy_resource(self):
         self.assertEqual(
