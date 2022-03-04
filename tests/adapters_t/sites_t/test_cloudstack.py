@@ -11,6 +11,7 @@ from tests.utilities.utilities import async_return
 from tests.utilities.utilities import run_async
 
 from aiohttp import ClientConnectionError
+from pydantic.error_wrappers import ValidationError
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -34,8 +35,8 @@ class TestCloudStackAdapter(TestCase):
         cls.mock_cloudstack_api_patcher.stop()
 
     def setUp(self):
-        config = self.mock_config.return_value
-        config.TestSite = AttributeDict(
+        self.config = self.mock_config.return_value
+        self.config.TestSite = AttributeDict(
             end_point="https://test.cloudstack.local/compute",
             api_key="1234567890abcdef",
             api_secret="fedcba0987654321",
@@ -84,6 +85,13 @@ class TestCloudStackAdapter(TestCase):
 
     def tearDown(self):
         self.mock_cloudstack_api.reset_mock()
+
+    def test_configuration_validation(self):
+        self.config.TestSite.end_point = "NotAValidURl"
+
+        with self.assertRaises(ValidationError):
+            # noinspection PyStatementEffect
+            CloudStackAdapter(machine_type="test2large", site_name="TestSite")
 
     def test_deploy_resource(self):
         self.assertEqual(
