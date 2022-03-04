@@ -6,6 +6,8 @@ from tardis.interfaces.siteadapter import ResourceStatus
 from tardis.utilities.attributedict import AttributeDict
 from ...utilities.utilities import mock_executor_run_command, run_async
 
+from pydantic.error_wrappers import ValidationError
+
 from datetime import datetime
 from datetime import timedelta
 from unittest import TestCase
@@ -123,8 +125,8 @@ class TestHTCondorSiteAdapter(TestCase):
         cls.mock_executor_patcher.stop()
 
     def setUp(self):
-        config = self.mock_config.return_value
-        config.TestSite = AttributeDict(
+        self.config = self.mock_config.return_value
+        self.config.TestSite = AttributeDict(
             MachineTypes=["test2large"],
             MachineMetaData=self.machine_meta_data,
             MachineTypeConfiguration=self.machine_type_configuration,
@@ -155,6 +157,20 @@ class TestHTCondorSiteAdapter(TestCase):
             testunkownresource=AttributeDict(jdl="tests/data/submit.jdl"),
             testdeprecated=AttributeDict(jdl="tests/data/submit_deprecated.jdl"),
         )
+
+    def test_configuration_validation(self):
+        for variable, new_value in (
+            ("executor", "DoesNotWork"),
+            ("bulk_size", -1),
+            ("bulk_delay", -1),
+            ("max_age", -1),
+        ):
+            old_value = getattr(self.config.TestSite, variable)
+            setattr(self.config.TestSite, variable, new_value)
+            with self.assertRaises(ValidationError):
+                # noinspection PyStatementEffect
+                HTCondorAdapter(machine_type="test2large", site_name="TestSite")
+            setattr(self.config.TestSite, variable, old_value)
 
     @mock_executor_run_command(stdout=CONDOR_SUBMIT_OUTPUT)
     def test_deploy_resource_htcondor_obs(self):

@@ -5,6 +5,8 @@ from tardis.utilities.attributedict import AttributeDict
 
 from ...utilities.utilities import MockedSimulator, run_async
 
+from pydantic.error_wrappers import ValidationError
+
 from datetime import datetime
 from datetime import timedelta
 from unittest.mock import patch
@@ -24,8 +26,8 @@ class TestFakeSiteAdapter(TestCase):
         cls.mock_config_patcher.stop()
 
     def setUp(self):
-        config = self.mock_config.return_value
-        config.TestSite = AttributeDict(
+        self.config = self.mock_config.return_value
+        self.config.TestSite = AttributeDict(
             MachineMetaData=self.machine_meta_data,
             MachineTypes=["test2large"],
             MachineTypeConfiguration=self.machine_type_configuration,
@@ -42,6 +44,15 @@ class TestFakeSiteAdapter(TestCase):
     @property
     def machine_type_configuration(self):
         return AttributeDict(test2large=AttributeDict(jdl="submit.jdl"))
+
+    def test_configuration_validation(self):
+        for variable in ("api_response_delay", "api_response_delay"):
+            old_value = getattr(self.config.TestSite, variable)
+            setattr(self.config.TestSite, variable, "DoesNotWork")
+            with self.assertRaises(ValidationError):
+                # noinspection PyStatementEffect
+                FakeSiteAdapter(machine_type="test2large", site_name="TestSite")
+            setattr(self.config.TestSite, variable, old_value)
 
     def test_deploy_resource(self):
         response = run_async(self.adapter.deploy_resource, AttributeDict())
