@@ -96,6 +96,14 @@ class TestOpenStackAdapter(TestCase):
         self.mock_openstack_api.reset_mock()
 
     def test_configuration_validation(self):
+        self.config.TestSite.auth_url = "NotAnUrl"
+
+        with self.assertRaises(ValidationError):
+            # noinspection PyStatementEffect
+            OpenStackAdapter(machine_type="test2large", site_name="TestSite")
+
+        self.config.TestSite.auth_url = "https://test.nova.client.local"
+
         self.config.TestSite.application_credential_id = "test123"
         self.config.TestSite.application_credential_secret = "secret123"
         with self.assertRaises(ValidationError) as ve:
