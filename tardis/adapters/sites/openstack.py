@@ -100,7 +100,7 @@ class OpenStackAdapter(SiteAdapter):
             user_domain_name=self.configuration.user_domain_name,
             project_domain_name=self.configuration.project_domain_name,
             application_credential_id=self.configuration.application_credential_id,
-            application_credential_secret=self.configuration.application_credential_secret,
+            application_credential_secret=self.configuration.application_credential_secret,  # noqa B950
         )
 
         self.nova = NovaClient(session=auth)
