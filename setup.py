@@ -84,7 +84,7 @@ setup(
         get_cryptography_version(),
         "CloudStackAIO>=0.0.8",
         "PyYAML",
-        "git+https://github.com/giffels/AsyncOpenStackClient@feature/support_application_credentials",  # noqa B950
+        "AsyncOpenStackClient @ git+https://github.com/giffels/AsyncOpenStackClient@feature/support_application_credentials",  # noqa B950
         "cobald>=0.12.3",
         "asyncssh",
         "aiotelegraf",
