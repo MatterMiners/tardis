@@ -143,7 +143,7 @@ class AvailableState(State):
     transition = {
         ResourceStatus.Running: lambda: {
             MachineStatus.Available: lambda: AvailableState(),
-            MachineStatus.NotAvailable: lambda: IntegratingState(),
+            MachineStatus.NotAvailable: lambda: ShutDownState(),
             MachineStatus.Draining: lambda: DrainingState(),
             MachineStatus.Drained: lambda: DisintegrateState(),
         },
