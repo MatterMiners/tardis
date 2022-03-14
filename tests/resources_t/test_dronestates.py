@@ -197,7 +197,7 @@ class TestDroneStates(TestCase):
     def test_available_state(self):
         matrix = [
             (ResourceStatus.Running, MachineStatus.Available, AvailableState),
-            (ResourceStatus.Running, MachineStatus.NotAvailable, IntegratingState),
+            (ResourceStatus.Running, MachineStatus.NotAvailable, ShutDownState),
             (ResourceStatus.Running, MachineStatus.Draining, DrainingState),
             (ResourceStatus.Running, MachineStatus.Drained, DisintegrateState),
             (ResourceStatus.Booting, MachineStatus.NotAvailable, BootingState),
