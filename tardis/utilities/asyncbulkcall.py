@@ -102,14 +102,12 @@ class AsyncBulkCall(Generic[T, R]):
     async def __call__(self, __task: T) -> R:
         """Queue a ``task`` for bulk execution and return the result when available"""
         result: "asyncio.Future[R]" = asyncio.get_event_loop().create_future()
+        # queue item first so that the dispatch task does not finish before
         self._queue.put_nowait((__task, result))
-        self._ensure_worker()
-        return await result
-
-    def _ensure_worker(self):
-        """Ensure there is a worker to dispatch tasks for command execution"""
+        # ensure there is a worker to dispatch items for command execution
         if self._dispatch_task is None:
             self._dispatch_task = asyncio.ensure_future(self._bulk_dispatch())
+        return await result
 
     async def _bulk_dispatch(self):
         """Collect tasks into bulks and dispatch them for command execution"""
