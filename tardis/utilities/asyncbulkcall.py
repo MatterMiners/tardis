@@ -113,7 +113,7 @@ class AsyncBulkCall(Generic[T, R]):
 
     async def _bulk_dispatch(self):
         """Collect tasks into bulks and dispatch them for command execution"""
-        while True:
+        while not self._queue.empty():
             bulk = list(zip(*(await self._get_bulk())))
             if not bulk:
                 continue
@@ -131,6 +131,7 @@ class AsyncBulkCall(Generic[T, R]):
             # yield to the event loop so that the `while True` loop does not arbitrarily
             # delay other tasks on the fast paths for `_get_bulk` and `acquire`.
             await asyncio.sleep(0)
+        self._dispatch_task = None
 
     async def _get_bulk(self) -> "List[Tuple[T, asyncio.Future[R]]]":
         """Fetch the next bulk from the internal queue"""
