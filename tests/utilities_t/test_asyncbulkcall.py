@@ -72,7 +72,7 @@ class TestAsyncBulkCall(TestCase):
         for repeat in range(4):
             result = await self.execute(execution, bunch_size)
             self.assertEqual(
-                result, [(i, i//2 + repeat * 2) for i in range(bunch_size)]
+                result, [(i, i // 2 + repeat * 2) for i in range(bunch_size)]
             )
             await asyncio.sleep(0.01)  # pause to allow for cleanup
             assert execution._dispatch_task is None
