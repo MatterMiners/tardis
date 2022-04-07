@@ -69,7 +69,7 @@ class TestAsyncBulkCall(TestCase):
         bunch_size = 4
         # use large delay to only trigger on size
         execution = AsyncBulkCall(CallCounter(), size=bunch_size // 2, delay=256)
-        for repeat in range(4):
+        for repeat in range(6):
             result = await self.execute(execution, bunch_size)
             self.assertEqual(
                 result, [(i, i // 2 + repeat * 2) for i in range(bunch_size)]
