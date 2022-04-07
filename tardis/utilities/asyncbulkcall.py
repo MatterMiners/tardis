@@ -138,6 +138,7 @@ class AsyncBulkCall(Generic[T, R]):
         # always pull in at least one item asynchronously
         # this avoids stalling for very low delays and efficiently waits for items
         results = [await queue.get()]
+        queue.task_done()
         deadline = time.monotonic() + self._delay
         while len(results) < max_items and time.monotonic() < deadline:
             try:
