@@ -1,4 +1,4 @@
-from typing import TypeVar, Generic, Iterable, List, Tuple, Optional
+from typing import TypeVar, Generic, Iterable, List, Tuple, Optional, Set
 from typing_extensions import Protocol
 import asyncio
 import time
@@ -74,6 +74,8 @@ class AsyncBulkCall(Generic[T, R]):
         self._concurrency = sys.maxsize if concurrent is None else concurrent
         # task handling dispatch from queue to command execution
         self._master_worker: Optional[asyncio.Task] = None
+        # tasks handling individual command executions
+        self._bulk_tasks: Set[asyncio.Task] = set()
         self._verify_settings()
 
     @cached_property
@@ -122,6 +124,10 @@ class AsyncBulkCall(Generic[T, R]):
             await self._concurrent.acquire()
             task = asyncio.ensure_future(self._bulk_execute(tuple(tasks), futures))
             task.add_done_callback(lambda _: self._concurrent.release)
+            # track tasks via strong references to avoid them being garbage collected.
+            # see bpo#44665
+            self._bulk_tasks.add(task)
+            task.add_done_callback(lambda _: self._bulk_tasks.discard(task))
             # yield to the event loop so that the `while True` loop does not arbitrarily
             # delay other tasks on the fast paths for `_get_bulk` and `acquire`.
             await asyncio.sleep(0)
