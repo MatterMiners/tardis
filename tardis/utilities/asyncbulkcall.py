@@ -73,7 +73,7 @@ class AsyncBulkCall(Generic[T, R]):
         self._delay = delay
         self._concurrency = sys.maxsize if concurrent is None else concurrent
         # task handling dispatch from queue to command execution
-        self._master_worker: Optional[asyncio.Task] = None
+        self._dispatch_task: Optional[asyncio.Task] = None
         # tasks handling individual command executions
         self._bulk_tasks: Set[asyncio.Task] = set()
         self._verify_settings()
@@ -108,8 +108,8 @@ class AsyncBulkCall(Generic[T, R]):
 
     def _ensure_worker(self):
         """Ensure there is a worker to dispatch tasks for command execution"""
-        if self._master_worker is None:
-            self._master_worker = asyncio.ensure_future(self._bulk_dispatch())
+        if self._dispatch_task is None:
+            self._dispatch_task = asyncio.ensure_future(self._bulk_dispatch())
 
     async def _bulk_dispatch(self):
         """Collect tasks into bulks and dispatch them for command execution"""
