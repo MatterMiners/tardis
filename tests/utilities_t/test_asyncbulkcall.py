@@ -61,6 +61,22 @@ class TestAsyncBulkCall(TestCase):
         result = run_async(self.execute, execution, count=2048)
         self.assertEqual(result, [(i, i) for i in range(2048)])
 
+    def test_restart(self):
+        """Test that calls work after pausing"""
+        run_async(self.check_restart)
+
+    async def check_restart(self):
+        bunch_size = 4
+        # use large delay to only trigger on size
+        execution = AsyncBulkCall(CallCounter(), size=bunch_size // 2, delay=256)
+        for repeat in range(6):
+            result = await self.execute(execution, bunch_size)
+            self.assertEqual(
+                result, [(i, i // 2 + repeat * 2) for i in range(bunch_size)]
+            )
+            await asyncio.sleep(0.01)  # pause to allow for cleanup
+            assert execution._dispatch_task is None
+
     def test_sanity_checks(self):
         """Test against illegal settings"""
         for wrong_size in (0, -1, 0.5, 2j, "15"):
