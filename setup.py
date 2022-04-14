@@ -78,7 +78,7 @@ setup(
         "cobald>=0.12.3",
         "asyncssh",
         "aiotelegraf",
-        "elasticsearch",
+        "elasticsearch>=7.17,<8.0.0",
         "aioprometheus>=21.9.0",
         "kubernetes_asyncio",
         "pydantic",

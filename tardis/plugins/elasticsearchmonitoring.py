@@ -25,7 +25,9 @@ class ElasticsearchMonitoring(Plugin):
         self._index = config.index
         self._meta = getattr(config, "meta", "")
 
-        self._es = Elasticsearch([{"host": config.host, "port": config.port}])
+        self._es = Elasticsearch(
+            [{"scheme": "http", "host": config.host, "port": config.port}]
+        )
 
     async def notify(self, state: State, resource_attributes: AttributeDict) -> None:
         """
@@ -47,7 +49,7 @@ class ElasticsearchMonitoring(Plugin):
             "state": str(state),
             "meta": self._meta,
             "timestamp": int(time() * 1000),
-            "resource_status": str(resource_attributes["resource_status"]),
+            "resource_status": str(resource_attributes.get("resource_status", "")),
         }
 
         await self.async_execute(document)
