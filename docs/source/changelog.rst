@@ -21,6 +21,7 @@ Added
 Changed
 -------
 
+* Remove granularity in Standardiser to enable earlier creation of new drones
 * SSHExecutor respects the remote MaxSessions via queueing
 * Remove minimum core limit (Standardiser) from pool factory
 * Change drone state initialisation and notification of plugins
