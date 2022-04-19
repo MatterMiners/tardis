@@ -17,15 +17,16 @@ Added
 * Add support for passing environment variables as executable arguments to support HTCondor grid universe
 * Added support for application credentials of the OpenStack site adapter
 * Added a new site adapter to use Lancium compute as resource provider
+* Ensure python3.10 compatibility
 
 Changed
 -------
 
-* Adjust Prometheus plugin to the latest aioprometheus version 21.9.0
 * Remove granularity in Standardiser to enable earlier creation of new drones
 * SSHExecutor respects the remote MaxSessions via queueing
 * Remove minimum core limit (Standardiser) from pool factory
 * Change drone state initialisation and notification of plugins
+* Adjust Prometheus plugin to the latest aioprometheus version 21.9.0
 
 Fixed
 -----
