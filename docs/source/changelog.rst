@@ -1,4 +1,4 @@
-.. Created by changelog.py at 2023-02-23, command
+.. Created by changelog.py at 2023-02-24, command
    '/Users/giffler/.cache/pre-commit/repor6pnmwlm/py_env-python3.10/bin/changelog docs/source/changes compile --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
@@ -6,18 +6,18 @@
 CHANGELOG
 #########
 
-[Unreleased] - 2023-02-23
+[Unreleased] - 2023-02-24
 =========================
 
 Added
 -----
 
 * Introduce a TARDIS REST API to query the state of resources from SqlRegistry
+* Ensure python3.10 compatibility
 * Added support for manual draining of drones using the REST API
 * Add support for passing environment variables as executable arguments to support HTCondor grid universe
 * Added support for application credentials of the OpenStack site adapter
 * Added a new site adapter to use Lancium compute as resource provider
-* Ensure python3.10 compatibility
 
 Changed
 -------
@@ -35,6 +35,7 @@ Fixed
 
 * Unique constraints in database schema have been fixed to allow same machine_type and remote_resource_uuid on multiple sites
 * Update the remote_resource_uuid in sqlite registry on a each update
+* Fixing recurrent cancellation of jobs TIMEOUTED in Slurm
 * Fixed state transition for stopped workers
 
 [0.6.0] - 2021-08-09
