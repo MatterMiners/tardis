@@ -323,7 +323,7 @@ class TestSlurmAdapter(TestCase):
             "STAGE_OUT": ResourceStatus.Running,
             "STOPPED": ResourceStatus.Stopped,
             "SUSPENDED": ResourceStatus.Stopped,
-            "TIMEOUT": ResourceStatus.Error,
+            "TIMEOUT": ResourceStatus.Deleted,
         }
 
         for id, value in enumerate(state_translations.values()):

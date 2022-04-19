@@ -92,6 +92,7 @@ class SlurmAdapter(SiteAdapter):
                 STAGE_OUT=ResourceStatus.Running,
                 STOPPED=ResourceStatus.Stopped,
                 SUSPENDED=ResourceStatus.Stopped,
+                TIMEOUT=ResourceStatus.Deleted,
             ): translator.get(x, default=ResourceStatus.Error),
             JobId=lambda x: int(x),
         )
