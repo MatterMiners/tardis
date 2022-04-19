@@ -22,6 +22,7 @@ Added
 Changed
 -------
 
+* Adjust ElasticSearch plugin to support client versions >=7.17,<8.0.0
 * Remove granularity in Standardiser to enable earlier creation of new drones
 * Introduced Bulk Executor and HTCondor Bulk Operations
 * SSHExecutor respects the remote MaxSessions via queueing
