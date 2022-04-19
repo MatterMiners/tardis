@@ -35,6 +35,7 @@ Fixed
 
 * Unique constraints in database schema have been fixed to allow same machine_type and remote_resource_uuid on multiple sites
 * Update the remote_resource_uuid in sqlite registry on a each update
+* Fixed state transition for stopped workers
 
 [0.6.0] - 2021-08-09
 ====================
