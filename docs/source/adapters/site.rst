@@ -217,10 +217,18 @@ Available adapter configuration options
     HTCondor batch system. The template jdl is using the `Python template string`_ syntax
     (see example HTCondor JDL for details).
 
-    .. Note::
-        The `$(...)` used for HTCondor variables needs to be replaced by `$$(...)` in the JDL.
+    .. Warning::
+        The `$(...)` used for HTCondor variables needs to be replaced by `$$(...)` in the templated JDL.
 
     .. _Python template string: https://docs.python.org/3.4/library/string.html#template-strings
+
+    .. Note::
+        In order to properly identify started drones in the overlay batch system and to limit the amount of resources
+        (CPU cores, memory, disk) announced to be available, a set of environment variables needs to be set inside the
+        drone. Preference is to use the ``environment`` parameter in the HTCondor JDL. However, in case of using the
+        HTCondor grid universe the environment is usually dropped by the Grid Compute Element. In that case, we suggest
+        to pass the environment variables using the ``arguments`` parameter and set the corresponding environment
+        variables inside the drone itself based on the command line arguments.
 
 .. content-tabs:: right-col
 
@@ -246,7 +254,7 @@ Available adapter configuration options
               Memory: 256
               Disk: 840
 
-    .. rubric:: Example HTCondor JDL
+    .. rubric:: Example HTCondor JDL (Vanilla Universe)
 
     .. code-block::
 
@@ -265,7 +273,24 @@ Available adapter configuration options
         request_memory=${Memory}
         request_disk=${Disk}
 
-        queue 1
+    .. rubric:: Example HTCondor JDL (Grid Universe)
+
+    .. code-block::
+
+        universe = grid
+        executable = start_pilot.sh
+        arguments = ${Arguments}
+        transfer_input_files = setup_pilot.sh,grid-mapfile
+        output = logs/$$(cluster).$$(process).out
+        error = logs/$$(cluster).$$(process).err
+        log = logs/cluster.log
+
+        accounting_group=tardis
+        x509userproxy = /home/tardis/proxy
+
+        request_cpus=${Cores}
+        request_memory=${Memory}
+        request_disk=${Disk}
 
 Moab Site Adapter
 -----------------

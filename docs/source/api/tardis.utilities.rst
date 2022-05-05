@@ -21,6 +21,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   tardis.utilities.asyncbulkcall
    tardis.utilities.asynccachemap
    tardis.utilities.attributedict
    tardis.utilities.pipeline
