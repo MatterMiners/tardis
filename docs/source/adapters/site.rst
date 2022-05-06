@@ -228,7 +228,7 @@ Available adapter configuration options
         drone. Preference is to use the ``environment`` parameter in the HTCondor JDL. However, in case of using the
         HTCondor grid universe the environment is usually dropped by the Grid Compute Element. In that case, we suggest
         to pass the environment variables using the ``arguments`` parameter and set the corresponding environment
-        variables inside the drone itself based on the command line arguments.
+        variables inside the drone itself based on the command line arguments in long option syntax.
 
 .. content-tabs:: right-col
 
@@ -273,6 +273,9 @@ Available adapter configuration options
         request_memory=${Memory}
         request_disk=${Disk}
 
+    The ``Environment`` contains the following variables, ``TardisDroneCores``. ``TardisDroneMemory``. ``TardisDroneDisk``
+    and ``TardisDroneUuid``.
+
     .. rubric:: Example HTCondor JDL (Grid Universe)
 
     .. code-block::
@@ -291,6 +294,9 @@ Available adapter configuration options
         request_cpus=${Cores}
         request_memory=${Memory}
         request_disk=${Disk}
+
+    The ``Arguments`` contains the following command line arguments, ``--cores``. ``--memory``. ``--disk`` and
+    ``--uuid``.
 
 Moab Site Adapter
 -----------------
