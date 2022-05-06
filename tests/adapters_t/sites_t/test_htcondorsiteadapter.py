@@ -86,7 +86,8 @@ request_cpus=8
 request_memory=32768
 request_disk=167772160
 
-queue 1"""  # noqa: B950
+queue 1
+"""  # noqa: B950
 
 CONDOR_SUBMIT_JDL_SPARK_OBS = """executable = start_pilot.sh
 transfer_input_files = setup_pilot.sh
@@ -263,7 +264,7 @@ class TestHTCondorSiteAdapter(TestCase):
             kwargs["stdin_input"],
             CONDOR_SUBMIT_PER_ARGUMENTS_JDL_CONDOR_OBS,
         )
-        self.mock_executor.reset()
+        self.mock_executor.reset_mock()
 
     def test_translate_resources_raises_logs(self):
         self.adapter = HTCondorAdapter(

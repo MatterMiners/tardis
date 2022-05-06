@@ -108,3 +108,4 @@ Fixed
 * Improved logging of the `HTCondor` batch system adapter and the status changes of the drones
 * Fix the handling of the termination of vanished resources
 * Fix state transitions for jobs retried by HTCondor
+* Fix state transitions and refactoring of the SLURM site adapter
