@@ -71,6 +71,21 @@ request_disk=167772160
 
 queue 1"""  # noqa: B950
 
+CONDOR_SUBMIT_PER_ARGUMENTS_JDL_CONDOR_OBS = """executable = start_pilot.sh
+arguments=--cores=8 --memory=32768 --disk=167772160 --uuid=test-123
+transfer_input_files = setup_pilot.sh
+output = logs/$(cluster).$(process).out
+error = logs/$(cluster).$(process).err
+log = logs/cluster.log
+
+accounting_group=tardis
+
+request_cpus=8
+request_memory=32768
+request_disk=167772160
+
+queue 1"""  # noqa: B950
+
 CONDOR_SUBMIT_JDL_SPARK_OBS = """executable = start_pilot.sh
 transfer_input_files = setup_pilot.sh
 output = logs/$(cluster).$(process).out
@@ -122,6 +137,8 @@ class TestHTCondorSiteAdapter(TestCase):
     def machine_meta_data(self):
         return AttributeDict(
             test2large=AttributeDict(Cores=8, Memory=32, Disk=160),
+            test2large_args=AttributeDict(Cores=8, Memory=32, Disk=160),
+            test2large_deprecated=AttributeDict(Cores=8, Memory=32, Disk=160),
             testunkownresource=AttributeDict(Cores=8, Memory=32, Disk=160, Foo=3),
         )
 
@@ -129,6 +146,8 @@ class TestHTCondorSiteAdapter(TestCase):
     def machine_type_configuration(self):
         return AttributeDict(
             test2large=AttributeDict(jdl="tests/data/submit.jdl"),
+            test2large_args=AttributeDict(jdl="tests/data/submit_per_arguments.jdl"),
+            test2large_deprecated=AttributeDict(jdl="tests/data/submit_deprecated.jdl"),
             testunkownresource=AttributeDict(jdl="tests/data/submit.jdl"),
         )
 
@@ -175,6 +194,10 @@ class TestHTCondorSiteAdapter(TestCase):
         )
         self.mock_executor.reset()
 
+        self.adapter = HTCondorAdapter(
+            machine_type="test2large_deprecated", site_name="TestSite"
+        )
+
         # "queue 1" deprecation
         with self.assertWarns(FutureWarning):
             run_async(
@@ -186,6 +209,29 @@ class TestHTCondorSiteAdapter(TestCase):
                     ),
                 ),
             )
+        self.mock_executor.reset()
+
+        self.adapter = HTCondorAdapter(
+            machine_type="test2large_args", site_name="TestSite"
+        )
+
+        run_async(
+            self.adapter.deploy_resource,
+            AttributeDict(
+                drone_uuid="test-123",
+                obs_machine_meta_data_translation_mapping=AttributeDict(
+                    Cores=1,
+                    Memory=1024,
+                    Disk=1024 * 1024,
+                ),
+            ),
+        )
+
+        _, kwargs = self.mock_executor.return_value.run_command.call_args
+        self.assertEqual(
+            kwargs["stdin_input"],
+            CONDOR_SUBMIT_PER_ARGUMENTS_JDL_CONDOR_OBS,
+        )
         self.mock_executor.reset()
 
     def test_translate_resources_raises_logs(self):

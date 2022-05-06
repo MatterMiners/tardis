@@ -11,3 +11,5 @@ environment=${Environment}
 request_cpus=${Cores}
 request_memory=${Memory}
 request_disk=${Disk}
+
+queue 1
