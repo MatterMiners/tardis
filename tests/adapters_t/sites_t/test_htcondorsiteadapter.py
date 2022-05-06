@@ -72,7 +72,7 @@ request_disk=167772160
 queue 1"""  # noqa: B950
 
 CONDOR_SUBMIT_PER_ARGUMENTS_JDL_CONDOR_OBS = """executable = start_pilot.sh
-arguments=TardisDroneCores=8 TardisDroneMemory=32768 TardisDroneDisk=167772160 TardisDroneUuid=test-123
+arguments=--cores=8 --memory=32768 --disk=167772160 --uuid=test-123
 transfer_input_files = setup_pilot.sh
 output = logs/$(cluster).$(process).out
 error = logs/$(cluster).$(process).err

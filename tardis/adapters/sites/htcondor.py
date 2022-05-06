@@ -244,9 +244,10 @@ class HTCondorAdapter(SiteAdapter):
             resource_attributes.obs_machine_meta_data_translation_mapping,
         )
 
-        def job_environment(seperator):
+        def job_environment(seperator, prefix, customize_key=lambda x: x):
             return seperator.join(
-                f"TardisDrone{key}={value}" for key, value in drone_environment.items()
+                f"{prefix}{customize_key(key)}={value}"
+                for key, value in drone_environment.items()
             )
 
         submit_jdl = jdl_template.substitute(
@@ -254,8 +255,8 @@ class HTCondorAdapter(SiteAdapter):
                 self.machine_meta_data,
                 self.htcondor_machine_meta_data_translation_mapping,
             ),
-            Environment=job_environment(";"),
-            Arguments=job_environment(" "),
+            Environment=job_environment(";", prefix="TardisDrone"),
+            Arguments=job_environment(" ", prefix="--", customize_key=str.lower),
         )
 
         job_id = await self._condor_submit(submit_jdl)
