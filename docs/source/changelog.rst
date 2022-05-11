@@ -19,6 +19,7 @@ Changed
 -------
 
 * SSHExecutor respects the remote MaxSessions via queueing
+* Change drone state initialisation and notification of plugins
 
 Fixed
 -----
