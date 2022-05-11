@@ -2,7 +2,7 @@ import logging
 
 from tardis.resources.dronestates import BootingState
 from tardis.resources.dronestates import IntegrateState
-from tardis.resources.dronestates import DownState
+from tardis.resources.dronestates import RequestState, DownState
 from tardis.interfaces.state import State
 from tardis.plugins.sqliteregistry import SqliteRegistry
 from tardis.utilities.attributedict import AttributeDict
@@ -48,7 +48,7 @@ class TestSqliteRegistry(TestCase):
                 "remote_resource_uuid"
             ],
             "drone_uuid": cls.test_resource_attributes["drone_uuid"],
-            "state": str(BootingState()),
+            "state": str(RequestState()),
             "created": cls.test_resource_attributes["created"],
             "updated": cls.test_resource_attributes["updated"],
         }
@@ -56,7 +56,7 @@ class TestSqliteRegistry(TestCase):
         cls.test_notify_result = (
             cls.test_resource_attributes["remote_resource_uuid"],
             cls.test_resource_attributes["drone_uuid"],
-            str(BootingState()),
+            str(RequestState()),
             cls.test_resource_attributes["site_name"],
             cls.test_resource_attributes["machine_type"],
             str(cls.test_resource_attributes["created"]),
@@ -182,7 +182,7 @@ class TestSqliteRegistry(TestCase):
     def test_get_resources(self):
         self.registry.add_site(self.test_site_name)
         self.registry.add_machine_types(self.test_site_name, self.test_machine_type)
-        run_async(self.registry.notify, BootingState(), self.test_resource_attributes)
+        run_async(self.registry.notify, RequestState(), self.test_resource_attributes)
 
         self.assertListEqual(
             self.registry.get_resources(
@@ -208,13 +208,13 @@ class TestSqliteRegistry(TestCase):
         self.registry.add_site(self.test_site_name)
         self.registry.add_machine_types(self.test_site_name, self.test_machine_type)
 
-        run_async(self.registry.notify, BootingState(), self.test_resource_attributes)
+        run_async(self.registry.notify, RequestState(), self.test_resource_attributes)
 
         self.assertEqual([self.test_notify_result], fetch_all())
 
         with self.assertRaises(sqlite3.IntegrityError) as ie:
             run_async(
-                self.registry.notify, BootingState(), self.test_resource_attributes
+                self.registry.notify, RequestState(), self.test_resource_attributes
             )
         self.assertTrue("unique" in str(ie.exception).lower())
 
@@ -250,7 +250,7 @@ class TestSqliteRegistry(TestCase):
             self.registry.add_site(site_name)
             self.registry.add_machine_types(site_name, self.test_machine_type)
 
-        bind_parameters = {"state": "BootingState"}
+        bind_parameters = {"state": "RequestState"}
         bind_parameters.update(self.test_resource_attributes)
 
         run_async(self.registry.insert_resource, bind_parameters)

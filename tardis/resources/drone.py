@@ -28,7 +28,7 @@ class Drone(Pool):
         plugins: Optional[List[Plugin]] = None,
         remote_resource_uuid=None,
         drone_uuid=None,
-        state: RequestState = RequestState(),
+        state: Optional[State] = None,
         created: float = None,
         updated: float = None,
     ):
@@ -93,6 +93,12 @@ class Drone(Pool):
         return self._site_agent
 
     async def run(self):
+        if not self.state:
+            # The state of a newly created Drone is None, since the plugins need
+            # to be notified on the first state change. As calling the
+            # ``set_state`` coroutine is not possible in the constructor, we
+            # initiate the first state change here
+            await self.set_state(RequestState())
         while True:
             current_state = self.state
             await current_state.run(self)

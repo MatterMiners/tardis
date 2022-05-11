@@ -27,7 +27,7 @@ class SqliteRegistry(Plugin):
         self._db_file = configuration.Plugins.SqliteRegistry.db_file
         self._deploy_db_schema()
         self._dispatch_on_state = dict(
-            BootingState=self.insert_resource, DownState=self.delete_resource
+            RequestState=self.insert_resource, DownState=self.delete_resource
         )
 
         for site in configuration.Sites:
