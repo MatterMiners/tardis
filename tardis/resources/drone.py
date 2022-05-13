@@ -93,7 +93,7 @@ class Drone(Pool):
         return self._site_agent
 
     async def run(self):
-        if not self.state:
+        if self.state is None:
             # The state of a newly created Drone is None, since the plugins need
             # to be notified on the first state change. As calling the
             # ``set_state`` coroutine is not possible in the constructor, we
