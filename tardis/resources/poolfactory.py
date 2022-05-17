@@ -6,7 +6,6 @@ from ..agents.batchsystemagent import BatchSystemAgent
 from ..agents.siteagent import SiteAgent
 from ..configuration.configuration import Configuration
 from ..resources.drone import Drone
-from ..resources.dronestates import RequestState
 
 from cobald.composite.weighted import WeightedComposite
 from cobald.composite.factory import FactoryPool
@@ -100,7 +99,7 @@ def create_drone(
     plugins: Optional[Iterable[Plugin]] = None,
     remote_resource_uuid=None,
     drone_uuid=None,
-    state: State = RequestState(),
+    state: Optional[State] = None,
     created: float = None,
     updated: float = None,
 ):

@@ -126,14 +126,12 @@ class TestPoolFactory(TestCase):
     @patch("tardis.resources.poolfactory.BatchSystemAgent")
     @patch("tardis.resources.poolfactory.SiteAgent")
     def test_create_drone(self, mock_site_agent, mock_batch_system_agent, mock_drone):
-        self.assertEqual(
-            create_drone(
-                site_agent=mock_site_agent, batch_system_agent=mock_batch_system_agent
-            ),
-            mock_drone(),
+        create_drone(
+            site_agent=mock_site_agent, batch_system_agent=mock_batch_system_agent
         )
 
-        mock_drone.has_call(
+        self.assertListEqual(
+            mock_drone.mock_calls,
             [
                 call(
                     site_agent=mock_site_agent,
@@ -141,11 +139,11 @@ class TestPoolFactory(TestCase):
                     plugins=None,
                     remote_resource_uuid=None,
                     drone_uuid=None,
-                    state=RequestState(),
+                    state=None,
                     created=None,
                     updated=None,
                 )
-            ]
+            ],
         )
 
     def test_load_plugins(self):

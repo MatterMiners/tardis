@@ -3,7 +3,7 @@ from ..utilities.utilities import async_return, run_async
 from tardis.interfaces.plugin import Plugin
 from tardis.interfaces.state import State
 from tardis.resources.drone import Drone
-from tardis.resources.dronestates import RequestState, DownState
+from tardis.resources.dronestates import DownState
 from tardis.utilities.attributedict import AttributeDict
 
 from logging import DEBUG
@@ -140,7 +140,7 @@ class TestDrone(TestCase):
 
     def test_state(self):
         self.assertEqual(self.drone.state, self.drone._state)
-        self.assertIsInstance(self.drone.state, RequestState)
+        self.assertIsNone(self.drone.state)
 
     def test_notify_plugins(self):
         self.drone.register_plugins(self.mock_plugin)
