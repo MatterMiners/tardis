@@ -1,7 +1,6 @@
 import logging
 
 from tardis.resources.dronestates import BootingState
-from tardis.resources.dronestates import IntegrateState
 from tardis.resources.dronestates import RequestState, DownState
 from tardis.interfaces.state import State
 from tardis.plugins.sqliteregistry import SqliteRegistry
@@ -27,7 +26,7 @@ class TestSqliteRegistry(TestCase):
         cls.test_machine_type = "MyGreatTestMachineType"
         cls.tables_in_db = {"MachineTypes", "Resources", "ResourceStates", "Sites"}
         cls.test_resource_attributes = {
-            "remote_resource_uuid": "bf85022b-fdd6-42b1-932d-086c288d4755",
+            "remote_resource_uuid": None,
             "drone_uuid": f"{cls.test_site_name}-07af52405e",
             "site_name": cls.test_site_name,
             "machine_type": cls.test_machine_type,
@@ -66,7 +65,7 @@ class TestSqliteRegistry(TestCase):
         cls.test_updated_notify_result = (
             cls.test_updated_resource_attributes["remote_resource_uuid"],
             cls.test_updated_resource_attributes["drone_uuid"],
-            str(IntegrateState()),
+            str(BootingState()),
             cls.test_updated_resource_attributes["site_name"],
             cls.test_updated_resource_attributes["machine_type"],
             str(cls.test_updated_resource_attributes["created"]),
@@ -220,7 +219,7 @@ class TestSqliteRegistry(TestCase):
 
         run_async(
             self.registry.notify,
-            IntegrateState(),
+            BootingState(),
             self.test_updated_resource_attributes,
         )
 

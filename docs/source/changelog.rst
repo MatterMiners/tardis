@@ -1,4 +1,4 @@
-.. Created by changelog.py at 2022-05-11, command
+.. Created by changelog.py at 2022-05-25, command
    '/Users/giffler/.cache/pre-commit/repor6pnmwlm/py_env-default/bin/changelog docs/source/changes compile --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
@@ -6,7 +6,7 @@
 CHANGELOG
 #########
 
-[Unreleased] - 2022-05-11
+[Unreleased] - 2022-05-25
 =========================
 
 Added
@@ -25,6 +25,7 @@ Fixed
 -----
 
 * Unique constraints in database schema have been fixed to allow same machine_type and remote_resource_uuid on multiple sites
+* Update the remote_resource_uuid in sqlite registry on a each update
 
 [0.6.0] - 2021-08-09
 ====================

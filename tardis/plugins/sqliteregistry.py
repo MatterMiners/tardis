@@ -190,6 +190,7 @@ class SqliteRegistry(Plugin):
 
     async def update_resource(self, bind_parameters: Dict) -> None:
         sql_query = """UPDATE Resources SET updated = :updated,
+        remote_resource_uuid = :remote_resource_uuid,
         state_id = (SELECT state_id FROM ResourceStates WHERE state = :state)
         WHERE drone_uuid = :drone_uuid
         AND site_id = (SELECT site_id FROM Sites WHERE site_name = :site_name)"""
