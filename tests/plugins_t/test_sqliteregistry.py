@@ -249,7 +249,7 @@ class TestSqliteRegistry(TestCase):
             self.registry.add_site(site_name)
             self.registry.add_machine_types(site_name, self.test_machine_type)
 
-        bind_parameters = {"state": str(RequestState())}
+        bind_parameters = {"state": "RequestState"}
         bind_parameters.update(self.test_resource_attributes)
 
         run_async(self.registry.insert_resource, bind_parameters)
