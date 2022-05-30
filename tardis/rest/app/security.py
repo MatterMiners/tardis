@@ -64,7 +64,8 @@ def check_authorization(
         authenticate_value = "Bearer"
 
     try:
-        payload = jwt.decode(token, get_secret_key(), algorithms=[get_algorithm()])
+        payload = jwt.decode(token, get_secret_key(),
+                             algorithms=[get_algorithm()])
         user_name: str = payload.get("sub")
         token_scopes = payload.get("scopes", [])
         token_data = TokenData(scopes=token_scopes, user_name=user_name)
@@ -78,7 +79,7 @@ def check_authorization(
     for scope in security_scopes.scopes:
         if scope not in token_data.scopes:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
+                status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not enough permissions",
                 headers={"WWW-Authenticate": authenticate_value},
             ) from None
@@ -89,11 +90,13 @@ def check_authorization(
 def check_authentication(user_name: str, password: str) -> UserCredentials:
     user = get_user(user_name)
     if not user:
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
     if checkpw(password.encode(), user.hashed_password.encode()):
         return user
     else:
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
 
 
 @lru_cache(maxsize=1)
@@ -121,7 +124,7 @@ def get_secret_key() -> str:
 
 
 @lru_cache(maxsize=16)
-def get_user(user_name: str) -> [None, UserCredentials]:
+def get_user(user_name: str) -> Optional[UserCredentials]:
     try:
         rest_service = Configuration().Services.restapi
     except AttributeError:
