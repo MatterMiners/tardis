@@ -1,5 +1,8 @@
 from ...__about__ import __version__
-from .routers import login, resources
+from .routers import resources, user
+from fastapi_jwt_auth.exceptions import AuthJWTException
+from fastapi import Request
+from fastapi.responses import JSONResponse
 
 from fastapi import FastAPI
 
@@ -22,11 +25,20 @@ app = FastAPI(
             "description": "Information about the currently managed resources.",
         },
         {
-            "name": "login",
-            "description": "Handles login and creation of limited duration tokens to access APIs.",  # noqa B509
+            "name": "user",
+            "description": "Handles login, refresh tokens, logout and anything related to the user.",  # noqa B509
         },
     ],
 )
 
+
+@app.exception_handler(AuthJWTException)
+def authjwt_exception_handler(request: Request, exc: AuthJWTException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.message}
+    )
+
+
 app.include_router(resources.router)
-app.include_router(login.router)
+app.include_router(user.router)
