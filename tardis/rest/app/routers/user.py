@@ -21,3 +21,30 @@ async def login(login_user: security.LoginUser, Authorize: AuthJWT = Depends()):
     Authorize.set_refresh_cookies(refresh_token)
 
     return {"msg": "Successfully logged in!"}
+
+
+@router.delete('/logout')
+async def logout(Authorize: AuthJWT = Depends()):
+    Authorize.jwt_required()
+
+    Authorize.unset_jwt_cookies()
+    return {"msg": "Successfully logged out!"}
+
+
+@router.post('/refresh')
+async def refresh(Authorize: AuthJWT = Depends()):
+    Authorize.jwt_refresh_token_required()
+
+    current_user = Authorize.get_jwt_subject()
+    new_access_token = Authorize.create_access_token(subject=current_user)
+
+    Authorize.set_access_cookies(new_access_token)
+    return {"msg": "Token successfully refreshed"}
+
+
+@router.get("/me", response_model=security.BaseUser)
+async def get_user_me(Authorize: AuthJWT = Depends()):
+    Authorize.jwt_required()
+
+    user_name = Authorize.get_jwt_subject()
+    return security.get_user(user_name)
