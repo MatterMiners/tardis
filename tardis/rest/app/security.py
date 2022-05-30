@@ -12,6 +12,8 @@ from functools import lru_cache
 from typing import List, Optional
 
 
+class Settings(BaseModel):
+    authjwt_secret_key: str = secrets.token_hex(128)
 class BaseUser(BaseModel):
     user_name: str
     scopes: List[str] = []

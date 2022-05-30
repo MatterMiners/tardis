@@ -21,7 +21,6 @@ class RestService(object):
         **fast_api_args,
     ):
         self._algorithm = algorithm
-        self._secret_key: str = secrets.token_hex(128)
         self._users = users or []
 
         # necessary to avoid that the TARDIS' logger configuration is overwritten!
@@ -33,11 +32,6 @@ class RestService(object):
     @lru_cache(maxsize=16)
     def algorithm(self) -> str:
         return self._algorithm
-
-    @property
-    @lru_cache(maxsize=16)
-    def secret_key(self) -> str:
-        return self._secret_key
 
     @lru_cache(maxsize=16)
     def get_user(self, user_name: str) -> Optional[DatabaseUser]:
