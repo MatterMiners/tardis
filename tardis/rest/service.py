@@ -1,3 +1,4 @@
+import secrets
 from .app.security import UserCredentials
 from cobald.daemon import service
 from cobald.daemon.plugins import yaml_tag
@@ -15,13 +16,12 @@ import asyncio
 class RestService(object):
     def __init__(
         self,
-        secret_key: str,
         algorithm: str = "HS256",
         users: List = None,
         **fast_api_args,
     ):
         self._algorithm = algorithm
-        self._secret_key = secret_key
+        self._secret_key: str = secrets.token_hex(128)
         self._users = users or []
 
         # necessary to avoid that the TARDIS' logger configuration is overwritten!
