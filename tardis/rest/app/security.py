@@ -12,18 +12,17 @@ from functools import lru_cache
 from typing import List, Optional
 
 
-class TokenData(BaseModel):
-    user_name: Optional[str] = None
+class BaseUser(BaseModel):
+    user_name: str
     scopes: List[str] = []
 
 
-class UserCredentials(BaseModel):
-    user_name: str
-    hashed_password: str
-    scopes: List[str]
+class LoginUser(BaseUser):
+    password: str
 
-    class Config:
-        extra = "forbid"
+
+class DatabaseUser(BaseUser):
+    hashed_password: str
 
 
 oauth2_scheme = OAuth2PasswordBearer(
@@ -87,7 +86,7 @@ def check_authorization(
     return token_data
 
 
-def check_authentication(user_name: str, password: str) -> UserCredentials:
+def check_authentication(user_name: str, password: str) -> DatabaseUser:
     user = get_user(user_name)
     if not user:
         raise HTTPException(
@@ -124,7 +123,7 @@ def get_secret_key() -> str:
 
 
 @lru_cache(maxsize=16)
-def get_user(user_name: str) -> Optional[UserCredentials]:
+def get_user(user_name: str) -> Optional[DatabaseUser]:
     try:
         rest_service = Configuration().Services.restapi
     except AttributeError:
