@@ -8,7 +8,8 @@ class TestResources(TestCaseRouters):
     def setUp(self):
         super().setUp()
         login = {"user_name": "test", "password": "test"}
-        # TODO: Create a static login token to make this test independent from /user/login
+        # TODO: Create a static login token to make this test
+        # independent from /user/login
         response = run_async(self.client.post, "/user/login", json=login)
         self.assertEqual(response.status_code, 200)
 
