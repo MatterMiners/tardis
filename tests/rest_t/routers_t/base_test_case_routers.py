@@ -63,12 +63,3 @@ class TestCaseRouters(TestCase):
     def clear_lru_cache():
         get_algorithm.cache_clear()
         get_user.cache_clear()
-
-    @property
-    def headers(
-        self,
-    ):
-        return {
-            "accept": "application/json",
-            "Content-Type": "application/json",
-        }

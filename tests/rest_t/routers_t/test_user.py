@@ -24,11 +24,9 @@ class TestLogin(TestCaseRouters):
             },
         )
 
-        # Invalid body but valid headers
+        # Empty body
         self.clear_lru_cache()
-        response = run_async(
-            self.client.post, "/user/login", headers=self.headers, data="{}"
-        )
+        response = run_async(self.client.post, "/user/login", data="{}")
         self.assertEqual(response.status_code, 422)
         self.assertEqual(
             response.json(),
@@ -49,9 +47,7 @@ class TestLogin(TestCaseRouters):
         )
 
         self.clear_lru_cache()
-        response = run_async(
-            self.client.post, "/user/login", json=data, headers=self.headers
-        )
+        response = run_async(self.client.post, "/user/login", json=self.test_user)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json(),
@@ -60,9 +56,7 @@ class TestLogin(TestCaseRouters):
 
         self.clear_lru_cache()
         self.config.Services.restapi.get_user.side_effect = lambda user_name: None
-        response = run_async(
-            self.client.post, "/user/login", json=data, headers=self.headers
-        )
+        response = run_async(self.client.post, "/user/login", json=self.test_user)
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json(), {"detail": "Incorrect username or password"})
         self.config.Services.restapi.get_user.side_effect = None
