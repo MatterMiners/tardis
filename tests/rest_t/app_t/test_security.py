@@ -100,13 +100,13 @@ class TestSecurity(TestCase):
 
         with self.assertRaises(HTTPException) as he:
             check_authentication(user_name="fails", password="test123")
-        self.assertEqual(he.exception.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(he.exception.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(he.exception.detail, "Incorrect username or password")
 
         self.clear_lru_cache()
         with self.assertRaises(HTTPException) as he:
             check_authentication(user_name="test", password="test123")
-        self.assertEqual(he.exception.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(he.exception.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(he.exception.detail, "Incorrect username or password")
 
         self.clear_lru_cache()
