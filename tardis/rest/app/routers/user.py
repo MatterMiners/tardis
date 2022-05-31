@@ -4,8 +4,6 @@ from fastapi_jwt_auth import AuthJWT
 
 router = APIRouter(prefix="/user", tags=["user"])
 
-# TODO: Very important: Set the csrf cookie in the frontend.
-
 
 @router.post("/login", description="Sets httponly access token in session cookie")
 async def login(login_user: security.LoginUser, Authorize: AuthJWT = Depends()):
