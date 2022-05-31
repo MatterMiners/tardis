@@ -9,12 +9,12 @@ router = APIRouter(prefix="/user", tags=["user"])
 
 @router.post("/login", description="Sets httponly access token in session cookie")
 async def login(login_user: security.LoginUser, Authorize: AuthJWT = Depends()):
-    user = security.check_authentication(
-        login_user.user_name, login_user.password)
+    user = security.check_authentication(login_user.user_name, login_user.password)
 
     scopes = {"scopes": user.scopes}
     access_token = Authorize.create_access_token(
-        subject=user.user_name, user_claims=scopes)
+        subject=user.user_name, user_claims=scopes
+    )
     refresh_token = Authorize.create_refresh_token(subject=user.user_name)
 
     Authorize.set_access_cookies(access_token)
@@ -23,7 +23,7 @@ async def login(login_user: security.LoginUser, Authorize: AuthJWT = Depends()):
     return {"msg": "Successfully logged in!"}
 
 
-@router.delete('/logout')
+@router.delete("/logout")
 async def logout(Authorize: AuthJWT = Depends()):
     Authorize.jwt_required()
 
@@ -31,7 +31,7 @@ async def logout(Authorize: AuthJWT = Depends()):
     return {"msg": "Successfully logged out!"}
 
 
-@router.post('/refresh')
+@router.post("/refresh")
 async def refresh(Authorize: AuthJWT = Depends()):
     Authorize.jwt_refresh_token_required()
 
