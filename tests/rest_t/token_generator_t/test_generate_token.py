@@ -6,7 +6,7 @@ from typer import Typer
 from unittest import TestCase
 from unittest.mock import patch
 
-
+# !!! This can probably be deprecated as refresh tokens where introduced which are really easy to use and are much safer than non expiring tokens
 class TestGenerateToken(TestCase):
     mock_config_patcher = None
     mock_cobald_config_loader_patcher = None
