@@ -9,9 +9,7 @@ class TestResources(TestCaseRouters):
         super().setUp()
         login = {"user_name": "test", "password": "test"}
         # TODO: Create a static login token to make this test independent from /user/login
-        response = run_async(
-            self.client.post, "/user/login", headers=self.headers, json=login
-        )
+        response = run_async(self.client.post, "/user/login", json=login)
         self.assertEqual(response.status_code, 200)
 
     def test_get_resource_state(self):
@@ -21,7 +19,8 @@ class TestResources(TestCaseRouters):
         )
 
         response = run_async(
-            self.client.get, "/resources/test-0123456789/state", headers=self.headers
+            self.client.get,
+            "/resources/test-0123456789/state",
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -30,15 +29,11 @@ class TestResources(TestCaseRouters):
         )
 
         self.mock_crud.get_resource_state.return_value = async_return(return_value=[])
-        response = run_async(
-            self.client.get, "/resources/test-1234567890/state", headers=self.headers
-        )
+        response = run_async(self.client.get, "/resources/test-1234567890/state")
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {"detail": "Drone not found"})
 
-        response = run_async(
-            self.client.get, "/resources/test-invalid/state", headers=self.headers
-        )
+        response = run_async(self.client.get, "/resources/test-invalid/state")
         self.assertEqual(response.status_code, 422)
         self.assertEqual(
             response.json(),
@@ -54,7 +49,10 @@ class TestResources(TestCaseRouters):
             },
         )
 
-        response = run_async(self.client.get, "/resources/state", headers=self.headers)
+        response = run_async(
+            self.client.get,
+            "/resources/state",
+        )
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {"detail": "Not Found"})
 
@@ -84,7 +82,7 @@ class TestResources(TestCaseRouters):
             return_value=full_expected_resources
         )
 
-        response = run_async(self.client.get, "/resources/", headers=self.headers)
+        response = run_async(self.client.get, "/resources/")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json(),
