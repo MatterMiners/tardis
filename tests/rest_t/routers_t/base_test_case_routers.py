@@ -1,4 +1,4 @@
-from tardis.rest.app.security import get_algorithm, get_secret_key, get_user
+from tardis.rest.app.security import get_algorithm, get_user
 from tardis.utilities.attributedict import AttributeDict
 from tests.utilities.utilities import run_async
 
@@ -31,11 +31,9 @@ class TestCaseRouters(TestCase):
         cls.mock_config_patcher.stop()
 
     def setUp(self) -> None:
-        secret_key = "63328dc6b8524bf08b0ba151e287edb498852b77b97f837088de4d17247d032c"
         algorithm = "HS256"
 
         self.config = self.mock_config.return_value
-        self.config.Services.restapi.secret_key = secret_key
         self.config.Services.restapi.algorithm = algorithm
         self.config.Services.restapi.get_user.return_value = AttributeDict(
             user_name="test",
@@ -55,12 +53,13 @@ class TestCaseRouters(TestCase):
     @staticmethod
     def clear_lru_cache():
         get_algorithm.cache_clear()
-        get_secret_key.cache_clear()
         get_user.cache_clear()
 
     @property
     def headers(
         self,
-        token="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0Iiwic2NvcGVzIjpbInJlc291cmNlczpnZXQiXX0.yybw7XC5GpTCHytNj2vl1nWLCgxaN7vpkIz4wF1-Pnc",  # noqa B950
     ):
-        return {"accept": "application/json", "Authorization": token}
+        return {
+            "accept": "application/json",
+            "Content-Type": "application/json",
+        }
