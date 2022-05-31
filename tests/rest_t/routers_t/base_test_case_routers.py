@@ -54,6 +54,11 @@ class TestCaseRouters(TestCase):
     def tearDown(self) -> None:
         run_async(self.client.aclose)
 
+    def login(self):
+        self.clear_lru_cache()
+        response = run_async(self.client.post, "/user/login", json=self.test_user)
+        self.assertEqual(response.status_code, 200)
+
     @staticmethod
     def clear_lru_cache():
         get_algorithm.cache_clear()

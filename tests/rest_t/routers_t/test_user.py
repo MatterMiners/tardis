@@ -68,9 +68,8 @@ class TestLogin(TestCaseRouters):
         self.config.Services.restapi.get_user.side_effect = None
 
         self.clear_lru_cache()
-        data["password"] = "wrong"
-        response = run_async(
-            self.client.post, "/user/login", json=data, headers=self.headers
+        self.login()
         )
+        self.login()
         self.assertEqual(response.status_code, 401)
-        self.assertEqual(response.json(), {"detail": "Incorrect username or password"})
+        self.login()
