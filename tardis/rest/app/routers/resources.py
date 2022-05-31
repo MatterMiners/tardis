@@ -1,17 +1,18 @@
-from .. import security, crud, database
+from .. import crud, database
 from ....plugins.sqliteregistry import SqliteRegistry
-from fastapi import APIRouter, Depends, HTTPException, Path, Security
+from fastapi import APIRouter, Depends, HTTPException, Path
 from fastapi_jwt_auth import AuthJWT
 
 router = APIRouter(prefix="/resources", tags=["resources"])
 
 
-@router.get("/{drone_uuid}/state", description="Get current state of a resource")
+@router.get("/{drone_uuid}/state",
+            description="Get current state of a resource")
 async def get_resource_state(
     drone_uuid: str = Path(..., regex=r"^\S+-[A-Fa-f0-9]{10}$"),
     sql_registry: SqliteRegistry = Depends(database.get_sql_registry()),
     Authorize: AuthJWT = Depends()
-    #  _: str = Security(security.check_authorization, scopes=["resources:get"]),
+    # _: str = Security(security.check_authorization, scopes=["resources:get"])
 ):
     Authorize.jwt_required()
 
@@ -19,7 +20,8 @@ async def get_resource_state(
     try:
         query_result = query_result[0]
     except IndexError:
-        raise HTTPException(status_code=404, detail="Drone not found") from None
+        raise HTTPException(
+            status_code=404, detail="Drone not found") from None
     return query_result
 
 
@@ -27,7 +29,7 @@ async def get_resource_state(
 async def get_resources(
     sql_registry: SqliteRegistry = Depends(database.get_sql_registry()),
     Authorize: AuthJWT = Depends()
-    # _: str = Security(security.check_authorization, scopes=["resources:get"]),
+    # _: str = Security(security.check_authorization, scopes=["resources:get"])
 ):
     Authorize.jwt_required()
 

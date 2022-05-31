@@ -1,4 +1,3 @@
-import secrets
 from .app.security import DatabaseUser
 from cobald.daemon import service
 from cobald.daemon.plugins import yaml_tag

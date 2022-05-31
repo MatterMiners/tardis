@@ -4,14 +4,14 @@ from ...exceptions.tardisexceptions import TardisError
 
 from bcrypt import checkpw, gensalt, hashpw
 from fastapi import Depends, HTTPException, status
-from fastapi.security import SecurityScopes
-from jose import JWTError, jwt
-from pydantic import BaseModel, Field, ValidationError
+# from fastapi.security import SecurityScopes
+# from jose import JWTError, jwt
+from pydantic import BaseModel  # , Field, ValidationError
 from fastapi_jwt_auth import AuthJWT
 
-from datetime import datetime, timedelta
+# from datetime import datetime, timedelta
 from functools import lru_cache
-from typing import List, Optional
+from typing import Optional, List
 
 
 class Settings(BaseModel):
@@ -84,13 +84,15 @@ def check_authentication(user_name: str, password: str) -> DatabaseUser:
 
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password")
 
     if checkpw(password.encode(), user.hashed_password.encode()):
         return user
     else:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password")
 
 
 @lru_cache(maxsize=1)
