@@ -5,6 +5,7 @@ from tests.utilities.utilities import async_return, run_async
 class TestResources(TestCaseRouters):
     # Reminder: When defining `setUp`, `setUpClass`, `tearDown` and `tearDownClass`
     # in router tests the corresponding super().function() needs to be called as well.
+        # TODO: Create a static login token to make this test independent from /user/login
     def test_get_resource_state(self):
         self.clear_lru_cache()
         self.mock_crud.get_resource_state.return_value = async_return(
