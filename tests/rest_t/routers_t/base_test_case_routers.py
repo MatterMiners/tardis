@@ -46,6 +46,10 @@ class TestCaseRouters(TestCase):
         )  # has to be imported after SqliteRegistry patch
 
         self.client = AsyncClient(app=app, base_url="http://test")
+        self.test_user = {
+            "user_name": "test1",
+            "password": "test",
+        }
 
     def tearDown(self) -> None:
         run_async(self.client.aclose)

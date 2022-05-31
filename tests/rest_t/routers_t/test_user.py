@@ -7,12 +7,6 @@ class TestLogin(TestCaseRouters):
     # Reminder: When defining `setUp`, `setUpClass`, `tearDown` and `tearDownClass`
     # in router tests the corresponding super().function() needs to be called as well.
     def test_login(self):
-        data = {
-            "user_name": "test1",
-            "password": "test",
-            "scope": "",
-        }
-
         # No body and headers
         self.clear_lru_cache()
         response = run_async(self.client.post, "/user/login")
