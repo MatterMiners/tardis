@@ -1,21 +1,15 @@
 from tardis.exceptions.tardisexceptions import TardisError
 from tardis.rest.app.security import (
-    create_access_token,
-    check_authorization,
+    # check_authorization,
     check_authentication,
     get_algorithm,
-    get_secret_key,
     get_user,
     hash_password,
-    TokenData,
 )
 from tardis.utilities.attributedict import AttributeDict
 
 from fastapi import HTTPException, status
-from fastapi.security import SecurityScopes
-from jose import JWTError
 
-from datetime import datetime, timedelta
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -33,9 +27,6 @@ class TestSecurity(TestCase):
         cls.mock_config_patcher.stop()
 
     def setUp(self) -> None:
-        self.secret_key = (
-            "689e7af69a70ad0d97f771371738be00452e81e128a876491c1d373dfbcca949"
-        )
         self.algorithm = "HS256"
 
         self.infinite_resources_get_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0Iiwic2NvcGVzIjpbInJlc291cmNlczpnZXQiXX0.FTzUlLfPgb2WXFUSPSoUsvqHI67QtSO2Boash_6eVBg"  # noqa B950
@@ -52,14 +43,12 @@ class TestSecurity(TestCase):
             return None
 
         config = self.mock_config.return_value
-        config.Services.restapi.secret_key = self.secret_key
         config.Services.restapi.algorithm = self.algorithm
         config.Services.restapi.get_user.side_effect = mocked_get_user
 
     @staticmethod
     def clear_lru_cache():
         get_algorithm.cache_clear()
-        get_secret_key.cache_clear()
         get_user.cache_clear()
 
     @patch("tardis.rest.app.security.datetime")
@@ -177,16 +166,6 @@ class TestSecurity(TestCase):
         self.mock_config.side_effect = AttributeError
         with self.assertRaises(TardisError):
             get_algorithm()
-        self.mock_config.side_effect = None
-
-    def test_get_secret_key(self):
-        self.clear_lru_cache()
-        self.assertEqual(get_secret_key(), self.secret_key)
-
-        self.clear_lru_cache()
-        self.mock_config.side_effect = AttributeError
-        with self.assertRaises(TardisError):
-            get_secret_key()
         self.mock_config.side_effect = None
 
     def test_get_user(self):
