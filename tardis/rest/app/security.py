@@ -4,6 +4,7 @@ from ...exceptions.tardisexceptions import TardisError
 
 from bcrypt import checkpw, gensalt, hashpw
 from fastapi import HTTPException, status
+
 # from fastapi.security import SecurityScopes
 # from jose import JWTError, jwt
 from pydantic import BaseModel  # , Field, ValidationError
@@ -32,6 +33,7 @@ def get_config():
 class BaseUser(BaseModel):
     user_name: str
     scopes: List[str] = []
+
 
 # TODO: Document the scopes manually
 # "resources:get": "Allows to read resource database",
@@ -85,14 +87,16 @@ def check_authentication(user_name: str, password: str) -> DatabaseUser:
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password")
+            detail="Incorrect username or password",
+        )
 
     if checkpw(password.encode(), user.hashed_password.encode()):
         return user
     else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password")
+            detail="Incorrect username or password",
+        )
 
 
 @lru_cache(maxsize=1)

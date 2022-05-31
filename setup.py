@@ -91,7 +91,7 @@ setup(
         "python-multipart",
         "typing_extensions",
         "backports.cached_property",
-        "fastapi-jwt-auth"
+        "fastapi-jwt-auth",
     ],
     extras_require={
         "docs": [
