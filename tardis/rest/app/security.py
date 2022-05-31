@@ -3,7 +3,7 @@ from ...configuration.configuration import Configuration
 from ...exceptions.tardisexceptions import TardisError
 
 from bcrypt import checkpw, gensalt, hashpw
-from fastapi import Depends, HTTPException, status
+from fastapi import HTTPException, status
 # from fastapi.security import SecurityScopes
 # from jose import JWTError, jwt
 from pydantic import BaseModel  # , Field, ValidationError
@@ -20,7 +20,7 @@ class Settings(BaseModel):
     authjwt_cookie_samesite: str = "strict"
     # TODO: change this to true in production so only https traffic is allowed
     authjwt_cookie_secure: bool = False
-    # TODO: Set this too to True. But as soon as possible. Only disabled temporarily
+    # TODO: Set this too to True. But as soon as possible.
     authjwt_cookie_csrf_protect: bool = False
 
 
@@ -97,7 +97,8 @@ def check_authentication(user_name: str, password: str) -> DatabaseUser:
 
 @lru_cache(maxsize=1)
 def get_algorithm() -> str:
-    # This can probably be deprecated as fastapi_jwt_tokens sets it's algorithm by itself
+    # This can probably be deprecated as fastapi_jwt_tokens
+    # sets it's algorithm by itself
     try:
         rest_service = Configuration().Services.restapi
     except AttributeError:
