@@ -48,14 +48,13 @@ class DatabaseUser(BaseUser):
     hashed_password: str
 
 
-# TODO: Implement scopes properly when needed
-# def check_authorization(
-#     security_scopes: SecurityScopes, token: str = Depends(oauth2_scheme)
-# ) -> TokenData:
-#     if security_scopes.scopes:
-#         authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
-#     else:
-#         authenticate_value = "Bearer"
+def check_scope_permissions(requested_scopes: List[str], allowed_scopes: List[str]):
+    for scope in requested_scopes:
+        if scope not in allowed_scopes:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not enough permissions",
+            ) from None
 
 #     try:
 #         payload = jwt.decode(token, get_secret_key(),
@@ -70,13 +69,7 @@ class DatabaseUser(BaseUser):
 #             headers={"WWW-Authenticate": authenticate_value},
 #         ) from err
 
-#     for scope in security_scopes.scopes:
-#         if scope not in token_data.scopes:
-#             raise HTTPException(
-#                 status_code=status.HTTP_403_FORBIDDEN,
-#                 detail="Not enough permissions",
-#                 headers={"WWW-Authenticate": authenticate_value},
-#             ) from None
+    check_scope_permissions(security_scopes.scopes, token_scopes)
 
 #     return token_data
 

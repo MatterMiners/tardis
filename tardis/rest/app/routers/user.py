@@ -9,7 +9,12 @@ router = APIRouter(prefix="/user", tags=["user"])
 async def login(login_user: security.LoginUser, Authorize: AuthJWT = Depends()):
     user = security.check_authentication(login_user.user_name, login_user.password)
 
-    scopes = {"scopes": user.scopes}
+    if login_user.scopes == None:
+        scopes = {"scopes": user.scopes}
+    else:
+        security.check_scope_permissions(login_user.scopes, user.scopes)
+        scopes = {"scopes": login_user.scopes}
+
     access_token = Authorize.create_access_token(
         subject=user.user_name, user_claims=scopes
     )
