@@ -52,3 +52,8 @@ async def get_user_me(
 ):
     user_name = Authorize.get_jwt_subject()
     return security.get_user(user_name)
+
+
+@router.get("/token_scopes")
+async def get_token_scopes():
+    pass
