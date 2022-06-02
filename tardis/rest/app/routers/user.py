@@ -1,13 +1,16 @@
+from ..scopes import User
 from .. import security
-from fastapi import APIRouter, Depends
-from fastapi.security import Security
+from fastapi import APIRouter, Depends, Security
 from fastapi_jwt_auth import AuthJWT
 
 router = APIRouter(prefix="/user", tags=["user"])
 
 
 @router.post("/login", description="Sets httponly access token in session cookie")
-async def login(login_user: security.LoginUser, Authorize: AuthJWT = Depends()):
+async def login(
+    login_user: security.LoginUser,
+    Authorize: AuthJWT = Depends(),
+):
     user = security.check_authentication(login_user.user_name, login_user.password)
 
     if login_user.scopes == None:
@@ -48,8 +51,10 @@ async def refresh(Authorize: AuthJWT = Depends()):
 
 @router.get("/me", response_model=security.BaseUser)
 async def get_user_me(
-    Authorize: AuthJWT = Security(security.check_authorization, scopes=["user:get"]),
+    Authorize: AuthJWT = Security(security.check_authorization, scopes=[User.get]),
 ):
+    Authorize.jwt_required()
+
     user_name = Authorize.get_jwt_subject()
     return security.get_user(user_name)
 

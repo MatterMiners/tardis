@@ -2,6 +2,7 @@ from .. import security
 from .. import crud, database
 from ....plugins.sqliteregistry import SqliteRegistry
 from fastapi import APIRouter, Depends, HTTPException, Path, Security, status
+from ..scopes import Resources
 
 router = APIRouter(prefix="/resources", tags=["resources"])
 
@@ -10,7 +11,7 @@ router = APIRouter(prefix="/resources", tags=["resources"])
 async def get_resource_state(
     drone_uuid: str = Path(..., regex=r"^\S+-[A-Fa-f0-9]{10}$"),
     sql_registry: SqliteRegistry = Depends(database.get_sql_registry()),
-    _: str = Security(security.check_authorization, scopes=["resources:get"]),
+    _=Security(security.check_authorization, scopes=[Resources.get]),
 ):
     query_result = await crud.get_resource_state(sql_registry, drone_uuid)
     try:
@@ -25,7 +26,7 @@ async def get_resource_state(
 @router.get("/", description="Get list of managed resources")
 async def get_resources(
     sql_registry: SqliteRegistry = Depends(database.get_sql_registry()),
-    _: str = Security(security.check_authorization, scopes=["resources:get"]),
+    _=Security(security.check_authorization, scopes=[Resources.get]),
 ):
     query_result = await crud.get_resources(sql_registry)
     return query_result
