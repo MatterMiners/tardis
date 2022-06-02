@@ -56,22 +56,21 @@ def check_scope_permissions(requested_scopes: List[str], allowed_scopes: List[st
                 detail="Not enough permissions",
             ) from None
 
-#     try:
-#         payload = jwt.decode(token, get_secret_key(),
-#                              algorithms=[get_algorithm()])
-#         user_name: str = payload.get("sub")
-#         token_scopes = payload.get("scopes", [])
-#         token_data = TokenData(scopes=token_scopes, user_name=user_name)
-#     except (JWTError, ValidationError) as err:
-#         raise HTTPException(
-#             status_code=status.HTTP_401_UNAUTHORIZED,
-#             detail="Could not validate credentials",
-#             headers={"WWW-Authenticate": authenticate_value},
-#         ) from err
+
+def check_authorization(
+    security_scopes: SecurityScopes, Authorize: AuthJWT = Depends()
+) -> AuthJWT:
+    # No authorization without authentication
+    Authorize.jwt_required()
+
+    try:
+        token_scopes = Authorize.get_raw_jwt()["scopes"]
+    except KeyError:
+        raise TardisError("Scopes not defined in jwt token") from None
 
     check_scope_permissions(security_scopes.scopes, token_scopes)
 
-#     return token_data
+    return Authorize
 
 
 def check_authentication(user_name: str, password: str) -> DatabaseUser:
