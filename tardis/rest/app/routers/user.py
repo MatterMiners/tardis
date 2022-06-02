@@ -16,6 +16,8 @@ async def login(
     if login_user.scopes == None:
         scopes = {"scopes": user.scopes}
     else:
+        # The next two lines are very critical as if wrongly implemented a user can give his token unlimited scopes.
+        # This functionality has to be tested thoroughly
         security.check_scope_permissions(login_user.scopes, user.scopes)
         scopes = {"scopes": login_user.scopes}
 
@@ -30,7 +32,10 @@ async def login(
     return {"msg": "Successfully logged in!"}
 
 
-@router.delete("/logout")
+@router.delete(
+    "/logout",
+    description="Logout the current user by deleting all access token cookies",
+)
 async def logout(Authorize: AuthJWT = Depends()):
     Authorize.jwt_required()
 
@@ -38,7 +43,9 @@ async def logout(Authorize: AuthJWT = Depends()):
     return {"msg": "Successfully logged out!"}
 
 
-@router.post("/refresh")
+@router.post(
+    "/refresh", description="Use refresh token cookie to refresh expiration on cookie"
+)
 async def refresh(Authorize: AuthJWT = Depends()):
     Authorize.jwt_refresh_token_required()
 
@@ -49,7 +56,11 @@ async def refresh(Authorize: AuthJWT = Depends()):
     return {"msg": "Token successfully refreshed"}
 
 
-@router.get("/me", response_model=security.BaseUser)
+@router.get(
+    "/me",
+    response_model=security.BaseUser,
+    description="Get the user data how it's stored in the database (no password)",
+)
 async def get_user_me(
     Authorize: AuthJWT = Security(security.check_authorization, scopes=[User.get]),
 ):
@@ -59,6 +70,6 @@ async def get_user_me(
     return security.get_user(user_name)
 
 
-@router.get("/token_scopes")
+@router.get("/token_scopes", description="get scopes of CURRENT token (not of user)")
 async def get_token_scopes():
     pass
