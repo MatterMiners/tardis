@@ -1,7 +1,7 @@
+from .. import security
 from .. import crud, database
 from ....plugins.sqliteregistry import SqliteRegistry
-from fastapi import APIRouter, Depends, HTTPException, Path
-from fastapi_jwt_auth import AuthJWT
+from fastapi import APIRouter, Depends, HTTPException, Path, Security, status
 
 router = APIRouter(prefix="/resources", tags=["resources"])
 

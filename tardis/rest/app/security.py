@@ -3,11 +3,11 @@ from ...configuration.configuration import Configuration
 from ...exceptions.tardisexceptions import TardisError
 
 from bcrypt import checkpw, gensalt, hashpw
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Depends
 
-# from fastapi.security import SecurityScopes
-# from jose import JWTError, jwt
-from pydantic import BaseModel  # , Field, ValidationError
+from fastapi.security import SecurityScopes
+
+from pydantic import BaseModel
 from fastapi_jwt_auth import AuthJWT
 
 # from datetime import datetime, timedelta
