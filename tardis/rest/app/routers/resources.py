@@ -19,7 +19,9 @@ async def get_resource_state(
     try:
         query_result = query_result[0]
     except IndexError:
-        raise HTTPException(status_code=404, detail="Drone not found") from None
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Drone not found"
+        ) from None
     return query_result
 
 
