@@ -32,7 +32,7 @@ def get_config():
 
 class BaseUser(BaseModel):
     user_name: str
-    scopes: List[str] = []
+    scopes: Optional[List[str]] = None
 
 
 # TODO: Document the scopes manually
