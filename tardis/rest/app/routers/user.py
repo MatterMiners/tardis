@@ -1,5 +1,6 @@
 from .. import security
 from fastapi import APIRouter, Depends
+from fastapi.security import Security
 from fastapi_jwt_auth import AuthJWT
 
 router = APIRouter(prefix="/user", tags=["user"])
@@ -46,8 +47,8 @@ async def refresh(Authorize: AuthJWT = Depends()):
 
 
 @router.get("/me", response_model=security.BaseUser)
-async def get_user_me(Authorize: AuthJWT = Depends()):
-    Authorize.jwt_required()
-
+async def get_user_me(
+    Authorize: AuthJWT = Security(security.check_authorization, scopes=["user:get"]),
+):
     user_name = Authorize.get_jwt_subject()
     return security.get_user(user_name)
