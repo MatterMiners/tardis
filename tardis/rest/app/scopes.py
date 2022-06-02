@@ -6,6 +6,7 @@ from enum import Enum
 class Resources(str, Enum):
     get = "resources:get"
     put = "resources:put"
+    delete = "resources:delete"
 
 
 class User(str, Enum):
