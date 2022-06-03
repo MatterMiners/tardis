@@ -6,6 +6,8 @@ from ..scopes import Resources
 
 router = APIRouter(prefix="/resources", tags=["resources"])
 
+# TODO: Implement dependency for single drone operations
+
 
 @router.get("/{drone_uuid}/state", description="Get current state of a resource")
 async def get_resource_state(
@@ -30,3 +32,10 @@ async def get_resources(
 ):
     query_result = await crud.get_resources(sql_registry)
     return query_result
+
+
+@router.delete('/{drone_uuid}/shutdown', description="Gently shut shown drone")
+async def shutdown_drone(
+    _=Security(security.check_authorization, scopes=[Resources.delete]),
+):
+    pass

@@ -6,14 +6,17 @@ from fastapi_jwt_auth import AuthJWT
 router = APIRouter(prefix="/user", tags=["user"])
 
 
-@router.post("/login", description="Sets httponly access token in session cookie")
+@router.post(
+    "/login",
+    description="Sets httponly access token in session cookie. The scopes are optional.",
+)
 async def login(
     login_user: security.LoginUser,
     Authorize: AuthJWT = Depends(),
 ):
     user = security.check_authentication(login_user.user_name, login_user.password)
 
-    if login_user.scopes == None:
+    if login_user.scopes is None:
         scopes = {"scopes": user.scopes}
     else:
         # The next two lines are very critical as if wrongly implemented a user can give his token unlimited scopes.
@@ -29,7 +32,9 @@ async def login(
     Authorize.set_access_cookies(access_token)
     Authorize.set_refresh_cookies(refresh_token)
 
-    return {"msg": "Successfully logged in!"}
+    # It is ok to return the user here because every user should have the user:get scope.
+    # Tokens don't have permissions to this function
+    return {"msg": "Successfully logged in!", "user": security.BaseUser(user_name=user.user_name, scopes=scopes["scopes"])}
 
 
 @router.delete(

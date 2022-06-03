@@ -63,11 +63,7 @@ def check_authorization(
     # No authorization without authentication
     Authorize.jwt_required()
 
-    try:
-        token_scopes = Authorize.get_raw_jwt()["scopes"]
-    except KeyError:
-        raise TardisError("Scopes not defined in jwt token") from None
-
+    token_scopes = get_token_scopes(Authorize)
     check_scope_permissions(security_scopes.scopes, token_scopes)
 
     return Authorize
@@ -89,6 +85,14 @@ def check_authentication(user_name: str, password: str) -> DatabaseUser:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
         )
+
+
+def get_token_scopes(Authorize: AuthJWT) -> List[str]:
+    try:
+        token_scopes: List[str] = Authorize.get_raw_jwt()["scopes"]
+    except KeyError:
+        raise TardisError("Scopes not defined in jwt token") from None
+    return token_scopes
 
 
 @lru_cache(maxsize=1)
