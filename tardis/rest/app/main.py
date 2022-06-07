@@ -1,5 +1,5 @@
 from ...__about__ import __version__
-from .routers import resources, user
+from .routers import resources, user, types
 from fastapi_jwt_auth.exceptions import AuthJWTException
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -39,3 +39,4 @@ def authjwt_exception_handler(request: Request, exc: AuthJWTException):
 
 app.include_router(resources.router)
 app.include_router(user.router)
+app.include_router(types.router)
