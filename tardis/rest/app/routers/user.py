@@ -27,14 +27,19 @@ async def login(
     access_token = Authorize.create_access_token(
         subject=user.user_name, user_claims=scopes
     )
-    refresh_token = Authorize.create_refresh_token(subject=user.user_name)
+    refresh_token = Authorize.create_refresh_token(
+        subject=user.user_name, user_claims=scopes
+    )
 
     Authorize.set_access_cookies(access_token)
     Authorize.set_refresh_cookies(refresh_token)
 
     # It is ok to return the user here because every user should have the user:get scope.
     # Tokens don't have permissions to this function
-    return {"msg": "Successfully logged in!", "user": security.BaseUser(user_name=user.user_name, scopes=scopes["scopes"])}
+    return {
+        "msg": "Successfully logged in!",
+        "user": security.BaseUser(user_name=user.user_name, scopes=scopes["scopes"]),
+    }
 
 
 @router.delete(
@@ -55,7 +60,11 @@ async def refresh(Authorize: AuthJWT = Depends()):
     Authorize.jwt_refresh_token_required()
 
     current_user = Authorize.get_jwt_subject()
-    new_access_token = Authorize.create_access_token(subject=current_user)
+    scopes = security.get_token_scopes(Authorize)
+
+    new_access_token = Authorize.create_access_token(
+        subject=current_user, user_claims=({"scopes": scopes})
+    )
 
     Authorize.set_access_cookies(new_access_token)
     return {"msg": "Token successfully refreshed"}
