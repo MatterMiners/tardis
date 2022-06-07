@@ -16,3 +16,18 @@ async def get_resources(sql_registry):
     JOIN Sites S ON R.site_id = S.site_id
     JOIN MachineTypes MT ON R.machine_type_id = MT.machine_type_id"""
     return await sql_registry.async_execute(sql_query, {})
+
+
+async def get_available_states(sql_registry):
+    sql_query = "SELECT RS.state FROM ResourceStates RS"
+    return await sql_registry.async_execute(sql_query, {})
+
+
+async def get_available_sites(sql_registry):
+    sql_query = "SELECT S.site_name FROM Sites S"
+    return await sql_registry.async_execute(sql_query, {})
+
+
+async def get_available_machine_types(sql_registry):
+    sql_query = "SELECT MT.machine_type FROM MachineTypes MT"
+    return await sql_registry.async_execute(sql_query, {})
