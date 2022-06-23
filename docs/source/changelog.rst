@@ -19,6 +19,7 @@ Changed
 -------
 
 * SSHExecutor respects the remote MaxSessions via queueing
+* Remove minimum core limit (Standardiser) from pool factory
 * Change drone state initialisation and notification of plugins
 
 Fixed
