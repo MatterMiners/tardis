@@ -34,7 +34,12 @@ app = FastAPI(
 
 @app.exception_handler(AuthJWTException)
 def authjwt_exception_handler(request: Request, exc: AuthJWTException):
-    return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
+    detail = exc.message
+
+    if detail == "Signature verification failed" or detail == "Signature has expired":
+        exc.status_code = 401
+      
+    return JSONResponse(status_code=exc.status_code, content={"detail": detail})
 
 
 app.include_router(resources.router)
