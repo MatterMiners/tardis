@@ -3,7 +3,7 @@ summary: "Remove minimum core limit (Standardiser) from pool factory"
 description: |
   Currently the ``create_composite_pool`` function applies a COBalD ``Standardiser`` to ensure the at least one drone is
   requested. This overwrites all Standardisers using the minimum parameter in the COBalD pipeline. It turns out that
-  that ``Standardiser`` is not needed anymore, since the ``utilisation`` and ``allocation`` is always 1.0 when no drone
+  the ``Standardiser`` is not needed anymore, since the ``utilisation`` and ``allocation`` is always 1.0 when no drone
   is running, so that automatically one is requested.
 pull_requests:
   - 252
