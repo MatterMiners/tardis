@@ -20,7 +20,7 @@ class SiteAdapterBaseModel(BaseModel):
     """
 
     MachineTypes: List[str]
-    MachineTypeConfiguration: "AttributeDict[str, AttributeDict[str, Any]]"
+    MachineTypeConfiguration: "AttributeDict[str, Optional[AttributeDict[str, Any]]]"
     MachineMetaData: "AttributeDict[str, AttributeDict[str, Any]]"
     # Use Any to avoid automated conversion to int or float here, validate later
 
