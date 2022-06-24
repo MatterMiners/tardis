@@ -1,4 +1,4 @@
-.. Created by changelog.py at 2022-05-25, command
+.. Created by changelog.py at 2022-06-24, command
    '/Users/giffler/.cache/pre-commit/repor6pnmwlm/py_env-default/bin/changelog docs/source/changes compile --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
@@ -6,7 +6,7 @@
 CHANGELOG
 #########
 
-[Unreleased] - 2022-05-25
+[Unreleased] - 2022-06-24
 =========================
 
 Added
@@ -19,6 +19,7 @@ Changed
 -------
 
 * SSHExecutor respects the remote MaxSessions via queueing
+* Remove minimum core limit (Standardiser) from pool factory
 * Change drone state initialisation and notification of plugins
 
 Fixed

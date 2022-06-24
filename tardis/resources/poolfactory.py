@@ -71,15 +71,10 @@ def create_composite_pool(configuration: str = None) -> WeightedComposite:
                 batch_system_agent=batch_system_agent,
                 plugins=plugins.values(),
             )
-            cpu_cores = getattr(configuration, site.name).MachineMetaData[machine_type][
-                "Cores"
-            ]
+
             site_composites.append(
                 Logger(
-                    Standardiser(
-                        FactoryPool(*check_pointed_drones, factory=drone_factory),
-                        minimum=cpu_cores,
-                    ),
+                    FactoryPool(*check_pointed_drones, factory=drone_factory),
                     name=f"{site.name.lower()}_{machine_type.lower()}",
                 )
             )

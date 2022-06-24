@@ -93,14 +93,9 @@ class TestPoolFactory(TestCase):
 
         self.assertEqual(mock_factory_pool.mock_calls, [call(factory=ANY)])
 
-        cpu_cores = getattr(
-            self.config, site_name
-        ).MachineMetaData.TestMachineType.Cores
-
         self.assertEqual(
             mock_standardiser.mock_calls,
             [
-                call(mock_factory_pool(), minimum=cpu_cores),
                 call(mock_weighted_composite(), maximum=self.config.Sites[0].quota),
             ],
         )
@@ -109,7 +104,7 @@ class TestPoolFactory(TestCase):
             mock_logger.mock_calls,
             [
                 call(
-                    mock_standardiser(),
+                    mock_factory_pool(),
                     name=f"{site_name.lower()}_{machine_type.lower()}",
                 )
             ],
