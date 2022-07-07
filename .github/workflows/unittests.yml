@@ -21,6 +21,7 @@ jobs:
         pip install .[contrib]
         pip install coverage codecov
     - name: Test with unittest
+      continue-on-error: ${{ matrix.python-version == 'pypy3' }}
       run: |
         coverage run -m unittest -v
     - name: Upload coverage to Codecov
