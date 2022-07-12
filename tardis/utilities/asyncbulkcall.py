@@ -125,7 +125,7 @@ class AsyncBulkCall(Generic[T, R]):
             # track tasks via strong references to avoid them being garbage collected.
             # see bpo#44665
             self._bulk_tasks.add(task)
-            task.add_done_callback(lambda _: self._bulk_tasks.discard(task))
+            task.add_done_callback(lambda _, task=task: self._bulk_tasks.discard(task))
             # yield to the event loop so that the `while True` loop does not arbitrarily
             # delay other tasks on the fast paths for `_get_bulk` and `acquire`.
             await asyncio.sleep(0)
