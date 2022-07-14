@@ -3,7 +3,7 @@ LABEL maintainer="Manuel Giffels <giffels@gmail.com>"
 
 RUN yum -y install epel-release curl && yum clean all
 
-RUN curl -sL https://rpm.nodesource.com/setup_18.x | bash -
+RUN curl -sL https://rpm.nodesource.com/setup_16.x | bash -
 
 RUN yum -y update \
     && yum -y install git \
