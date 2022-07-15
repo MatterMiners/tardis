@@ -1,0 +1,17 @@
+FROM rockylinux:9
+LABEL maintainer="Manuel Giffels <giffels@gmail.com>"
+
+RUN yum -y install epel-release curl && yum clean all
+
+RUN curl -sL https://rpm.nodesource.com/setup_18.x | bash -
+
+RUN yum -y update \
+    && yum -y install git \
+                      python3 \
+                      gcc \
+                      python3-devel \
+                      nodejs \
+                      glibc-langpack-en \
+    && yum clean all
+
+SHELL [ "/bin/bash", "--noprofile", "--norc", "-e", "-o", "pipefail", "-c" ]
