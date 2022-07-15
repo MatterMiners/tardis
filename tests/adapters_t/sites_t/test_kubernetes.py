@@ -11,6 +11,7 @@ from unittest.mock import patch
 
 import logging
 from kubernetes_asyncio import client
+from pydantic import ValidationError
 
 
 class TestKubernetesStackAdapter(TestCase):
@@ -38,8 +39,8 @@ class TestKubernetesStackAdapter(TestCase):
         cls.mock_kubernetes_hpa_patcher.stop()
 
     def setUp(self):
-        config = self.mock_config.return_value
-        config.TestSite = AttributeDict(
+        self.config = self.mock_config.return_value
+        self.config.TestSite = AttributeDict(
             # Endpoint of Kube cluster
             host="https://127.0.0.1:443",
             # Barer token we are going to use to authenticate
@@ -50,10 +51,10 @@ class TestKubernetesStackAdapter(TestCase):
                     namespace="default",
                     image="busybox:1.26.1",
                     args=["sleep", "3600"],
-                    hpa="True",
-                    min_replicas="1",
-                    max_replicas="2",
-                    cpu_utilization="50",
+                    hpa=True,
+                    min_replicas=1,
+                    max_replicas=2,
+                    cpu_utilization=50,
                 )
             ),
             MachineMetaData=AttributeDict(
@@ -73,8 +74,9 @@ class TestKubernetesStackAdapter(TestCase):
             name="testsite-089123",
             resources=client.V1ResourceRequirements(
                 requests={
-                    "cpu": config.TestSite.MachineMetaData.test2large.Cores,
-                    "memory": config.TestSite.MachineMetaData.test2large.Memory * 1e9,
+                    "cpu": self.config.TestSite.MachineMetaData.test2large.Cores,
+                    "memory": self.config.TestSite.MachineMetaData.test2large.Memory
+                    * 1e9,
                 }
             ),
             env=[
@@ -154,6 +156,255 @@ class TestKubernetesStackAdapter(TestCase):
 
     def tearDown(self):
         self.mock_kubernetes_api.reset_mock()
+
+    def test_adapter_configuration_validation(self):
+        old_value = self.config.TestSite.host
+        self.config.TestSite.host = "NotAnUrl"
+
+        with self.assertRaises(ValidationError):
+            k8s_adapter = KubernetesAdapter(
+                machine_type="test2large", site_name="TestSite"
+            )
+            # noinspection PyStatementEffect
+            k8s_adapter.configuration  # config needs to be accessed to run validation
+
+        self.config.TestSite.host = old_value
+
+        self.config.TestSite.token = ValueError
+
+        with self.assertRaises(ValidationError):
+            k8s_adapter = KubernetesAdapter(
+                machine_type="test2large", site_name="TestSite"
+            )
+            # noinspection PyStatementEffect
+            k8s_adapter.configuration  # config needs to be accessed to run validation
+
+    def test_machine_type_configuration_validation(self):
+        def run_validation_test(configuration, expected_outcome):
+            self.config.TestSite.MachineTypeConfiguration.test2large = configuration
+            k8s_adapter = KubernetesAdapter(
+                machine_type="test2large", site_name="TestSite"
+            )
+            try:
+                issubclass(expected_outcome, Exception)
+            except TypeError:
+                self.assertEqual(
+                    expected_outcome, k8s_adapter.machine_type_configuration
+                )
+            else:
+                with self.assertRaises(expected_outcome):
+                    # config needs to be accessed to run validation
+                    # noinspection PyStatementEffect
+                    k8s_adapter.machine_type_configuration
+
+        run_validation_test(
+            self.config.TestSite.MachineTypeConfiguration.test2large,
+            AttributeDict(
+                namespace="default",
+                image="busybox:1.26.1",
+                args=["sleep", "3600"],
+                hpa=True,
+                min_replicas=1,
+                max_replicas=2,
+                cpu_utilization=50,
+            ),
+        )
+
+        run_validation_test(
+            AttributeDict(
+                namespace="tardis",
+                image="busybox:1.26.1",
+                args=["sleep", "3600"],
+                hpa=False,
+            ),
+            AttributeDict(
+                namespace="tardis",
+                image="busybox:1.26.1",
+                args=["sleep", "3600"],
+                hpa=False,
+                min_replicas=None,
+                max_replicas=None,
+                cpu_utilization=None,
+            ),
+        )
+
+        run_validation_test(
+            AttributeDict(
+                namespace="default",
+                args=["sleep", "3600"],
+                hpa=True,
+                min_replicas=1,
+                max_replicas=2,
+                cpu_utilization=50,
+            ),
+            ValidationError,
+        )
+
+        run_validation_test(
+            AttributeDict(
+                namespace="default",
+                image="InvalidImage",
+                args=["sleep", "3600"],
+                hpa=True,
+                min_replicas=1,
+                max_replicas=2,
+                cpu_utilization=50,
+            ),
+            ValidationError,
+        )
+
+        run_validation_test(
+            AttributeDict(
+                namespace="default",
+                image="busybox:1.26.1",
+                args="Invalid",
+                hpa=True,
+                min_replicas=1,
+                max_replicas=2,
+                cpu_utilization=50,
+            ),
+            ValidationError,
+        )
+
+        run_validation_test(
+            AttributeDict(
+                namespace="default",
+                image="busybox:1.26.1",
+                args=["sleep", "3600"],
+                hpa=True,
+                max_replicas=2,
+                cpu_utilization=50,
+            ),
+            ValidationError,
+        )
+
+        run_validation_test(
+            AttributeDict(
+                namespace="default",
+                image="busybox:1.26.1",
+                args=["sleep", "3600"],
+                hpa=True,
+                min_replicas=1,
+                cpu_utilization=50,
+            ),
+            ValidationError,
+        )
+
+        run_validation_test(
+            AttributeDict(
+                namespace="default",
+                image="busybox:1.26.1",
+                args=["sleep", "3600"],
+                hpa=True,
+                min_replicas=1,
+                max_replicas=2,
+            ),
+            ValidationError,
+        )
+
+        run_validation_test(
+            AttributeDict(
+                namespace="default",
+                image="busybox:1.26.1",
+                args=["sleep", "3600"],
+                hpa=True,
+                min_replicas="invalid",
+                max_replicas=2,
+                cpu_utilization=50,
+            ),
+            ValidationError,
+        )
+
+        run_validation_test(
+            AttributeDict(
+                namespace="default",
+                image="busybox:1.26.1",
+                args=["sleep", "3600"],
+                hpa=True,
+                min_replicas=-1,
+                max_replicas=2,
+                cpu_utilization=50,
+            ),
+            ValidationError,
+        )
+
+        run_validation_test(
+            AttributeDict(
+                namespace="default",
+                image="busybox:1.26.1",
+                args=["sleep", "3600"],
+                hpa=True,
+                min_replicas=1,
+                max_replicas="invalid",
+                cpu_utilization=50,
+            ),
+            ValidationError,
+        )
+
+        run_validation_test(
+            AttributeDict(
+                namespace="default",
+                image="busybox:1.26.1",
+                args=["sleep", "3600"],
+                hpa=True,
+                min_replicas=1,
+                max_replicas=-1,
+                cpu_utilization=50,
+            ),
+            ValidationError,
+        )
+
+        run_validation_test(
+            AttributeDict(
+                namespace="default",
+                image="busybox:1.26.1",
+                args=["sleep", "3600"],
+                hpa=True,
+                min_replicas=2,
+                max_replicas=1,
+                cpu_utilization=50,
+            ),
+            ValidationError,
+        )
+
+        run_validation_test(
+            AttributeDict(
+                namespace="default",
+                image="busybox:1.26.1",
+                args=["sleep", "3600"],
+                hpa=True,
+                min_replicas=1,
+                max_replicas=2,
+                cpu_utilization="invalid",
+            ),
+            ValidationError,
+        )
+
+        run_validation_test(
+            AttributeDict(
+                namespace="default",
+                image="busybox:1.26.1",
+                args=["sleep", "3600"],
+                hpa=True,
+                min_replicas=1,
+                max_replicas=2,
+                cpu_utilization=-1,
+            ),
+            ValidationError,
+        )
+
+        run_validation_test(
+            AttributeDict(
+                namespace="default",
+                image="busybox:1.26.1",
+                args=["sleep", "3600"],
+                hpa=True,
+                min_replicas=1,
+                max_replicas=2,
+                cpu_utilization=999,
+            ),
+            ValidationError,
+        )
 
     @patch("kubernetes_asyncio.client.rest.aiohttp")
     def test_deploy_resource(self, mocked_aiohttp):
