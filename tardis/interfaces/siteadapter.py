@@ -27,9 +27,7 @@ class SiteAdapterBaseModel(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    @root_validator(
-        skip_on_failure=True, allow_reuse=True, pre=True
-    )  # skip if previous validator failed
+    @root_validator(skip_on_failure=True, pre=True)  # skip if previous validator failed
     def validate(cls, values: Dict[str, Any]) -> Dict[str, Any]:  # noqa B902
         """
         Validate that MachineTypeConfiguration and MachineMetaData is available
@@ -55,7 +53,7 @@ class SiteAdapterBaseModel(BaseModel):
                     ) from None
         return values
 
-    @validator("MachineMetaData", allow_reuse=True)
+    @validator("MachineMetaData")
     def validate_machine_meta_data(
         cls,  # noqa B902
         machine_meta_data: "AttributeDict[str, AttributeDict[str, Any]]",
