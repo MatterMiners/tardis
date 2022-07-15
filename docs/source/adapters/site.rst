@@ -579,15 +579,15 @@ Available machine type configuration options
     +----------------+-------------------------------------------------------------------------------+-----------------+
     | args           | Arguments for the containers that run in your pods.                           |  **Required**   |
     +----------------+-------------------------------------------------------------------------------+-----------------+
-    | hpa            | Set True\False to enable\disable kubernetes horizontal pod autoscaler feature.|  **Required**   |
+    | hpa            | Set True\False to enable\disable kubernetes horizontal pod autoscaler feature.|  **Optional**   |
     +----------------+-------------------------------------------------------------------------------+-----------------+
-    | min_replicas   | Minimum number of pods to scale to. (Only required when hpa is set to True)   |  **Required**   |
+    | min_replicas   | Minimum number of pods to scale to. (Required when hpa is set to True)        |  **Optional**   |
     +----------------+-------------------------------------------------------------------------------+-----------------+
-    | max_replicas   | Maximum number of pods to scale to. (Only required when hpa is set to True)   |  **Required**   |
+    | max_replicas   | Maximum number of pods to scale to. (Required when hpa is set to True)        |  **Optional**   |
     +----------------+-------------------------------------------------------------------------------+-----------------+
-    | cpu_utilization| Average Cpu utilization to maintain across pods of a deployment.              |  **Required**   |
+    | cpu_utilization| Average Cpu utilization to maintain across pods of a deployment.              |  **Optional**   |
     +                +                                                                               +                 +
-    |                | (Only required when hpa is set to True)                                       |                 |
+    |                | (Required when hpa is set to True)                                            |                 |
     +----------------+-------------------------------------------------------------------------------+-----------------+
 
 .. content-tabs:: right-col
