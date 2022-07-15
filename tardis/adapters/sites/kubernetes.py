@@ -6,15 +6,26 @@ from ...utilities.attributedict import AttributeDict
 from ...utilities.staticmapping import StaticMapping
 from ...utilities.utils import convert_to
 
-from pydantic import AnyUrl
+from pydantic import AnyUrl, BaseModel, conint, constr, PositiveInt, validator
 
 from functools import partial
 from datetime import datetime
 from contextlib import contextmanager
+from typing import Any, List, Optional
 
 import logging
 
 logger = logging.getLogger("cobald.runtime.tardis.adapters.sites.kubernetes")
+
+
+class KubernetesMachineTypeConfigurationModel(BaseModel):
+    args: List[str]
+    cpu_utilization: Optional[conint(ge=0, le=100)]
+    hpa: bool = False
+    image: constr(regex=r"^\S+:\S+$")  # noqa F722
+    max_replicas: Optional[PositiveInt]
+    min_replicas: Optional[PositiveInt]
+    namespace: str = "default"
 
 
 class KubernetesAdapterConfigurationModel(SiteAdapterBaseModel):
@@ -24,6 +35,47 @@ class KubernetesAdapterConfigurationModel(SiteAdapterBaseModel):
 
     host: AnyUrl
     token: str
+
+    @validator("MachineTypeConfiguration")
+    def validate_machine_type_configuration(
+        cls,  # noqa B902
+        machine_type_configurations: AttributeDict[
+            str, Optional[AttributeDict[str, AttributeDict[str, Any]]]
+        ],
+    ):
+        validated_configurations = AttributeDict()
+
+        for (
+            machine_type,
+            machine_type_configuration,
+        ) in machine_type_configurations.items():
+            validated_configuration = KubernetesMachineTypeConfigurationModel(
+                **machine_type_configuration
+            )
+            hpa_required_attrs = ("cpu_utilization", "max_replicas", "min_replicas")
+            if validated_configuration.hpa:
+                if not all(  # check all required attributes are present
+                    getattr(validated_configuration, attr)
+                    for attr in hpa_required_attrs
+                ):
+                    raise ValueError(
+                        f"You need to supply {hpa_required_attrs} in case you activate "
+                        "the Kubernetes Horizontal Autopod Scaler (HPA)!"
+                    )
+                if (  # check consistency of min_replicas and max_replicas
+                    validated_configuration.min_replicas
+                    > validated_configuration.max_replicas
+                ):
+                    raise ValueError(
+                        "max_replicas have to be larger/equal as/to min_replicas!"
+                    )
+            setattr(
+                validated_configurations,
+                machine_type,
+                AttributeDict(validated_configuration),
+            )
+
+        return validated_configurations
 
 
 class KubernetesAdapter(SiteAdapter):
