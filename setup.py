@@ -72,7 +72,7 @@ setup(
         "aiohttp<4.0; python_version<'3.7'",  # to support python3.6 (Centos 7)
         "aiohttp; python_version>='3.7'",
         get_cryptography_version(),
-        "CloudStackAIO",
+        "CloudStackAIO>=0.0.8",
         "PyYAML",
         "AsyncOpenStackClient",
         "cobald>=0.12.3",
