@@ -86,4 +86,5 @@ async def get_user_me(
 
 @router.get("/token_scopes", description="get scopes of CURRENT token (not of user)")
 async def get_token_scopes():
-    pass
+    # TODO: Implement
+    return {"msg": "Not implemented"}
