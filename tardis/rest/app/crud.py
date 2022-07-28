@@ -19,15 +19,15 @@ async def get_resources(sql_registry):
 
 
 async def get_available_states(sql_registry):
-    sql_query = "SELECT RS.state FROM ResourceStates RS"
+    sql_query = "SELECT state FROM ResourceStates"
     return await sql_registry.async_execute(sql_query, {})
 
 
 async def get_available_sites(sql_registry):
-    sql_query = "SELECT S.site_name FROM Sites S"
+    sql_query = "SELECT site_name FROM Sites"
     return await sql_registry.async_execute(sql_query, {})
 
 
 async def get_available_machine_types(sql_registry):
-    sql_query = "SELECT MT.machine_type FROM MachineTypes MT"
+    sql_query = "SELECT machine_type FROM MachineTypes"
     return await sql_registry.async_execute(sql_query, {})
