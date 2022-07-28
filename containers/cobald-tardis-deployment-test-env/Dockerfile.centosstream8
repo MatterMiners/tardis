@@ -1,7 +1,7 @@
 FROM quay.io/centos/centos:stream8
 LABEL maintainer="Manuel Giffels <giffels@gmail.com>"
 
-RUN dnf -y module enable nodejs:12
+RUN curl -sL https://rpm.nodesource.com/setup_18.x | bash -
 
 RUN dnf -y update \
     && dnf -y install git \

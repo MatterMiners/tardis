@@ -8,7 +8,6 @@ from tardis.utilities.attributedict import AttributeDict
 from tardis.utilities.staticmapping import StaticMapping
 
 from aiohttp import ClientConnectionError
-from cobald.daemon import runtime
 from CloudStackAIO.CloudStack import CloudStack
 from CloudStackAIO.CloudStack import CloudStackClientException
 
@@ -31,7 +30,6 @@ class CloudStackAdapter(SiteAdapter):
             end_point=self.configuration.end_point,
             api_key=self.configuration.api_key,
             api_secret=self.configuration.api_secret,
-            event_loop=runtime._meta_runner.runners[asyncio].event_loop,
         )
 
         key_translator = StaticMapping(
