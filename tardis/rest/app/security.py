@@ -22,6 +22,7 @@ class Settings(BaseModel):
     # TODO: change this to true in production so only https traffic is allowed
     authjwt_cookie_secure: bool = False
     # TODO: Set this too to True. But as soon as possible.
+    # Update: As 'same_site' is strict this is probably enough.
     authjwt_cookie_csrf_protect: bool = False
 
 
