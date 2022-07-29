@@ -85,6 +85,7 @@ async def get_user_me(
 
 
 @router.get("/token_scopes", description="get scopes of CURRENT token (not of user)")
-async def get_token_scopes():
-    # TODO: Implement
-    return {"msg": "Not implemented"}
+async def get_token_scopes(Authorize: AuthJWT = Depends()):
+    Authorize.jwt_required()
+
+    return security.get_token_scopes(Authorize)
