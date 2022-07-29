@@ -1,7 +1,9 @@
+from starlette.types import Scope
 from tardis.exceptions.tardisexceptions import TardisError
+from tardis.plugins.sqliteregistry import SqliteRegistry
 from tardis.rest.app.security import (
-    # check_authorization,
     check_authentication,
+    check_scope_permissions,
     get_algorithm,
     get_user,
     hash_password,
@@ -9,6 +11,7 @@ from tardis.rest.app.security import (
 from tardis.utilities.attributedict import AttributeDict
 
 from fastapi import HTTPException, status
+
 
 from unittest import TestCase
 from unittest.mock import patch
@@ -51,49 +54,19 @@ class TestSecurity(TestCase):
         get_algorithm.cache_clear()
         get_user.cache_clear()
 
-    # def test_check_authorization(self):
-    #     self.clear_lru_cache()
-    #     security_scopes = SecurityScopes(["resources:get"])
-    #     token_data = check_authorization(
-    #         security_scopes, self.infinite_resources_get_token
-    #     )
+    def test_check_scope_permissions(self):
+        self.assertRaises(
+            HTTPException,
+            check_scope_permissions,
+            ["resources:get"],
+            ["user:get"],
+        )
 
-    #     self.assertEqual(
-    #         token_data, TokenData(scopes=security_scopes.scopes, user_name="test")
-    #     )
+        check_scope_permissions(["resources:get"], ["resources:get"])
 
-    #     security_scopes = SecurityScopes(["resources:put"])
-    #     with self.assertRaises(HTTPException) as he:
-    #         check_authorization(security_scopes, self.infinite_resources_get_token)
-    #     self.assertEqual(he.exception.status_code, status.HTTP_401_UNAUTHORIZED)
-    #     self.assertEqual(he.exception.detail, "Not enough permissions")
-
-    #     token_data = check_authorization(
-    #         security_scopes, self.infinite_resources_get_update_token
-    #     )
-    #     self.assertEqual(
-    #         token_data,
-    #         TokenData(scopes=["resources:get", "resources:put"], user_name="test"),
-    #     )
-
-    #     security_scopes = SecurityScopes()
-    #     check_authorization(security_scopes, self.infinite_resources_get_token)
-
-    #     with self.assertRaises(HTTPException) as he:
-    #         check_authorization(security_scopes, "1234567890abdcef")
-    #     self.assertEqual(he.exception.status_code, status.HTTP_401_UNAUTHORIZED)
-    #     self.assertEqual(he.exception.detail, "Could not validate credentials")
-
-    # @patch("tardis.rest.app.security.jwt")
-    # def test_check_authorization_jwt_error(self, mocked_jwt):
-    #     mocked_jwt.decode.side_effect = JWTError
-
-    #     with self.assertRaises(HTTPException) as he:
-    #         check_authorization(SecurityScopes(), self.infinite_resources_get_token)
-    #     self.assertEqual(he.exception.status_code, status.HTTP_401_UNAUTHORIZED)
-    #     self.assertEqual(he.exception.detail, "Could not validate credentials")
-
-    #     mocked_jwt.decode.side_effect = None
+    def test_check_authorization(self):
+        # It is very hard mocking the AuthJWT object. However, authorization is tested implicitly as an integration test in the router tests.
+        pass
 
     def test_check_authentication(self):
         self.clear_lru_cache()

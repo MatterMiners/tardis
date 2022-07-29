@@ -4,7 +4,7 @@ from tests.utilities.utilities import run_async
 # TODO: decrease code repetition by extracting basic auth test into separate function
 
 
-class TestLogin(TestCaseRouters):
+class TestUser(TestCaseRouters):
     # Reminder: When defining `setUp`, `setUpClass`, `tearDown` and `tearDownClass`
     # in router tests the corresponding super().function() needs to be called as well.
     def test_login(self):
@@ -52,7 +52,10 @@ class TestLogin(TestCaseRouters):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json(),
-            {"msg": "Successfully logged in!"},
+            {
+                "msg": "Successfully logged in!",
+                "user": {"user_name": "test", "scopes": ["resources:get", "user:get"]},
+            },
         )
 
         self.clear_lru_cache()
@@ -101,6 +104,12 @@ class TestLogin(TestCaseRouters):
         response = run_async(self.client.post, "/user/refresh")
         self.assertEqual(response.status_code, 200)
 
+        # invalid access token but valid refresh token
+        self.clear_lru_cache()
+        self.client.cookies["access_token_cookie"] = "invalid"
+        response = run_async(self.client.post, "/user/refresh")
+        self.assertEqual(response.status_code, 200)
+
     def test_user_me(self):
         # Not logged in yet
         self.clear_lru_cache()
@@ -110,10 +119,23 @@ class TestLogin(TestCaseRouters):
             response.json(), {"detail": "Missing cookie access_token_cookie"}
         )
 
-        # should work
         self.login()
         response = run_async(self.client.get, "/user/me")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
-            response.json(), {"user_name": "test", "scopes": ["resources:get"]}
+            response.json(),
+            {"user_name": "test", "scopes": ["resources:get", "user:get"]},
         )
+
+    def test_get_token_scopes(self):
+        self.clear_lru_cache()
+        self.login(
+            {
+                "user_name": "test1",
+                "password": "test",
+                "scopes": ["resources:get"],
+            }
+        )
+        response = run_async(self.client.get, "/user/token_scopes")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), ["resources:get"])

@@ -18,9 +18,11 @@ class TestCaseRouters(TestCase):
         cls.mock_sqlite_registry_patcher = patch(
             "tardis.rest.app.database.SqliteRegistry"
         )
+        cls.mock_types_patcher = patch("tardis.rest.app.routers.types.crud")
         cls.mock_crud_patcher = patch("tardis.rest.app.routers.resources.crud")
         cls.mock_config_patcher = patch("tardis.rest.app.security.Configuration")
         cls.mock_sqlite_registry = cls.mock_sqlite_registry_patcher.start()
+        cls.mock_types = cls.mock_types_patcher.start()
         cls.mock_crud = cls.mock_crud_patcher.start()
         cls.mock_config = cls.mock_config_patcher.start()
 
@@ -38,7 +40,7 @@ class TestCaseRouters(TestCase):
         self.config.Services.restapi.get_user.return_value = AttributeDict(
             user_name="test",
             hashed_password="$2b$12$Gkl8KYNGRMhx4kB0bKJnyuRuzOrx3LZlWf1CReIsDk9HyWoUGBihG",  # noqa B509
-            scopes=["resources:get"],
+            scopes=["resources:get", "user:get"],
         )
 
         from tardis.rest.app.main import (
@@ -54,9 +56,11 @@ class TestCaseRouters(TestCase):
     def tearDown(self) -> None:
         run_async(self.client.aclose)
 
-    def login(self):
+    def login(self, user: dict = None):
         self.clear_lru_cache()
-        response = run_async(self.client.post, "/user/login", json=self.test_user)
+        response = run_async(
+            self.client.post, "/user/login", json=user or self.test_user
+        )
         self.assertEqual(response.status_code, 200)
 
     @staticmethod
