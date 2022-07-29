@@ -11,13 +11,13 @@ from ...utilities.executors.shellexecutor import ShellExecutor
 from ...utilities.asynccachemap import AsyncCacheMap
 from ...utilities.utils import convert_to, csv_parser, submit_cmd_option_formatter
 
-from pydantic import PositiveInt, root_validator
+from pydantic import PositiveInt
 
 from asyncio import TimeoutError
 from contextlib import contextmanager
 from functools import partial
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Optional
 
 import logging
 import re
@@ -55,15 +55,7 @@ class SlurmAdapterConfigurationModel(SiteAdapterBaseModel):
 
     executor: Optional[Executor] = ShellExecutor()
     StatusUpdate: PositiveInt
-    StartupCommand: Optional[str] = None
-
-    @root_validator(allow_reuse=True)
-    def deprecate_startup_command(
-        cls, valuesDict: [str, Any]  # noqa B902
-    ) -> Dict[str, Any]:
-        if valuesDict["StartupCommand"] is None:
-            del valuesDict["StartupCommand"]
-        return valuesDict
+    StartupCommand: Optional[str]
 
 
 class SlurmAdapter(SiteAdapter):
@@ -75,7 +67,7 @@ class SlurmAdapter(SiteAdapter):
         try:
             self._startup_command = self.machine_type_configuration.StartupCommand
         except AttributeError:
-            if not hasattr(self.configuration, "StartupCommand"):
+            if self.configuration.StartupCommand is None:
                 raise
             warnings.warn(
                 "StartupCommand has been moved to the machine_type_configuration!",
