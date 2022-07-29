@@ -53,7 +53,10 @@ def check_scope_permissions(requested_scopes: List[str], allowed_scopes: List[st
         if scope not in allowed_scopes:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not enough permissions",
+                detail={
+                    "msg": "Not enough permissions",
+                    "scopesRequired": requested_scopes,
+                },
             ) from None
 
 
