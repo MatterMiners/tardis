@@ -30,7 +30,7 @@ async def get_resource_state(
 
 
 @router.get("/sites", description="Get all available sites")
-async def get_resource_state(
+async def get_resource_sites(
     sql_registry: SqliteRegistry = Depends(database.get_sql_registry()),
     _=Security(security.check_authorization, scopes=[Resources.get]),
 ):
@@ -39,7 +39,7 @@ async def get_resource_state(
 
 
 @router.get("/machine_types", description="Get all available machine types")
-async def get_resource_state(
+async def get_resource_types(
     sql_registry: SqliteRegistry = Depends(database.get_sql_registry()),
     _=Security(security.check_authorization, scopes=[Resources.get]),
 ):

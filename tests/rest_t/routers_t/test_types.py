@@ -1,4 +1,3 @@
-from tardis.utilities.attributedict import AttributeDict
 from tests.rest_t.routers_t.base_test_case_routers import TestCaseRouters
 from tests.utilities.utilities import async_return, run_async
 

@@ -1,6 +1,4 @@
-from starlette.types import Scope
 from tardis.exceptions.tardisexceptions import TardisError
-from tardis.plugins.sqliteregistry import SqliteRegistry
 from tardis.rest.app.security import (
     check_authentication,
     check_scope_permissions,
