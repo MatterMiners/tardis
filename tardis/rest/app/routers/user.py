@@ -8,7 +8,7 @@ router = APIRouter(prefix="/user", tags=["user"])
 
 @router.post(
     "/login",
-    description="Sets httponly access token in session cookie. The scopes are optional.",
+    description="Sets httponly access token in session cookie. The scopes are optional.",  # noqa B950
 )
 async def login(
     login_user: security.LoginUser,
@@ -19,7 +19,7 @@ async def login(
     if login_user.scopes is None:
         scopes = {"scopes": user.scopes}
     else:
-        # The next two lines are very critical as if wrongly implemented a user can give his token unlimited scopes.
+        # The next two lines are very critical as if wrongly implemented a user can give his token unlimited scopes. # noqa B950
         # This functionality has to be tested thoroughly
         security.check_scope_permissions(login_user.scopes, user.scopes)
         scopes = {"scopes": login_user.scopes}
@@ -34,7 +34,7 @@ async def login(
     Authorize.set_access_cookies(access_token)
     Authorize.set_refresh_cookies(refresh_token)
 
-    # It is ok to return the user here because every user should have the user:get scope.
+    # It is ok to return the user here because every user should have the user:get scope. # noqa B950
     # Tokens don't have permissions to this function
     return {
         "msg": "Successfully logged in!",
@@ -54,7 +54,8 @@ async def logout(Authorize: AuthJWT = Depends()):
 
 
 @router.post(
-    "/refresh", description="Use refresh token cookie to refresh expiration on cookie"
+    "/refresh",
+    description="Use refresh token cookie to refresh expiration on cookie",  # noqa B950
 )
 async def refresh(Authorize: AuthJWT = Depends()):
     Authorize.jwt_refresh_token_required()
