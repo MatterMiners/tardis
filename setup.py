@@ -91,7 +91,6 @@ setup(
         "python-multipart",
         "typing_extensions",
         "backports.cached_property",
-        "fastapi-jwt-auth",
     ],
     extras_require={
         "docs": [
@@ -100,6 +99,7 @@ setup(
             "sphinxcontrib-contentui",
             "myst_parser",
         ],
+        "rest": ["fastapi-jwt-auth"],
         "test": TESTS_REQUIRE,
         "contrib": ["flake8", "flake8-bugbear", "black; implementation_name=='cpython'"]
         + TESTS_REQUIRE,
