@@ -74,7 +74,7 @@ class TestUser(TestCaseRouters):
     def test_logout(self):
         # Not logged in yet
         self.clear_lru_cache()
-        response = run_async(self.client.delete, "/user/logout")
+        response = run_async(self.client.post, "/user/logout")
 
         self.assertEqual(response.status_code, 401)
         self.assertEqual(
@@ -83,11 +83,11 @@ class TestUser(TestCaseRouters):
 
         # correct login
         self.login()
-        response = run_async(self.client.delete, "/user/logout")
+        response = run_async(self.client.post, "/user/logout")
         self.assertEqual(response.status_code, 200)
 
         # prevent second logout
-        response = run_async(self.client.delete, "/user/logout")
+        response = run_async(self.client.post, "/user/logout")
         self.assertEqual(response.status_code, 401)
 
     def test_refresh(self):

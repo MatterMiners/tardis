@@ -42,7 +42,7 @@ async def login(
     }
 
 
-@router.delete(
+@router.post(
     "/logout",
     description="Logout the current user by deleting all access token cookies",
 )
