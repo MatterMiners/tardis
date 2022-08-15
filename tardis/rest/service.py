@@ -1,6 +1,7 @@
 from .app.security import UserCredentials
 from cobald.daemon import service
 from cobald.daemon.plugins import yaml_tag
+import threading
 
 from uvicorn.config import Config
 from uvicorn.server import Server
@@ -47,4 +48,10 @@ class RestService(object):
         return None
 
     async def run(self) -> None:
-        await Server(config=self._config).serve()
+        server = Server(config=self._config)
+        await server.serve()
+        # See https://github.com/encode/uvicorn/issues/1579
+        # The server has shut down after receiving *and suppressing* a signal.
+        # Explicitly raise the corresponding shutdown exception as a workaround.
+        if server.should_exit and threading.current_thread() is threading.main_thread():
+            raise KeyboardInterrupt
