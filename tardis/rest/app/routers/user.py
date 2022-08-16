@@ -16,6 +16,7 @@ async def login(
 ):
     user = security.check_authentication(login_user.user_name, login_user.password)
 
+    # set and check the scopes that are applied to the returned token
     if login_user.scopes is None:
         scopes = {"scopes": user.scopes}
     else:
@@ -34,12 +35,18 @@ async def login(
     Authorize.set_access_cookies(access_token)
     Authorize.set_refresh_cookies(refresh_token)
 
-    # It is ok to return the user here because every user should have the user:get scope. # noqa B950
-    # Tokens don't have permissions to this function
-    return {
-        "msg": "Successfully logged in!",
-        "user": security.BaseUser(user_name=user.user_name, scopes=scopes["scopes"]),
-    }
+    # If the user doesn't have the user:get scope, he can't get the user data. # noqa B950
+    if User.get not in user.scopes:
+        return {
+            "msg": "Successfully logged in",
+        }
+    else:
+        return {
+            "msg": "Successfully logged in!",
+            "user": security.BaseUser(
+                user_name=user.user_name, scopes=scopes["scopes"]
+            ),
+        }
 
 
 @router.post(
