@@ -12,7 +12,16 @@ with open(os.path.join(repo_base_dir, "tardis", "__about__.py")) as about_file:
 with open(os.path.join(repo_base_dir, "README.md"), "r") as read_me:
     long_description = read_me.read()
 
-TESTS_REQUIRE = ["flake8", "httpx", "fastapi-jwt-auth"]
+TESTS_REQUIRE = ["flake8", "httpx"]
+REST_REQUIRES = [
+    "fastapi-jwt-auth",
+    "fastapi",
+    "python-jose",
+    "uvicorn[standard]<=0.14.0",  # to support python3.6 (Centos 7)
+    "typer",
+    "bcrypt",
+    "python-multipart",
+]
 
 
 def get_cryptography_version():
@@ -83,12 +92,6 @@ setup(
         "kubernetes_asyncio",
         "pydantic",
         "asyncstdlib",
-        "fastapi",
-        "python-jose",
-        "uvicorn[standard]<=0.14.0",  # to support python3.6 (Centos 7)
-        "typer",
-        "bcrypt",
-        "python-multipart",
         "typing_extensions",
         "backports.cached_property",
     ],
@@ -99,10 +102,15 @@ setup(
             "sphinxcontrib-contentui",
             "myst_parser",
         ],
-        "rest": ["fastapi-jwt-auth"],
+        "rest": REST_REQUIRES,
         "test": TESTS_REQUIRE,
-        "contrib": ["flake8", "flake8-bugbear", "black; implementation_name=='cpython'"]
-        + TESTS_REQUIRE,
+        "contrib": [
+            "flake8",
+            "flake8-bugbear",
+            "black; implementation_name=='cpython'",
+        ]
+        + TESTS_REQUIRE
+        + REST_REQUIRES,
     },
     tests_require=TESTS_REQUIRE,
     zip_safe=False,
