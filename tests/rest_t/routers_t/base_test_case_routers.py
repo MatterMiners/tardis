@@ -1,4 +1,4 @@
-from tardis.rest.app.security import get_algorithm, get_user
+from tardis.rest.app.security import get_user
 from tardis.utilities.attributedict import AttributeDict
 from tests.utilities.utilities import run_async
 
@@ -65,5 +65,4 @@ class TestCaseRouters(TestCase):
 
     @staticmethod
     def clear_lru_cache():
-        get_algorithm.cache_clear()
         get_user.cache_clear()

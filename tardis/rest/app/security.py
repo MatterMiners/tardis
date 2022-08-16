@@ -98,20 +98,6 @@ def get_token_scopes(Authorize: AuthJWT) -> List[str]:
     return token_scopes
 
 
-@lru_cache(maxsize=1)
-def get_algorithm() -> str:
-    # This can probably be deprecated as fastapi_jwt_tokens
-    # sets it's algorithm by itself
-    try:
-        rest_service = Configuration().Services.restapi
-    except AttributeError:
-        raise TardisError(
-            "TARDIS RestService not configured while accessing algorithm!"
-        ) from None
-    else:
-        return rest_service.algorithm
-
-
 @lru_cache(maxsize=16)
 def get_user(user_name: str) -> Optional[DatabaseUser]:
     try:

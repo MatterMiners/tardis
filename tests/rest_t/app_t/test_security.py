@@ -2,7 +2,6 @@ from tardis.exceptions.tardisexceptions import TardisError
 from tardis.rest.app.security import (
     check_authentication,
     check_scope_permissions,
-    get_algorithm,
     get_user,
     hash_password,
 )
@@ -49,7 +48,6 @@ class TestSecurity(TestCase):
 
     @staticmethod
     def clear_lru_cache():
-        get_algorithm.cache_clear()
         get_user.cache_clear()
 
     def test_check_scope_permissions(self):
@@ -89,16 +87,6 @@ class TestSecurity(TestCase):
                 "user_name": "test",
             },
         )
-
-    def test_get_algorithm(self):
-        self.clear_lru_cache()
-        self.assertEqual(get_algorithm(), self.algorithm)
-
-        self.clear_lru_cache()
-        self.mock_config.side_effect = AttributeError
-        with self.assertRaises(TardisError):
-            get_algorithm()
-        self.mock_config.side_effect = None
 
     def test_get_user(self):
         self.clear_lru_cache()
