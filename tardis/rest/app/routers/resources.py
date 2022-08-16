@@ -32,7 +32,7 @@ async def get_resources(
     return query_result
 
 
-@router.delete("/{drone_uuid}/drain", description="Gently shut shown drone")
+@router.patch("/{drone_uuid}/drain", description="Gently shut shown drone")
 async def shutdown_drone(
     _: AuthJWT = Security(security.check_authorization, scopes=[Resources.delete]),
 ):
