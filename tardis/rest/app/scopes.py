@@ -11,4 +11,3 @@ class Resources(str, Enum):
 
 class User(str, Enum):
     get = "user:get"
-    put = "user:put"  # usused
