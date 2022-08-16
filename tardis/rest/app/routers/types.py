@@ -1,5 +1,4 @@
 from typing import Dict, List
-
 from tardis.exceptions.tardisexceptions import TardisError
 from .. import security
 from .. import crud, database
@@ -12,13 +11,10 @@ router = APIRouter(prefix="/types", tags=["types", "resources"])
 
 
 def sql_to_list(query_result: List[Dict]) -> List[str]:
-    out = []
     try:
-        for val in query_result:
-            out.append(list(val.values())[0])
+        return [list(pair.values())[0] for pair in query_result]
     except Exception as e:
         raise TardisError("Query result has invalid format") from e
-    return out
 
 
 @router.get("/states", description="Get all available states")
