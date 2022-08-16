@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from fastapi_jwt_auth import AuthJWT
 
 from functools import lru_cache
-from typing import Optional, List
+from typing import List, Optional
 
 
 class Settings(BaseModel):
