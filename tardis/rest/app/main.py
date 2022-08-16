@@ -31,7 +31,8 @@ app = FastAPI(
     ],
 )
 
-
+# the jwt auth package returns 422 on failed auth which doens't make sense
+# This code changes that. There is currently an issue running: https://github.com/IndominusByte/fastapi-jwt-auth/issues/20
 @app.exception_handler(AuthJWTException)
 def authjwt_exception_handler(request: Request, exc: AuthJWTException):
     detail = exc.message
