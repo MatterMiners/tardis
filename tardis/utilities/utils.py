@@ -1,6 +1,7 @@
 from .attributedict import AttributeDict
 
 from contextlib import contextmanager
+from importlib import import_module
 from io import StringIO
 from typing import Any, Callable, List, TypeVar, Tuple
 
@@ -96,6 +97,15 @@ def machine_meta_data_translation(
             f"machine_meta_data_translation failed: no translation known for {ke}"
         )
         raise
+
+
+def str_to_state(resources):
+    for entry in resources:
+        state_class = getattr(
+            import_module(name="tardis.resources.dronestates"), f"{entry['state']}"
+        )
+        entry["state"] = state_class()
+    return resources
 
 
 def submit_cmd_option_formatter(options: AttributeDict) -> str:

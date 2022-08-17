@@ -1,10 +1,12 @@
 import logging
 
+from tardis.resources.dronestates import RequestState
 from tardis.utilities.attributedict import AttributeDict
 from tardis.utilities.utils import (
     csv_parser,
     disable_logging,
     htcondor_cmd_option_formatter,
+    str_to_state,
     submit_cmd_option_formatter,
 )
 
@@ -114,6 +116,14 @@ class TestDisableLogging(TestCase):
             with self.assertLogs(level=logging.DEBUG):
                 with disable_logging(logging.DEBUG):
                     logging.debug("Test")
+
+
+class TestStrToState(TestCase):
+    def test_str_to_state(self):
+        test = [{"state": "RequestState", "drone_uuid": "test-abc123"}]
+        converted_test = str_to_state(test)
+        self.assertTrue(converted_test[0]["state"], RequestState)
+        self.assertEqual(converted_test[0]["drone_uuid"], "test-abc123")
 
 
 class TestSlurmCMDOptionFormatter(TestCase):
