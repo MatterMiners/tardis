@@ -6,10 +6,13 @@ from tardis.interfaces.plugin import Plugin
 from tardis.interfaces.state import State
 from .dronestates import RequestState
 from .dronestates import DownState
+from ..plugins.sqliteregistry import SqliteRegistry
 from ..utilities.attributedict import AttributeDict
+from ..utilities.utils import str_to_state
 from cobald.daemon import service
 from cobald.interfaces import Pool
 
+from backports.cached_property import cached_property
 from datetime import datetime
 
 import asyncio
@@ -59,6 +62,22 @@ class Drone(Pool):
     @property
     def batch_system_agent(self) -> BatchSystemAgent:
         return self._batch_system_agent
+
+    @cached_property
+    def _database(self) -> Optional[SqliteRegistry]:
+        for plugin in self._plugins:
+            if isinstance(plugin, SqliteRegistry):
+                return plugin
+
+    async def database_state(self) -> Optional[State]:
+        try:
+            return str_to_state(
+                await self._database.get_resource_state(
+                    self.resource_attributes.drone_uuid
+                )
+            )[0]["state"]
+        except (IndexError, AttributeError):
+            return None
 
     @property
     def demand(self) -> float:
