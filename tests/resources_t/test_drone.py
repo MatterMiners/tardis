@@ -1,4 +1,4 @@
-from ..utilities.utilities import async_return, run_async
+from ..utilities.utilities import async_return, run_async, set_awaitable_return_value
 
 from tardis.interfaces.plugin import Plugin
 from tardis.interfaces.state import State
@@ -65,12 +65,14 @@ class TestDrone(TestCase):
         sql_registry = MagicMock(spec=SqliteRegistry)
         self.drone.register_plugins(sql_registry)
         self.drone.__dict__.pop("_database")  # reset cached_property's cache
-        sql_registry.get_resource_state.return_value = [{"state": "DrainState"}]
+        set_awaitable_return_value(
+            sql_registry.get_resource_state, [{"state": "DrainState"}]
+        )
 
         self.assertIsInstance(run_async(self.drone.database_state), DrainState)
 
         # testing IndexError
-        sql_registry.get_resource_state.return_value = []
+        set_awaitable_return_value(sql_registry.get_resource_state, [])
         self.assertIsNone(run_async(self.drone.database_state))
 
         # testing AttributeError
