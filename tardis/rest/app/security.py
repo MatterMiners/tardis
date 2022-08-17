@@ -94,7 +94,10 @@ def get_token_scopes(Authorize: AuthJWT) -> List[str]:
     try:
         token_scopes: List[str] = Authorize.get_raw_jwt()["scopes"]
     except KeyError:
-        raise TardisError("Scopes not defined in jwt token") from None
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid token/no scopes in token",
+        )
     return token_scopes
 
 
@@ -108,6 +111,7 @@ def get_user(user_name: str) -> Optional[DatabaseUser]:
         ) from None
     else:
         return rest_service.get_user(user_name)
+
 
 
 def hash_password(password: str) -> bytes:
