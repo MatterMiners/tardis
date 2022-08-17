@@ -178,6 +178,28 @@ class TestSqliteRegistry(TestCase):
         SqliteRegistry()
 
     @patch("tardis.plugins.sqliteregistry.logging", Mock())
+    def test_get_resource_state(self):
+        self.registry.add_site(self.test_site_name)
+        self.registry.add_machine_types(self.test_site_name, self.test_machine_type)
+        run_async(self.registry.notify, RequestState(), self.test_resource_attributes)
+
+        self.assertEqual(
+            run_async(
+                self.registry.get_resource_state,
+                drone_uuid=self.test_resource_attributes["drone_uuid"],
+            ),
+            [{"state": "RequestState"}],
+        )
+
+        self.assertEqual(
+            run_async(
+                self.registry.get_resource_state,
+                drone_uuid="does_not_exists",
+            ),
+            [],
+        )
+
+    @patch("tardis.plugins.sqliteregistry.logging", Mock())
     def test_get_resources(self):
         self.registry.add_site(self.test_site_name)
         self.registry.add_machine_types(self.test_site_name, self.test_machine_type)
