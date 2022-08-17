@@ -15,22 +15,16 @@ import asyncio
 class RestService(object):
     def __init__(
         self,
-        algorithm: str = "HS256",
         users: List = None,
         **fast_api_args,
     ):
-        self._algorithm = algorithm
         self._users = users or []
 
         # necessary to avoid that the TARDIS' logger configuration is overwritten!
         if "log_config" not in fast_api_args:
             fast_api_args["log_config"] = None
-        self._config = Config("tardis.rest.app.main:app", **fast_api_args)
 
-    @property
-    @lru_cache(maxsize=16)
-    def algorithm(self) -> str:
-        return self._algorithm
+        self._config = Config("tardis.rest.app.main:app", **fast_api_args)
 
     @lru_cache(maxsize=16)
     def get_user(self, user_name: str) -> Optional[DatabaseUser]:
