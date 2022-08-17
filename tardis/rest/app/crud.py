@@ -31,3 +31,11 @@ async def get_available_sites(sql_registry):
 async def get_available_machine_types(sql_registry):
     sql_query = "SELECT machine_type FROM MachineTypes"
     return await sql_registry.async_execute(sql_query, {})
+
+
+async def set_state_to_draining(sql_registry, drone_uuid: str):
+    sql_query = """
+    UPDATE Resources
+    SET state_id = (SELECT state_id FROM ResourceStates WHERE state = 'DrainState')
+    WHERE drone_uuid = :drone_uuid"""
+    return await sql_registry.async_execute(sql_query, dict(drone_uuid=drone_uuid))

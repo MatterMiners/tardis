@@ -34,7 +34,9 @@ async def get_resources(
 
 @router.patch("/{drone_uuid}/drain", description="Gently shut shown drone")
 async def shutdown_drone(
-    _: AuthJWT = Security(security.check_authorization, scopes=[Resources.delete]),
+    drone_uuid: str = Path(..., regex=r"^\S+-[A-Fa-f0-9]{10}$"),
+    sql_registry: SqliteRegistry = Depends(database.get_sql_registry()),
+    _: AuthJWT = Security(security.check_authorization, scopes=[Resources.patch]),
 ):
-    # TODO: Implement
-    return {"msg": "Not implemented"}
+    await crud.set_state_to_draining(sql_registry, drone_uuid)
+    return {"msg": "Drone set to DrainState"}
