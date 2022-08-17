@@ -5,8 +5,7 @@ from enum import Enum
 
 class Resources(str, Enum):
     get = "resources:get"
-    put = "resources:put"
-    delete = "resources:delete"
+    patch = "resources:patch"
 
 
 class User(str, Enum):
