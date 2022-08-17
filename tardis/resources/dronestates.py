@@ -36,10 +36,8 @@ async def check_remote_draining(
 ):
     database_state = await drone.database_state()
 
-    if isinstance(database_state, DrainState) and not isinstance(
-        database_state, current_state.__class__
-    ):
-        raise StopProcessing(last_result=database_state)
+    if database_state is DrainState and database_state is not current_state:
+        raise StopProcessing(last_result=database_state())
     return state_transition
 
 

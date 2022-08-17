@@ -1,4 +1,4 @@
-from typing import List, Union, Optional
+from typing import List, Union, Optional, Type
 
 from tardis.agents.batchsystemagent import BatchSystemAgent
 from tardis.agents.siteagent import SiteAgent
@@ -69,7 +69,7 @@ class Drone(Pool):
             if isinstance(plugin, SqliteRegistry):
                 return plugin
 
-    async def database_state(self) -> Optional[State]:
+    async def database_state(self) -> Optional[Type[State]]:
         try:
             return str_to_state(
                 await self._database.get_resource_state(
