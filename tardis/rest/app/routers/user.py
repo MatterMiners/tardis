@@ -12,6 +12,7 @@ router = APIRouter(prefix="/user", tags=["user"])
 )
 async def login(
     login_user: security.LoginUser,
+    expires_delta: int | None = None,
     Authorize: AuthJWT = Depends(),
 ):
     user = security.check_authentication(login_user.user_name, login_user.password)
@@ -26,7 +27,7 @@ async def login(
         scopes = {"scopes": login_user.scopes}
 
     access_token = Authorize.create_access_token(
-        subject=user.user_name, user_claims=scopes
+        subject=user.user_name, user_claims=scopes, expires_time=expires_delta
     )
     refresh_token = Authorize.create_refresh_token(
         subject=user.user_name, user_claims=scopes
