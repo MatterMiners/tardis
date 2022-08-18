@@ -19,14 +19,18 @@ class Settings(BaseModel):
     authjwt_token_location: set = {"cookies"}
     authjwt_cookie_samesite: str = "strict"
     # TODO: change this to true in production so only https traffic is allowed
+    # Service meant to be used with https proxy
     authjwt_cookie_secure: bool = False
-    # TODO: Set this too to True. But as soon as possible.
-    # Update: As 'same_site' is strict this is probably enough.
+    # As 'same_site' is strict this is probably enough.
     authjwt_cookie_csrf_protect: bool = False
+
+    def __init__(self):
+        self.authjwt_cookie_secure = Configuration().Services.restapi._dev
 
 
 @AuthJWT.load_config
 def get_config():
+    # TODO: Solve - AttributeError: Configuration().Services
     return Settings()
 
 
@@ -49,13 +53,15 @@ class DatabaseUser(BaseUser):
 
 
 def check_scope_permissions(requested_scopes: List[str], allowed_scopes: List[str]):
+    # All requested scopes must be contained in allowed_scopes
     for scope in requested_scopes:
         if scope not in allowed_scopes:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail={
                     "msg": "Not enough permissions",
-                    "scopesRequired": requested_scopes,
+                    "failedAt": scope,
+                    "allowedScopes": allowed_scopes,
                 },
             ) from None
 
@@ -111,7 +117,6 @@ def get_user(user_name: str) -> Optional[DatabaseUser]:
         ) from None
     else:
         return rest_service.get_user(user_name)
-
 
 
 def hash_password(password: str) -> bytes:
