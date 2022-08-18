@@ -24,9 +24,6 @@ class Settings(BaseModel):
     # As 'same_site' is strict this is probably enough.
     authjwt_cookie_csrf_protect: bool = False
 
-    def __init__(self):
-        self.authjwt_cookie_secure = Configuration().Services.restapi._dev
-
 
 @AuthJWT.load_config
 def get_config():
