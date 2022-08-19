@@ -39,7 +39,7 @@ async def login(
     # If the user doesn't have the user:get scope, he can't get the user data. # noqa B950
     if User.get not in user.scopes:
         return {
-            "msg": "Successfully logged in",
+            "msg": "Successfully logged in!",
         }
     else:
         return {
