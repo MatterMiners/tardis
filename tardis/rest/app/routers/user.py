@@ -1,4 +1,3 @@
-from optparse import Option
 from typing import Optional
 from ..scopes import User
 from .. import security
