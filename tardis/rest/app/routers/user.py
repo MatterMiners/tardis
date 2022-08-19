@@ -1,3 +1,5 @@
+from optparse import Option
+from typing import Optional
 from ..scopes import User
 from .. import security
 from fastapi import APIRouter, Depends, Security
@@ -12,7 +14,7 @@ router = APIRouter(prefix="/user", tags=["user"])
 )
 async def login(
     login_user: security.LoginUser,
-    expires_delta: int | None = None,
+    expires_delta: Optional[int] = None,
     Authorize: AuthJWT = Depends(),
 ):
     user = security.check_authentication(login_user.user_name, login_user.password)
