@@ -1,8 +1,6 @@
 from tests.rest_t.routers_t.base_test_case_routers import TestCaseRouters
 from tests.utilities.utilities import run_async
 
-# TODO: decrease code repetition by extracting basic auth test into separate function
-
 
 class TestUser(TestCaseRouters):
     # Reminder: When defining `setUp`, `setUpClass`, `tearDown` and `tearDownClass`
@@ -54,7 +52,19 @@ class TestUser(TestCaseRouters):
             response.json(),
             {
                 "msg": "Successfully logged in!",
-                "user": {"user_name": "test", "scopes": ["resources:get", "user:get"]},
+                "user": {"user_name": "test", "scopes": self.get_scopes()},
+            },
+        )
+
+        # missing scopes
+        self.clear_lru_cache()
+        self.set_scopes(["resources:get"])
+        response = run_async(self.client.post, "/user/login", json=self.test_user)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "msg": "Successfully logged in!",
             },
         )
 
@@ -124,8 +134,14 @@ class TestUser(TestCaseRouters):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json(),
-            {"user_name": "test", "scopes": ["resources:get", "user:get"]},
+            {"user_name": "test", "scopes": self.get_scopes()},
         )
+
+        # missing scope
+        self.set_scopes(["resources:get"])
+        self.login()
+        response = run_async(self.client.get, "/user/me")
+        self.assertEqual(response.status_code, 403)
 
     def test_get_token_scopes(self):
         self.clear_lru_cache()

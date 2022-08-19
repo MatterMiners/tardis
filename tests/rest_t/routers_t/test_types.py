@@ -9,11 +9,8 @@ def is_list_str(resp):
 class TestTypes(TestCaseRouters):
     def setUp(self) -> None:
         super().setUp()
-        login = {"user_name": "test", "password": "test"}
-        # TODO: Create a static login token to make this test
-        # independent from /user/login
-        response = run_async(self.client.post, "/user/login", json=login)
-        self.assertEqual(response.status_code, 200)
+        self.reset_scopes()
+        self.login()
 
     def test_types(self):
         self.clear_lru_cache()
@@ -44,12 +41,7 @@ class TestTypes(TestCaseRouters):
 
         # Invalid scope
         self.clear_lru_cache()
-        self.login(
-            {
-                "user_name": "test1",
-                "password": "test",
-                "scopes": ["user:get"],
-            }
-        )
+        self.set_scopes(["resources:patch"])
+        self.login()
         response = run_async(self.client.get, "/types/states")
         self.assertEqual(response.status_code, 403)

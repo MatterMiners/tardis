@@ -7,11 +7,8 @@ class TestResources(TestCaseRouters):
     # in router tests the corresponding super().function() needs to be called as well.
     def setUp(self):
         super().setUp()
-        login = {"user_name": "test", "password": "test"}
-        # TODO: Create a static login token to make this test
-        # independent from /user/login
-        response = run_async(self.client.post, "/user/login", json=login)
-        self.assertEqual(response.status_code, 200)
+        self.reset_scopes()
+        self.login()
 
     def test_get_resource_state(self):
         self.clear_lru_cache()
@@ -57,6 +54,12 @@ class TestResources(TestCaseRouters):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {"detail": "Not Found"})
 
+        # missing scope
+        self.set_scopes(["resources:patch"])
+        self.login()
+        response = run_async(self.client.get, "/resources/test-0123456789/state")
+        self.assertEqual(response.status_code, 403)
+
     def test_get_resources(self):
         self.clear_lru_cache()
         full_expected_resources = [
@@ -89,6 +92,12 @@ class TestResources(TestCaseRouters):
             response.json(),
             full_expected_resources,
         )
+
+        # missing scope
+        self.set_scopes(["resources:patch"])
+        self.login()
+        response = run_async(self.client.get, "/resources/")
+        self.assertEqual(response.status_code, 403)
 
     def test_shutdown_drone(self):
         self.clear_lru_cache()
