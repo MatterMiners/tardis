@@ -89,3 +89,17 @@ class TestResources(TestCaseRouters):
             response.json(),
             full_expected_resources,
         )
+
+    def test_shutdown_drone(self):
+        self.clear_lru_cache()
+        self.mock_crud.set_state_to_draining.return_value = async_return()
+
+        response = run_async(self.client.patch, "/resources/test-0125bc9fd8/drain")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"msg": "Drone set to DrainState"})
+
+        # missing scope
+        self.set_scopes(["resources:get"])
+        self.login()
+        response = run_async(self.client.patch, "/resources/test-0125bc9fd8/drain")
+        self.assertEqual(response.status_code, 403)
