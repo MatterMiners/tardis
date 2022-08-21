@@ -1,3 +1,17 @@
+CREATE_USERS = """CREATE TABLE Users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_name TEXT NOT NULL UNIQUE,
+                hashed_password TEXT NOT NULL,
+                scopes TEXT NOT NULL
+            )"""
+
+ADD_USER = "INSERT INTO Users (user_name, hashed_password, scopes) VALUES (?, ?, ?)"
+
+GET_USER = "SELECT user_name, hashed_password, scopes FROM Users WHERE user_name = ?"
+
+DELETE_USER = "DELETE FROM Users WHERE user_name = ?"
+
+
 async def get_resource_state(sql_registry, drone_uuid: str):
     sql_query = """
     SELECT R.drone_uuid, RS.state

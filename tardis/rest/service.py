@@ -1,4 +1,5 @@
-from .app.security import DatabaseUser
+from .app.security import DatabaseUser, LoginUser
+from .app.userdb import UserDB
 from cobald.daemon import service
 from cobald.daemon.plugins import yaml_tag
 import threading
@@ -7,7 +8,7 @@ from uvicorn.config import Config
 from uvicorn.server import Server
 
 from functools import lru_cache
-from typing import List, Optional
+from typing import Optional
 import asyncio
 
 
@@ -16,10 +17,12 @@ import asyncio
 class RestService(object):
     def __init__(
         self,
-        users: List = None,
+        user_db_file: str = "users.db",
         **fast_api_args,
     ):
-        self._users = users or []
+        self._db = UserDB(user_db_file)
+        # if table already exists, ignore
+        self._db.try_create_users()
 
         # necessary to avoid that the TARDIS' logger configuration is overwritten!
         if "log_config" not in fast_api_args:
@@ -29,10 +32,13 @@ class RestService(object):
 
     @lru_cache(maxsize=16)
     def get_user(self, user_name: str) -> Optional[DatabaseUser]:
-        for user in self._users:
-            if user["user_name"] == user_name:
-                return DatabaseUser(**user)
-        return None
+        try:
+            return self._db.get_user(user_name)
+        except:
+            return None
+
+    def add_user(self, user: DatabaseUser):
+        self._db.add_user(user)
 
     async def run(self) -> None:
         server = Server(config=self._config)
