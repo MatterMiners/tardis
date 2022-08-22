@@ -17,11 +17,7 @@ class UserDB:
         self.path = path
 
     def try_create_users(self):
-        try:
-            self.execute(CREATE_USERS)
-        except sqlite3.OperationalError as e:
-            if str(e) != "table Users already exists":
-                raise e
+        self.execute(CREATE_USERS)
 
     def drop_users(self):
         self.execute("DROP TABLE Users")

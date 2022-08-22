@@ -1,16 +1,12 @@
-CREATE_USERS = """CREATE TABLE Users (
+CREATE_USERS = """CREATE TABLE IF NOT EXISTS Users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_name TEXT NOT NULL UNIQUE,
                 hashed_password TEXT NOT NULL,
                 scopes TEXT NOT NULL
             )"""
-
 ADD_USER = "INSERT INTO Users (user_name, hashed_password, scopes) VALUES (?, ?, ?)"
-
 GET_USER = "SELECT user_name, hashed_password, scopes FROM Users WHERE user_name = ?"
-
 DELETE_USER = "DELETE FROM Users WHERE user_name = ?"
-
 DUMP_USERS = "SELECT user_name, hashed_password, scopes FROM Users"
 
 
