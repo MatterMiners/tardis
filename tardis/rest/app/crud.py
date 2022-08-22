@@ -11,6 +11,8 @@ GET_USER = "SELECT user_name, hashed_password, scopes FROM Users WHERE user_name
 
 DELETE_USER = "DELETE FROM Users WHERE user_name = ?"
 
+DUMP_USERS = "SELECT user_name, hashed_password, scopes FROM Users"
+
 
 async def get_resource_state(sql_registry, drone_uuid: str):
     sql_query = """

@@ -34,8 +34,10 @@ class RestService(object):
     def get_user(self, user_name: str) -> Optional[DatabaseUser]:
         try:
             return self._db.get_user(user_name)
-        except:
-            return None
+        except Exception as e:
+            if str(e) == "USER NOT FOUND":
+                return None
+            raise e
 
     def add_user(self, user: DatabaseUser):
         self._db.add_user(user)
