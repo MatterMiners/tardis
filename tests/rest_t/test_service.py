@@ -15,7 +15,10 @@ class TestRestService(TestCase):
 
         mocked_server.reset_mock()
 
-        run_async(self.rest_service.run)
+        # Mocking the server means that all its attributes are set, including
+        # the "I got killed by SIGINT" flag, which triggers its shutdown heuristic.
+        with self.assertRaises(KeyboardInterrupt):
+            run_async(self.rest_service.run)
         mocked_server.assert_called_with(config=self.rest_service._config)
 
     def test_get_user(self):
