@@ -1,3 +1,4 @@
+from unittest.mock import ANY
 from tests.rest_t.routers_t.base_test_case_routers import TestCaseRouters
 from tests.utilities.utilities import async_return, run_async
 
@@ -99,13 +100,18 @@ class TestResources(TestCaseRouters):
         response = run_async(self.client.get, "/resources/")
         self.assertEqual(response.status_code, 403)
 
-    def test_shutdown_drone(self):
+    def test_drain_drone(self):
         self.clear_lru_cache()
         self.mock_crud.set_state_to_draining.return_value = async_return()
 
         response = run_async(self.client.patch, "/resources/test-0125bc9fd8/drain")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"msg": "Drone set to DrainState"})
+
+        # Using ANY because th SQLiteRegistry id changes every time
+        self.mock_crud.set_state_to_draining.assert_called_once_with(
+            ANY, "test-0125bc9fd8"
+        )
 
         # missing scope
         self.set_scopes(["resources:get"])
