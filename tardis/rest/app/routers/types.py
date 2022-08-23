@@ -13,8 +13,10 @@ router = APIRouter(prefix="/types", tags=["types", "resources"])
 def sql_to_list(query_result: List[Dict]) -> List[str]:
     try:
         return [list(pair.values())[0] for pair in query_result]
-    except Exception as e:
-        raise TardisError("Query result has invalid format") from e
+    except (AttributeError, IndexError, TypeError) as e:
+        raise TardisError(
+            f"Query result has invalid type/format: {type(query_result)}. Must be List[Dict]"
+        ) from e
 
 
 @router.get("/states", description="Get all available states")
