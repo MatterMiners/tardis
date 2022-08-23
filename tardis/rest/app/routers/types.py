@@ -15,7 +15,7 @@ def sql_to_list(query_result: List[Dict]) -> List[str]:
         return [list(pair.values())[0] for pair in query_result]
     except (AttributeError, IndexError, TypeError) as e:
         raise TardisError(
-            f"Query result has invalid type/format: {type(query_result)}. Must be List[Dict]"
+            f"Query result has invalid type/format: {type(query_result)}. Must be List[Dict]"  # noqa B950
         ) from e
 
 
