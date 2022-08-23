@@ -1,7 +1,7 @@
 from abc import ABCMeta
 
 
-class Borg(metaclass=ABCMeta):
+class Borg(metaclass=ABCMeta):  # noqa B024
     _shared_state = {}  # should be overwritten in all classes inheriting the borg
 
     def __init__(self):
