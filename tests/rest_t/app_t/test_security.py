@@ -69,10 +69,6 @@ class TestSecurity(TestCase):
 
         check_scope_permissions(["resources:get"], ["resources:get"])
 
-    def test_check_authorization(self):
-        # It is very hard mocking the AuthJWT object. However, authorization is tested implicitly as an integration test in the router tests. # noqa B950
-        pass
-
     def test_check_authentication(self):
         self.clear_lru_cache()
 
