@@ -91,6 +91,7 @@ setup(
         "python-multipart",
         "typing_extensions",
         "backports.cached_property",
+        "httpx",
     ],
     extras_require={
         "docs": [
