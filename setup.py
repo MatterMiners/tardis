@@ -94,6 +94,9 @@ setup(
         "asyncstdlib",
         "typing_extensions",
         "backports.cached_property",
+        "python-auditor>=0.0.5",
+        "pytz",
+        "tzlocal",
     ],
     extras_require={
         "docs": [
