@@ -4,7 +4,7 @@ from ..interfaces.state import State
 from ..utilities.attributedict import AttributeDict
 from ..resources.dronestates import AvailableState, DownState
 
-from pyauditor import AuditorClientBuilder, Record, Component, Score
+import pyauditor
 
 import logging
 import pytz
@@ -33,16 +33,16 @@ class Auditor(Plugin):
                     self._resources[site.name][machine_type][r] = getattr(
                         config, site.name
                     ).MachineMetaData[machine_type][r]
-                    self._components[site.name][machine_type][r] = config_auditor[
-                        "components"
-                    ][machine_type].get(r, {})
+                    self._components[site.name][machine_type][r] = getattr(
+                        config_auditor.components, machine_type
+                    ).get(r, {})
 
         self._user = config_auditor.user if config_auditor.user else "tardis"
         self._group = config_auditor.group if config_auditor.group else "tardis"
-        auditor_timeout = config_auditor.get("timeout", 30)
+        auditor_timeout = getattr(config_auditor, "timeout", 30)
         self._local_timezone = get_localzone()
         self._client = (
-            AuditorClientBuilder()
+            pyauditor.AuditorClientBuilder()
             .address(config_auditor.host, config_auditor.port)
             .timeout(auditor_timeout)
             .build()
@@ -76,7 +76,7 @@ class Auditor(Plugin):
             await self._client.update(record)
 
     def construct_record(self, resource_attributes: AttributeDict):
-        record = Record(
+        record = pyauditor.Record(
             resource_attributes["drone_uuid"],
             resource_attributes["site_name"],
             self._user,
@@ -89,11 +89,11 @@ class Auditor(Plugin):
         for (resource, amount) in self._resources[resource_attributes["site_name"]][
             resource_attributes["machine_type"]
         ].items():
-            component = Component(resource, amount)
+            component = pyauditor.Component(resource, amount)
             for score_name, score_val in self._components[
                 resource_attributes["site_name"]
             ][resource_attributes["machine_type"]][resource].items():
-                component = component.with_score(Score(score_name, score_val))
+                component = component.with_score(pyauditor.Score(score_name, score_val))
 
             record = record.with_component(component)
 
