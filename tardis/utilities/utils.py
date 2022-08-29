@@ -102,7 +102,7 @@ def machine_meta_data_translation(
 def str_to_state(resources):
     for entry in resources:
         state_class = getattr(
-            import_module(name="tardis.resources.dronestates"), f"{entry['state']}"
+            tardis.resources.dronestates, str(entry['state'])
         )
         entry["state"] = state_class()
     return resources
