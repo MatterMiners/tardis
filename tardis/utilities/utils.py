@@ -98,7 +98,7 @@ def machine_meta_data_translation(
         raise
 
 
-def str_to_state(resources):
+def load_states(resources):
     import tardis.resources.dronestates
 
     for entry in resources:

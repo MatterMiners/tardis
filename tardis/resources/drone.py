@@ -8,7 +8,7 @@ from .dronestates import RequestState
 from .dronestates import DownState
 from ..plugins.sqliteregistry import SqliteRegistry
 from ..utilities.attributedict import AttributeDict
-from ..utilities.utils import str_to_state
+from ..utilities.utils import load_states
 from cobald.daemon import service
 from cobald.interfaces import Pool
 
@@ -71,7 +71,7 @@ class Drone(Pool):
 
     async def database_state(self) -> Optional[Type[State]]:
         try:
-            return str_to_state(
+            return load_states(
                 await self._database.get_resource_state(
                     self.resource_attributes.drone_uuid
                 )

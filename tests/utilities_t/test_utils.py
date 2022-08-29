@@ -6,7 +6,7 @@ from tardis.utilities.utils import (
     csv_parser,
     disable_logging,
     htcondor_cmd_option_formatter,
-    str_to_state,
+    load_states,
     submit_cmd_option_formatter,
 )
 
@@ -121,7 +121,7 @@ class TestDisableLogging(TestCase):
 class TestStrToState(TestCase):
     def test_str_to_state(self):
         test = [{"state": "RequestState", "drone_uuid": "test-abc123"}]
-        converted_test = str_to_state(test)
+        converted_test = load_states(test)
         self.assertTrue(converted_test[0]["state"], RequestState)
         self.assertEqual(converted_test[0]["drone_uuid"], "test-abc123")
 

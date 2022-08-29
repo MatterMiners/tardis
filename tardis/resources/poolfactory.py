@@ -6,7 +6,7 @@ from ..agents.batchsystemagent import BatchSystemAgent
 from ..agents.siteagent import SiteAgent
 from ..configuration.configuration import Configuration
 from ..resources.drone import Drone
-from ..utilities.utils import str_to_state
+from ..utilities.utils import load_states
 
 from cobald.composite.weighted import WeightedComposite
 from cobald.composite.factory import FactoryPool
@@ -109,7 +109,7 @@ def get_drones_to_restore(plugins: dict, site, machine_type: str):
     except KeyError:
         return []
     else:
-        return str_to_state(
+        return load_states(
             sql_registry.get_resources(site_name=site.name, machine_type=machine_type)
         )
 
