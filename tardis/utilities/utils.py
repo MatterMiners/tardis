@@ -1,7 +1,6 @@
 from .attributedict import AttributeDict
 
 from contextlib import contextmanager
-from importlib import import_module
 from io import StringIO
 from typing import Any, Callable, List, TypeVar, Tuple
 
@@ -100,10 +99,10 @@ def machine_meta_data_translation(
 
 
 def str_to_state(resources):
+    import tardis.resources.dronestates
+
     for entry in resources:
-        state_class = getattr(
-            tardis.resources.dronestates, str(entry['state'])
-        )
+        state_class = getattr(tardis.resources.dronestates, str(entry["state"]))
         entry["state"] = state_class()
     return resources
 

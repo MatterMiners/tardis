@@ -1,4 +1,4 @@
-.. Created by changelog.py at 2022-08-18, command
+.. Created by changelog.py at 2022-08-29, command
    '/Users/giffler/.cache/pre-commit/repor6pnmwlm/py_env-python3.10/bin/changelog docs/source/changes compile --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
@@ -6,14 +6,14 @@
 CHANGELOG
 #########
 
-[Unreleased] - 2022-08-18
+[Unreleased] - 2022-08-29
 =========================
 
 Added
 -----
 
 * Introduce a TARDIS REST API to query the state of resources from SqlRegistry
-* Added support for remote draining of drones i.e. using REST API
+* Added support for manual draining of drones using the REST API
 * Add support for passing environment variables as executable arguments to support HTCondor grid universe
 
 Changed
