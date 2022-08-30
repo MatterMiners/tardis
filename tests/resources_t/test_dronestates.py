@@ -195,6 +195,8 @@ class TestDroneStates(TestCase):
         self.run_the_matrix(matrix, initial_state=IntegratingState)
 
     def test_available_state(self):
+        self.drone.database_state.return_value = async_return()
+
         matrix = [
             (ResourceStatus.Running, MachineStatus.Available, AvailableState),
             (ResourceStatus.Running, MachineStatus.NotAvailable, ShutDownState),
@@ -219,6 +221,12 @@ class TestDroneStates(TestCase):
         # Test draining procedure due to exceeding life time of the drone
         self.drone.demand = 8.0
         self.drone.minimum_lifetime = 1
+        self.drone.state.return_value = AvailableState()
+        run_async(self.drone.state.return_value.run, self.drone)
+        self.assertIsInstance(self.drone.state, DrainState)
+
+        # Test remote draining procedure via REST service and database
+        self.drone.database_state.return_value = async_return(return_value=DrainState)
         self.drone.state.return_value = AvailableState()
         run_async(self.drone.state.return_value.run, self.drone)
         self.assertIsInstance(self.drone.state, DrainState)

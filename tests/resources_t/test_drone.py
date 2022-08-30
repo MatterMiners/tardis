@@ -1,9 +1,10 @@
-from ..utilities.utilities import async_return, run_async
+from ..utilities.utilities import async_return, run_async, set_awaitable_return_value
 
 from tardis.interfaces.plugin import Plugin
 from tardis.interfaces.state import State
 from tardis.resources.drone import Drone
-from tardis.resources.dronestates import DownState
+from tardis.resources.dronestates import DrainState, DownState
+from tardis.plugins.sqliteregistry import SqliteRegistry
 from tardis.utilities.attributedict import AttributeDict
 
 from logging import DEBUG
@@ -48,6 +49,35 @@ class TestDrone(TestCase):
 
     def test_batch_system_agent(self):
         self.assertEqual(self.drone.batch_system_agent, self.mock_batch_system_agent)
+
+    def test_database(self):
+        self.assertIsNone(self.drone._database)
+
+        sql_registry = MagicMock(spec=SqliteRegistry)
+        self.drone.register_plugins(sql_registry)
+        self.drone.__dict__.pop("_database")  # reset cached_property's cache
+
+        self.assertEqual(self.drone._database, sql_registry)
+
+    def test_database_state(self):
+        self.assertIsNone(run_async(self.drone.database_state))
+
+        sql_registry = MagicMock(spec=SqliteRegistry)
+        self.drone.register_plugins(sql_registry)
+        self.drone.__dict__.pop("_database")  # reset cached_property's cache
+        set_awaitable_return_value(
+            sql_registry.get_resource_state, [{"state": "DrainState"}]
+        )
+
+        self.assertIsInstance(run_async(self.drone.database_state), DrainState)
+
+        # testing IndexError
+        set_awaitable_return_value(sql_registry.get_resource_state, [])
+        self.assertIsNone(run_async(self.drone.database_state))
+
+        # testing AttributeError
+        delattr(self.drone.resource_attributes, "drone_uuid")
+        self.assertIsNone(run_async(self.drone.database_state))
 
     def test_demand(self):
         self.assertEqual(self.drone.demand, 8)

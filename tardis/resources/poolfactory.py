@@ -6,6 +6,7 @@ from ..agents.batchsystemagent import BatchSystemAgent
 from ..agents.siteagent import SiteAgent
 from ..configuration.configuration import Configuration
 from ..resources.drone import Drone
+from ..utilities.utils import load_states
 
 from cobald.composite.weighted import WeightedComposite
 from cobald.composite.factory import FactoryPool
@@ -15,15 +16,6 @@ from cobald.utility.primitives import infinity as inf
 
 from functools import partial
 from importlib import import_module
-
-
-def str_to_state(resources):
-    for entry in resources:
-        state_class = getattr(
-            import_module(name="tardis.resources.dronestates"), f"{entry['state']}"
-        )
-        entry["state"] = state_class()
-    return resources
 
 
 def create_composite_pool(configuration: str = None) -> WeightedComposite:
@@ -117,7 +109,7 @@ def get_drones_to_restore(plugins: dict, site, machine_type: str):
     except KeyError:
         return []
     else:
-        return str_to_state(
+        return load_states(
             sql_registry.get_resources(site_name=site.name, machine_type=machine_type)
         )
 

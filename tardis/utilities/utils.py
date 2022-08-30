@@ -98,6 +98,15 @@ def machine_meta_data_translation(
         raise
 
 
+def load_states(resources):
+    import tardis.resources.dronestates
+
+    for entry in resources:
+        state_class = getattr(tardis.resources.dronestates, str(entry["state"]))
+        entry["state"] = state_class()
+    return resources
+
+
 def submit_cmd_option_formatter(options: AttributeDict) -> str:
     option_prefix = dict(short="-", long="--")
     option_separator = dict(short=" ", long="=")

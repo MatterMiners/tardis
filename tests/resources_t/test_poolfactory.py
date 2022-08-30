@@ -3,7 +3,6 @@ from tardis.resources.poolfactory import create_composite_pool
 from tardis.resources.poolfactory import create_drone
 from tardis.resources.poolfactory import get_drones_to_restore
 from tardis.resources.poolfactory import load_plugins
-from tardis.resources.poolfactory import str_to_state
 from tardis.utilities.attributedict import AttributeDict
 
 from unittest import TestCase
@@ -43,12 +42,6 @@ class TestPoolFactory(TestCase):
         self.config.BatchSystem = AttributeDict(adapter="TestBatchSystem")
         sqlite_registry = self.mock_sqliteregistry.return_value
         sqlite_registry.get_resources.return_value = [{"state": "RequestState"}]
-
-    def test_str_to_state(self):
-        test = [{"state": "RequestState", "drone_uuid": "test-abc123"}]
-        converted_test = str_to_state(test)
-        self.assertTrue(converted_test[0]["state"], RequestState)
-        self.assertEqual(converted_test[0]["drone_uuid"], "test-abc123")
 
     @patch("tardis.resources.poolfactory.FactoryPool")
     @patch("tardis.resources.poolfactory.Logger")

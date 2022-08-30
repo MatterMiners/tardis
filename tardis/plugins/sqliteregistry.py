@@ -155,6 +155,15 @@ class SqliteRegistry(Plugin):
             logger.debug(f"{sql_query},{bind_parameters} executed")
             return cursor.fetchall()
 
+    async def get_resource_state(self, drone_uuid: str):
+        sql_query = """
+        SELECT RS.state
+        FROM Resources R
+        JOIN ResourceStates RS ON R.state_id = RS.state_id
+        WHERE R.drone_uuid = :drone_uuid
+        """
+        return await self.async_execute(sql_query, {"drone_uuid": drone_uuid})
+
     def get_resources(self, site_name: str, machine_type: str) -> List[Dict]:
         sql_query = """
         SELECT R.remote_resource_uuid, R.drone_uuid, RS.state, R.created, R.updated

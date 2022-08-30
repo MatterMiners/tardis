@@ -31,6 +31,16 @@ async def batchsystem_machine_status(
     return state_transition[machine_status]()
 
 
+async def check_remote_draining(
+    state_transition, drone: "Drone", current_state: Type[State]
+):
+    database_state = await drone.database_state()
+
+    if database_state is DrainState and database_state is not current_state:
+        raise StopProcessing(last_result=database_state())
+    return state_transition
+
+
 async def check_demand(state_transition, drone: "Drone", current_state: Type[State]):
     if not drone.demand:
         drone._supply = 0.0
@@ -154,6 +164,7 @@ class AvailableState(State):
     }
 
     processing_pipeline = [
+        check_remote_draining,
         check_demand,
         check_minimum_lifetime,
         resource_status,
