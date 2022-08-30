@@ -161,6 +161,62 @@ Available configuration options
             index: cobald_tardis
             meta: instance1
 
+Auditor Accounting
+------------------
+
+.. content-tabs:: left-col
+
+    The :py:class:`~tardis.plugins.auditor.Auditor` implements an interface to push
+    information from the drones relevant for accounting to an `Auditor <https://alu-schumacher.github.io/AUDITOR/>`_ instance.
+    The plugin extracts the components to be accounted for from the ``MachineMetaData`` in the configuration. 
+    Scores which help relating resources of the same kind with different performance to each other can be configured as well.
+    Scores are configured for each ``MachineType`` individually and multiple scores per ``MachineType`` are possible.
+    An Auditor record requires a ``site_id``, a ``user_id`` and a ``group_id``. The latter two can be configured in the
+    ``Auditor`` plugin configuration (and default to ``tardis`` if omitted). The ``site_id`` is taken from the ``Sites`` in
+    the TARDIS config.
+
+Available configuration options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. content-tabs:: left-col
+
+    +----------------+--------------------------------------------------------------------------------------------------+-----------------+
+    | Option     | Short Description                                                                                    | Requirement     |
+    +============+======================================================================================================+=================+
+    | host       | Hostname or IP address of the Auditor instance.                                                      |  **Required**   |
+    +----------------+--------------------------------------------------------------------------------------------------+-----------------+
+    | port       | Port on which the Auditor instance is listening on.                                                  |  **Required**   |
+    +----------------+--------------------------------------------------------------------------------------------------+-----------------+
+    | user       | User name added to the record. Defaults to ``tardis``.                                               |  **Optional**   |
+    +----------------+--------------------------------------------------------------------------------------------------+-----------------+
+    | group      | Group name added to the record. Defaults to ``tardis``.                                              |  **Optional**   |
+    +----------------+--------------------------------------------------------------------------------------------------+-----------------+
+    | components | Configuration of the components per ``MachineType``. Used to attach scores to individual components. |  **Optional**   |
+    +----------------+--------------------------------------------------------------------------------------------------+-----------------+
+
+.. content-tabs:: right-col
+
+    .. rubric:: Example configuration
+
+    .. code-block:: yaml
+
+        Plugins:
+          Auditor:
+            host: "127.0.0.1"
+            port: 8000
+            user: "some-user"
+            group: "some-group"
+            components:
+              machinetype_1:
+                Cores:
+                  HEPSPEC06: 1.2
+                  OTHERBENCHMARK: 1.4
+              machinetype_2:
+                Cores:
+                  HEPSPEC06: 1.0
+                Memory:
+                  PRECIOUSMEMORY: 2.0
+
 .. content-tabs:: left-col
 
     Your favorite monitoring is currently not supported?

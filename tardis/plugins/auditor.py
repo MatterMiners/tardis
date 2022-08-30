@@ -13,7 +13,13 @@ from tzlocal import get_localzone
 
 class Auditor(Plugin):
     """
-    The :py:class:`~tardis.plugins.auditor.Auditor` TODO
+    The :py:class:`~tardis.plugins.auditor.Auditor` plugin is a collector for the
+    accounting tool Auditor. It sends accounting information of individual drones to an
+    Auditor instance. The records contain information about the provided resources of
+    the drones as well as start and stop times. When a drone enters `AvailableState`, a
+    record with the start time set to the time it went into this state is stored in the
+    Auditor database. The stop time remains empty until the drone goes into `DownState`.
+    The Auditor plugin does not keep any state.
     """
 
     def __init__(self):
@@ -50,7 +56,8 @@ class Auditor(Plugin):
 
     async def notify(self, state: State, resource_attributes: AttributeDict) -> None:
         """
-        TODO
+        Pushes a record to an Auditor instance when the drone is in state
+        `AvailableState` or `DownState`.
 
         :param state: New state of the Drone
         :type state: State
@@ -76,6 +83,14 @@ class Auditor(Plugin):
             await self._client.update(record)
 
     def construct_record(self, resource_attributes: AttributeDict):
+        """
+        Constructs a record from ``resource_attributes``.
+
+        :param resource_attributes: Contains all meta-data of the Drone (created and
+            updated timestamps, dns name, unique id, site_name, machine_type, etc.)
+        :type resource_attributes: AttributeDict
+        :return: Record
+        """
         record = pyauditor.Record(
             resource_attributes["drone_uuid"],
             resource_attributes["site_name"],
