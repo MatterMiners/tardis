@@ -35,16 +35,18 @@ class Auditor(Plugin):
             for machine_type in getattr(config, site.name).MachineTypes:
                 self._resources[site.name][machine_type] = {}
                 self._components[site.name][machine_type] = {}
-                for r in getattr(config, site.name).MachineMetaData[machine_type]:
-                    self._resources[site.name][machine_type][r] = getattr(
+                for resource in getattr(config, site.name).MachineMetaData[
+                    machine_type
+                ]:
+                    self._resources[site.name][machine_type][resource] = getattr(
                         config, site.name
-                    ).MachineMetaData[machine_type][r]
-                    self._components[site.name][machine_type][r] = getattr(
+                    ).MachineMetaData[machine_type][resource]
+                    self._components[site.name][machine_type][resource] = getattr(
                         config_auditor.components, machine_type
-                    ).get(r, {})
+                    ).get(resource, {})
 
-        self._user = config_auditor.user if config_auditor.user else "tardis"
-        self._group = config_auditor.group if config_auditor.group else "tardis"
+        self._user = getattr(config_auditor, "user", "tardis")
+        self._group = getattr(config_auditor, "group", "tardis")
         auditor_timeout = getattr(config_auditor, "timeout", 30)
         self._local_timezone = get_localzone()
         self._client = (

@@ -1,7 +1,18 @@
 from tardis.plugins.auditor import Auditor
 from tardis.utilities.attributedict import AttributeDict
 from tardis.interfaces.siteadapter import ResourceStatus
-from tardis.resources.dronestates import AvailableState, DownState
+from tardis.resources.dronestates import (
+    AvailableState,
+    DownState,
+    BootingState,
+    CleanupState,
+    ShutDownState,
+    ShuttingDownState,
+    DrainState,
+    DrainingState,
+    IntegrateState,
+    DisintegrateState,
+)
 
 from datetime import datetime
 from unittest import TestCase
@@ -39,14 +50,18 @@ class TestAuditor(TestCase):
         self.drone_uuid = "test-drone"
         self.machine_type = "test_machine_type"
         config = self.mock_config.return_value
-        config.Plugins.Auditor.host = self.address
-        config.Plugins.Auditor.port = self.port
-        config.Plugins.Auditor.timeout = self.timeout
-        config.Plugins.Auditor.user = self.user
-        config.Plugins.Auditor.group = self.group
-        config.Plugins.Auditor.components.test_machine_type = AttributeDict(
-            Cores=AttributeDict(HEPSPEC=1.2, BENCHMARK=3.0),
-            Memory=AttributeDict(BLUBB=1.4),
+        config.Plugins.Auditor = AttributeDict(
+            host=self.address,
+            port=self.port,
+            timeout=self.timeout,
+            user=self.user,
+            group=self.group,
+            components=AttributeDict(
+                test_machine_type=AttributeDict(
+                    Cores=AttributeDict(HEPSPEC=1.2, BENCHMARK=3.0),
+                    Memory=AttributeDict(BLUBB=1.4),
+                )
+            ),
         )
         config.Sites = [AttributeDict(name=self.site)]
         config.testsite.MachineTypes = [self.machine_type]
@@ -70,7 +85,20 @@ class TestAuditor(TestCase):
         self.client.add.return_value = async_return()
         self.client.update.return_value = async_return()
 
+        self.config = config
         self.plugin = Auditor()
+
+    def test_default_fields(self):
+        # Potential future race condition ahead.
+        # Since this is the only test modifying self.config, this is
+        # fine. However, when adding further tests care must be taken
+        # when config changes are involved.
+        del self.config.Plugins.Auditor.user
+        del self.config.Plugins.Auditor.group
+        # Needed in order to reload config.
+        plugin = Auditor()
+        self.assertEqual(plugin._user, "tardis")
+        self.assertEqual(plugin._group, "tardis")
 
     def test_notify(self):
         self.mock_auditorclientbuilder.return_value.address.assert_called_with(
@@ -95,6 +123,25 @@ class TestAuditor(TestCase):
         )
         self.assertEqual(self.client.add.call_count, 1)
         self.assertEqual(self.client.update.call_count, 1)
+
+        # test for no-op
+        for state in [
+            BootingState(),
+            IntegrateState(),
+            CleanupState(),
+            ShutDownState(),
+            ShuttingDownState(),
+            DrainState(),
+            DrainingState(),
+            DisintegrateState(),
+        ]:
+            run_async(
+                self.plugin.notify,
+                state=state,
+                resource_attributes=self.test_param,
+            )
+            self.assertEqual(self.client.add.call_count, 1)
+            self.assertEqual(self.client.update.call_count, 1)
 
     def test_construct_record(self):
         record = self.plugin.construct_record(resource_attributes=self.test_param)
