@@ -88,10 +88,11 @@ class OpenStackAdapterConfigurationModel(SiteAdapterBaseModel):
 
 
 class OpenStackAdapter(SiteAdapter):
+    _configuration_validation_model = OpenStackAdapterConfigurationModel
+
     def __init__(self, machine_type: str, site_name: str):
         self._machine_type = machine_type
         self._site_name = site_name
-        self._configuration_validation_model = OpenStackAdapterConfigurationModel
 
         auth = AuthPassword(
             auth_url=self.configuration.auth_url,

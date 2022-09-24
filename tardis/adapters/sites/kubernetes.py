@@ -79,10 +79,11 @@ class KubernetesAdapterConfigurationModel(SiteAdapterBaseModel):
 
 
 class KubernetesAdapter(SiteAdapter):
+    _configuration_validation_model = KubernetesAdapterConfigurationModel
+
     def __init__(self, machine_type: str, site_name: str):
         self._machine_type = machine_type
         self._site_name = site_name
-        self._configuration_validation_model = KubernetesAdapterConfigurationModel
         key_translator = StaticMapping(
             remote_resource_uuid="uid", drone_uuid="name", resource_status="type"
         )

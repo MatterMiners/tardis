@@ -36,10 +36,11 @@ class CloudStackAdapterConfigurationModel(SiteAdapterBaseModel):
 
 
 class CloudStackAdapter(SiteAdapter):
+    _configuration_validation_model = CloudStackAdapterConfigurationModel
+
     def __init__(self, machine_type: str, site_name: str):
         self._machine_type = machine_type
         self._site_name = site_name
-        self._configuration_validation_model = CloudStackAdapterConfigurationModel
 
         self.cloud_stack_client = CloudStack(
             end_point=self.configuration.end_point,

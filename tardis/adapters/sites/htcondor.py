@@ -197,6 +197,7 @@ class HTCondorAdapter(SiteAdapter):
     htcondor_machine_meta_data_translation_mapping = AttributeDict(
         Cores=1, Memory=1024, Disk=1024 * 1024
     )
+    _configuration_validation_model = HTCondorAdapterConfigurationModel
 
     def __init__(
         self,
@@ -205,7 +206,6 @@ class HTCondorAdapter(SiteAdapter):
     ):
         self._machine_type = machine_type
         self._site_name = site_name
-        self._configuration_validation_model = HTCondorAdapterConfigurationModel
         self._executor = self.configuration.executor
         bulk_size = self.configuration.bulk_size
         bulk_delay = self.configuration.bulk_delay

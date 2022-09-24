@@ -59,10 +59,11 @@ class SlurmAdapterConfigurationModel(SiteAdapterBaseModel):
 
 
 class SlurmAdapter(SiteAdapter):
+    _configuration_validation_model = SlurmAdapterConfigurationModel
+
     def __init__(self, machine_type: str, site_name: str):
         self._machine_type = machine_type
         self._site_name = site_name
-        self._configuration_validation_model = SlurmAdapterConfigurationModel
 
         try:
             self._startup_command = self.machine_type_configuration.StartupCommand

@@ -23,10 +23,11 @@ class FakeSiteAdapterConfigurationModel(SiteAdapterBaseModel):
 
 
 class FakeSiteAdapter(SiteAdapter):
+    _configuration_validation_model = FakeSiteAdapterConfigurationModel
+
     def __init__(self, machine_type: str, site_name: str) -> None:
         self._machine_type = machine_type
         self._site_name = site_name
-        self._configuration_validation_model = FakeSiteAdapterConfigurationModel
         self._api_response_delay = self.configuration.api_response_delay
         self._resource_boot_time = self.configuration.resource_boot_time
 

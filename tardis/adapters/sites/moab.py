@@ -61,10 +61,11 @@ class MoabAdapterConfigurationModel(SiteAdapterBaseModel):
 
 
 class MoabAdapter(SiteAdapter):
+    _configuration_validation_model = MoabAdapterConfigurationModel
+
     def __init__(self, machine_type: str, site_name: str):
         self._machine_type = machine_type
         self._site_name = site_name
-        self._configuration_validation_model = MoabAdapterConfigurationModel
 
         try:
             self._startup_command = self.machine_type_configuration.StartupCommand

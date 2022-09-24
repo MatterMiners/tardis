@@ -151,7 +151,7 @@ class SiteAdapter(metaclass=ABCMeta):
             return self._configuration_validation_model
         except AttributeError as ae:
             raise AttributeError(
-                f"Class {self.__class__.__name__} must have an '_configuration_validation_model' instance variable"  # noqa
+                f"Class {self.__class__.__name__} must have an '_configuration_validation_model' class variable"  # noqa
             ) from ae
 
     @abstractmethod
