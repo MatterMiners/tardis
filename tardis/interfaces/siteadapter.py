@@ -33,24 +33,18 @@ class SiteAdapterBaseModel(BaseModel):
         Validate that MachineTypeConfiguration and MachineMetaData is available
         for each MachineType defined.
         """
-        if "MachineTypes" not in values.keys():
+        if "MachineTypes" not in values:
             raise ValueError(
                 "You have to add MachineTypes to the site configuration"
             ) from None
 
         for machine_type in values["MachineTypes"]:
             for config_block in ("MachineTypeConfiguration", "MachineMetaData"):
-                try:
-                    if machine_type not in values[config_block].keys():
-                        raise ValueError(
-                            f"You have to specify {config_block} for MachineType "
-                            f"{machine_type}."
-                        )
-                except KeyError:
+                if machine_type not in values.get(config_block, {}):
                     raise ValueError(
                         f"You have to specify {config_block} for MachineType "
                         f"{machine_type}."
-                    ) from None
+                    )
         return values
 
     @validator("MachineMetaData")
@@ -71,10 +65,7 @@ class SiteAdapterBaseModel(BaseModel):
                     ) from None
 
                 # validate types here
-                if not any(
-                    isinstance(machine_meta_data_item[entry], allowed_type)
-                    for allowed_type in allowed_types
-                ):
+                if not isinstance(machine_meta_data_item[entry], allowed_types):
                     raise ValueError(
                         f"You supplied a wrong type "
                         f"{type(machine_meta_data_item[entry])} in the "
