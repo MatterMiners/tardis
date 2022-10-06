@@ -1,6 +1,6 @@
 from ...exceptions.tardisexceptions import TardisError
-from ...interfaces.siteadapter import ResourceStatus
-from ...interfaces.siteadapter import SiteAdapter
+from ...interfaces.siteadapter import ResourceStatus, SiteAdapter, SiteAdapterBaseModel
+from ...interfaces.simulator import Simulator
 from ...utilities.attributedict import AttributeDict
 from ...utilities.staticmapping import StaticMapping
 
@@ -13,7 +13,18 @@ from uuid import uuid4
 import asyncio
 
 
+class FakeSiteAdapterConfigurationModel(SiteAdapterBaseModel):
+    """
+    pydantic model for the input validation of the fake site adapter configuration
+    """
+
+    api_response_delay: Simulator
+    resource_boot_time: Simulator
+
+
 class FakeSiteAdapter(SiteAdapter):
+    _configuration_validation_model = FakeSiteAdapterConfigurationModel
+
     def __init__(self, machine_type: str, site_name: str) -> None:
         self._machine_type = machine_type
         self._site_name = site_name

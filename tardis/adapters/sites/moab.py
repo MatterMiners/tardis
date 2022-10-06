@@ -2,8 +2,8 @@ from ...exceptions.executorexceptions import CommandExecutionFailure
 from ...exceptions.tardisexceptions import TardisError
 from ...exceptions.tardisexceptions import TardisTimeout
 from ...exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
-from ...interfaces.siteadapter import ResourceStatus
-from ...interfaces.siteadapter import SiteAdapter
+from ...interfaces.executor import Executor
+from ...interfaces.siteadapter import ResourceStatus, SiteAdapter, SiteAdapterBaseModel
 from ...utilities.staticmapping import StaticMapping
 from ...utilities.attributedict import AttributeDict
 from ...utilities.attributedict import convert_to_attribute_dict
@@ -11,10 +11,13 @@ from ...utilities.executors.shellexecutor import ShellExecutor
 from ...utilities.asynccachemap import AsyncCacheMap
 from ...utilities.utils import submit_cmd_option_formatter
 
+from pydantic import PositiveInt
+
 from asyncio import TimeoutError
 from contextlib import contextmanager
 from functools import partial
 from datetime import datetime
+from typing import Optional
 
 import asyncssh
 import logging
@@ -47,7 +50,19 @@ async def moab_status_updater(executor):
     return moab_resource_status
 
 
+class MoabAdapterConfigurationModel(SiteAdapterBaseModel):
+    """
+    pydantic model for the input validation of the Moab site adapter configuration
+    """
+
+    executor: Optional[Executor] = ShellExecutor()
+    StatusUpdate: PositiveInt
+    StartupCommand: Optional[str]
+
+
 class MoabAdapter(SiteAdapter):
+    _configuration_validation_model = MoabAdapterConfigurationModel
+
     def __init__(self, machine_type: str, site_name: str):
         self._machine_type = machine_type
         self._site_name = site_name
@@ -55,7 +70,7 @@ class MoabAdapter(SiteAdapter):
         try:
             self._startup_command = self.machine_type_configuration.StartupCommand
         except AttributeError:
-            if not hasattr(self.configuration, "StartupCommand"):
+            if self.configuration.StartupCommand is None:
                 raise
             warnings.warn(
                 "StartupCommand has been moved to the machine_type_configuration!",
@@ -63,7 +78,7 @@ class MoabAdapter(SiteAdapter):
             )
             self._startup_command = self.configuration.StartupCommand
 
-        self._executor = getattr(self.configuration, "executor", ShellExecutor())
+        self._executor = self.configuration.executor
 
         self._moab_status = AsyncCacheMap(
             update_coroutine=partial(moab_status_updater, self._executor),

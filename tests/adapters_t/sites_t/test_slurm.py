@@ -5,11 +5,15 @@ from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from tardis.exceptions.executorexceptions import CommandExecutionFailure
 from tardis.interfaces.siteadapter import ResourceStatus
 from tardis.utilities.attributedict import AttributeDict
-from ...utilities.utilities import mock_executor_run_command
-from ...utilities.utilities import run_async
+from ...utilities.utilities import (
+    assert_awaited_once,
+    assert_awaited_with,
+    mock_executor_run_command,
+    run_async,
+)
 
 from unittest import TestCase
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from datetime import datetime, timedelta
 from warnings import filterwarnings
@@ -17,7 +21,6 @@ from warnings import filterwarnings
 import asyncio
 import logging
 
-__all__ = ["TestSlurmAdapter"]
 
 TEST_RESOURCE_STATUS_RESPONSE = """
 1390065||PENDING
@@ -81,7 +84,9 @@ class TestSlurmAdapter(TestCase):
     def setUpClass(cls):
         cls.mock_config_patcher = patch("tardis.interfaces.siteadapter.Configuration")
         cls.mock_config = cls.mock_config_patcher.start()
-        cls.mock_executor_patcher = patch("tardis.adapters.sites.slurm.ShellExecutor")
+        cls.mock_executor_patcher = patch(
+            "tardis.adapters.sites.slurm.ShellExecutor", autospec=True
+        )
         cls.mock_executor = cls.mock_executor_patcher.start()
 
     @classmethod
@@ -90,24 +95,20 @@ class TestSlurmAdapter(TestCase):
         cls.mock_executor_patcher.stop()
 
     def setUp(self):
-        config = self.mock_config.return_value
-        config.TestSite = MagicMock(
-            spec=[
-                "MachineMetaData",
-                "StatusUpdate",
-                "MachineTypeConfiguration",
-                "executor",
-            ]
+        self.config = self.mock_config.return_value
+        self.config.TestSite = AttributeDict(
+            MachineTypes=["test2large"],
+            MachineMetaData=self.machine_meta_data,
+            StatusUpdate=10,
+            MachineTypeConfiguration=self.machine_type_configuration,
+            executor=self.mock_executor.return_value,
         )
-        self.test_site_config = config.TestSite
-        self.test_site_config.MachineMetaData = self.machine_meta_data
-        self.test_site_config.StatusUpdate = 10
-        self.test_site_config.MachineTypeConfiguration = self.machine_type_configuration
-        self.test_site_config.executor = self.mock_executor.return_value
 
         self.slurm_adapter = SlurmAdapter(
             machine_type="test2large", site_name="TestSite"
         )
+
+        self.mock_executor.reset_mock()
 
     def tearDown(self):
         pass
@@ -137,14 +138,14 @@ class TestSlurmAdapter(TestCase):
     def test_start_up_command_deprecation_warning(self):
         # Necessary to avoid annoying message in PyCharm
         filterwarnings(action="ignore", message="unclosed", category=ResourceWarning)
-        del self.test_site_config.MachineTypeConfiguration.test2large.StartupCommand
+        del self.config.TestSite.MachineTypeConfiguration.test2large.StartupCommand
 
         with self.assertRaises(AttributeError):
             self.slurm_adapter = SlurmAdapter(
                 machine_type="test2large", site_name="TestSite"
             )
 
-        self.test_site_config.StartupCommand = "pilot.sh"
+        self.config.TestSite.StartupCommand = "pilot.sh"
 
         with self.assertWarns(DeprecationWarning):
             self.slurm_adapter = SlurmAdapter(
@@ -189,8 +190,9 @@ class TestSlurmAdapter(TestCase):
         )
 
         self.mock_executor.reset_mock()
+        self.slurm_adapter.refresh_configuration()
 
-        self.test_site_config.MachineMetaData.test2large.Memory = 2.5
+        self.config.TestSite.MachineMetaData.test2large.Memory = 2.5
 
         run_async(self.slurm_adapter.deploy_resource, resource_attributes)
 
@@ -199,8 +201,9 @@ class TestSlurmAdapter(TestCase):
         )
 
         self.mock_executor.reset_mock()
+        self.slurm_adapter.refresh_configuration()
 
-        self.test_site_config.MachineMetaData.test2large.Memory = 2.546372129
+        self.config.TestSite.MachineMetaData.test2large.Memory = 2.546372129
 
         run_async(self.slurm_adapter.deploy_resource, resource_attributes)
 
@@ -210,7 +213,7 @@ class TestSlurmAdapter(TestCase):
 
     @mock_executor_run_command(TEST_DEPLOY_RESOURCE_RESPONSE)
     def test_deploy_resource_w_submit_options(self):
-        self.test_site_config.MachineTypeConfiguration.test2large.SubmitOptions = (
+        self.config.TestSite.MachineTypeConfiguration.test2large.SubmitOptions = (
             AttributeDict(long=AttributeDict(gres="tmp:1G"))
         )
 
@@ -334,10 +337,10 @@ class TestSlurmAdapter(TestCase):
             )
             self.assertEqual(returned_resource_attributes.resource_status, value)
 
-        self.mock_executor.return_value.run_command.called_once()
-
-        self.mock_executor.return_value.run_command.assert_called_with(
-            'squeue -o "%A|%N|%T" -h -t all'
+        assert_awaited_once(self.mock_executor.return_value.run_command)
+        assert_awaited_with(
+            self.mock_executor.return_value.run_command,
+            'squeue -o "%A|%N|%T" -h -t all',
         )
 
     def test_resource_status_raise_update_failed(self):

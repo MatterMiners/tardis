@@ -3,7 +3,9 @@ from tardis.exceptions.tardisexceptions import TardisError
 from tardis.interfaces.siteadapter import ResourceStatus
 from tardis.utilities.attributedict import AttributeDict
 
-from ...utilities.utilities import run_async
+from ...utilities.utilities import MockedSimulator, run_async
+
+from pydantic.error_wrappers import ValidationError
 
 from datetime import datetime
 from datetime import timedelta
@@ -24,22 +26,33 @@ class TestFakeSiteAdapter(TestCase):
         cls.mock_config_patcher.stop()
 
     def setUp(self):
-        config = self.mock_config.return_value
-        test_site_config = config.TestSite
-        test_site_config.MachineMetaData = self.machine_meta_data
-        test_site_config.MachineTypeConfiguration = self.machine_type_configuration
-        test_site_config.api_response_delay = AttributeDict(get_value=lambda: 0)
-        test_site_config.resource_boot_time = AttributeDict(get_value=lambda: 100)
+        self.config = self.mock_config.return_value
+        self.config.TestSite = AttributeDict(
+            MachineMetaData=self.machine_meta_data,
+            MachineTypes=["test2large"],
+            MachineTypeConfiguration=self.machine_type_configuration,
+            api_response_delay=MockedSimulator(0),
+            resource_boot_time=MockedSimulator(100),
+        )
 
         self.adapter = FakeSiteAdapter(machine_type="test2large", site_name="TestSite")
 
     @property
     def machine_meta_data(self):
-        return AttributeDict(test2large=AttributeDict(Cores=8, Memory=32))
+        return AttributeDict(test2large=AttributeDict(Cores=8, Memory=32, Disk=1000))
 
     @property
     def machine_type_configuration(self):
         return AttributeDict(test2large=AttributeDict(jdl="submit.jdl"))
+
+    def test_configuration_validation(self):
+        for variable in ("api_response_delay", "api_response_delay"):
+            old_value = getattr(self.config.TestSite, variable)
+            setattr(self.config.TestSite, variable, "DoesNotWork")
+            with self.assertRaises(ValidationError):
+                # noinspection PyStatementEffect
+                FakeSiteAdapter(machine_type="test2large", site_name="TestSite")
+            setattr(self.config.TestSite, variable, old_value)
 
     def test_deploy_resource(self):
         response = run_async(self.adapter.deploy_resource, AttributeDict())

@@ -84,7 +84,7 @@ setup(
         get_cryptography_version(),
         "CloudStackAIO>=0.0.8",
         "PyYAML",
-        "AsyncOpenStackClient",
+        "AsyncOpenStackClient>=0.9.0",
         "cobald>=0.12.3",
         "asyncssh",
         "aiotelegraf",
