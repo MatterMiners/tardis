@@ -1,4 +1,4 @@
-from typing import Mapping, TypeVar
+from typing import Dict, TypeVar
 
 K = TypeVar("K")
 V = TypeVar("V")
@@ -15,7 +15,7 @@ def convert_to_attribute_dict(obj):
         return obj
 
 
-class AttributeDict(dict, Mapping[K, V]):
+class AttributeDict(Dict[K, V]):
     def __getattr__(self, item):
         try:
             return self[item]
