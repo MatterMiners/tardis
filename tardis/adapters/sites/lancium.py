@@ -73,9 +73,14 @@ class LanciumAdapter(SiteAdapter):
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
-        create_response = await self.client.create_job(
-            job=self.machine_type_configuration
+        specs = dict(name=resource_attributes.drone_uuid)
+        specs["resources"] = dict(
+            core_count=self.machine_meta_data.Cores,
+            memory=self.machine_meta_data.Memory,
+            scratch=self.machine_meta_data.Disk,
         )
+        specs.update(self.machine_type_configuration)
+        create_response = await self.client.create_job(job=specs)
         logger.debug(f"{self.site_name} create job returned {create_response}")
         submit_response = await self.client.submit_job(id=create_response["job"]["id"])
         logger.debug(f"{self.site_name} submit job returned {submit_response}")
