@@ -17,7 +17,7 @@ logger = logging.getLogger("cobald.runtime.tardis.adapters.sites.lancium")
 
 
 async def lancium_status_updater(client: LanciumClient) -> Dict:
-    response = client.jobs.show_jobs()
+    response = await client.jobs.show_jobs()
     logger.debug(f"Show jobs returned {response}")
     return {job["id"]: job for job in response["jobs"]}
 
@@ -47,16 +47,14 @@ class LanciumAdapter(SiteAdapter):
             remote_resource_uuid="id",
             drone_uuid="name",
             resource_status="status",
-            created="created_at",
-            updated="updated_at",
         )
 
         translator_functions = StaticMapping(
-            created=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ"),
-            updated=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ"),
             status=lambda x, translator=StaticMapping(
                 **self.resource_status_translation
             ): translator[x],
+            id=int,
+            name=str,
         )
 
         self.handle_response = partial(
@@ -80,11 +78,13 @@ class LanciumAdapter(SiteAdapter):
             scratch=self.machine_meta_data.Disk,
         )
         specs.update(self.machine_type_configuration)
-        create_response = await self.client.create_job(job=specs)
+        create_response = await self.client.jobs.create_job(job=specs)
         logger.debug(f"{self.site_name} create job returned {create_response}")
-        submit_response = await self.client.submit_job(id=create_response["job"]["id"])
+        submit_response = await self.client.jobs.submit_job(
+            id=create_response["job"]["id"]
+        )
         logger.debug(f"{self.site_name} submit job returned {submit_response}")
-        return self.handle_response(create_response)
+        return self.handle_response(create_response["job"])
 
     async def resource_status(
         self, resource_attributes: AttributeDict
@@ -95,7 +95,7 @@ class LanciumAdapter(SiteAdapter):
         # since map is updated asynchronously.
         try:
             resource_uuid = resource_attributes.remote_resource_uuid
-            resource_status = self._lancium_status[str(resource_uuid)]
+            resource_status = self._lancium_status[resource_uuid]
         except KeyError as err:
             if (
                 self._lancium_status._last_update - resource_attributes.created
@@ -113,14 +113,16 @@ class LanciumAdapter(SiteAdapter):
         )
 
     async def stop_resource(self, resource_attributes: AttributeDict):
-        response = self.client.terminate_job(
+        response = await self.client.jobs.terminate_job(
             id=resource_attributes.remote_resource_uuid
         )
         logger.debug(f"{self.site_name} stop resource returned {response}")
         return response
 
     async def terminate_resource(self, resource_attributes: AttributeDict):
-        response = self.client.delete_job(id=resource_attributes.remote_resource_uuid)
+        response = await self.client.jobs.delete_job(
+            id=resource_attributes.remote_resource_uuid
+        )
         logger.debug(f"{self.site_name} terminate resource returned {response}")
         return response
 
