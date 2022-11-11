@@ -98,6 +98,7 @@ setup(
         "python-auditor>=0.0.5",
         "pytz",
         "tzlocal",
+        "aiolancium",
     ],
     extras_require={
         "docs": [
