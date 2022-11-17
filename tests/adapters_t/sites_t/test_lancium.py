@@ -120,7 +120,7 @@ class TestLanciumAdapter(TestCase):
                     {"variable": "TardisDroneUuid", "value": "testsite-089123"},
                 ],
             },
-            self.mocked_lancium_api.jobs.create_job.call_args.kwargs["job"],
+            self.mocked_lancium_api.jobs.create_job.call_args[1]["job"],
         )
         self.mocked_lancium_api.jobs.submit_job.assert_called_with(id=123)
 
