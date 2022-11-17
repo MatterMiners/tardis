@@ -298,6 +298,66 @@ Available adapter configuration options
     The ``Arguments`` contains the following command line arguments, ``--cores``. ``--memory``. ``--disk`` and
     ``--uuid``.
 
+Lancium Site Adapter
+--------------------
+
+.. content-tabs:: left-col
+
+    The :py:class:`~tardis.adapters.sites.lancium.LanciumAdapter` implements an interface to `Lancium`_ Compute API.
+    The following general adapter configuration options are available.
+
+    .. _Lancium: https://lancium.github.io
+
+Available adapter configuration options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. content-tabs:: left-col
+
+    +---------------------+------------------------------------------------------------------------+-----------------+
+    | Option              | Short Description                                                      | Requirement     |
+    +=====================+========================================================================+=================+
+    | api_url             | The end point of the Lancium API to contact.                           |  **Required**   |
+    +---------------------+------------------------------------------------------------------------+-----------------+
+    | api_key             | API Token to access the Lancium API.                                   |  **Required**   |
+    +---------------------+------------------------------------------------------------------------+-----------------+
+    | max_age             | The output of the `show_jobs` API call is cached for `max_age` minutes |  **Required**   |
+    +---------------------+------------------------------------------------------------------------+-----------------+
+
+    All configuration entries in the `MachineTypeConfiguration` section of the machine types are
+    directly added to the body of Lancium API `create_job` call. All available options are
+    described in the `Lancium documentation`_
+
+    .. _Lancium documentation: https://lancium.github.io/compute-api-docs/api.html#tag/Jobs/operation/create_job
+
+.. content-tabs:: right-col
+
+    .. rubric:: Example configuration
+
+    .. code-block:: yaml
+
+          Sites:
+            - name: Lancium
+              adapter: Lancium
+              quota: 1 # CPU core quota
+
+          Lancium:
+            api_url: https://portal.lancium.com/api/v1/
+            api_key: "top_secret"
+            max_age: 1
+            MachineTypes:
+              - m1.small
+            MachineTypeConfiguration:
+              m1.small:
+                qos: "high"
+                image: "lancium/ubuntu"
+                command_line: "sleep 500"
+                max_run_time: 600
+            MachineMetaData:
+              m1.small:
+                Cores: 2
+                Memory: 4
+                Disk: 20
+
 Moab Site Adapter
 -----------------
 
@@ -621,5 +681,4 @@ Available machine type configuration options
 .. content-tabs:: left-col
 
     Your favorite site is currently not supported?
-    Please, have a look at
-    :ref:`how to contribute.<ref_contribute_site_adapter>`
+    Please, have a look at how to contribute.

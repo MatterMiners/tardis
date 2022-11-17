@@ -23,4 +23,5 @@ Submodules
    tardis.rest.app.crud
    tardis.rest.app.database
    tardis.rest.app.main
+   tardis.rest.app.scopes
    tardis.rest.app.security
