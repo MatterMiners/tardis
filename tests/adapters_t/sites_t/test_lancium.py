@@ -76,15 +76,12 @@ class TestLanciumAdapter(TestCase):
                 ]
             },
         )
+        set_awaitable_return_value(self.mocked_lancium_api.jobs.terminate_job, {})
+        set_awaitable_return_value(self.mocked_lancium_api.jobs.delete_job, {})
 
     def test_deploy_resource(self):
-        self.assertEqual(
-            AttributeDict(
-                drone_uuid="testsite-089123",
-                remote_resource_uuid=123,
-                resource_status=ResourceStatus.Booting,
-            ),
-            run_async(
+        def run_it():
+            return run_async(
                 self.adapter.deploy_resource,
                 resource_attributes=AttributeDict(
                     drone_uuid="testsite-089123",
@@ -94,7 +91,15 @@ class TestLanciumAdapter(TestCase):
                         Disk=1,
                     ),
                 ),
+            )
+
+        self.assertEqual(
+            AttributeDict(
+                drone_uuid="testsite-089123",
+                remote_resource_uuid=123,
+                resource_status=ResourceStatus.Booting,
             ),
+            run_it(),
         )
 
         self.assertDictEqual(
@@ -120,17 +125,7 @@ class TestLanciumAdapter(TestCase):
             "operation=auth_error", {}
         )
         with self.assertRaises(AuthError):
-            run_async(
-                self.adapter.deploy_resource,
-                resource_attributes=AttributeDict(
-                    drone_uuid="testsite-089123",
-                    obs_machine_meta_data_translation_mapping=AttributeDict(
-                        Cores=1,
-                        Memory=1,
-                        Disk=1,
-                    ),
-                ),
-            )
+            run_it()
 
     def test_machine_meta_data(self):
         self.assertEqual(
@@ -144,6 +139,16 @@ class TestLanciumAdapter(TestCase):
         self.assertEqual(self.adapter.site_name, "TestSite")
 
     def test_resource_status(self):
+        def run_it(job_id, created=datetime.now()):
+            return run_async(
+                self.adapter.resource_status,
+                resource_attributes=AttributeDict(
+                    remote_resource_uuid=job_id,
+                    drone_uuid=f"testsite-089{job_id}",
+                    created=created,
+                ),
+            )
+
         test_matrix = [
             (123, ResourceStatus.Booting),
             (124, ResourceStatus.Booting),
@@ -158,13 +163,7 @@ class TestLanciumAdapter(TestCase):
         for job_id, resource_status in test_matrix:
             response = {
                 key: value
-                for key, value in run_async(
-                    self.adapter.resource_status,
-                    resource_attributes=AttributeDict(
-                        remote_resource_uuid=job_id,
-                        drone_uuid=f"testsite-089{job_id}",
-                    ),
-                ).items()
+                for key, value in run_it(job_id).items()
                 if key not in ["created", "updated"]
             }
             self.assertEqual(
@@ -180,14 +179,7 @@ class TestLanciumAdapter(TestCase):
         # have status deleted
         response = {
             key: value
-            for key, value in run_async(
-                self.adapter.resource_status,
-                resource_attributes=AttributeDict(
-                    remote_resource_uuid=999,
-                    drone_uuid="testsite-089999",
-                    created=datetime.fromtimestamp(0),
-                ),
-            ).items()
+            for key, value in run_it(999, datetime.fromtimestamp(0)).items()
             if key not in ["created", "updated"]
         }
         self.assertEqual(
@@ -202,22 +194,42 @@ class TestLanciumAdapter(TestCase):
         # check that resources not in the show_job list and younger than maxAge
         # raise TardisResourceStatusUpdateFailed
         with self.assertRaises(TardisResourceStatusUpdateFailed):
-            run_async(
-                self.adapter.resource_status,
-                resource_attributes=AttributeDict(
-                    remote_resource_uuid=999,
-                    drone_uuid="testsite-089999",
-                    created=datetime.now(),
-                ),
-            )
+            run_it(999, datetime.now())
 
         self.mocked_lancium_api.jobs.show_jobs.assert_called_once()
 
     def test_stop_resource(self):
-        ...
+        def run_it():
+            return run_async(
+                self.adapter.stop_resource,
+                resource_attributes=AttributeDict(remote_resource_uuid=123),
+            )
+
+        run_it()
+
+        self.mocked_lancium_api.jobs.terminate_job.assert_called_with(id=123)
+
+        self.mocked_lancium_api.jobs.terminate_job.side_effect = AuthError(
+            "operation=auth_error", {}
+        )
+        with self.assertRaises(AuthError):
+            run_it()
 
     def test_terminate_resource(self):
-        ...
+        def run_it():
+            return run_async(
+                self.adapter.terminate_resource,
+                resource_attributes=AttributeDict(remote_resource_uuid=123),
+            )
+
+        run_it()
+        self.mocked_lancium_api.jobs.delete_job.assert_called_with(id=123)
+
+        self.mocked_lancium_api.jobs.delete_job.side_effect = AuthError(
+            "operation=auth_error", {}
+        )
+        with self.assertRaises(AuthError):
+            run_it()
 
     def test_exception_handling(self):
         ...
