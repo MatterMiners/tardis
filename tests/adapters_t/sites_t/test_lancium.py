@@ -1,5 +1,8 @@
 from tardis.adapters.sites.lancium import LanciumAdapter
-from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
+from tardis.exceptions.tardisexceptions import (
+    TardisResourceStatusUpdateFailed,
+    TardisError,
+)
 from tardis.interfaces.siteadapter import ResourceStatus
 from tardis.utilities.attributedict import AttributeDict
 
@@ -198,6 +201,19 @@ class TestLanciumAdapter(TestCase):
 
         self.mocked_lancium_api.jobs.show_jobs.assert_called_once()
 
+    def test_resource_status_failed(self):
+        self.mocked_lancium_api.jobs.show_jobs.side_effect = AuthError(
+            "operation=auth_error", {}
+        )
+        with self.assertRaises(AuthError):
+            run_async(
+                self.adapter.resource_status,
+                resource_attributes=AttributeDict(
+                    remote_resource_uuid=123,
+                    drone_uuid="testsite-089123",
+                ),
+            )
+
     def test_stop_resource(self):
         def run_it():
             return run_async(
@@ -232,4 +248,6 @@ class TestLanciumAdapter(TestCase):
             run_it()
 
     def test_exception_handling(self):
-        ...
+        with self.assertRaises(TardisError):
+            with self.adapter.handle_exceptions():
+                raise AuthError("test", "test")
