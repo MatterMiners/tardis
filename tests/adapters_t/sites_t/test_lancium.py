@@ -1,4 +1,5 @@
 from tardis.adapters.sites.lancium import LanciumAdapter
+from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from tardis.interfaces.siteadapter import ResourceStatus
 from tardis.utilities.attributedict import AttributeDict
 
@@ -6,6 +7,7 @@ from simple_rest_client.exceptions import AuthError
 
 from ...utilities.utilities import run_async, set_awaitable_return_value
 
+from datetime import datetime
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -58,6 +60,22 @@ class TestLanciumAdapter(TestCase):
             {"job": {"id": 123, "status": "created", "name": "testsite-089123"}},
         )
         set_awaitable_return_value(self.mocked_lancium_api.jobs.submit_job, {})
+        set_awaitable_return_value(
+            self.mocked_lancium_api.jobs.show_jobs,
+            {
+                "jobs": [
+                    {"id": 123, "status": "created", "name": "testsite-089123"},
+                    {"id": 124, "status": "submitted", "name": "testsite-089124"},
+                    {"id": 125, "status": "queued", "name": "testsite-089125"},
+                    {"id": 126, "status": "ready", "name": "testsite-089126"},
+                    {"id": 127, "status": "running", "name": "testsite-089127"},
+                    {"id": 128, "status": "error", "name": "testsite-089128"},
+                    {"id": 129, "status": "finished", "name": "testsite-089129"},
+                    {"id": 130, "status": "delete pending", "name": "testsite-089130"},
+                    {"id": 131, "status": "deleted", "name": "testsite-089131"},
+                ]
+            },
+        )
 
     def test_deploy_resource(self):
         self.assertEqual(
@@ -115,16 +133,85 @@ class TestLanciumAdapter(TestCase):
             )
 
     def test_machine_meta_data(self):
-        ...
+        self.assertEqual(
+            self.adapter.machine_meta_data, AttributeDict(Cores=8, Memory=20, Disk=20)
+        )
 
     def test_machine_type(self):
-        ...
+        self.assertEqual(self.adapter.machine_type, "test2large")
 
     def test_site_name(self):
-        ...
+        self.assertEqual(self.adapter.site_name, "TestSite")
 
     def test_resource_status(self):
-        ...
+        test_matrix = [
+            (123, ResourceStatus.Booting),
+            (124, ResourceStatus.Booting),
+            (125, ResourceStatus.Booting),
+            (126, ResourceStatus.Booting),
+            (127, ResourceStatus.Running),
+            (128, ResourceStatus.Error),
+            (129, ResourceStatus.Stopped),
+            (130, ResourceStatus.Stopped),
+            (131, ResourceStatus.Deleted),
+        ]
+        for job_id, resource_status in test_matrix:
+            response = {
+                key: value
+                for key, value in run_async(
+                    self.adapter.resource_status,
+                    resource_attributes=AttributeDict(
+                        remote_resource_uuid=job_id,
+                        drone_uuid=f"testsite-089{job_id}",
+                    ),
+                ).items()
+                if key not in ["created", "updated"]
+            }
+            self.assertEqual(
+                {
+                    "remote_resource_uuid": job_id,
+                    "drone_uuid": f"testsite-089{job_id}",
+                    "resource_status": resource_status,
+                },
+                response,
+            )
+
+        # check that resource not in the show_job list and older than maxAge
+        # have status deleted
+        response = {
+            key: value
+            for key, value in run_async(
+                self.adapter.resource_status,
+                resource_attributes=AttributeDict(
+                    remote_resource_uuid=999,
+                    drone_uuid="testsite-089999",
+                    created=datetime.fromtimestamp(0),
+                ),
+            ).items()
+            if key not in ["created", "updated"]
+        }
+        self.assertEqual(
+            {
+                "remote_resource_uuid": 999,
+                "drone_uuid": "testsite-089999",
+                "resource_status": ResourceStatus.Deleted,
+            },
+            response,
+        )
+
+        # check that resources not in the show_job list and younger than maxAge
+        # raise TardisResourceStatusUpdateFailed
+        with self.assertRaises(TardisResourceStatusUpdateFailed):
+            run_async(
+                self.adapter.resource_status,
+                resource_attributes=AttributeDict(
+                    remote_resource_uuid=999,
+                    drone_uuid="testsite-089999",
+                    created=datetime.now(),
+                ),
+            )
+
+        self.mocked_lancium_api.jobs.show_jobs.assert_called_once()
 
     def test_stop_resource(self):
         ...
