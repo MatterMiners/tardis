@@ -15,6 +15,7 @@ Added
 * Introduce a TARDIS REST API to query the state of resources from SqlRegistry
 * Added support for manual draining of drones using the REST API
 * Add support for passing environment variables as executable arguments to support HTCondor grid universe
+* Added a new site adapter to use Lancium compute as resource provider
 
 Changed
 -------
