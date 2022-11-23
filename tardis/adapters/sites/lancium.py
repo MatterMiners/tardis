@@ -114,7 +114,7 @@ class LanciumAdapter(SiteAdapter):
                     "status": "deleted",
                 }
         logger.debug(f"{self.site_name} has status {resource_status}.")
-        resource_attributes["updated"]=datetime.now()
+        resource_attributes["updated"] = datetime.now()
         return convert_to_attribute_dict(
             {**resource_attributes, **self.handle_response(resource_status)}
         )
