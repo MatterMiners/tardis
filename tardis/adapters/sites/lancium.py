@@ -105,7 +105,7 @@ class LanciumAdapter(SiteAdapter):
             resource_status = self._lancium_status[resource_uuid]
         except KeyError as err:
             if (
-                self._lancium_status._last_update - resource_attributes.created
+                self._lancium_status.last_update - resource_attributes.created
             ).total_seconds() < 0:
                 raise TardisResourceStatusUpdateFailed from err
             else:
@@ -114,7 +114,7 @@ class LanciumAdapter(SiteAdapter):
                     "status": "deleted",
                 }
         logger.debug(f"{self.site_name} has status {resource_status}.")
-        resource_attributes.update(updated=datetime.now())
+        resource_attributes["updated"]=datetime.now()
         return convert_to_attribute_dict(
             {**resource_attributes, **self.handle_response(resource_status)}
         )
