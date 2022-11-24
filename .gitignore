@@ -113,7 +113,7 @@ test_scripts/
 *.db
 
 # Ignore configurations
-cobald.yml
+cobald*.yml
 *tardis.yml
 
 #Ignore cloudinit files

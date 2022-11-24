@@ -1,4 +1,4 @@
-.. Created by changelog.py at 2022-11-11, command
+.. Created by changelog.py at 2022-11-23, command
    '/Users/giffler/.cache/pre-commit/repor6pnmwlm/py_env-python3.10/bin/changelog docs/source/changes compile --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
@@ -6,7 +6,7 @@
 CHANGELOG
 #########
 
-[Unreleased] - 2022-11-11
+[Unreleased] - 2022-11-23
 =========================
 
 Added
@@ -15,6 +15,7 @@ Added
 * Introduce a TARDIS REST API to query the state of resources from SqlRegistry
 * Added support for manual draining of drones using the REST API
 * Add support for passing environment variables as executable arguments to support HTCondor grid universe
+* Added a new site adapter to use Lancium compute as resource provider
 
 Changed
 -------

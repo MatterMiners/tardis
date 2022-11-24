@@ -220,5 +220,4 @@ Available configuration options
 .. content-tabs:: left-col
 
     Your favorite monitoring is currently not supported?
-    Please, have a look at
-    :ref:`how to contribute.<ref_contribute_plugin>`
+    Please, have a look at how to contribute.
