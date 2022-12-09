@@ -145,7 +145,7 @@ class TestSqliteRegistry(TestCase):
         # Database content has to be checked several times
         # Define inline function to re-use code
         def check_db_content():
-            for row, site_name in zip(
+            for row, site_name in zip(  # noqa B905
                 self.execute_db_query("SELECT site_name FROM Sites"), test_site_names
             ):
                 self.assertEqual(row[0], site_name)

@@ -112,7 +112,7 @@ class AsyncBulkCall(Generic[T, R]):
     async def _bulk_dispatch(self):
         """Collect tasks into bulks and dispatch them for command execution"""
         while not self._queue.empty():
-            bulk = list(zip(*(await self._get_bulk())))
+            bulk = list(zip(*(await self._get_bulk())))  # noqa B905
             if not bulk:
                 continue
             tasks, futures = bulk
@@ -171,5 +171,5 @@ class AsyncBulkCall(Generic[T, R]):
             for future in futures:
                 future.set_exception(task_exception)
         else:
-            for future, result in zip(futures, results):
+            for future, result in zip(futures, results):  # noqa B905
                 future.set_result(result)

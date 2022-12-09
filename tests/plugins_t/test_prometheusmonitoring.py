@@ -74,7 +74,9 @@ class TestPrometheusMonitoring(TestCase):
         assert all(
             [
                 gauge.get({}) == result
-                for (gauge, result) in zip(self.plugin._gauges.values(), values)
+                for (gauge, result) in zip(  # noqa B905
+                    self.plugin._gauges.values(), values
+                )
             ]
         )
 
