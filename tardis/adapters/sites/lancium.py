@@ -5,6 +5,7 @@ from ...interfaces.siteadapter import SiteAdapter, ResourceStatus
 from ...utilities.attributedict import AttributeDict, convert_to_attribute_dict
 from ...utilities.asynccachemap import AsyncCacheMap
 from ...utilities.staticmapping import StaticMapping
+from ...utilities.utils import deep_update
 
 from contextlib import contextmanager
 from datetime import datetime
@@ -84,7 +85,7 @@ class LanciumAdapter(SiteAdapter):
                 resource_attributes.obs_machine_meta_data_translation_mapping,
             ).items()
         ]
-        specs.update(self.machine_type_configuration)
+        specs = deep_update(specs, self.machine_type_configuration)
         create_response = await self.client.jobs.create_job(job=specs)
         logger.debug(f"{self.site_name} create job returned {create_response}")
         submit_response = await self.client.jobs.submit_job(
