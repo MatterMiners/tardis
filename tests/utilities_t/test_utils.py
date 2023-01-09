@@ -4,6 +4,7 @@ from tardis.resources.dronestates import RequestState
 from tardis.utilities.attributedict import AttributeDict
 from tardis.utilities.utils import (
     csv_parser,
+    deep_update,
     disable_logging,
     htcondor_cmd_option_formatter,
     load_states,
@@ -103,6 +104,97 @@ class TestCSVParser(TestCase):
                 Features="site-124",
                 NodeHost="host-2",
             ),
+        )
+
+
+class TestDeepUpdate(TestCase):
+    def test_deep_update_simple_dict(self):
+        original_mapping = {"test": 123, "NoChange": 789}
+        mapping_update = {"test": 456}
+        updated_mapping = {"test": 456, "NoChange": 789}
+
+        self.assertDictEqual(
+            updated_mapping, deep_update(original_mapping, mapping_update)
+        )
+
+    def test_deep_update_nested_dict(self):
+        original_mapping = {
+            "test": {"test": 123},
+            "NoChange1": 123,
+            "NoChange2": {"Test": 789},
+        }
+        mapping_update = {"test": {"test": 123}}
+        updated_mapping = {
+            "test": {"test": 123},
+            "NoChange1": 123,
+            "NoChange2": {"Test": 789},
+        }
+
+        self.assertDictEqual(
+            updated_mapping, deep_update(original_mapping, mapping_update)
+        )
+
+    def test_deep_update_list_in_nested_dict(self):
+        original_mapping = {
+            "test": [{"test1": 123}, {"test2": 456}],
+            "test2": [1, 2, 3],
+            "NoChange1": 123,
+            "NoChange2": {"Test": 789},
+            "NoChange3": [0, 9, 8],
+        }
+
+        mapping_update = {"test": [{"test3": 789}], "test2": [4, 5, 6]}
+        updated_mapping = {
+            "test": [{"test1": 123}, {"test2": 456}, {"test3": 789}],
+            "test2": [1, 2, 3, 4, 5, 6],
+            "NoChange1": 123,
+            "NoChange2": {"Test": 789},
+            "NoChange3": [0, 9, 8],
+        }
+
+        self.assertDictEqual(
+            updated_mapping, deep_update(original_mapping, mapping_update)
+        )
+
+        # check that existing list entries are not duplicated
+        mapping_update = {"test": [{"test2": 456}]}
+        updated_mapping = {
+            "test": [{"test1": 123}, {"test2": 456}],
+            "test2": [1, 2, 3],
+            "NoChange1": 123,
+            "NoChange2": {"Test": 789},
+            "NoChange3": [0, 9, 8],
+        }
+
+        self.assertDictEqual(
+            updated_mapping, deep_update(original_mapping, mapping_update)
+        )
+
+    def test_preservation_of_original_dicts(self):
+        original_mapping = {
+            "test": [{"test1": 123}, {"test2": 456}],
+            "test2": [1, 2, 3],
+            "NoChange1": 123,
+            "NoChange2": {"Test": 789},
+            "NoChange3": [0, 9, 8],
+        }
+
+        mapping_update = {"test": [{"test3": 789}], "test2": [4, 5, 6]}
+        deep_update(original_mapping, mapping_update)
+
+        self.assertDictEqual(
+            original_mapping,
+            {
+                "test": [{"test1": 123}, {"test2": 456}],
+                "test2": [1, 2, 3],
+                "NoChange1": 123,
+                "NoChange2": {"Test": 789},
+                "NoChange3": [0, 9, 8],
+            },
+        )
+
+        self.assertDictEqual(
+            mapping_update, {"test": [{"test3": 789}], "test2": [4, 5, 6]}
         )
 
 

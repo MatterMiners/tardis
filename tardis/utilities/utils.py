@@ -1,8 +1,9 @@
 from .attributedict import AttributeDict
 
 from contextlib import contextmanager
+from copy import deepcopy
 from io import StringIO
-from typing import Any, Callable, List, TypeVar, Tuple
+from typing import Any, Callable, List, Mapping, TypeVar, Tuple
 
 
 import csv
@@ -64,6 +65,32 @@ def csv_parser(
                 key: value if value not in replacements.keys() else replacements[value]
                 for key, value in row.items()
             }
+
+
+KeyType = TypeVar("KeyType")
+
+
+def deep_update(
+    original_mapping: Mapping[KeyType, Any],
+    mapping_update: Mapping[KeyType, Any],
+) -> Mapping[KeyType, Any]:
+    from collections.abc import Mapping
+
+    updated_mapping = deepcopy(original_mapping)
+    for key, value in mapping_update.items():
+        if isinstance(value, Mapping):
+            updated_mapping[key] = deep_update(value, original_mapping.get(key, {}))
+        elif isinstance(value, List):
+            updated_mapping[key] = []
+            for item in original_mapping.get(key, []):
+                # do not allow duplicate entries in list, so only append entries
+                # not to update
+                if item not in value:
+                    updated_mapping[key].append(deepcopy(item))
+            updated_mapping[key].extend(deepcopy(value))
+        else:
+            updated_mapping[key] = value
+    return updated_mapping
 
 
 @contextmanager
