@@ -1,8 +1,7 @@
 FROM rockylinux:9
 LABEL maintainer="Manuel Giffels <giffels@gmail.com>"
 
-RUN yum -y install epel-release && yum clean all
-RUN yum -y install curl && yum clean all
+RUN yum -y install epel-release && yum -y install curl && yum clean all
 
 RUN curl -sL https://rpm.nodesource.com/setup_18.x | bash -
 
