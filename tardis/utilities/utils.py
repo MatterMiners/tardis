@@ -76,8 +76,8 @@ def deep_update(
 ) -> Mapping[KeyType, Any]:
     """
     Perform a deep ``dict.update``
-    
-    Recursively updates one mapping by another, merging nested ``dict``\ s and ``list``\ s.
+
+    Recursively updates one mapping by another, merging nested ``dict``'s and ``list``'s.
     """
 
     updated_mapping = deepcopy(original_mapping)
