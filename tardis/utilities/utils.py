@@ -85,13 +85,13 @@ def deep_update(
         if isinstance(value, MutableMapping):
             updated_mapping[key] = deep_update(original_mapping.get(key, {}), value)
         elif isinstance(value, list):
-            updated_mapping[key] = []
-            for item in original_mapping.get(key, []):
-                # do not allow duplicate entries in list, so only append entries
-                # not to update
-                if item not in value:
-                    updated_mapping[key].append(deepcopy(item))
-            updated_mapping[key].extend(deepcopy(value))
+            updated_mapping[key] = deepcopy(original_mapping.get(key, []))
+            # do not duplicate entries which are already in the list
+            updated_mapping[key].extend(
+                deepcopy(item)
+                for item in value
+                if item not in updated_mapping[key]
+            )
         else:
             updated_mapping[key] = value
     return updated_mapping
