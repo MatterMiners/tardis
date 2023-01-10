@@ -143,7 +143,10 @@ class TestDeepUpdate(TestCase):
             "NoChange3": [0, 9, 8],
         }
 
-        mapping_update = {"test": [{"test3": 789}], "test2": [4, 5, 6]}
+        mapping_update = {
+            "test": [{"test3": 789}],
+             "test2": [4, 5, 6],
+         }
         updated_mapping = {
             "test": [{"test1": 123}, {"test2": 456}, {"test3": 789}],
             "test2": [1, 2, 3, 4, 5, 6],
