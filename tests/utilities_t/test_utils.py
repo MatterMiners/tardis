@@ -111,7 +111,7 @@ class TestDeepUpdate(TestCase):
     def test_deep_update_simple_dict(self):
         original_mapping = {"test": 123, "NoChange": 789}
         mapping_update = {"test": 456}
-        updated_mapping = {"NoChange": 789, "test": 456}
+        updated_mapping = {"test": 456, "NoChange": 789}
 
         self.assertDictEqual(
             updated_mapping, deep_update(original_mapping, mapping_update)
@@ -123,11 +123,11 @@ class TestDeepUpdate(TestCase):
             "NoChange1": 123,
             "NoChange2": {"Test": 789},
         }
-        mapping_update = {"test": {"test": 456}}
+        mapping_update = {"test": {"test": 123}}
         updated_mapping = {
+            "test": {"test": 123},
             "NoChange1": 123,
             "NoChange2": {"Test": 789},
-            "test": {"test": 456},
         }
 
         self.assertDictEqual(
