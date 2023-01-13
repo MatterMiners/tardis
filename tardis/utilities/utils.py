@@ -77,8 +77,7 @@ def deep_update(
     """
     Perform a deep ``dict.update``
 
-    Recursively updates one mapping by another, merging nested ``dict``'s and
-    ``list``'s.
+    Recursively updates one mapping by another, merging nested ``dict``'s and ``list``'s.
     """
 
     updated_mapping = deepcopy(original_mapping)
@@ -89,7 +88,9 @@ def deep_update(
             updated_mapping[key] = deepcopy(original_mapping.get(key, []))
             # do not duplicate entries which are already in the list
             updated_mapping[key].extend(
-                deepcopy(item) for item in value if item not in updated_mapping[key]
+                deepcopy(item)
+                for item in value
+                if item not in updated_mapping[key]
             )
         else:
             updated_mapping[key] = value
