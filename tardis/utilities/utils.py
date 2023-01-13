@@ -3,7 +3,7 @@ from .attributedict import AttributeDict
 from contextlib import contextmanager
 from copy import deepcopy
 from io import StringIO
-from typing import Any, Callable, List, Mapping, MutableMapping, TypeVar, Tuple
+from typing import Any, Callable, List, Mapping, TypeVar, Tuple
 
 
 import csv
@@ -71,9 +71,9 @@ KeyType = TypeVar("KeyType")
 
 
 def deep_update(
-    original_mapping: MutableMapping[KeyType, Any],
+    original_mapping: Mapping[KeyType, Any],
     mapping_update: Mapping[KeyType, Any],
-) -> MutableMapping[KeyType, Any]:
+) -> Mapping[KeyType, Any]:
     """
     Perform a deep ``dict.update``
 
@@ -82,7 +82,7 @@ def deep_update(
 
     updated_mapping = deepcopy(original_mapping)
     for key, value in mapping_update.items():
-        if isinstance(value, MutableMapping):
+        if isinstance(value, Mapping):
             updated_mapping[key] = deep_update(original_mapping.get(key, {}), value)
         elif isinstance(value, list):
             updated_mapping[key] = []
