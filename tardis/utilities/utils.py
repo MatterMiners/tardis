@@ -74,17 +74,13 @@ def deep_update(
     original_mapping: Mapping[KeyType, Any],
     mapping_update: Mapping[KeyType, Any],
 ) -> Mapping[KeyType, Any]:
-    """
-    Perform a deep ``dict.update``
-    
-    Recursively updates one mapping by another, merging nested ``dict``\ s and ``list``\ s.
-    """
+    from collections.abc import Mapping
 
     updated_mapping = deepcopy(original_mapping)
     for key, value in mapping_update.items():
         if isinstance(value, Mapping):
-            updated_mapping[key] = deep_update(original_mapping.get(key, {}), value)
-        elif isinstance(value, list):
+            updated_mapping[key] = deep_update(value, original_mapping.get(key, {}))
+        elif isinstance(value, List):
             updated_mapping[key] = []
             for item in original_mapping.get(key, []):
                 # do not allow duplicate entries in list, so only append entries
