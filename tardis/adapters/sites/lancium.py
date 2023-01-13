@@ -71,20 +71,27 @@ class LanciumAdapter(SiteAdapter):
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
-        specs = dict(name=resource_attributes.drone_uuid)
-        specs["resources"] = dict(
-            core_count=self.machine_meta_data.Cores,
-            memory=self.machine_meta_data.Memory,
-            scratch=self.machine_meta_data.Disk,
+        specs = dict(self.machine_type_configuration)
+
+        # Overwrite, update or extend entries necessary for TARDIS to work properly
+        specs["name"] = resource_attributes.drone_uuid
+        specs.setdefault("resources", {}).update(
+            dict(
+                core_count=self.machine_meta_data.Cores,
+                memory=self.machine_meta_data.Memory,
+                scratch=self.machine_meta_data.Disk,
+            )
         )
-        specs["environment"] = [
-            {"variable": f"TardisDrone{key}", "value": str(value)}
-            for key, value in self.drone_environment(
-                resource_attributes.drone_uuid,
-                resource_attributes.obs_machine_meta_data_translation_mapping,
-            ).items()
-        ]
-        specs.update(self.machine_type_configuration)
+        specs.setdefault("environment", []).extend(
+            [
+                {"variable": f"TardisDrone{key}", "value": str(value)}
+                for key, value in self.drone_environment(
+                    resource_attributes.drone_uuid,
+                    resource_attributes.obs_machine_meta_data_translation_mapping,
+                ).items()
+            ]
+        )
+
         create_response = await self.client.jobs.create_job(job=specs)
         logger.debug(f"{self.site_name} create job returned {create_response}")
         submit_response = await self.client.jobs.submit_job(
