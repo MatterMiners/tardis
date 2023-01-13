@@ -55,6 +55,7 @@ class TestLanciumAdapter(TestCase):
                         variable="SITECONFIG_PATH", value="T1_DE_KIT/KIT-Lancium"
                     )
                 ],
+                resources=AttributeDict(node_exclusive=True),
             )
         )
         test_site_config.MachineMetaData = AttributeDict(
@@ -117,13 +118,21 @@ class TestLanciumAdapter(TestCase):
                 "image": "lancium/ubuntu",
                 "command_line": "sleep 500",
                 "max_run_time": 600,
-                "resources": {"core_count": 8, "memory": 20, "scratch": 20},
+                "resources": {
+                    "node_exclusive": True,
+                    "core_count": 8,
+                    "memory": 20,
+                    "scratch": 20,
+                },
                 "environment": [
-                    {"value": "8", "variable": "TardisDroneCores"},
-                    {"value": "20", "variable": "TardisDroneMemory"},
-                    {"value": "20", "variable": "TardisDroneDisk"},
-                    {"value": "testsite-089123", "variable": "TardisDroneUuid"},
-                    {"value": "T1_DE_KIT/KIT-Lancium", "variable": "SITECONFIG_PATH"},
+                    {
+                        "variable": "SITECONFIG_PATH",
+                        "value": "T1_DE_KIT/KIT-Lancium",
+                    },
+                    {"variable": "TardisDroneCores", "value": "8"},
+                    {"variable": "TardisDroneMemory", "value": "20"},
+                    {"variable": "TardisDroneDisk", "value": "20"},
+                    {"variable": "TardisDroneUuid", "value": "testsite-089123"},
                 ],
             },
             self.mocked_lancium_api.jobs.create_job.call_args[1]["job"],
