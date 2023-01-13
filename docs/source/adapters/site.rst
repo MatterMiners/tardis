@@ -447,19 +447,28 @@ Available adapter configuration options
 
 .. content-tabs:: left-col
 
-    +---------------------+---------------------------------------------------------------------+-----------------+
-    | Option              | Short Description                                                   | Requirement     |
-    +=====================+=====================================================================+=================+
-    | auth_url            | The end point of the OpenStack API to contact.                      |  **Required**   |
-    +---------------------+---------------------------------------------------------------------+-----------------+
-    | username            | Your OpenStack API username to authenticate yourself.               |  **Required**   |
-    +---------------------+---------------------------------------------------------------------+-----------------+
-    | password            | Your OpenStack API password to authenticate yourself.               |  **Required**   |
-    +---------------------+---------------------------------------------------------------------+-----------------+
-    | user_domain_name    | The name of the OpenStack user domain.                              |  **Required**   |
-    +---------------------+---------------------------------------------------------------------+-----------------+
-    | project_domain_name | The name of the OpenStack project domain.                           |  **Required**   |
-    +---------------------+---------------------------------------------------------------------+-----------------+
+    +-------------------------------+---------------------------------------------------------------------+-----------------+
+    | Option                        | Short Description                                                   | Requirement     |
+    +===============================+=====================================================================+=================+
+    | auth_url                      | The end point of the OpenStack API to contact.                      |  **Required**   |
+    +-------------------------------+---------------------------------------------------------------------+-----------------+
+    | username                      | Your OpenStack API username to authenticate yourself.               |  **Optional**   |
+    +-------------------------------+---------------------------------------------------------------------+-----------------+
+    | password                      | Your OpenStack API password to authenticate yourself.               |  **Optional**   |
+    +-------------------------------+---------------------------------------------------------------------+-----------------+
+    | user_domain_name              | The name of the OpenStack user domain.                              |  **Optional**   |
+    +-------------------------------+---------------------------------------------------------------------+-----------------+
+    | project_domain_name           | The name of the OpenStack project domain.                           |  **Optional**   |
+    +-------------------------------+---------------------------------------------------------------------+-----------------+
+    | application_credential_id     | Your application credential ID to authenticate yourself.            |  **Optional**   |
+    +-------------------------------+---------------------------------------------------------------------+-----------------+
+    | application_credential_secret | Your application credential secret to authenticate yourself.        |  **Optional**   |
+    +-------------------------------+---------------------------------------------------------------------+-----------------+
+
+    .. note::
+        Either ``username``, ``password`` , ``user_domain_name`` and ``project_domain_name`` or
+        ``application_credential_id`` and ``application_credential_secret`` are mandatory to authenticate against the
+        OpenStack endpoint.
 
     All configuration entries in the `MachineTypeConfiguration` section of the machine types are
     directly added as keyword arguments to the OpenStack API `create-server` call. All available options are
