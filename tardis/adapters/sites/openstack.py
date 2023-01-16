@@ -15,6 +15,7 @@ from tardis.interfaces.siteadapter import SiteAdapter
 from tardis.utilities.attributedict import AttributeDict
 from tardis.utilities.staticmapping import StaticMapping
 
+
 from asyncio import TimeoutError
 from contextlib import contextmanager
 from datetime import datetime
@@ -30,16 +31,21 @@ class OpenStackAdapter(SiteAdapter):
         self._machine_type = machine_type
         self._site_name = site_name
 
-        auth = AuthPassword(
-            auth_url=self.configuration.auth_url,
-            username=self.configuration.username,
-            password=self.configuration.password,
-            project_name=self.configuration.project_name,
-            user_domain_name=self.configuration.user_domain_name,
-            project_domain_name=self.configuration.project_domain_name,
-            application_credential_id=self.configuration.application_credential_id,
-            application_credential_secret=self.configuration.application_credential_secret,  # noqa B950
-        )
+        try:
+            auth = AuthPassword(
+                auth_url=self.configuration.auth_url,
+                username=self.configuration.username,
+                password=self.configuration.password,
+                project_name=self.configuration.project_name,
+                user_domain_name=self.configuration.user_domain_name,
+                project_domain_name=self.configuration.project_domain_name,
+            )
+        except AttributeError:
+            auth = AuthPassword(
+                auth_url=self.configuration.auth_url,
+                application_credential_id=self.configuration.application_credential_id,
+                application_credential_secret=self.configuration.application_credential_secret,  # noqa B950
+            )
 
         self.nova = NovaClient(session=auth)
 
