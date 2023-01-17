@@ -40,19 +40,23 @@ class TestOpenStackAdapter(TestCase):
         cls.mock_openstack_api_patcher.stop()
 
     def setUp(self):
-        config = self.mock_config.return_value
-        test_site_config = config.TestSite
-        test_site_config.auth_url = "https://test.nova.client.local"
-        test_site_config.username = "TestUser"
-        test_site_config.password = "test123"
-        test_site_config.project_name = "TestProject"
-        test_site_config.user_domain_name = "TestDomain"
-        test_site_config.project_domain_name = "TestProjectDomain"
-        test_site_config.MachineTypeConfiguration = AttributeDict(
-            test2large=AttributeDict(imageRef="bc613271-6a54-48ca-9222-47e009dc0c29")
-        )
-        test_site_config.MachineMetaData = AttributeDict(
-            test2large=AttributeDict(Cores=128)
+        self.config = self.mock_config.return_value
+        self.config.TestSite = AttributeDict(
+            auth_url="https://test.nova.client.local",
+            username="TestUser",
+            password="test123",
+            project_name="TestProject",
+            user_domain_name="TestDomain",
+            project_domain_name="TestProjectDomain",
+            MachineTypes=["test2large"],
+            MachineTypeConfiguration=AttributeDict(
+                test2large=AttributeDict(
+                    imageRef="bc613271-6a54-48ca-9222-47e009dc0c29"
+                )
+            ),
+            MachineMetaData=AttributeDict(
+                test2large=AttributeDict(Cores=128, Memory=256, Disk=1000)
+            ),
         )
 
         openstack_api = self.mock_openstack_api.return_value
@@ -90,6 +94,24 @@ class TestOpenStackAdapter(TestCase):
     def tearDown(self):
         self.mock_openstack_api.reset_mock()
 
+    def test_auth_setup(self):
+        # test auth with username, password, etc.
+        OpenStackAdapter(machine_type="test2large", site_name="TestSite")
+
+        for key in (
+            "username",
+            "password",
+            "project_name",
+            "user_domain_name",
+            "project_domain_name",
+        ):
+            delattr(self.config.TestSite, key)
+
+        self.config.TestSite["application_credential_id"] = "TestAppId"
+        self.config.TestSite["application_credential_secret"] = "TestAppSecret"
+        # test auth with application credentials
+        OpenStackAdapter(machine_type="test2large", site_name="TestSite")
+
     def test_deploy_resource(self):
         self.assertEqual(
             run_async(
@@ -110,7 +132,8 @@ class TestOpenStackAdapter(TestCase):
 
     def test_machine_meta_data(self):
         self.assertEqual(
-            self.openstack_adapter.machine_meta_data, AttributeDict(Cores=128)
+            self.openstack_adapter.machine_meta_data,
+            AttributeDict(Cores=128, Disk=1000, Memory=256),
         )
 
     def test_machine_type(self):
