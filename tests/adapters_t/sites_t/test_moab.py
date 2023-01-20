@@ -131,7 +131,7 @@ TEST_RESOURCE_STATE_TRANSLATION_RESPONSE = "\n\n".join(
   <job Account="bw16g013" CompletionCode="CNCLD" EEDuration="2729" GJID="76242{num:02}" Group="ka_etp" JobID="76242{num:02}" JobName="startVM.py" ReqAWDuration="360" ReqProcs="20" StartTime="0" StatPSDed="0.000000" StatPSUtl="0.000000" State="{resource_status}" SubmissionTime="1583331813" SuspendDuration="0" User="ka_qb1555"/>
  </queue>
 </Data>
-"""  # noqa: B950
+"""  # noqa: B950, B907
     for num, (resource_status, _) in enumerate(STATE_TRANSLATIONS)
 )
 

@@ -26,7 +26,7 @@ logger = logging.getLogger("cobald.runtime.tardis.adapters.sites.slurm")
 async def slurm_status_updater(executor):
     attributes = dict(JobId="%A", Host="%N", State="%T")
     attributes_string = "|".join(attributes.values())
-    cmd = f'squeue -o "{attributes_string}" -h -t all'
+    cmd = f"squeue -o {attributes_string!r} -h -t all"
 
     slurm_resource_status = {}
     logger.debug("Slurm status update is started.")

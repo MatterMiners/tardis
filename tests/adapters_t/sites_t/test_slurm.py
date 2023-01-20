@@ -270,7 +270,7 @@ class TestSlurmAdapter(TestCase):
         )
 
         self.mock_executor.return_value.run_command.assert_called_with(
-            'squeue -o "%A|%N|%T" -h -t all'
+            "squeue -o '%A|%N|%T' -h -t all"
         )
 
     @mock_executor_run_command(TEST_RESOURCE_STATUS_RESPONSE_RUNNING)
@@ -294,7 +294,7 @@ class TestSlurmAdapter(TestCase):
         )
 
         self.mock_executor.return_value.run_command.assert_called_with(
-            'squeue -o "%A|%N|%T" -h -t all'
+            "squeue -o '%A|%N|%T' -h -t all"
         )
 
     @mock_executor_run_command(TEST_RESOURCE_STATUS_RESPONSE_ALL_STATES)
@@ -337,7 +337,7 @@ class TestSlurmAdapter(TestCase):
         self.mock_executor.return_value.run_command.called_once()
 
         self.mock_executor.return_value.run_command.assert_called_with(
-            'squeue -o "%A|%N|%T" -h -t all'
+            "squeue -o '%A|%N|%T' -h -t all"
         )
 
     def test_resource_status_raise_update_failed(self):
@@ -381,7 +381,7 @@ class TestSlurmAdapter(TestCase):
         self.assertEqual(response.resource_status, ResourceStatus.Deleted)
 
         self.mock_executor.return_value.run_command.assert_called_with(
-            'squeue -o "%A|%N|%T" -h -t all'
+            "squeue -o '%A|%N|%T' -h -t all"
         )
 
     @mock_executor_run_command(
@@ -413,7 +413,7 @@ class TestSlurmAdapter(TestCase):
         )
 
         self.mock_executor.return_value.run_command.assert_called_with(
-            'squeue -o "%A|%N|%T" -h -t all'
+            "squeue -o '%A|%N|%T' -h -t all"
         )
 
     @mock_executor_run_command(stdout="", stderr="", exit_code=0)
