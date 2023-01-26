@@ -109,7 +109,7 @@ class LanciumAdapter(SiteAdapter):
         # since map is updated asynchronously.
         try:
             resource_uuid = resource_attributes.remote_resource_uuid
-            resource_status = self._lancium_status[resource_uuid]
+            resource_status = self._lancium_status[int(resource_uuid)]
         except KeyError as err:
             if (
                 self._lancium_status.last_update - resource_attributes.created
