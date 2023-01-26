@@ -128,14 +128,14 @@ class LanciumAdapter(SiteAdapter):
 
     async def stop_resource(self, resource_attributes: AttributeDict):
         response = await self.client.jobs.terminate_job(
-            id=resource_attributes.remote_resource_uuid
+            id=int(resource_attributes.remote_resource_uuid)
         )
         logger.debug(f"{self.site_name} stop resource returned {response}")
         return response
 
     async def terminate_resource(self, resource_attributes: AttributeDict):
         response = await self.client.jobs.delete_job(
-            id=resource_attributes.remote_resource_uuid
+            id=int(resource_attributes.remote_resource_uuid)
         )
         logger.debug(f"{self.site_name} terminate resource returned {response}")
         return response

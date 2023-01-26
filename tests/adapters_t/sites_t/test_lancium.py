@@ -238,37 +238,40 @@ class TestLanciumAdapter(TestCase):
             )
 
     def test_stop_resource(self):
-        def run_it():
+        def run_it(job_id):
             return run_async(
                 self.adapter.stop_resource,
-                resource_attributes=AttributeDict(remote_resource_uuid=123),
+                resource_attributes=AttributeDict(remote_resource_uuid=job_id),
             )
 
-        run_it()
-
-        self.mocked_lancium_api.jobs.terminate_job.assert_called_with(id=123)
+        for job_id in (123, "123"):
+            run_it(job_id)
+            self.mocked_lancium_api.jobs.terminate_job.assert_called_with(
+                id=int(job_id)
+            )
 
         self.mocked_lancium_api.jobs.terminate_job.side_effect = AuthError(
             "operation=auth_error", {}
         )
         with self.assertRaises(AuthError):
-            run_it()
+            run_it(123)
 
     def test_terminate_resource(self):
-        def run_it():
+        def run_it(job_id):
             return run_async(
                 self.adapter.terminate_resource,
-                resource_attributes=AttributeDict(remote_resource_uuid=123),
+                resource_attributes=AttributeDict(remote_resource_uuid=job_id),
             )
 
-        run_it()
-        self.mocked_lancium_api.jobs.delete_job.assert_called_with(id=123)
+        for job_id in (123, "123"):
+            run_it(job_id)
+            self.mocked_lancium_api.jobs.delete_job.assert_called_with(id=int(job_id))
 
         self.mocked_lancium_api.jobs.delete_job.side_effect = AuthError(
             "operation=auth_error", {}
         )
         with self.assertRaises(AuthError):
-            run_it()
+            run_it(123)
 
     def test_exception_handling(self):
         with self.assertRaises(TardisError):
