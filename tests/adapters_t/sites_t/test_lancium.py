@@ -179,40 +179,48 @@ class TestLanciumAdapter(TestCase):
             (131, ResourceStatus.Deleted),
         ]
         for job_id, resource_status in test_matrix:
+            # remote_resource_uuid is stored as VARCHAR(255) in the drone registry.
+            # In case drones are restored after a shutdown of TARDIS, we need to ensure
+            # that the resource_status function can also handle remote_resource_uuids
+            # of type string.
+            for translation in (str, int):
+                response = {
+                    key: value
+                    for key, value in run_it(translation(job_id)).items()
+                    if key not in ["created", "updated"]
+                }
+                self.assertEqual(
+                    {
+                        "remote_resource_uuid": job_id,
+                        "drone_uuid": f"testsite-089{job_id}",
+                        "resource_status": resource_status,
+                    },
+                    response,
+                )
+
+        # check that resource not in the show_job list and older than maxAge
+        # have status deleted
+        for translation in (str, int):
             response = {
                 key: value
-                for key, value in run_it(job_id).items()
+                for key, value in run_it(
+                    translation(999), datetime.fromtimestamp(0)
+                ).items()
                 if key not in ["created", "updated"]
             }
             self.assertEqual(
                 {
-                    "remote_resource_uuid": job_id,
-                    "drone_uuid": f"testsite-089{job_id}",
-                    "resource_status": resource_status,
+                    "remote_resource_uuid": 999,
+                    "drone_uuid": "testsite-089999",
+                    "resource_status": ResourceStatus.Deleted,
                 },
                 response,
             )
 
-        # check that resource not in the show_job list and older than maxAge
-        # have status deleted
-        response = {
-            key: value
-            for key, value in run_it(999, datetime.fromtimestamp(0)).items()
-            if key not in ["created", "updated"]
-        }
-        self.assertEqual(
-            {
-                "remote_resource_uuid": 999,
-                "drone_uuid": "testsite-089999",
-                "resource_status": ResourceStatus.Deleted,
-            },
-            response,
-        )
-
-        # check that resources not in the show_job list and younger than maxAge
-        # raise TardisResourceStatusUpdateFailed
-        with self.assertRaises(TardisResourceStatusUpdateFailed):
-            run_it(999, datetime.now())
+            # check that resources not in the show_job list and younger than maxAge
+            # raise TardisResourceStatusUpdateFailed
+            with self.assertRaises(TardisResourceStatusUpdateFailed):
+                run_it(translation(999), datetime.now())
 
         self.mocked_lancium_api.jobs.show_jobs.assert_called_once()
 
