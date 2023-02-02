@@ -103,7 +103,7 @@ class Auditor(Plugin):
             .astimezone(pytz.utc),
         )
 
-        for (resource, amount) in self._resources[resource_attributes["site_name"]][
+        for resource, amount in self._resources[resource_attributes["site_name"]][
             resource_attributes["machine_type"]
         ].items():
             component = pyauditor.Component(resource, amount)
