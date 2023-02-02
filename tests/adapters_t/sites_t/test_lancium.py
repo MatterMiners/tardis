@@ -1,12 +1,13 @@
 from tardis.adapters.sites.lancium import LanciumAdapter
 from tardis.exceptions.tardisexceptions import (
+    TardisDroneCrashed,
     TardisResourceStatusUpdateFailed,
     TardisError,
 )
 from tardis.interfaces.siteadapter import ResourceStatus
 from tardis.utilities.attributedict import AttributeDict
 
-from simple_rest_client.exceptions import AuthError
+from simple_rest_client.exceptions import AuthError, ClientError
 
 from ...utilities.utilities import run_async, set_awaitable_return_value
 
@@ -277,3 +278,11 @@ class TestLanciumAdapter(TestCase):
         with self.assertRaises(TardisError):
             with self.adapter.handle_exceptions():
                 raise AuthError("test", "test")
+
+        with self.assertRaises(TardisResourceStatusUpdateFailed):
+            with self.adapter.handle_exceptions():
+                raise ClientError("error", AttributeDict(status_code=409))
+
+        with self.assertRaises(TardisDroneCrashed):
+            with self.adapter.handle_exceptions():
+                raise ClientError("error", AttributeDict(status_code=404))
