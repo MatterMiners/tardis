@@ -36,7 +36,7 @@ async def slurm_status_updater(
 
     attributes_string = ",".join([str(x) for x in attributes.values()])
 
-    cmd = f"sinfo --Format={attributes_string!r} -e --noheader -r"
+    cmd = f'sinfo --Format="{attributes_string}" -e --noheader -r'
 
     if options_string:
         cmd = f"{cmd} {options_string}"

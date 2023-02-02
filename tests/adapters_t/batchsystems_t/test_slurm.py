@@ -51,9 +51,9 @@ class TestSlurmAdapter(TestCase):
         self.cpu_ratio = 0.5
         self.memory_ratio = 0.25
 
-        self.command = "sinfo --Format='statelong,cpusstate,allocmem,memory,features,nodehost' -e --noheader -r --partition=test_part"  # noqa B950
+        self.command = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader -r --partition=test_part'  # noqa B950
 
-        self.command_wo_options = "sinfo --Format='statelong,cpusstate,allocmem,memory,features,nodehost' -e --noheader -r"  # noqa B950
+        self.command_wo_options = 'sinfo --Format="statelong,cpusstate,allocmem,memory,features,nodehost" -e --noheader -r'  # noqa B950
 
         self.setup_config_mock(
             options=AttributeDict({"long": {"partition": "test_part"}})
