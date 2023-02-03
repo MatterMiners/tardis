@@ -251,11 +251,12 @@ class TestLanciumAdapter(TestCase):
                 id=int(job_id)
             )
 
-        self.mocked_lancium_api.jobs.terminate_job.side_effect = AuthError(
-            "operation=auth_error", {}
-        )
-        with self.assertRaises(AuthError):
-            run_it(123)
+        for exception in (AuthError, ClientError):
+            self.mocked_lancium_api.jobs.terminate_job.side_effect = exception(
+                "test", AttributeDict
+            )
+            with self.assertRaises(exception):
+                run_it(123)
 
     def test_terminate_resource(self):
         def run_it(job_id):
@@ -268,11 +269,12 @@ class TestLanciumAdapter(TestCase):
             run_it(job_id)
             self.mocked_lancium_api.jobs.delete_job.assert_called_with(id=int(job_id))
 
-        self.mocked_lancium_api.jobs.delete_job.side_effect = AuthError(
-            "operation=auth_error", {}
-        )
-        with self.assertRaises(AuthError):
-            run_it(123)
+        for exception in (AuthError, ClientError):
+            self.mocked_lancium_api.jobs.delete_job.side_effect = exception(
+                "test", AttributeDict()
+            )
+            with self.assertRaises(exception):
+                run_it(123)
 
     def test_exception_handling(self):
         with self.assertRaises(TardisError):
