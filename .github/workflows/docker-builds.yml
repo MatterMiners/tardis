@@ -22,13 +22,13 @@ jobs:
            import json
            import pathlib
            print(
-               "::set-output name=containers::%s"
+               "containers=%s"
                % json.dumps([
                        str(path.parent.relative_to("containers"))
                        for path in pathlib.Path("containers").glob("**/Dockerfile")
                    ]
            ))
-           '
+           ' >> $GITHUB_OUTPUT
     outputs:
       containers: ${{ steps.get_containers.outputs.containers }}
 
