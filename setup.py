@@ -99,8 +99,8 @@ setup(
         "pytz",
         "tzlocal",
         "aiolancium",
-    ]
-    + REST_REQUIRES,
+        *REST_REQUIRES,
+    ],
     extras_require={
         "docs": [
             "sphinx",
@@ -113,8 +113,8 @@ setup(
             "flake8",
             "flake8-bugbear",
             "black; implementation_name=='cpython'",
-        ]
-        + TESTS_REQUIRE,
+            *TESTS_REQUIRE,
+        ],
     },
     tests_require=TESTS_REQUIRE,
     zip_safe=False,
