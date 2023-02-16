@@ -1,6 +1,11 @@
 from aiolancium.client import Authenticator, LanciumClient
+from simple_rest_client.exceptions import AuthError, ClientError
 
-from ...exceptions.tardisexceptions import TardisError, TardisResourceStatusUpdateFailed
+from ...exceptions.tardisexceptions import (
+    TardisError,
+    TardisResourceStatusUpdateFailed,
+    TardisDroneCrashed,
+)
 from ...interfaces.siteadapter import SiteAdapter, ResourceStatus
 from ...utilities.attributedict import AttributeDict, convert_to_attribute_dict
 from ...utilities.asynccachemap import AsyncCacheMap
@@ -144,5 +149,19 @@ class LanciumAdapter(SiteAdapter):
     def handle_exceptions(self):
         try:
             yield
+        except AuthError as ae:
+            # AuthError inherits ClientError but does not contain a response
+            # therefore handle AuthError separately before ClientError
+            raise TardisError from ae
+        except ClientError as ce:
+            status_code = ce.response.status_code
+            if status_code == 404:
+                # Drone does not exist anymore
+                raise TardisDroneCrashed from ce
+            elif status_code == 409:
+                # Current status of the drone does not allow the performed operation
+                # Let us wait until the next resource status update
+                raise TardisResourceStatusUpdateFailed from ce
+            raise TardisError from ce
         except Exception as ex:
             raise TardisError from ex
