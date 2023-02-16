@@ -99,6 +99,7 @@ setup(
         "pytz",
         "tzlocal",
         "aiolancium",
+        *REST_REQUIRES,
     ],
     extras_require={
         "docs": [
@@ -107,15 +108,13 @@ setup(
             "sphinxcontrib-contentui",
             "myst_parser",
         ],
-        "rest": REST_REQUIRES,
         "test": TESTS_REQUIRE,
         "contrib": [
             "flake8",
             "flake8-bugbear",
             "black; implementation_name=='cpython'",
-        ]
-        + TESTS_REQUIRE
-        + REST_REQUIRES,
+            *TESTS_REQUIRE,
+        ],
     },
     tests_require=TESTS_REQUIRE,
     zip_safe=False,
