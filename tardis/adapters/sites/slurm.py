@@ -106,7 +106,6 @@ class SlurmAdapter(SiteAdapter):
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
-
         sbatch_cmdline_option_string = submit_cmd_option_formatter(
             self.sbatch_cmdline_options(
                 resource_attributes.drone_uuid,
