@@ -60,6 +60,7 @@ class MoabAdapter(SiteAdapter):
             warnings.warn(
                 "StartupCommand has been moved to the machine_type_configuration!",
                 DeprecationWarning,
+                stacklevel=2,
             )
             self._startup_command = self.configuration.StartupCommand
 
