@@ -93,15 +93,18 @@ class Auditor(Plugin):
         :type resource_attributes: AttributeDict
         :return: Record
         """
+        meta = (
+            pyauditor.Meta()
+            .insert("site_id", [resource_attributes["site_name"]])
+            .insert("user_id", [self._user])
+            .insert("group_id", [self._group])
+        )
         record = pyauditor.Record(
             resource_attributes["drone_uuid"],
-            resource_attributes["site_name"],
-            self._user,
-            self._group,
             resource_attributes["updated"]
             .replace(tzinfo=self._local_timezone)
             .astimezone(pytz.utc),
-        )
+        ).with_meta(meta)
 
         for resource, amount in self._resources[resource_attributes["site_name"]][
             resource_attributes["machine_type"]
