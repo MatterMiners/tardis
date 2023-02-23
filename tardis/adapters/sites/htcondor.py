@@ -72,6 +72,7 @@ def _submit_description(resource_jdls: Tuple[JDL, ...]) -> str:
             warnings.warn(
                 "Condor JDL templates may not include queue commands",
                 FutureWarning,
+                stacklevel=2,
             )
         else:
             commands.append("queue 1")
