@@ -6,5 +6,5 @@ __url__ = "https://github.com/matterminers/tardis"
 __version__ = "0.7.0"
 __author__ = "Manuel Giffels, Matthias Schnepf"
 __email__ = "giffels@gmail.com"
-__copyright__ = "2018 - 2022 %s and Contributors" % __author__
+__copyright__ = "2018 - 2023 %s and Contributors" % __author__
 __keywords__ = "asyncio tardis cloud scheduler"
