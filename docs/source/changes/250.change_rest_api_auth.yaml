@@ -1,0 +1,7 @@
+category: changed
+summary: "REST API cookie authentication and refactoring"
+description: |
+  The authentication method was changed to cookie authentication with jwt
+  tokens. The login router was completly changed and moved to /user.
+pull requests:
+- 250

@@ -28,6 +28,7 @@ Changed
 * SSHExecutor respects the remote MaxSessions via queueing
 * Remove minimum core limit (Standardiser) from pool factory
 * Change drone state initialisation and notification of plugins
+* REST API cookie authentication and refactoring
 * Adjust Prometheus plugin to the latest aioprometheus version 21.9.0
 
 Fixed
