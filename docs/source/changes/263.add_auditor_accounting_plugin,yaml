@@ -1,0 +1,7 @@
+category: added
+summary: "Added Auditor accounting plugin"
+description: |
+  Added Auditor (Accounting Data Handling Toolbox For Opportunistic Resources)
+  plugin.
+pull requests:
+- 263
