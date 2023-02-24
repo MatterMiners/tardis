@@ -36,6 +36,7 @@ Fixed
 
 * Unique constraints in database schema have been fixed to allow same machine_type and remote_resource_uuid on multiple sites
 * Update the remote_resource_uuid in sqlite registry on a each update
+* REST API does not suppress KeyboardInterrupt
 * Fixing recurrent cancellation of jobs TIMEOUTED in Slurm
 * Fixed state transition for stopped workers
 
