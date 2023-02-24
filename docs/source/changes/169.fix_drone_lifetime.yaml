@@ -1,6 +1,5 @@
 category: fixed
-summary: "Fixes a bug that the drone_minimum_lifetime parameter is not working as\
-  \ described in the documentation"
+summary: "Fixes a bug that the drone_minimum_lifetime parameter is not working as described in the documentation"
 description: |
   The `drone_minimum_lifetime` parameter is not working as expected and described in the documentation.
   `drone_minimum_lifetime` is meant to be a generic site parameter. However the code is trying to look it up in the

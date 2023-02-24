@@ -1,9 +1,10 @@
 category: fixed
 summary: "Fixing recurrent cancellation of jobs TIMEOUTED in Slurm"
-description: "Fixed a problem where Slurm jobs in status TIMEOUT are not handled correctly.\
-  \ Slurm TIMEOUT state were handled as \n`ResourceStatus.Error` causing TARDIS to\
-  \ repeatedly cleanup the job from the batch system using `scancel`. Now \ntimeouted\
-  \ drones in Slurm are handled as `ResourceStatus.Deleted` instead.\n"
+description: |
+  Fixed a problem where Slurm jobs in status TIMEOUT are not handled correctly.
+  Slurm TIMEOUT state were handled as `ResourceStatus.Error` causing TARDIS to
+  repeatedly cleanup the job from the batch system using `scancel`. Now timeouted
+  drones in Slurm are handled as `ResourceStatus.Deleted` instead.
 issues:
 - 240
 pull requests:

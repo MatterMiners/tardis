@@ -1,8 +1,9 @@
 category: added
 summary: "Ensure python3.10 compatibility"
-description: "Ensure python3.10 compatibility. Enable Python 3.10 unittests, adds\
-  \ 3.10 as supported release into setup.py and \nfixes a few deprecation warnings\
-  \ occuring when executing unittests under 3.10.\n"
+description: |
+  Ensure python3.10 compatibility. Enable Python 3.10 unittests, adds
+  3.10 as supported release into setup.py and fixes a few deprecation warnings
+  occuring when executing unittests under 3.10.
 pull requests:
 - 213
 version: 0.7.0

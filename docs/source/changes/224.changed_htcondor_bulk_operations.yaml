@@ -1,10 +1,11 @@
 category: changed
 summary: "Introduced Bulk Executor and HTCondor Bulk Operations"
-description: "Introduced bulk execution to HTCondor SiteAdapter including generic\
-  \ AsyncBulkCall framework class for collecting \ntasks to execute in bulk. HTCondorAdapter\
-  \ uses bulk executions for its commands `deploy resource`, `stop resource` and\n\
-  `terminate resource`. Changes the Resource UUID format used by the HTCondor Site\
-  \ adapter to `ClusterId.ProcId`.\n"
+description: |
+  Introduced bulk execution to HTCondor SiteAdapter including generic
+  AsyncBulkCall framework class for collecting tasks to execute in bulk.
+  HTCondorAdapter uses bulk executions for its commands `deploy resource`,
+  `stop resource` and `terminate resource`. Changes the Resource UUID
+  format used by the HTCondor Site adapter to `ClusterId.ProcId`.
 issues:
 - 223
 pull requests:
