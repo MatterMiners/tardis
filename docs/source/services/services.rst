@@ -85,10 +85,6 @@ Available configuration options
         +----------------+-------------------------------------------------------------------+-----------------+
         | port           | Port the REST Service is listening on                             |  **Required**   |
         +----------------+-------------------------------------------------------------------+-----------------+
-        | secret_key     | 32 byte secret key to generate and validate JWTs                  |  **Required**   |
-        +----------------+-------------------------------------------------------------------+-----------------+
-        | algorithm      | Algorithm to generate and validate JWTs (default: HS256)          |  **Optional**   |
-        +----------------+-------------------------------------------------------------------+-----------------+
         | users          | List of user entries allowed to use the REST service. (see below) | **Required**    |
         +----------------+-------------------------------------------------------------------+-----------------+
 
@@ -104,11 +100,6 @@ Available configuration options
         | scopes          | List of scopes the user is allowed to request.  | **Required**    |
         +-----------------+-------------------------------------------------+-----------------+
 
-    .. note::
-
-        The REST service is using a 32 byte ``secret_key`` to generate and verify JWTs. It can be created using
-        ``openssl rand -hex 32``.
-
 .. content-tabs:: right-col
 
     .. rubric:: Example configuration
@@ -120,8 +111,6 @@ Available configuration options
             !TardisRestApi
             host: 127.0.0.1
             port: 1234
-            secret_key: 752e003f636f402cc23728e185ce8c9eef27b7e02cf509b3015f7757e625b8e4
-            algorithm: HS256
             users:
               - user_name: tardis
                 hashed_password: $2b$12$c9SSllh1U6tOhIo37sDWF.kdRIU5RQAAOHL9bVYMs2.HluyFE43Uq
@@ -181,53 +170,6 @@ Available logging configuration options
 
 Convenience Tools
 ~~~~~~~~~~~~~~~~~
-
-Generate Token
-""""""""""""""
-
-.. content-tabs:: left-col
-
-    The ``generate_token`` command provides the possibility to create non-expiring tokens to be used to authenticate
-    against the REST service (:ref:`see above<REST Service>`). This is useful for automated scripts polling the REST
-    service.
-
-    .. note::
-
-        For security reasons it is recommended to use non-expiring tokens only together with ``resources:get`` scope.
-
-    .. table:: Options available to the `generate_token` command
-
-        +-----------------+-------------------------------------------------------------------------------------------+-----------------+
-        | Option          | Short Description                                                                         | Requirement     |
-        +=================+===========================================================================================+=================+
-        | user_name       | The user name the token includes                                                          | **Required**    |
-        +-----------------+-------------------------------------------------------------------------------------------+-----------------+
-        | scopes          | List of scopes the token should have. Comma separated list.                               | **Required**    |
-        +-----------------+-------------------------------------------------------------------------------------------+-----------------+
-        | config-file     | The ``COBalD/TARDIS`` configuration file containing the configuration of the REST service | **Optional**    |
-        +-----------------+-------------------------------------------------------------------------------------------+-----------------+
-        | secret-key      | The secret key to generate the token                                                      | **Optional**    |
-        +-----------------+-------------------------------------------------------------------------------------------+-----------------+
-        | algorithm       | The algorithm to generate the token. For example ``HS256``                                | **Optional**    |
-        +-----------------+-------------------------------------------------------------------------------------------+-----------------+
-
-    Either ``config-file`` or ``secret-key`` and ``algorithm`` needs to be specified.
-
-.. content-tabs:: right-col
-
-    .. rubric:: Examples
-
-    .. code-block:: shell
-
-        generate_token --user-name tardis --scopes resources:get --config-file tardis.yml
-        #alternatively
-        python -m tardis.rest.token_generator --user-name tardis --scopes resources:get --config-file tardis.yml
-
-    .. code-block:: shell
-
-        generate_token --user-name tardis --scopes resources:get --secret-key ... --algorithm HS256
-        #alternatively
-        python -m tardis.rest.token_generator --user-name tardis --scopes resources:get --secret-key ... --algorithm HS256
 
 Hash Credentials
 """"""""""""""""
