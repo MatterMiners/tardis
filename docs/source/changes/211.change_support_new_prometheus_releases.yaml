@@ -1,7 +1,8 @@
 category: changed
-summary: Adjust Prometheus plugin to the latest aioprometheus version 21.9.0
-description: |
-  `aioprometheus` has changed its API so that metrics are automatically registered when they are created. Prometheus 
-  plugin has been changed accordingly and the installation of `aioprometheus>=21.9.0` has been enforced.
+summary: "Adjust Prometheus plugin to the latest aioprometheus version 21.9.0"
+description: "`aioprometheus` has changed its API so that metrics are automatically\
+  \ registered when they are created. Prometheus \nplugin has been changed accordingly\
+  \ and the installation of `aioprometheus>=21.9.0` has been enforced.\n"
 pull requests:
 - 211
+version: 0.7.0

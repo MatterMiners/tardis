@@ -1,9 +1,10 @@
 category: added
-summary: "Add support for passing environment variables as executable arguments to support HTCondor grid universe"
-description: |
-  In order to properly identify started drones in the overlay batch system and to limit the amount of resources 
-  (CPU cores, memory, disk) announced to be available, a set of environment variables needs to be set inside the drone. 
-  In case of the HTCondor grid universe such an environment is usually dropped by the Grid Compute Element. Therefore 
-  the possibility to pass the environment variables using executable arguments has been added.
-pull_requests:
-  - 224
+summary: "Add support for passing environment variables as executable arguments to\
+  \ support HTCondor grid universe"
+description: "In order to properly identify started drones in the overlay batch system\
+  \ and to limit the amount of resources \n(CPU cores, memory, disk) announced to\
+  \ be available, a set of environment variables needs to be set inside the drone.\
+  \ \nIn case of the HTCondor grid universe such an environment is usually dropped\
+  \ by the Grid Compute Element. Therefore \nthe possibility to pass the environment\
+  \ variables using executable arguments has been added.\n"
+version: 0.7.0

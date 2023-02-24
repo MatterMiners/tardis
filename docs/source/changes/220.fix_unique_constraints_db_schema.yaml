@@ -1,9 +1,9 @@
 category: fixed
-summary: "Unique constraints in database schema have been fixed to allow same machine_type and remote_resource_uuid on multiple sites"
+summary: "Unique constraints in database schema have been fixed to allow same machine_type\
+  \ and remote_resource_uuid on multiple sites"
 description: |
   The unique constraints in the datebase schema have been relaxed to allow the same machine_type and the same
   remote_resource_uuid to be used on multiple sites. In addition, the unittest of the SqliteRegistry have been improved.
-pull_requests:
-  - 220
 issues:
-  - 219
+- 219
+version: 0.7.0

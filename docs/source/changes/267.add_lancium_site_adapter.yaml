@@ -4,3 +4,4 @@ description: |
   A new Lancium compute site adapter has been added to `TARDIS` to use resources provided by the Lancium compute cluster.
 pull requests:
 - 267
+version: 0.7.0

@@ -1,9 +1,10 @@
 category: fixed
 summary: "Fixed state transition for stopped workers"
-description: |
-  Fixes an unexpected behaviour for Drones in AvailableState in case the HTCondor daemon on nodes is shutdown
-  automatically causing the machine status to be NotAvailable, while the resource status continues to be Running. In 
-  that case the drone state is re-set to IntegratingState. Since HTCondor is not restarted, the Drone remains in this 
-  state forever.
+description: "Fixes an unexpected behaviour for Drones in AvailableState in case the\
+  \ HTCondor daemon on nodes is shutdown\nautomatically causing the machine status\
+  \ to be NotAvailable, while the resource status continues to be Running. In \nthat\
+  \ case the drone state is re-set to IntegratingState. Since HTCondor is not restarted,\
+  \ the Drone remains in this \nstate forever.\n"
 pull requests:
-  - 234
+- 234
+version: 0.7.0

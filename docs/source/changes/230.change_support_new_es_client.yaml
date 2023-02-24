@@ -1,9 +1,11 @@
 category: changed
-summary: Adjust ElasticSearch plugin to support client versions >=7.17,<8.0.0
-description: |
-  The latest versions of the Elasticsearch client have a compatibility mode which can also be used for newer server 
-  versions. Includes also a fix for the case where `resource_status` is not part of `resource_attributes`, which 
-  occasionally caused crashes. Newer versions of the Elasticsearch client require the `scheme` parameter to be set. 
-  By setting this already, it will be easier to eventually transition to client version 8.
+summary: "Adjust ElasticSearch plugin to support client versions >=7.17,<8.0.0"
+description: "The latest versions of the Elasticsearch client have a compatibility\
+  \ mode which can also be used for newer server \nversions. Includes also a fix for\
+  \ the case where `resource_status` is not part of `resource_attributes`, which \n\
+  occasionally caused crashes. Newer versions of the Elasticsearch client require\
+  \ the `scheme` parameter to be set. \nBy setting this already, it will be easier\
+  \ to eventually transition to client version 8.\n"
 pull requests:
-  - 230
+- 230
+version: 0.7.0

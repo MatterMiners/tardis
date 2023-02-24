@@ -1,9 +1,10 @@
 category: added
 summary: "Added support for application credentials of the OpenStack site adapter"
-description: |
-  Newer versions of OpenStack support the creation of application credentials for specific projects. So, the pair of
-  application_credential_id and application_credential_secret is only valid of a specific project. The OpenStack site
-  adapter now fully supports the utilization of application credentials to authenticate against the OpenStack API 
-  endpoint.
+description: "Newer versions of OpenStack support the creation of application credentials\
+  \ for specific projects. So, the pair of\napplication_credential_id and application_credential_secret\
+  \ is only valid of a specific project. The OpenStack site\nadapter now fully supports\
+  \ the utilization of application credentials to authenticate against the OpenStack\
+  \ API \nendpoint.\n"
 pull requests:
 - 274
+version: 0.7.0

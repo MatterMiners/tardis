@@ -4,7 +4,8 @@ description: |
   The SSHExecutor now is aware of sshd MaxSessions, which is a limit on the concurrent
   operations per connection. If more operations are to be run at once, operations are
   queued until a session becomes available.
-pull requests:
-- 218
 issues:
 - 217
+pull requests:
+- 218
+version: 0.7.0

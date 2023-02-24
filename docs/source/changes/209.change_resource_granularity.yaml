@@ -1,7 +1,8 @@
 category: changed
 summary: "Remove granularity in Standardiser to enable earlier creation of new drones"
-description: |
-  With granularity new drones are requested when `demand>supply+granularity`. Remove granularity in Standardiser to 
-  enable earlier creation of new drones when `demand>supply`.
+description: "With granularity new drones are requested when `demand>supply+granularity`.\
+  \ Remove granularity in Standardiser to \nenable earlier creation of new drones\
+  \ when `demand>supply`.\n"
 pull requests:
 - 209
+version: 0.7.0

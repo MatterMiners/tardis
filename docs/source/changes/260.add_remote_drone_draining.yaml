@@ -1,8 +1,9 @@
 category: added
 summary: "Added support for manual draining of drones using the REST API"
-description: |
-  Added limited support to synchronize the state stored in the ``SqliteRegistry`` with the current state of the drone. 
-  Only implemented for drones in ``AvailableState`` which can transition to ``DrainState`` via a remote update of the 
-  ``SqliteRegistry``, i.e. using the REST API.
+description: "Added limited support to synchronize the state stored in the ``SqliteRegistry``\
+  \ with the current state of the drone. \nOnly implemented for drones in ``AvailableState``\
+  \ which can transition to ``DrainState`` via a remote update of the \n``SqliteRegistry``,\
+  \ i.e. using the REST API.\n"
 pull requests:
 - 260
+version: 0.7.0
