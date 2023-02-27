@@ -1,6 +1,5 @@
 category: added
-summary: "The machine name has been added as a default tag in the telegraf monitoring\
-  \ plugin, can be overwritten."
+summary: "The machine name has been added as a default tag in the telegraf monitoring plugin, can be overwritten."
 description: |
   The machine name has been added as a default tag in the telegraf monitoring plugin. Can be overwritten by adding
   `tardis_machine_name` as default tag in the plugin configuration.

@@ -1,0 +1,9 @@
+category: fixed
+summary: "REST API does not suppress KeyboardInterrupt"
+description: |
+  Implements a workaround for a bug in uvicorn that suppresses
+  KeyboardInterrupt. It allows clean shutdown in both the current cobald
+  release and master version.
+pull requests:
+- 259
+version: 0.7.0

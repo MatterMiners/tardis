@@ -1,10 +1,10 @@
 category: fixed
 summary: "Update the remote_resource_uuid in sqlite registry on a each update"
 description: |
-  The change drone state initialisation update revealed a bug in TARDIS. The ``remote_resource_uuid`` in the 
-  ``SqliteRegistry`` plugin is not updated at all. As a result, TARDIS keeps crashing on restarts due to the missing 
-  ``remote_resource_uuid`` until the DB has been removed.
-pull_requests:
-  - 249
+  The change drone state initialisation update revealed a bug in TARDIS.
+  The ``remote_resource_uuid`` in the ``SqliteRegistry`` plugin is not
+  updated at all. As a result, TARDIS keeps crashing on restarts due to the
+  missing ``remote_resource_uuid`` until the DB has been removed.
 issues:
-  - 248
+- 248
+version: 0.7.0

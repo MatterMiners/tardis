@@ -1,7 +1,8 @@
 category: fixed
 summary: "Fix the translation of cloud init scripts into base64 encoded strings"
-description: "The translation of cloud init scripts into base64 encoded strings has\
-  \ been fixed. Reason was changing a data structure\nwhile interating over it. \n"
+description: |
+  The translation of cloud init scripts into base64 encoded strings has
+  been fixed. Reason was changing a data structure while interating over it.
 pull requests:
 - 126
 version: 0.3.0

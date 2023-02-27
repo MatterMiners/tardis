@@ -1,10 +1,12 @@
 category: changed
 summary: "Change drone state initialisation and notification of plugins"
 description: |
-  The initialisation procedure and the notification of the plugins is changed to fix a bug occurring on restarts of 
-  Drones. A newly created Drone is now initialised with ``state = None`` and all plugins are notified first state
-  change ``None`` -> ``RequestState``. The Drone is now inserted in the `SqliteRegistry` when it state changes to 
-  ``RequestState`` and all subsequent changes are DB updates. So, failing duplicated inserts due to the unique 
-  requirement of the ``drone_uuid`` are prevented in case a Drone changes back to ``BootingState`` again.
-pull_requests:
-  - 247
+  The initialisation procedure and the notification of the plugins is
+  changed to fix a bug occurring on restarts of Drones. A newly created Drone
+  is now initialised with ``state = None`` and all plugins are notified first
+  state change ``None`` -> ``RequestState``. The Drone is now inserted in the
+  `SqliteRegistry` when it state changes to ``RequestState`` and all
+  subsequent changes are DB updates. So, failing duplicated inserts due to the
+  unique requirement of the  ``drone_uuid`` are prevented in case a Drone
+  changes back to ``BootingState`` again.
+version: 0.7.0

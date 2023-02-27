@@ -5,5 +5,4 @@ description: |
   requested. This overwrites all Standardisers using the minimum parameter in the COBalD pipeline. It turns out that
   the ``Standardiser`` is not needed anymore, since the ``utilisation`` and ``allocation`` is always 1.0 when no drone
   is running, so that automatically one is requested.
-pull_requests:
-  - 252
+version: 0.7.0

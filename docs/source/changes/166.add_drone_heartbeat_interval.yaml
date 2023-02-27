@@ -1,6 +1,5 @@
 category: added
-summary: "An optional and per site configurable drone heartbeat interval has been\
-  \ added"
+summary: "An optional and per site configurable drone heartbeat interval has been added"
 description: |
   Add an optional and per site configurable drone heartbeat interval to TARDIS. The heartbeat interval is defined as
   the time between two consecutive calls of the drones run method. The heartbeat interval defaults to 60s.

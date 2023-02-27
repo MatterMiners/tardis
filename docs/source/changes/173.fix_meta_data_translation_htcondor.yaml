@@ -1,6 +1,5 @@
 category: fixed
-summary: "Fixes a bug in the HTCondor Site Adapter which leads to wrong requirements\
-  \ when using non HTCondor OBS"
+summary: "Fixes a bug in the HTCondor Site Adapter which leads to wrong requirements when using non HTCondor OBS"
 description: |
   The HTCondor Site Adapter takes a wrong `machine_meta_data_translation_mapping` into account in some circumstances.
   Due to a bug introduced in #157, the HTCondor Site Adapter uses the `machine_meta_data_translation_mapping` of the

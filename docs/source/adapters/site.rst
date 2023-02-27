@@ -199,11 +199,11 @@ Available adapter configuration options
     | Option         | Short Description                                                                 | Requirement     |
     +================+===================================================================================+=================+
     | max_age        | The result of the `condor_status` call is cached for `max_age` in minutes.        |  **Required**   |
-    +================+===================================================================================+=================+
+    +----------------+-----------------------------------------------------------------------------------+-----------------+
     | bulk_size      | Maximum number of jobs to handle per bulk invocation of a condor tool.            |  **Optional**   |
     +                +                                                                                   +                 +
     |                | Default: 100                                                                      |                 |
-    +================+===================================================================================+=================+
+    +----------------+-----------------------------------------------------------------------------------+-----------------+
     | bulk_delay     | Maximum duration in seconds to wait per bulk invocation of a condor tool.         |  **Optional**   |
     +                +                                                                                   +                 +
     |                | Default: 1.0                                                                      |                 |
