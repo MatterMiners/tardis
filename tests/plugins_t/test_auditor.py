@@ -163,3 +163,8 @@ class TestAuditor(TestCase):
         self.assertEqual(len(record.components[1].scores), 1)
         self.assertEqual(record.components[1].scores[0].name, "BLUBB")
         self.assertEqual(record.components[1].scores[0].value, 1.4)
+
+    def test_missing_components(self):
+        del self.config.Plugins.Auditor.components
+        plugin = Auditor()
+        self.assertEqual(plugin._components, {"testsite": {"test_machine_type": {}}})
