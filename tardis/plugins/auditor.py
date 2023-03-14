@@ -41,9 +41,12 @@ class Auditor(Plugin):
                     self._resources[site.name][machine_type][resource] = getattr(
                         config, site.name
                     ).MachineMetaData[machine_type][resource]
-                    self._components[site.name][machine_type][resource] = getattr(
-                        config_auditor.components, machine_type
-                    ).get(resource, {})
+                    try:
+                        self._components[site.name][machine_type][resource] = getattr(
+                            config_auditor.components, machine_type
+                        ).get(resource, {})
+                    except AttributeError:
+                        continue
 
         self._user = getattr(config_auditor, "user", "tardis")
         self._group = getattr(config_auditor, "group", "tardis")
