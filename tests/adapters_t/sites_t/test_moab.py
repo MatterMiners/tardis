@@ -198,7 +198,7 @@ class TestMoabAdapter(TestCase):
             updated=datetime.strptime(
                 "Wed Jan 23 2019 15:02:17", "%a %b %d %Y %H:%M:%S"
             ),
-            drone_uuid="testsite-4761849",
+            drone_uuid="testsite-abcdef",
         )
 
     def test_start_up_command_deprecation_warning(self):
@@ -227,7 +227,9 @@ class TestMoabAdapter(TestCase):
         return_resource_attributes = run_async(
             self.moab_adapter.deploy_resource,
             resource_attributes=AttributeDict(
-                machine_type="test2large", site_name="TestSite"
+                drone_uuid="testsite-abcdef",
+                machine_type="test2large",
+                site_name="TestSite",
             ),
         )
         if (
