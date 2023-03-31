@@ -9,7 +9,11 @@ from ...utilities.attributedict import AttributeDict
 from ...utilities.attributedict import convert_to_attribute_dict
 from ...utilities.executors.shellexecutor import ShellExecutor
 from ...utilities.asynccachemap import AsyncCacheMap
-from ...utilities.utils import convert_to, submit_cmd_option_formatter
+from ...utilities.utils import (
+    convert_to,
+    drone_environment_to_str,
+    submit_cmd_option_formatter,
+)
 
 from asyncio import TimeoutError
 from contextlib import contextmanager
@@ -216,11 +220,11 @@ class MoabAdapter(SiteAdapter):
         mem = self.machine_meta_data.Memory
         node_type = self.machine_type_configuration.NodeType
 
-        drone_environment = ",".join(
-            f"TardisDrone{key}={convert_to(value, int, value)}"
-            for key, value in self.drone_environment(
-                drone_uuid, machine_meta_data_translation_mapping
-            ).items()
+        drone_environment = drone_environment_to_str(
+            self.drone_environment(drone_uuid, machine_meta_data_translation_mapping),
+            seperator=",",
+            prefix="TardisDrone",
+            customize_value=lambda x: convert_to(x, int, x),
         )
 
         return submit_cmd_option_formatter(

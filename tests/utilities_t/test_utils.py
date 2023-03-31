@@ -3,8 +3,10 @@ import logging
 from tardis.resources.dronestates import RequestState
 from tardis.utilities.attributedict import AttributeDict
 from tardis.utilities.utils import (
+    convert_to,
     csv_parser,
     disable_logging,
+    drone_environment_to_str,
     htcondor_cmd_option_formatter,
     load_states,
     submit_cmd_option_formatter,
@@ -12,6 +14,64 @@ from tardis.utilities.utils import (
 
 
 from unittest import TestCase
+
+
+class TestConvertTo(TestCase):
+    def test_convert_to(self):
+        for value, instance, converted_value in (
+            (1, int, 1),
+            ("1", int, 1),
+            (1, float, 1),
+            ("§$%", float, "§$%"),
+        ):
+            result = convert_to(value, instance, value)
+            self.assertEqual(converted_value, result)
+
+
+class TestDroneEnvironmentToStr(TestCase):
+    def test_drone_environment_to_str(self):
+        test_environment = {"Uuid": "test-abcfed", "Cores": 8, "Memory": 20.0}
+
+        for drone_environment_to_str_kwargs, result in (
+            (
+                {
+                    "seperator": ",",
+                    "prefix": "TardisDrone",
+                },
+                "TardisDroneUuid=test-abcfed,TardisDroneCores=8,TardisDroneMemory=20.0",
+            ),
+            (
+                {
+                    "seperator": " ",
+                    "prefix": "--",
+                },
+                "--Uuid=test-abcfed --Cores=8 --Memory=20.0",
+            ),
+            (
+                {
+                    "seperator": ",",
+                    "prefix": "TardisDrone",
+                    "customize_value": lambda x: convert_to(x, int, x),
+                },
+                "TardisDroneUuid=test-abcfed,TardisDroneCores=8,TardisDroneMemory=20",
+            ),
+            (
+                {
+                    "seperator": " ",
+                    "prefix": "--",
+                    "customize_key": str.lower,
+                    "customize_value": lambda x: convert_to(x, int, x),
+                },
+                "--uuid=test-abcfed --cores=8 --memory=20",
+            ),
+        ):
+            drone_environments_str = drone_environment_to_str(
+                test_environment, **drone_environment_to_str_kwargs
+            )
+            self.assertEqual(
+                drone_environments_str,
+                result,
+            )
 
 
 class TestHTCondorCMDOptionFormatter(TestCase):

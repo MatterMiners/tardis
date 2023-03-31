@@ -2,7 +2,7 @@ from .attributedict import AttributeDict
 
 from contextlib import contextmanager
 from io import StringIO
-from typing import Any, Callable, List, TypeVar, Tuple
+from typing import Any, Callable, Dict, List, TypeVar, Tuple
 
 
 import csv
@@ -142,3 +142,16 @@ def convert_to(
         return convert_to_type(value)
     except ValueError:
         return default
+
+
+def drone_environment_to_str(
+    drone_environment: Dict,
+    seperator: str,
+    prefix: str,
+    customize_key: Callable = lambda x: x,
+    customize_value: Callable = lambda x: x,
+) -> str:
+    return seperator.join(
+        f"{prefix}{customize_key(key)}={customize_value(value)}"
+        for key, value in drone_environment.items()
+    )
