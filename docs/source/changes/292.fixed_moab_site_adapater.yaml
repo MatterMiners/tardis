@@ -1,0 +1,12 @@
+category: fixed
+summary: "Disable change of drone_uuid after resource deployment in Moab adapter"
+description: |
+  The Moab site adapter is changing the drone_uuid after the resource has been deployed to name-<moab_job_id>. Due to
+  this the SqliteRegistry is not updated anymore (since #247 ), so that TARDIS forgets about deployed resources in case
+  of a restart of the service. This pull requests removes that feature from the Moab adapter and deploys the standard
+  TardisDrone environments variables in the job environment instead, so that the drone can take care of setting the
+  right attributes to the OBS, so that TARDIS can associate drones to running jobs.
+issues:
+- 291
+pull requests:
+- 292
