@@ -10,7 +10,11 @@ from ...utilities.attributedict import AttributeDict
 from ...utilities.staticmapping import StaticMapping
 from ...utilities.executors.shellexecutor import ShellExecutor
 from ...utilities.asyncbulkcall import AsyncBulkCall
-from ...utilities.utils import csv_parser, machine_meta_data_translation
+from ...utilities.utils import (
+    csv_parser,
+    drone_environment_to_str,
+    machine_meta_data_translation,
+)
 
 from contextlib import contextmanager
 from datetime import datetime
@@ -245,19 +249,17 @@ class HTCondorAdapter(SiteAdapter):
             resource_attributes.obs_machine_meta_data_translation_mapping,
         )
 
-        def job_environment(seperator, prefix, customize_key=lambda x: x):
-            return seperator.join(
-                f"{prefix}{customize_key(key)}={value}"
-                for key, value in drone_environment.items()
-            )
-
         submit_jdl = jdl_template.substitute(
             machine_meta_data_translation(
                 self.machine_meta_data,
                 self.htcondor_machine_meta_data_translation_mapping,
             ),
-            Environment=job_environment(";", prefix="TardisDrone"),
-            Arguments=job_environment(" ", prefix="--", customize_key=str.lower),
+            Environment=drone_environment_to_str(
+                drone_environment, seperator=";", prefix="TardisDrone"
+            ),
+            Arguments=drone_environment_to_str(
+                drone_environment, seperator=" ", prefix="--", customize_key=str.lower
+            ),
         )
 
         job_id = await self._condor_submit(submit_jdl)

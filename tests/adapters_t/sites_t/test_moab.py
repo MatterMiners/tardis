@@ -175,7 +175,7 @@ class TestMoabAdapter(TestCase):
 
     @property
     def machine_meta_data(self):
-        return AttributeDict(test2large=AttributeDict(Cores=128, Memory="120"))
+        return AttributeDict(test2large=AttributeDict(Cores=128, Memory=120, Disk=100))
 
     @property
     def machine_type_configuration(self):
@@ -198,7 +198,12 @@ class TestMoabAdapter(TestCase):
             updated=datetime.strptime(
                 "Wed Jan 23 2019 15:02:17", "%a %b %d %Y %H:%M:%S"
             ),
-            drone_uuid="testsite-4761849",
+            drone_uuid="testsite-abcdef",
+            obs_machine_meta_data_translation_mapping=AttributeDict(
+                Cores=1,
+                Memory=1,
+                Disk=1,
+            ),
         )
 
     def test_start_up_command_deprecation_warning(self):
@@ -226,9 +231,7 @@ class TestMoabAdapter(TestCase):
         )
         return_resource_attributes = run_async(
             self.moab_adapter.deploy_resource,
-            resource_attributes=AttributeDict(
-                machine_type="test2large", site_name="TestSite"
-            ),
+            resource_attributes=self.resource_attributes,
         )
         if (
             return_resource_attributes.created - expected_resource_attributes.created
@@ -245,7 +248,7 @@ class TestMoabAdapter(TestCase):
         )
         self.assertEqual(return_resource_attributes, expected_resource_attributes)
         self.mock_executor.return_value.run_command.assert_called_with(
-            "msub -j oe -m p -l walltime=02:00:00:00,mem=120gb,nodes=1:ppn=20 startVM.py"  # noqa: B950
+            "msub -j oe -m p -l walltime=02:00:00:00,mem=120gb,nodes=1:ppn=20 -v TardisDroneCores=128,TardisDroneMemory=120,TardisDroneDisk=100,TardisDroneUuid=testsite-abcdef startVM.py"  # noqa: B950
         )
 
     @mock_executor_run_command(TEST_DEPLOY_RESOURCE_RESPONSE)
@@ -261,13 +264,10 @@ class TestMoabAdapter(TestCase):
 
         run_async(
             moab_adapter.deploy_resource,
-            resource_attributes=AttributeDict(
-                machine_type="test2large",
-                site_name="TestSite",
-            ),
+            resource_attributes=self.resource_attributes,
         )
         self.mock_executor.return_value.run_command.assert_called_with(
-            "msub -M someone@somewhere.com -j oe -m p -l walltime=02:00:00:00,mem=120gb,nodes=1:ppn=20 --timeout=60 startVM.py"  # noqa: B950
+            "msub -M someone@somewhere.com -j oe -m p -l walltime=02:00:00:00,mem=120gb,nodes=1:ppn=20 -v TardisDroneCores=128,TardisDroneMemory=120,TardisDroneDisk=100,TardisDroneUuid=testsite-abcdef --timeout=60 startVM.py"  # noqa: B950
         )
 
     def test_machine_meta_data(self):

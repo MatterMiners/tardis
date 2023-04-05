@@ -9,7 +9,11 @@ from ...utilities.attributedict import AttributeDict
 from ...utilities.attributedict import convert_to_attribute_dict
 from ...utilities.executors.shellexecutor import ShellExecutor
 from ...utilities.asynccachemap import AsyncCacheMap
-from ...utilities.utils import submit_cmd_option_formatter
+from ...utilities.utils import (
+    convert_to,
+    drone_environment_to_str,
+    submit_cmd_option_formatter,
+)
 
 from asyncio import TimeoutError
 from contextlib import contextmanager
@@ -120,7 +124,11 @@ class MoabAdapter(SiteAdapter):
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
-        request_command = f"msub {self.msub_cmdline_options()} {self._startup_command}"
+        msub_cmdline_option_string = self.msub_cmdline_options(
+            resource_attributes.drone_uuid,
+            resource_attributes.obs_machine_meta_data_translation_mapping,
+        )
+        request_command = f"msub {msub_cmdline_option_string} {self._startup_command}"
         result = await self._executor.run_command(request_command)
         logger.debug(f"{self.site_name} servers create returned {result}")
 
@@ -129,7 +137,6 @@ class MoabAdapter(SiteAdapter):
             remote_resource_uuid=remote_resource_uuid,
             created=datetime.now(),
             updated=datetime.now(),
-            drone_uuid=self.drone_uuid(remote_resource_uuid),
             resource_status=ResourceStatus.Booting,
         )
         return resource_attributes
@@ -204,7 +211,7 @@ class MoabAdapter(SiteAdapter):
         logger.debug("MOAB jobs cannot be stopped gracefully. Terminating instead.")
         return await self.terminate_resource(resource_attributes)
 
-    def msub_cmdline_options(self):
+    def msub_cmdline_options(self, drone_uuid, machine_meta_data_translation_mapping):
         sbatch_options = self.machine_type_configuration.get(
             "SubmitOptions", AttributeDict()
         )
@@ -213,6 +220,13 @@ class MoabAdapter(SiteAdapter):
         mem = self.machine_meta_data.Memory
         node_type = self.machine_type_configuration.NodeType
 
+        drone_environment = drone_environment_to_str(
+            self.drone_environment(drone_uuid, machine_meta_data_translation_mapping),
+            seperator=",",
+            prefix="TardisDrone",
+            customize_value=lambda x: convert_to(x, int, x),
+        )
+
         return submit_cmd_option_formatter(
             AttributeDict(
                 short=AttributeDict(
@@ -220,6 +234,7 @@ class MoabAdapter(SiteAdapter):
                     j="oe",
                     m="p",
                     l=f"walltime={walltime},mem={mem}gb,nodes={node_type}",
+                    v=f"{drone_environment}",
                 ),
                 long=AttributeDict(
                     **sbatch_options.get("long", AttributeDict()),
