@@ -95,7 +95,7 @@ setup(
         "asyncstdlib",
         "typing_extensions",
         "backports.cached_property",
-        "python-auditor==0.0.7",
+        "python-auditor==0.1.0",
         "pytz",
         "tzlocal",
         "aiolancium",
