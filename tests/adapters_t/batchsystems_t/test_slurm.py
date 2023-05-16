@@ -181,14 +181,16 @@ class TestSlurmAdapter(TestCase):
             CommandExecutionFailure(message="Test", exit_code=123, stderr="Test")
         )
 
+        attributes = {
+            "statelong": "statelong",
+            "cpusstate": "cpusstate",
+            "allocmem": "allocmem",
+            "memory": "memory",
+            "features": "features",
+            "nodehost": "nodehost",
+        }
         with self.assertLogs(level="WARN"):
             with self.assertRaises(CommandExecutionFailure):
-                attributes = {
-                    "Machine": "Machine",
-                    "State": "State",
-                    "Activity": "Activity",
-                    "TardisDroneUuid": "TardisDroneUuid",
-                }
                 run_async(
                     partial(
                         slurm_status_updater,
@@ -197,9 +199,7 @@ class TestSlurmAdapter(TestCase):
                         self.mock_executor.return_value,
                     )
                 )
-                self.mock_executor.return_value.run_command.assert_called_with(
-                    self.command
-                )
+        self.mock_executor.return_value.run_command.assert_called_with(self.command)
 
         self.mock_executor.return_value.run_command.side_effect = None
 
