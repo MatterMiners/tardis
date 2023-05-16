@@ -1,7 +1,7 @@
 category: Fixed
 summary: "Fixed optional configuration items in Auditor to be actual optional"
-description: |
-  The AUDITOR plugin crashes when no components are defined in the config, despite being marked as "optional" in the 
-  documentation.
+description: "The AUDITOR plugin crashes when no components are defined in the config,\
+  \ despite being marked as \"optional\" in the \ndocumentation.\n"
 pull requests:
 - 290
+version: 0.7.1
