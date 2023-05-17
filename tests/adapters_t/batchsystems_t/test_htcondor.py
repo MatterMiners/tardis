@@ -259,21 +259,20 @@ class TestHTCondorAdapter(TestCase):
         self.mock_executor.return_value.run_command.side_effect = (
             CommandExecutionFailure(message="Test", exit_code=123, stderr="Test")
         )
+
+        attributes = {
+            "Machine": "Machine",
+            "Name": "Name",
+            "State": "State",
+            "Activity": "Activity",
+            "TardisDroneUuid": "TardisDroneUuid",
+        }
+        # Escape htcondor expressions and add them to attributes
+        attributes.update(
+            {key: quote(value) for key, value in self.config.BatchSystem.ratios.items()}
+        )
         with self.assertLogs(level=logging.WARNING):
             with self.assertRaises(CommandExecutionFailure):
-                attributes = {
-                    "Machine": "Machine",
-                    "State": "State",
-                    "Activity": "Activity",
-                    "TardisDroneUuid": "TardisDroneUuid",
-                }
-                # Escape htcondor expressions and add them to attributes
-                attributes.update(
-                    {
-                        key: quote(value)
-                        for key, value in self.config.BatchSystem.ratios.items()
-                    }
-                )
                 run_async(
                     partial(
                         htcondor_status_updater,
@@ -282,9 +281,7 @@ class TestHTCondorAdapter(TestCase):
                         self.mock_executor.return_value,
                     )
                 )
-                self.mock_executor.return_value.run_command.assert_called_with(
-                    self.command
-                )
+        self.mock_executor.return_value.run_command.assert_called_with(self.command)
         self.mock_executor.return_value.run_command.side_effect = None
 
     @mock_executor_run_command(stdout=CONDOR_RETURN)

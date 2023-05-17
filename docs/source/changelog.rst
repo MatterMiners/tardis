@@ -1,4 +1,4 @@
-.. Created by changelog.py at 2023-04-03, command
+.. Created by changelog.py at 2023-05-16, command
    '/Users/giffler/.cache/pre-commit/repor6pnmwlm/py_env-python3.10/bin/changelog docs/source/changes compile --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
@@ -6,8 +6,13 @@
 CHANGELOG
 #########
 
-[Unreleased] - 2023-04-03
-=========================
+[0.7.1] - 2023-05-16
+====================
+
+Changed
+-------
+
+* Change pyauditor version to 0.1.0
 
 Fixed
 -----
