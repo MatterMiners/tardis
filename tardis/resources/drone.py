@@ -3,9 +3,9 @@ from typing import List, Union, Optional, Type
 from tardis.agents.batchsystemagent import BatchSystemAgent
 from tardis.agents.siteagent import SiteAgent
 from tardis.interfaces.plugin import Plugin
+from tardis.interfaces.siteadapter import ResourceStatus
 from tardis.interfaces.state import State
-from .dronestates import RequestState
-from .dronestates import DownState
+from .dronestates import DownState, RequestState
 from ..plugins.sqliteregistry import SqliteRegistry
 from ..utilities.attributedict import AttributeDict
 from ..utilities.utils import load_states
@@ -32,8 +32,8 @@ class Drone(Pool):
         remote_resource_uuid=None,
         drone_uuid=None,
         state: Optional[State] = None,
-        created: float = None,
-        updated: float = None,
+        created: Optional[float] = None,
+        updated: Optional[float] = None,
     ):
         self._site_agent = site_agent
         self._batch_system_agent = batch_system_agent
@@ -117,6 +117,12 @@ class Drone(Pool):
             # to be notified on the first state change. As calling the
             # ``set_state`` coroutine is not possible in the constructor, we
             # initiate the first state change here
+            #
+            # In addition, all necessary attributes in `resource_attributes`
+            # `AttributeDict` need to be present and have meaningful defaults.
+            # `resource_status` should be set to `ResourceStatus.Booting` on
+            # newly created drones by default.
+            self.resource_attributes.resource_status = ResourceStatus.Booting
             await self.set_state(RequestState())
         while True:
             current_state = self.state

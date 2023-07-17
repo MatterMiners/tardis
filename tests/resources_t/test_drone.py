@@ -1,9 +1,10 @@
 from ..utilities.utilities import async_return, run_async, set_awaitable_return_value
 
 from tardis.interfaces.plugin import Plugin
+from tardis.interfaces.siteadapter import ResourceStatus
 from tardis.interfaces.state import State
 from tardis.resources.drone import Drone
-from tardis.resources.dronestates import DrainState, DownState
+from tardis.resources.dronestates import DrainState, DownState, RequestState
 from tardis.plugins.sqliteregistry import SqliteRegistry
 from tardis.utilities.attributedict import AttributeDict
 
@@ -111,6 +112,24 @@ class TestDrone(TestCase):
 
     def test_site_agent(self):
         self.assertEqual(self.drone.site_agent, self.mock_site_agent)
+
+    @patch("tardis.resources.drone.RequestState", spec=RequestState)
+    def test_first_run_of_initialized_drone(self, mocked_request_state):
+        # self.drone.run() is executed in an endless loop, therefore an
+        # EndOfLoop exception is thrown, which then can be caught. Throwing
+        # StopIteration does not work in a while loop
+        class EndOfLoop(Exception):
+            pass
+
+        mocked_request_state.return_value.run.side_effect = EndOfLoop
+        with self.assertRaises(EndOfLoop):
+            run_async(self.drone.run)
+
+        # Actual test code
+        self.assertIsInstance(self.drone.state, RequestState)
+        self.assertEqual(
+            self.drone.resource_attributes.resource_status, ResourceStatus.Booting
+        )
 
     @patch("tardis.resources.drone.asyncio.sleep")
     def test_run(self, mocked_asyncio_sleep):
