@@ -91,7 +91,7 @@ setup(
         "elasticsearch>=7.17,<8.0.0",
         "aioprometheus>=21.9.0",
         "kubernetes_asyncio",
-        "pydantic",
+        "pydantic<2.0.0",
         "asyncstdlib",
         "typing_extensions",
         "backports.cached_property",
