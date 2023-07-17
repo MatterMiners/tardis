@@ -1,0 +1,9 @@
+category: fixed
+summary: "Pin TARDIS to use pydantic version 1"
+description: |
+  TARDIS supports at the moment only pydantic version 1, hence we are pinning the utilization of pydantic version 1 in 
+  `setup.py`.
+issues:
+- 299
+pull requests:
+- 298

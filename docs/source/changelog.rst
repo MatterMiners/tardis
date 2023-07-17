@@ -14,6 +14,11 @@ Deprecated
 
 * Minimal Python version is 3.8
 
+Fixed
+-----
+
+* Pin TARDIS to use pydantic version 1
+
 [0.7.1] - 2023-05-16
 ====================
 
