@@ -18,6 +18,7 @@ Fixed
 -----
 
 * Pin TARDIS to use pydantic version 1
+* Fix missing `resource_status` attribute crashing Prometheus plugin on newly started drones
 
 [0.7.1] - 2023-05-16
 ====================

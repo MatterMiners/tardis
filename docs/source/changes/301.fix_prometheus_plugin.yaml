@@ -1,0 +1,9 @@
+category: fixed
+summary: "Fix missing `resource_status` attribute crashing Prometheus plugin on newly started drones"
+description: |
+  Newly started drones were missing the `resource_status` attribute in the `resource_attributes` dictionary which led
+  to crashes in the Prometheus plugin.
+issues:
+- 297
+pull requests:
+- 301
