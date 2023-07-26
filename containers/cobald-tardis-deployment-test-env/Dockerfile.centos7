@@ -1,15 +1,16 @@
 FROM centos:7
 LABEL maintainer="Manuel Giffels <giffels@gmail.com>"
 
-RUN yum -y install epel-release curl && yum clean all
+RUN yum -y install epel-release centos-release-scl-rh curl && yum clean all
+RUN yum --enablerepo=centos-sclo-rh -y install rh-python38 && yum clean all
+
+RUN scl enable rh-python38 bash
 
 RUN curl -sL https://rpm.nodesource.com/setup_16.x | bash -
 
 RUN yum -y update \
     && yum -y install git \
-                      python3 \
                       gcc \
-                      python3-devel \
                       nodejs \
     && yum clean all
 
