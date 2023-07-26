@@ -1,10 +1,9 @@
+from functools import cached_property
 from typing import TypeVar, Generic, Iterable, List, Tuple, Optional, Set
 from typing_extensions import Protocol
 import asyncio
 import time
 import sys
-
-from backports.cached_property import cached_property
 
 
 T = TypeVar("T")
