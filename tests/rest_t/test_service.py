@@ -1,5 +1,5 @@
 from tardis.rest.service import RestService
-from ..utilities.utilities import async_return, run_async
+from tests.utilities.utilities import async_return, run_async
 
 from unittest import TestCase
 from unittest.mock import patch

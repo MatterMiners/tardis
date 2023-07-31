@@ -1,4 +1,8 @@
-from ..utilities.utilities import async_return, run_async, set_awaitable_return_value
+from tests.utilities.utilities import (
+    async_return,
+    run_async,
+    set_awaitable_return_value,
+)
 
 from tardis.interfaces.plugin import Plugin
 from tardis.interfaces.siteadapter import ResourceStatus

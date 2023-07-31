@@ -1,5 +1,5 @@
-from ..utilities.utilities import run_async
-from ..utilities.utilities import async_return
+from tests.utilities.utilities import run_async
+from tests.utilities.utilities import async_return
 from tardis.agents.siteagent import SiteAgent
 from tardis.interfaces.siteadapter import SiteAdapter
 

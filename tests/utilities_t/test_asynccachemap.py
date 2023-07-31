@@ -1,7 +1,7 @@
 from tardis.exceptions.executorexceptions import CommandExecutionFailure
 from tardis.utilities.asynccachemap import AsyncCacheMap
 
-from ..utilities.utilities import run_async
+from tests.utilities.utilities import run_async
 
 from json.decoder import JSONDecodeError
 from datetime import datetime

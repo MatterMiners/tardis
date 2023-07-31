@@ -3,7 +3,7 @@ from tardis.exceptions.tardisexceptions import TardisError
 from tardis.interfaces.siteadapter import ResourceStatus
 from tardis.utilities.attributedict import AttributeDict
 
-from ...utilities.utilities import run_async
+from tests.utilities.utilities import run_async
 
 from datetime import datetime
 from datetime import timedelta
