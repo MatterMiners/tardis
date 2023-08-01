@@ -85,7 +85,18 @@ class Auditor(Plugin):
                 .replace(tzinfo=self._local_timezone)
                 .astimezone(pytz.utc)
             )
-            await self._client.update(record)
+            try:
+                await self._client.update(record)
+            except RuntimeError as e:
+                if str(e).startswith(
+                    "Reqwest Error: HTTP status client error (400 Bad Request)"
+                ):
+                    self.logger.debug(
+                        f"Could not update record {record.record_id}, "
+                        "it probably does not exist in the database"
+                    )
+                else:
+                    raise
 
     def construct_record(self, resource_attributes: AttributeDict):
         """

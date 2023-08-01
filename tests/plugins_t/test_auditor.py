@@ -143,6 +143,38 @@ class TestAuditor(TestCase):
             self.assertEqual(self.client.add.call_count, 1)
             self.assertEqual(self.client.update.call_count, 1)
 
+        # test exception handling
+        self.client.update.side_effect = RuntimeError(
+            "Reqwest Error: HTTP status client error (400 Bad Request) "
+            "for url (http://127.0.0.1:8000/update)"
+        )
+        run_async(
+            self.plugin.notify,
+            state=DownState(),
+            resource_attributes=self.test_param,
+        )
+
+        self.client.update.side_effect = RuntimeError(
+            "Reqwest Error: HTTP status client error (403 Forbidden) "
+            "for url (http://127.0.0.1:8000/update)"
+        )
+        with self.assertRaises(RuntimeError):
+            run_async(
+                self.plugin.notify,
+                state=DownState(),
+                resource_attributes=self.test_param,
+            )
+
+        self.client.update.side_effect = ValueError("Other exception")
+        with self.assertRaises(ValueError):
+            run_async(
+                self.plugin.notify,
+                state=DownState(),
+                resource_attributes=self.test_param,
+            )
+
+        self.client.update.side_effect = None
+
     def test_construct_record(self):
         record = self.plugin.construct_record(resource_attributes=self.test_param)
 
