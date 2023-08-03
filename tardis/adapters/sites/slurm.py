@@ -141,12 +141,21 @@ class SlurmAdapter(SiteAdapter):
         except KeyError:
             if (
                 self._slurm_status.last_update - resource_attributes.created
-            ).total_seconds() < 0:
+            ).total_seconds() < 10:
                 # In case the created timestamp is after last update timestamp of the
-                # asynccachemap, no decision about the current state can be given,
-                # since map is updated asynchronously. Just retry later on.
+                # asynccachemap plus 10 s grace period, no decision about the current
+                # state can be given, since map is updated asynchronously.
+                # Just retry later on.
+                logger.debug(
+                    "Time difference between drone creation and last_update of"
+                    "slurm_status is less then 10 s."
+                )
                 raise TardisResourceStatusUpdateFailed from None
             else:
+                logger.debug(
+                    f"Cannot find {resource_uuid} in slurm_status assuming"
+                    "drone is already deleted."
+                )
                 resource_status = {
                     "JobID": resource_attributes.remote_resource_uuid,
                     "State": "COMPLETED",

@@ -273,13 +273,23 @@ class HTCondorAdapter(SiteAdapter):
             resource_status = self._htcondor_queue[resource_uuid]
         except KeyError:
             # In case the created timestamp is after last update timestamp of the
-            # asynccachemap, no decision about the current state can be given,
-            # since map is updated asynchronously.
+            # asynccachemap plus a grace period of max(10, bulk_delay) seconds, no
+            # decision about the current state can be given, since map is updated
+            # asynchronously.
+            bulk_delay = getattr(self.configuration, "bulk_delay", 1)
             if (
                 self._htcondor_queue.last_update - resource_attributes.created
-            ).total_seconds() < 0:
+            ).total_seconds() < max(bulk_delay, 10):
+                logger.debug(
+                    "Time difference between drone creation and last_update of"
+                    f"htcondor_queue is less then {max(bulk_delay, 10)} s."
+                )
                 raise TardisResourceStatusUpdateFailed from None
             else:
+                logger.debug(
+                    f"Cannot find {resource_uuid} in htcondor_queue assuming"
+                    "drone is already deleted."
+                )
                 return AttributeDict(resource_status=ResourceStatus.Deleted)
         else:
             return self.handle_response(resource_status)

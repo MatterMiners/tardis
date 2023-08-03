@@ -141,17 +141,25 @@ class MoabAdapter(SiteAdapter):
     ) -> AttributeDict:
         await self._moab_status.update_status()
         # In case the created timestamp is after last update timestamp of the
-        # asynccachemap, no decision about the current state can be given,
-        # since map is updated asynchronously.
+        # asynccachemap plus 10 s grace period, no decision about the current
+        # state can be given, since map is updated asynchronously.
         try:
             resource_uuid = resource_attributes.remote_resource_uuid
             resource_status = self._moab_status[str(resource_uuid)]
         except KeyError as err:
             if (
                 self._moab_status._last_update - resource_attributes.created
-            ).total_seconds() < 0:
+            ).total_seconds() < 10:
+                logger.debug(
+                    "Time difference between drone creation and last_update of"
+                    "moab_status is less then 10 s."
+                )
                 raise TardisResourceStatusUpdateFailed from err
             else:
+                logger.debug(
+                    f"Cannot find {resource_uuid} in moab_status assuming"
+                    "drone is already deleted."
+                )
                 resource_status = {
                     "JobID": resource_attributes.remote_resource_uuid,
                     "State": "Completed",
