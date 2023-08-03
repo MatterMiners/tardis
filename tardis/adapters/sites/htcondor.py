@@ -17,7 +17,6 @@ from ...utilities.utils import (
 )
 
 from contextlib import contextmanager
-from datetime import datetime
 from functools import partial
 from string import Template
 
@@ -213,8 +212,6 @@ class HTCondorAdapter(SiteAdapter):
         key_translator = StaticMapping(
             remote_resource_uuid="JobId",
             resource_status="JobStatus",
-            created="created",
-            updated="updated",
         )
 
         # HTCondor uses digits to indicate job states and digit as variable names
@@ -264,7 +261,7 @@ class HTCondorAdapter(SiteAdapter):
 
         job_id = await self._condor_submit(submit_jdl)
         response = AttributeDict(JobId=job_id)
-        response.update(self.create_timestamps())
+
         return self.handle_response(response)
 
     async def resource_status(
@@ -287,28 +284,23 @@ class HTCondorAdapter(SiteAdapter):
         else:
             return self.handle_response(resource_status)
 
-    async def stop_resource(self, resource_attributes: AttributeDict):
+    async def stop_resource(self, resource_attributes: AttributeDict) -> None:
         """
         Stopping machines is equivalent to suspending jobs in HTCondor,
         therefore condor_suspend is called!
         """
         resource_uuid = resource_attributes.remote_resource_uuid
         if await self._condor_suspend(resource_attributes):
-            return self.handle_response(AttributeDict(JobId=resource_uuid))
+            return
         logger.debug(f"condor_suspend failed for {resource_uuid}")
         raise TardisResourceStatusUpdateFailed
 
-    async def terminate_resource(self, resource_attributes: AttributeDict):
+    async def terminate_resource(self, resource_attributes: AttributeDict) -> None:
         resource_uuid = resource_attributes.remote_resource_uuid
         if await self._condor_rm(resource_attributes):
-            return self.handle_response(AttributeDict(JobId=resource_uuid))
+            return
         logger.debug(f"condor_rm failed for {resource_uuid}")
         raise TardisResourceStatusUpdateFailed
-
-    @staticmethod
-    def create_timestamps():
-        now = datetime.now()
-        return AttributeDict(created=now, updated=now)
 
     @contextmanager
     def handle_exceptions(self):

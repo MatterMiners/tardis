@@ -165,8 +165,6 @@ class TestHTCondorSiteAdapter(TestCase):
             ),
         )
         self.assertEqual(response.remote_resource_uuid, "1351043.0")
-        self.assertFalse(response.created - datetime.now() > timedelta(seconds=1))
-        self.assertFalse(response.updated - datetime.now() > timedelta(seconds=1))
 
         _, kwargs = self.mock_executor.return_value.run_command.call_args
         self.assertEqual(
@@ -361,7 +359,7 @@ class TestHTCondorSiteAdapter(TestCase):
         response = run_async(
             self.adapter.stop_resource, AttributeDict(remote_resource_uuid="1351043.0")
         )
-        self.assertEqual(response.remote_resource_uuid, "1351043.0")
+        self.assertIsNone(response)
 
     @mock_executor_run_command(
         stdout="",
@@ -403,7 +401,7 @@ class TestHTCondorSiteAdapter(TestCase):
             self.adapter.terminate_resource,
             AttributeDict(remote_resource_uuid="1351043.0"),
         )
-        self.assertEqual(response.remote_resource_uuid, "1351043.0")
+        self.assertIsNone(response)
 
     @mock_executor_run_command(stdout=CONDOR_RM_FAILED_OUTPUT)
     def test_terminate_resource_failed_redo(self):
