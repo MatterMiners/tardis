@@ -225,28 +225,16 @@ class TestMoabAdapter(TestCase):
 
     @mock_executor_run_command(TEST_DEPLOY_RESOURCE_RESPONSE)
     def test_deploy_resource(self):
-        expected_resource_attributes = self.resource_attributes
-        expected_resource_attributes.update(
-            created=datetime.now(), updated=datetime.now()
+        self.assertDictEqual(
+            AttributeDict(
+                remote_resource_uuid=4761849, resource_status=ResourceStatus.Booting
+            ),
+            run_async(
+                self.moab_adapter.deploy_resource,
+                resource_attributes=self.resource_attributes,
+            ),
         )
-        return_resource_attributes = run_async(
-            self.moab_adapter.deploy_resource,
-            resource_attributes=self.resource_attributes,
-        )
-        if (
-            return_resource_attributes.created - expected_resource_attributes.created
-            > timedelta(seconds=1)
-            or return_resource_attributes.updated - expected_resource_attributes.updated
-            > timedelta(seconds=1)
-        ):
-            raise Exception("Creation time or update time wrong!")
-        del (
-            expected_resource_attributes.created,
-            expected_resource_attributes.updated,
-            return_resource_attributes.created,
-            return_resource_attributes.updated,
-        )
-        self.assertEqual(return_resource_attributes, expected_resource_attributes)
+
         self.mock_executor.return_value.run_command.assert_called_with(
             "msub -j oe -m p -l walltime=02:00:00:00,mem=120gb,nodes=1:ppn=20 -v TardisDroneCores=128,TardisDroneMemory=120,TardisDroneDisk=100,TardisDroneUuid=testsite-abcdef startVM.py"  # noqa: B950
         )
@@ -260,12 +248,11 @@ class TestMoabAdapter(TestCase):
             )
         )
 
-        moab_adapter = MoabAdapter(machine_type="test2large", site_name="TestSite")
-
         run_async(
-            moab_adapter.deploy_resource,
+            self.moab_adapter.deploy_resource,
             resource_attributes=self.resource_attributes,
         )
+
         self.mock_executor.return_value.run_command.assert_called_with(
             "msub -M someone@somewhere.com -j oe -m p -l walltime=02:00:00:00,mem=120gb,nodes=1:ppn=20 -v TardisDroneCores=128,TardisDroneMemory=120,TardisDroneDisk=100,TardisDroneUuid=testsite-abcdef --timeout=60 startVM.py"  # noqa: B950
         )
@@ -283,19 +270,15 @@ class TestMoabAdapter(TestCase):
 
     @mock_executor_run_command(TEST_RESOURCE_STATUS_RESPONSE)
     def test_resource_status(self):
-        expected_resource_attributes = self.resource_attributes
-        expected_resource_attributes.update(updated=datetime.now())
-        return_resource_attributes = run_async(
-            self.moab_adapter.resource_status,
-            resource_attributes=self.resource_attributes,
+        self.assertDictEqual(
+            AttributeDict(
+                remote_resource_uuid=4761849, resource_status=ResourceStatus.Booting
+            ),
+            run_async(
+                self.moab_adapter.resource_status,
+                resource_attributes=self.resource_attributes,
+            ),
         )
-        if (
-            return_resource_attributes.updated - expected_resource_attributes.updated
-            > timedelta(seconds=1)
-        ):
-            raise Exception("Update time wrong!")
-        del expected_resource_attributes.updated, return_resource_attributes.updated
-        self.assertEqual(return_resource_attributes, expected_resource_attributes)
 
     @mock_executor_run_command(TEST_RESOURCE_STATE_TRANSLATION_RESPONSE)
     def test_resource_state_translation(self):
@@ -316,49 +299,36 @@ class TestMoabAdapter(TestCase):
         self.assertEqual(
             self.resource_attributes["resource_status"], ResourceStatus.Booting
         )
-        return_resource_attributes = run_async(
-            self.moab_adapter.resource_status,
-            resource_attributes=self.resource_attributes,
-        )
-        self.assertEqual(
-            return_resource_attributes["resource_status"], ResourceStatus.Running
+
+        self.assertDictEqual(
+            AttributeDict(
+                remote_resource_uuid=4761849, resource_status=ResourceStatus.Running
+            ),
+            run_async(
+                self.moab_adapter.resource_status,
+                resource_attributes=self.resource_attributes,
+            ),
         )
 
     @mock_executor_run_command(TEST_TERMINATE_RESOURCE_RESPONSE)
     def test_stop_resource(self):
-        expected_resource_attributes = self.resource_attributes
-        expected_resource_attributes.update(
-            updated=datetime.now(), resource_status=ResourceStatus.Stopped
-        )
-        return_resource_attributes = run_async(
+        run_async(
             self.moab_adapter.stop_resource,
             resource_attributes=self.resource_attributes,
         )
-        if (
-            return_resource_attributes.updated - expected_resource_attributes.updated
-            > timedelta(seconds=1)
-        ):
-            raise Exception("Update time wrong!")
-        del expected_resource_attributes.updated, return_resource_attributes.updated
-        self.assertEqual(return_resource_attributes, expected_resource_attributes)
+        self.mock_executor.return_value.run_command.assert_called_with(
+            "canceljob 4761849"
+        )
 
     @mock_executor_run_command(TEST_TERMINATE_RESOURCE_RESPONSE)
     def test_terminate_resource(self):
-        expected_resource_attributes = self.resource_attributes
-        expected_resource_attributes.update(
-            updated=datetime.now(), resource_status=ResourceStatus.Stopped
-        )
-        return_resource_attributes = run_async(
+        run_async(
             self.moab_adapter.terminate_resource,
             resource_attributes=self.resource_attributes,
         )
-        if (
-            return_resource_attributes.updated - expected_resource_attributes.updated
-            > timedelta(seconds=1)
-        ):
-            raise Exception("Update time wrong!")
-        del expected_resource_attributes.updated, return_resource_attributes.updated
-        self.assertEqual(return_resource_attributes, expected_resource_attributes)
+        self.mock_executor.return_value.run_command.assert_called_with(
+            "canceljob 4761849"
+        )
 
     @mock_executor_run_command(
         "",
@@ -372,18 +342,11 @@ class TestMoabAdapter(TestCase):
         ),
     )
     def test_terminate_dead_resource(self):
-        expected_resource_attributes = self.resource_attributes
-        expected_resource_attributes.update(
-            updated=datetime.now(), resource_status=ResourceStatus.Stopped
-        )
         with self.assertLogs(level=logging.WARNING):
-            return_resource_attributes = run_async(
+            run_async(
                 self.moab_adapter.terminate_resource,
                 resource_attributes=self.resource_attributes,
             )
-        self.assertEqual(
-            return_resource_attributes["resource_status"], ResourceStatus.Stopped
-        )
 
     @mock_executor_run_command(
         "",
@@ -461,9 +424,3 @@ class TestMoabAdapter(TestCase):
 
         for to_raise, to_catch in matrix:
             test_exception_handling(to_raise, to_catch)
-
-    def test_check_remote_resource_uuid(self):
-        with self.assertRaises(TardisError):
-            self.moab_adapter.check_remote_resource_uuid(
-                AttributeDict(remote_resource_uuid=1), regex=r"^(\d)$", response="2"
-            )

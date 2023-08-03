@@ -6,7 +6,6 @@ from ...interfaces.siteadapter import ResourceStatus
 from ...interfaces.siteadapter import SiteAdapter
 from ...utilities.staticmapping import StaticMapping
 from ...utilities.attributedict import AttributeDict
-from ...utilities.attributedict import convert_to_attribute_dict
 from ...utilities.executors.shellexecutor import ShellExecutor
 from ...utilities.asynccachemap import AsyncCacheMap
 from ...utilities.utils import (
@@ -18,11 +17,9 @@ from ...utilities.utils import (
 from asyncio import TimeoutError
 from contextlib import contextmanager
 from functools import partial
-from datetime import datetime
 
 import asyncssh
 import logging
-import re
 import warnings
 from xml.dom import minidom
 
@@ -133,27 +130,11 @@ class MoabAdapter(SiteAdapter):
         logger.debug(f"{self.site_name} servers create returned {result}")
 
         remote_resource_uuid = int(result.stdout)
-        resource_attributes.update(
+
+        return AttributeDict(
             remote_resource_uuid=remote_resource_uuid,
-            created=datetime.now(),
-            updated=datetime.now(),
             resource_status=ResourceStatus.Booting,
         )
-        return resource_attributes
-
-    @staticmethod
-    def check_remote_resource_uuid(resource_attributes, regex, response):
-        pattern = re.compile(regex, flags=re.MULTILINE)
-        remote_resource_uuid = int(pattern.findall(response)[0])
-        if remote_resource_uuid != int(resource_attributes.remote_resource_uuid):
-            raise TardisError(
-                f"Failed to terminate {resource_attributes.remote_resource_uuid}."
-            )
-        else:
-            resource_attributes.update(
-                resource_status=ResourceStatus.Stopped, updated=datetime.now()
-            )
-        return remote_resource_uuid
 
     async def resource_status(
         self, resource_attributes: AttributeDict
@@ -176,40 +157,27 @@ class MoabAdapter(SiteAdapter):
                     "State": "Completed",
                 }
         logger.debug(f"{self.site_name} has status {resource_status}.")
-        resource_attributes.update(updated=datetime.now())
-        return convert_to_attribute_dict(
-            {**resource_attributes, **self.handle_response(resource_status)}
-        )
 
-    async def terminate_resource(self, resource_attributes: AttributeDict):
+        return self.handle_response(resource_status)
+
+    async def terminate_resource(self, resource_attributes: AttributeDict) -> None:
         request_command = f"canceljob {resource_attributes.remote_resource_uuid}"
         try:
             response = await self._executor.run_command(request_command)
         except CommandExecutionFailure as cf:
             if cf.exit_code == 1:
                 logger.warning(
-                    f"{self.site_name} servers terminate returned {cf.stdout}"
-                )
-                remote_resource_uuid = self.check_remote_resource_uuid(
-                    resource_attributes,
-                    r"ERROR:  invalid job specified \((\d*)\)",
-                    cf.stderr,
+                    f"{self.site_name} servers terminate returned {cf.stdout}."
+                    "Potentially already terminated."
                 )
             else:
                 raise cf
         else:
             logger.debug(f"{self.site_name} servers terminate returned {response}")
-            remote_resource_uuid = self.check_remote_resource_uuid(
-                resource_attributes, r"^job \'(\d*)\' cancelled", response.stdout
-            )
 
-        return self.handle_response(
-            {"SystemJID": remote_resource_uuid}, **resource_attributes
-        )
-
-    async def stop_resource(self, resource_attributes: AttributeDict):
+    async def stop_resource(self, resource_attributes: AttributeDict) -> None:
         logger.debug("MOAB jobs cannot be stopped gracefully. Terminating instead.")
-        return await self.terminate_resource(resource_attributes)
+        await self.terminate_resource(resource_attributes)
 
     def msub_cmdline_options(self, drone_uuid, machine_meta_data_translation_mapping):
         sbatch_options = self.machine_type_configuration.get(
