@@ -1,7 +1,5 @@
 from tardis.utilities.attributedict import AttributeDict
 
-from datetime import datetime
-
 import asyncio
 import socket
 
@@ -19,10 +17,6 @@ def get_free_port():  # from https://gist.github.com/dbrgn/3979133
     port = s.getsockname()[1]
     s.close()
     return port
-
-
-def get_fixed_datetime():
-    return datetime.fromtimestamp(12345689)
 
 
 def mock_executor_run_command(stdout, stderr="", exit_code=0, raise_exception=None):
