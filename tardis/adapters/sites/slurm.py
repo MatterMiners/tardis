@@ -6,7 +6,6 @@ from ...interfaces.siteadapter import ResourceStatus
 from ...interfaces.siteadapter import SiteAdapter
 from ...utilities.staticmapping import StaticMapping
 from ...utilities.attributedict import AttributeDict
-from ...utilities.attributedict import convert_to_attribute_dict
 from ...utilities.executors.shellexecutor import ShellExecutor
 from ...utilities.asynccachemap import AsyncCacheMap
 from ...utilities.utils import (
@@ -19,7 +18,6 @@ from ...utilities.utils import (
 from asyncio import TimeoutError
 from contextlib import contextmanager
 from functools import partial
-from datetime import datetime
 
 import logging
 import re
@@ -127,13 +125,11 @@ class SlurmAdapter(SiteAdapter):
         logger.debug(f"{self.site_name} sbatch returned {result}")
         pattern = re.compile(r"^Submitted batch job (\d*)", flags=re.MULTILINE)
         remote_resource_uuid = int(pattern.findall(result.stdout)[0])
-        resource_attributes.update(
+
+        return AttributeDict(
             remote_resource_uuid=remote_resource_uuid,
-            created=datetime.now(),
-            updated=datetime.now(),
             resource_status=ResourceStatus.Booting,
         )
-        return resource_attributes
 
     async def resource_status(
         self, resource_attributes: AttributeDict
@@ -156,20 +152,12 @@ class SlurmAdapter(SiteAdapter):
                     "State": "COMPLETED",
                 }
         logger.debug(f"{self.site_name} has status {resource_status}.")
-        resource_attributes.update(updated=datetime.now())
-        return convert_to_attribute_dict(
-            {**resource_attributes, **self.handle_response(resource_status)}
-        )
 
-    async def terminate_resource(self, resource_attributes: AttributeDict):
+        return self.handle_response(resource_status)
+
+    async def terminate_resource(self, resource_attributes: AttributeDict) -> None:
         request_command = f"scancel {resource_attributes.remote_resource_uuid}"
         await self._executor.run_command(request_command)
-        resource_attributes.update(
-            resource_status=ResourceStatus.Stopped, updated=datetime.now()
-        )
-        return self.handle_response(
-            {"JobId": resource_attributes.remote_resource_uuid}, **resource_attributes
-        )
 
     def sbatch_cmdline_options(self, drone_uuid, machine_meta_data_translation_mapping):
         sbatch_options = self.machine_type_configuration.get(
@@ -205,9 +193,9 @@ class SlurmAdapter(SiteAdapter):
             ),
         )
 
-    async def stop_resource(self, resource_attributes: AttributeDict):
+    async def stop_resource(self, resource_attributes: AttributeDict) -> None:
         logger.debug("Slurm jobs cannot be stopped gracefully. Terminating instead.")
-        return await self.terminate_resource(resource_attributes)
+        await self.terminate_resource(resource_attributes)
 
     @contextmanager
     def handle_exceptions(self):

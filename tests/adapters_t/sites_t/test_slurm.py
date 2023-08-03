@@ -5,7 +5,7 @@ from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from tardis.exceptions.executorexceptions import CommandExecutionFailure
 from tardis.interfaces.siteadapter import ResourceStatus
 from tardis.utilities.attributedict import AttributeDict
-from tests.utilities.utilities import mock_executor_run_command
+from tests.utilities.utilities import mock_executor_run_command, run_async
 from tests.utilities.utilities import run_async
 
 from unittest import TestCase
@@ -67,15 +67,6 @@ Submitted batch job 1390065
 class TestSlurmAdapter(TestCase):
     mock_config_patcher = None
     mock_executor_patcher = None
-
-    def check_attribute_dicts(
-        self, expected_attributes, returned_attributes, exclude=tuple()
-    ):
-        for key in expected_attributes.keys():
-            if key not in exclude:
-                self.assertEqual(
-                    getattr(returned_attributes, key), getattr(expected_attributes, key)
-                )
 
     @classmethod
     def setUpClass(cls):
@@ -153,11 +144,6 @@ class TestSlurmAdapter(TestCase):
 
     @mock_executor_run_command(TEST_DEPLOY_RESOURCE_RESPONSE)
     def test_deploy_resource(self):
-        expected_resource_attributes = self.resource_attributes
-        expected_resource_attributes.update(
-            created=datetime.now(), updated=datetime.now()
-        )
-
         resource_attributes = AttributeDict(
             machine_type="test2large",
             site_name="TestSite",
@@ -169,19 +155,11 @@ class TestSlurmAdapter(TestCase):
             drone_uuid="testsite-1390065",
         )
 
-        returned_resource_attributes = run_async(
-            self.slurm_adapter.deploy_resource, resource_attributes
-        )
-
-        self.assertLess(
-            returned_resource_attributes.created - expected_resource_attributes.created,
-            timedelta(seconds=1),
-        )
-
-        self.check_attribute_dicts(
-            expected_resource_attributes,
-            returned_resource_attributes,
-            exclude=("created", "updated"),
+        self.assertDictEqual(
+            AttributeDict(
+                remote_resource_uuid=1390065, resource_status=ResourceStatus.Booting
+            ),
+            run_async(self.slurm_adapter.deploy_resource, resource_attributes),
         )
 
         self.mock_executor.return_value.run_command.assert_called_with(
@@ -247,26 +225,14 @@ class TestSlurmAdapter(TestCase):
 
     @mock_executor_run_command(TEST_RESOURCE_STATUS_RESPONSE)
     def test_resource_status(self):
-        expected_resource_attributes = self.resource_attributes
-        expected_resource_attributes.update(updated=datetime.now())
-
-        returned_resource_attributes = run_async(
-            self.slurm_adapter.resource_status,
-            resource_attributes=self.resource_attributes,
-        )
-
-        self.assertLess(
-            (
-                returned_resource_attributes.updated
-                - expected_resource_attributes.updated
+        self.assertDictEqual(
+            AttributeDict(
+                resource_status=ResourceStatus.Booting, remote_resource_uuid=1390065
             ),
-            timedelta(seconds=1),
-        )
-
-        self.check_attribute_dicts(
-            expected_resource_attributes,
-            returned_resource_attributes,
-            exclude=("created", "updated"),
+            run_async(
+                self.slurm_adapter.resource_status,
+                resource_attributes=self.resource_attributes,
+            ),
         )
 
         self.mock_executor.return_value.run_command.assert_called_with(
@@ -279,18 +245,14 @@ class TestSlurmAdapter(TestCase):
             self.resource_attributes["resource_status"], ResourceStatus.Booting
         )
 
-        return_resource_attributes = run_async(
-            self.slurm_adapter.resource_status,
-            resource_attributes=self.resource_attributes,
-        )
-
-        self.assertEqual(
-            return_resource_attributes["resource_status"], ResourceStatus.Running
-        )
-
-        self.assertEqual(
-            return_resource_attributes["drone_uuid"],
-            self.resource_attributes["drone_uuid"],
+        self.assertDictEqual(
+            AttributeDict(
+                resource_status=ResourceStatus.Running, remote_resource_uuid=1390065
+            ),
+            run_async(
+                self.slurm_adapter.resource_status,
+                resource_attributes=self.resource_attributes,
+            ),
         )
 
         self.mock_executor.return_value.run_command.assert_called_with(
@@ -402,14 +364,11 @@ class TestSlurmAdapter(TestCase):
                 AttributeDict(remote_resource_uuid="1390065"),
             )
 
-        self.check_attribute_dicts(
+        self.assertDictEqual(
             AttributeDict(
-                remote_resource_uuid=1390065,
-                resource_status=ResourceStatus.Running,
-                updated=datetime.now(),
+                remote_resource_uuid=1390065, resource_status=ResourceStatus.Running
             ),
             response,
-            exclude=("updated",),
         )
 
         self.mock_executor.return_value.run_command.assert_called_with(
