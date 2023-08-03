@@ -18,7 +18,6 @@ from tardis.utilities.staticmapping import StaticMapping
 
 from asyncio import TimeoutError
 from contextlib import contextmanager
-from datetime import datetime
 from functools import partial
 
 import logging
@@ -54,8 +53,6 @@ class OpenStackAdapter(SiteAdapter):
         )
 
         translator_functions = StaticMapping(
-            created=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ"),
-            updated=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ"),
             status=lambda x, translator=StaticMapping(
                 BUILD=ResourceStatus.Booting,
                 ACTIVE=ResourceStatus.Running,

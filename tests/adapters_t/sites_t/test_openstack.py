@@ -6,8 +6,7 @@ from tardis.exceptions.tardisexceptions import TardisTimeout
 from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from tardis.utilities.attributedict import AttributeDict
 from tardis.interfaces.siteadapter import ResourceStatus
-from tests.utilities.utilities import async_return
-from tests.utilities.utilities import run_async
+from tests.utilities.utilities import async_return, run_async
 
 from aiohttp import ClientConnectionError
 from aiohttp import ContentTypeError
@@ -71,7 +70,11 @@ class TestOpenStackAdapter(TestCase):
 
         self.get_return_value = AttributeDict(
             server=AttributeDict(
-                name="testsite-089123", id="029312-1231-123123", status="ACTIVE"
+                name="testsite-089123",
+                id="029312-1231-123123",
+                status="ACTIVE",
+                created="2023-07-31T12:46:24Z",
+                updated="2023-07-31T12:46:50Z",
             )
         )
         openstack_api.servers.get.return_value = async_return(
@@ -147,7 +150,9 @@ class TestOpenStackAdapter(TestCase):
             run_async(
                 self.openstack_adapter.resource_status,
                 resource_attributes=AttributeDict(
-                    remote_resource_uuid="029312-1231-123123"
+                    drone_uuid="testsite-089123",
+                    remote_resource_uuid="029312-1231-123123",
+                    resource_status=ResourceStatus.Booting,
                 ),
             ),
             AttributeDict(
