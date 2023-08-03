@@ -85,22 +85,20 @@ class OpenStackAdapter(SiteAdapter):
         logger.debug(f"{self.site_name} servers get returned {response}")
         return self.handle_response(response["server"])
 
-    async def stop_resource(self, resource_attributes: AttributeDict):
+    async def stop_resource(self, resource_attributes: AttributeDict) -> None:
         await self.nova.init_api(timeout=60)
         params = {"os-stop": None}
         response = await self.nova.servers.run_action(
             resource_attributes.remote_resource_uuid, **params
         )
         logger.debug(f"{self.site_name} servers stop returned {response}")
-        return response
 
-    async def terminate_resource(self, resource_attributes: AttributeDict):
+    async def terminate_resource(self, resource_attributes: AttributeDict) -> None:
         await self.nova.init_api(timeout=60)
         response = await self.nova.servers.force_delete(
             resource_attributes.remote_resource_uuid
         )
         logger.debug(f"{self.site_name} servers terminate returned {response}")
-        return response
 
     @contextmanager
     def handle_exceptions(self):
