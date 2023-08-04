@@ -17,6 +17,7 @@ Deprecated
 Fixed
 -----
 
+* Fix auditor error handling when updating non-existing record
 * Pin TARDIS to use pydantic version 1
 * Fix missing `resource_status` attribute crashing Prometheus plugin on newly started drones
 
