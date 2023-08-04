@@ -273,27 +273,25 @@ class SiteAdapter(metaclass=ABCMeta):
             ) from ae
 
     @abstractmethod
-    async def stop_resource(self, resource_attributes: AttributeDict):
+    async def stop_resource(self, resource_attributes: AttributeDict) -> None:
         """
         Abstract method to define the interface to stop resources at a resource
         provider.
         :param resource_attributes: Contains describing attributes of the resource,
         defined in the :py:class:`~tardis.resources.drone.Drone` implementation!
         :type resource_attributes: AttributeDict
-        :return: Contains updated describing attributes of the resource.
-        :rtype: AttributeDict
+        :return: None
         """
         raise NotImplementedError
 
     @abstractmethod
-    async def terminate_resource(self, resource_attributes: AttributeDict):
+    async def terminate_resource(self, resource_attributes: AttributeDict) -> None:
         """
         Abstract method to define the interface to terminate resources at a
         resource provider.
         :param resource_attributes: Contains describing attributes of the resource,
         defined in the :py:class:`~tardis.resources.drone.Drone` implementation!
         :type resource_attributes: AttributeDict
-        :return: Contains updated describing attributes of the resource.
-        :rtype: AttributeDict
+        :return: None
         """
         raise NotImplementedError
