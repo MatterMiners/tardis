@@ -165,6 +165,14 @@ class TestAuditor(TestCase):
                 resource_attributes=self.test_param,
             )
 
+        self.client.update.side_effect = RuntimeError("Does not match RegEx")
+        with self.assertRaises(RuntimeError):
+            run_async(
+                self.plugin.notify,
+                state=DownState(),
+                resource_attributes=self.test_param,
+            )
+
         self.client.update.side_effect = ValueError("Other exception")
         with self.assertRaises(ValueError):
             run_async(
