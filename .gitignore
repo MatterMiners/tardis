@@ -116,8 +116,11 @@ test_scripts/
 cobald*.yml
 *tardis.yml
 
-#Ignore cloudinit files
+# Ignore cloudinit files
 cloudinit/
 
-#Ignore logs
-*.log*
+# Ignore logs
+*.log
+
+# Igonre vscode
+.vscode*
