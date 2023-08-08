@@ -98,7 +98,6 @@ setup(
         "python-auditor==0.1.0",
         "pytz",
         "tzlocal",
-        "aiolancium",
         *REST_REQUIRES,
     ],
     extras_require={
