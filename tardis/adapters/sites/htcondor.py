@@ -1,11 +1,10 @@
-from typing import Iterable, Tuple, Awaitable
+from typing import Iterable, Tuple, Awaitable, Mapping
 from ...exceptions.executorexceptions import CommandExecutionFailure
 from ...exceptions.tardisexceptions import TardisError
 from ...exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from ...interfaces.siteadapter import SiteAdapter
 from ...interfaces.siteadapter import ResourceStatus
 from ...interfaces.executor import Executor
-from ...utilities.asynccachemap import AsyncCacheMap
 from ...utilities.attributedict import AttributeDict
 from ...utilities.staticmapping import StaticMapping
 from ...utilities.executors.shellexecutor import ShellExecutor
@@ -35,18 +34,23 @@ def _job_id(resource_uuid: str) -> str:
     return resource_uuid if "." in resource_uuid else f"{resource_uuid}.0"
 
 
-async def htcondor_queue_updater(executor):
-    attributes = dict(
-        Owner="Owner", JobStatus="JobStatus", ClusterId="ClusterId", ProcId="ProcId"
-    )
+async def condor_q(
+    *resource_attributes: Tuple[AttributeDict, ...], executor: Executor
+) -> Iterable[Mapping]:
+    attributes = dict(JobStatus="JobStatus", ClusterId="ClusterId", ProcId="ProcId")
     attributes_string = " ".join(attributes.values())
-    queue_command = f"condor_q -af:t {attributes_string}"
+
+    remote_resource_ids = " ".join(
+        _job_id(resource.remote_resource_uuid) for resource in resource_attributes
+    )
+
+    queue_command = f"condor_q {remote_resource_ids} -af:t {attributes_string}"
 
     htcondor_queue = {}
     try:
         condor_queue = await executor.run_command(queue_command)
     except CommandExecutionFailure as cf:
-        logger.warning(f"htcondor_queue_update failed: {cf}")
+        logger.warning(f"{queue_command} failed with: {cf}")
         raise
     else:
         for row in csv_parser(
@@ -57,7 +61,18 @@ async def htcondor_queue_updater(executor):
         ):
             row["JobId"] = f"{row['ClusterId']}.{row['ProcId']}"
             htcondor_queue[row["JobId"]] = row
-        return htcondor_queue
+
+        return (
+            htcondor_queue.get(
+                _job_id(resource.remote_resource_uuid),
+                # assume that jobs that do not show up (anymore) in condor_q have
+                # JobStatus 4 (Deleted)
+                {
+                    "JobStatus": "4",
+                },
+            )
+            for resource in resource_attributes
+        )
 
 
 JDL = str
@@ -208,6 +223,11 @@ class HTCondorAdapter(SiteAdapter):
             )
             for tool in (condor_submit, condor_suspend, condor_rm)
         )
+        self._condor_q = AsyncBulkCall(
+            partial(condor_q, executor=self._executor),
+            size=bulk_size,
+            delay=bulk_delay,
+        )
 
         key_translator = StaticMapping(
             remote_resource_uuid="JobId",
@@ -227,11 +247,6 @@ class HTCondorAdapter(SiteAdapter):
             self.handle_response,
             key_translator=key_translator,
             translator_functions=translator_functions,
-        )
-
-        self._htcondor_queue = AsyncCacheMap(
-            update_coroutine=partial(htcondor_queue_updater, self._executor),
-            max_age=self.configuration.max_age * 60,
         )
 
     async def deploy_resource(
@@ -267,32 +282,7 @@ class HTCondorAdapter(SiteAdapter):
     async def resource_status(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
-        await self._htcondor_queue.update_status()
-        try:
-            resource_uuid = _job_id(resource_attributes.remote_resource_uuid)
-            resource_status = self._htcondor_queue[resource_uuid]
-        except KeyError:
-            # In case the created timestamp is after last update timestamp of the
-            # asynccachemap plus a grace period of max(10, bulk_delay) seconds, no
-            # decision about the current state can be given, since map is updated
-            # asynchronously.
-            bulk_delay = getattr(self.configuration, "bulk_delay", 1)
-            if (
-                self._htcondor_queue.last_update - resource_attributes.created
-            ).total_seconds() < max(bulk_delay, 10):
-                logger.debug(
-                    "Time difference between drone creation and last_update of"
-                    f"htcondor_queue is less then {max(bulk_delay, 10)} s."
-                )
-                raise TardisResourceStatusUpdateFailed from None
-            else:
-                logger.debug(
-                    f"Cannot find {resource_uuid} in htcondor_queue assuming"
-                    "drone is already deleted."
-                )
-                return AttributeDict(resource_status=ResourceStatus.Deleted)
-        else:
-            return self.handle_response(resource_status)
+        return self.handle_response(await self._condor_q(resource_attributes))
 
     async def stop_resource(self, resource_attributes: AttributeDict) -> None:
         """

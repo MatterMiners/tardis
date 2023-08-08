@@ -7,8 +7,6 @@ from tardis.utilities.attributedict import AttributeDict
 from tests.utilities.utilities import mock_executor_run_command
 from tests.utilities.utilities import run_async
 
-from datetime import datetime
-from datetime import timedelta
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -38,13 +36,14 @@ RequestDisk = 167772160
 RequestMemory = 32768
 """
 
-CONDOR_Q_OUTPUT_IDLE = "test\t1\t1351043\t0"
-CONDOR_Q_OUTPUT_RUN = "test\t2\t1351043\t0"
-CONDOR_Q_OUTPUT_REMOVING = "test\t3\t1351043\t0"
-CONDOR_Q_OUTPUT_COMPLETED = "test\t4\t1351043\t0"
-CONDOR_Q_OUTPUT_HELD = "test\t5\t1351043\t0"
-CONDOR_Q_OUTPUT_TRANSFERING_OUTPUT = "test\t6\t1351043\t0"
-CONDOR_Q_OUTPUT_SUSPENDED = "test\t7\t1351043\t0"
+CONDOR_Q_OUTPUT_IDLE = "1\t1351043\t0"
+CONDOR_Q_OUTPUT_RUN = "2\t1351043\t0"
+CONDOR_Q_OUTPUT_REMOVING = "3\t1351043\t0"
+CONDOR_Q_OUTPUT_COMPLETED = "4\t1351043\t0"
+CONDOR_Q_OUTPUT_HELD = "5\t1351043\t0"
+CONDOR_Q_OUTPUT_TRANSFERING_OUTPUT = "6\t1351043\t0"
+CONDOR_Q_OUTPUT_SUSPENDED = "7\t1351043\t0"
+CONDOR_Q_OUTPUT_DOES_NOT_EXISTS = "1\t1351042\t0"
 
 CONDOR_RM_OUTPUT = "Job 1351043.0 marked for removal"
 CONDOR_RM_FAILED_OUTPUT = "Job 1351043.0 not found"
@@ -323,35 +322,22 @@ class TestHTCondorSiteAdapter(TestCase):
             message="Failed", stdout="Failed", stderr="Failed", exit_code=2
         ),
     )
-    def test_resource_status_raise_future(self):
-        future_timestamp = datetime.now() + timedelta(minutes=1)
+    def test_resource_status_command_execution_error(self):
         with self.assertLogs(level=logging.WARNING):
-            with self.assertRaises(TardisResourceStatusUpdateFailed):
+            with self.assertRaises(CommandExecutionFailure):
                 run_async(
                     self.adapter.resource_status,
                     AttributeDict(
-                        remote_resource_uuid="1351043.0", created=future_timestamp
+                        remote_resource_uuid="1351043.0",
                     ),
                 )
 
-    @mock_executor_run_command(
-        stdout="",
-        raise_exception=CommandExecutionFailure(
-            message="Failed", stdout="Failed", stderr="Failed", exit_code=2
-        ),
-    )
-    def test_resource_status_raise_past(self):
-        # Update interval is 10 minutes, so set last update back by 11 minutes
-        # in order to execute condor_q command and creation date to 12 minutes ago
-        past_timestamp = datetime.now() - timedelta(minutes=12)
-        self.adapter._htcondor_queue._last_update = datetime.now() - timedelta(
-            minutes=11
+    @mock_executor_run_command(stdout=CONDOR_Q_OUTPUT_DOES_NOT_EXISTS)
+    def test_resource_status_already_deleted(self):
+        response = run_async(
+            self.adapter.resource_status,
+            AttributeDict(remote_resource_uuid="1351043.0"),
         )
-        with self.assertLogs(level=logging.WARNING):
-            response = run_async(
-                self.adapter.resource_status,
-                AttributeDict(remote_resource_uuid="1351043.0", created=past_timestamp),
-            )
         self.assertEqual(response.resource_status, ResourceStatus.Deleted)
 
     @mock_executor_run_command(stdout=CONDOR_SUSPEND_OUTPUT)
