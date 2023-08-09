@@ -2,12 +2,13 @@ from ...exceptions.executorexceptions import CommandExecutionFailure
 from ...exceptions.tardisexceptions import TardisError
 from ...exceptions.tardisexceptions import TardisTimeout
 from ...exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
+from ...interfaces.executor import Executor
 from ...interfaces.siteadapter import ResourceStatus
 from ...interfaces.siteadapter import SiteAdapter
 from ...utilities.staticmapping import StaticMapping
+from ...utilities.asyncbulkcall import AsyncBulkCall
 from ...utilities.attributedict import AttributeDict
 from ...utilities.executors.shellexecutor import ShellExecutor
-from ...utilities.asynccachemap import AsyncCacheMap
 from ...utilities.utils import (
     convert_to,
     drone_environment_to_str,
@@ -17,6 +18,7 @@ from ...utilities.utils import (
 from asyncio import TimeoutError
 from contextlib import contextmanager
 from functools import partial
+from typing import Iterable, Mapping, Tuple
 
 import asyncssh
 import logging
@@ -26,7 +28,9 @@ from xml.dom import minidom
 logger = logging.getLogger("cobald.runtime.tardis.adapters.sites.moab")
 
 
-async def moab_status_updater(executor):
+async def showq(
+    *resource_attributes: Tuple[AttributeDict, ...], executor: Executor
+) -> Iterable[Mapping]:
     cmd = "showq --xml -w user=$(whoami) && showq -c --xml -w user=$(whoami)"
     logger.debug("Moab status update is running.")
     response = await executor.run_command(cmd)
@@ -45,7 +49,18 @@ async def moab_status_updater(executor):
                 "State": line.attributes["State"].value,
             }
     logger.debug("Moab status update completed")
-    return moab_resource_status
+
+    return (
+        moab_resource_status.get(
+            str(resource.remote_resource_uuid),
+            # assume that jobs that do not show up (anymore) in squeue have
+            # State Completed (Deleted)
+            {
+                "State": "Completed",
+            },
+        )
+        for resource in resource_attributes
+    )
 
 
 class MoabAdapter(SiteAdapter):
@@ -67,10 +82,6 @@ class MoabAdapter(SiteAdapter):
 
         self._executor = getattr(self.configuration, "executor", ShellExecutor())
 
-        self._moab_status = AsyncCacheMap(
-            update_coroutine=partial(moab_status_updater, self._executor),
-            max_age=self.configuration.StatusUpdate * 60,
-        )
         key_translator = StaticMapping(
             remote_resource_uuid="JobID", resource_status="State"
         )
@@ -118,6 +129,15 @@ class MoabAdapter(SiteAdapter):
             translator_functions=translator_functions,
         )
 
+        bulk_size = getattr(self.configuration, "bulk_size", 100)
+        bulk_delay = getattr(self.configuration, "bulk_delay", 1.0)
+
+        self._showq = AsyncBulkCall(
+            partial(showq, executor=self._executor),
+            size=bulk_size,
+            delay=bulk_delay,
+        )
+
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
@@ -139,34 +159,7 @@ class MoabAdapter(SiteAdapter):
     async def resource_status(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
-        await self._moab_status.update_status()
-        # In case the created timestamp is after last update timestamp of the
-        # asynccachemap plus 10 s grace period, no decision about the current
-        # state can be given, since map is updated asynchronously.
-        try:
-            resource_uuid = resource_attributes.remote_resource_uuid
-            resource_status = self._moab_status[str(resource_uuid)]
-        except KeyError as err:
-            if (
-                self._moab_status._last_update - resource_attributes.created
-            ).total_seconds() < 10:
-                logger.debug(
-                    "Time difference between drone creation and last_update of"
-                    "moab_status is less then 10 s."
-                )
-                raise TardisResourceStatusUpdateFailed from err
-            else:
-                logger.debug(
-                    f"Cannot find {resource_uuid} in moab_status assuming"
-                    "drone is already deleted."
-                )
-                resource_status = {
-                    "JobID": resource_attributes.remote_resource_uuid,
-                    "State": "Completed",
-                }
-        logger.debug(f"{self.site_name} has status {resource_status}.")
-
-        return self.handle_response(resource_status)
+        return self.handle_response(await self._showq(resource_attributes))
 
     async def terminate_resource(self, resource_attributes: AttributeDict) -> None:
         request_command = f"canceljob {resource_attributes.remote_resource_uuid}"

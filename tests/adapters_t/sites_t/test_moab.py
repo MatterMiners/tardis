@@ -11,7 +11,7 @@ from tests.utilities.utilities import run_async
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from warnings import filterwarnings
 
 import asyncio
@@ -167,6 +167,7 @@ class TestMoabAdapter(TestCase):
         self.test_site_config.StatusUpdate = 10
         self.test_site_config.MachineTypeConfiguration = self.machine_type_configuration
         self.test_site_config.executor = self.mock_executor.return_value
+        self.test_site_config.bulk_delay = 0.01
 
         self.moab_adapter = MoabAdapter(machine_type="test2large", site_name="TestSite")
 
@@ -362,35 +363,30 @@ class TestMoabAdapter(TestCase):
                 resource_attributes=self.resource_attributes,
             )
 
-    def test_resource_status_raise(self):
-        # Update interval is 10 minutes, so set last update back by 2 minutes in
-        # order to execute sacct command and creation date to current date
-        created_timestamp = datetime.now()
-        new_timestamp = datetime.now() - timedelta(minutes=2)
-        self.moab_adapter._moab_status._last_update = new_timestamp
-        with self.assertRaises(TardisResourceStatusUpdateFailed):
+    @mock_executor_run_command(
+        stdout="",
+        raise_exception=CommandExecutionFailure(
+            message="Failed", stdout="Failed", stderr="Failed", exit_code=2
+        ),
+    )
+    def test_resource_status_update_failed(self):
+        with self.assertRaises(CommandExecutionFailure):
             run_async(
                 self.moab_adapter.resource_status,
                 AttributeDict(
                     resource_id=1351043,
                     remote_resource_uuid=1351043,
                     resource_state=ResourceStatus.Booting,
-                    created=created_timestamp,
                 ),
             )
 
-    def test_resource_status_raise_past(self):
-        # Update interval is 10 minutes, so set last update back by 11 minutes
-        # in order to execute sacct command and creation date to 12 minutes ago
-        creation_timestamp = datetime.now() - timedelta(minutes=12)
-        last_update_timestamp = datetime.now() - timedelta(minutes=11)
-        self.moab_adapter._moab_status._last_update = last_update_timestamp
+    @mock_executor_run_command(TEST_RESOURCE_STATUS_RESPONSE_RUNNING)
+    def test_resource_status_of_completed_jobs(self):
         response = run_async(
             self.moab_adapter.resource_status,
             AttributeDict(
                 resource_id=1390065,
                 remote_resource_uuid=1351043,
-                created=creation_timestamp,
             ),
         )
         self.assertEqual(response.resource_status, ResourceStatus.Deleted)
