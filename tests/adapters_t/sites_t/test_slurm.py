@@ -6,12 +6,10 @@ from tardis.exceptions.executorexceptions import CommandExecutionFailure
 from tardis.interfaces.siteadapter import ResourceStatus
 from tardis.utilities.attributedict import AttributeDict
 from tests.utilities.utilities import mock_executor_run_command, run_async
-from tests.utilities.utilities import run_async
 
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
-from datetime import datetime, timedelta
 from warnings import filterwarnings
 
 import asyncio
@@ -95,6 +93,7 @@ class TestSlurmAdapter(TestCase):
         self.test_site_config.StatusUpdate = 10
         self.test_site_config.MachineTypeConfiguration = self.machine_type_configuration
         self.test_site_config.executor = self.mock_executor.return_value
+        self.test_site_config.bulk_delay = 0.01
 
         self.slurm_adapter = SlurmAdapter(
             machine_type="test2large", site_name="TestSite"
@@ -236,7 +235,7 @@ class TestSlurmAdapter(TestCase):
         )
 
         self.mock_executor.return_value.run_command.assert_called_with(
-            'squeue -o "%A|%N|%T" -h -t all'
+            'squeue -o "%A|%N|%T" -h -t all --job=1390065'
         )
 
     @mock_executor_run_command(TEST_RESOURCE_STATUS_RESPONSE_RUNNING)
@@ -256,7 +255,7 @@ class TestSlurmAdapter(TestCase):
         )
 
         self.mock_executor.return_value.run_command.assert_called_with(
-            'squeue -o "%A|%N|%T" -h -t all'
+            'squeue -o "%A|%N|%T" -h -t all --job=1390065'
         )
 
     @mock_executor_run_command(TEST_RESOURCE_STATUS_RESPONSE_ALL_STATES)
@@ -296,54 +295,28 @@ class TestSlurmAdapter(TestCase):
             )
             self.assertEqual(returned_resource_attributes.resource_status, value)
 
-        self.mock_executor.return_value.run_command.called_once()
+            self.mock_executor.return_value.run_command.called_once()
 
-        self.mock_executor.return_value.run_command.assert_called_with(
-            'squeue -o "%A|%N|%T" -h -t all'
-        )
-
-    def test_resource_status_raise_update_failed(self):
-        # Update interval is 10 minutes, so turn back last update by 2 minutes
-        # and creation date to current date, so that
-        # TardisResourceStatusUpdateFailed is raised
-        created_timestamp = datetime.now()
-        new_timestamp = datetime.now() - timedelta(minutes=2)
-
-        self.slurm_adapter._slurm_status._last_update = new_timestamp
-
-        with self.assertRaises(TardisResourceStatusUpdateFailed):
-            run_async(
-                self.slurm_adapter.resource_status,
-                AttributeDict(
-                    remote_resource_uuid=1351043,
-                    resource_state=ResourceStatus.Booting,
-                    created=created_timestamp,
-                ),
+            self.mock_executor.return_value.run_command.assert_called_with(
+                f'squeue -o "%A|%N|%T" -h -t all --job={job_id}'
             )
+
+            self.mock_executor.reset_mock()
 
     @mock_executor_run_command("")
     def test_resource_status_of_completed_jobs(self):
-        # Update interval is 10 minutes, so turn back last update by 11 minutes
-        # and creation date to 12 minutes ago. => squeue should be executed
-        # The empty string returned by squeue represents a resource is already
-        # gone. So, ResourceStatus returned should be Deleted.
-        past_timestamp = datetime.now() - timedelta(minutes=12)
-        new_timestamp = datetime.now() - timedelta(minutes=11)
-        self.slurm_adapter._slurm_status._last_update = new_timestamp
-
         response = run_async(
             self.slurm_adapter.resource_status,
             AttributeDict(
                 resource_id="1390065",
                 remote_resource_uuid="1351043",
-                created=past_timestamp,
             ),
         )
 
         self.assertEqual(response.resource_status, ResourceStatus.Deleted)
 
         self.mock_executor.return_value.run_command.assert_called_with(
-            'squeue -o "%A|%N|%T" -h -t all'
+            'squeue -o "%A|%N|%T" -h -t all --job=1351043'
         )
 
     @mock_executor_run_command(
@@ -353,26 +326,15 @@ class TestSlurmAdapter(TestCase):
         ),
     )
     def test_resource_status_update_failed(self):
-        # set previous data, should be returned when update fails
-        self.slurm_adapter._slurm_status._data = {
-            "1390065": {"JobId": "1390065", "Host": "fh2n1552", "State": "RUNNING"}
-        }
-
         with self.assertLogs(level=logging.WARNING):
-            response = run_async(
-                self.slurm_adapter.resource_status,
-                AttributeDict(remote_resource_uuid="1390065"),
-            )
-
-        self.assertDictEqual(
-            AttributeDict(
-                remote_resource_uuid=1390065, resource_status=ResourceStatus.Running
-            ),
-            response,
-        )
+            with self.assertRaises(CommandExecutionFailure):
+                run_async(
+                    self.slurm_adapter.resource_status,
+                    AttributeDict(remote_resource_uuid="1390065"),
+                )
 
         self.mock_executor.return_value.run_command.assert_called_with(
-            'squeue -o "%A|%N|%T" -h -t all'
+            'squeue -o "%A|%N|%T" -h -t all --job=1390065'
         )
 
     @mock_executor_run_command(stdout="", stderr="", exit_code=0)
