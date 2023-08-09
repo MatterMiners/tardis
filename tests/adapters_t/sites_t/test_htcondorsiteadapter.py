@@ -127,7 +127,7 @@ class TestHTCondorSiteAdapter(TestCase):
         test_site_config.MachineTypeConfiguration = self.machine_type_configuration
         test_site_config.executor = self.mock_executor.return_value
         test_site_config.bulk_size = 100
-        test_site_config.bulk_delay = 0.1
+        test_site_config.bulk_delay = 0.01
         test_site_config.max_age = 10
 
         self.adapter = HTCondorAdapter(machine_type="test2large", site_name="TestSite")
