@@ -113,7 +113,7 @@ Configuration of TARDIS
         BatchSystem:
           adapter: FakeBatchSystem
           allocation: 1.0
-          utilisation: !PeriodicValue
+          utilisation: !TardisPeriodicValue
                        period: 3600
                        amplitude: 0.5
                        offset: 0.5
@@ -126,10 +126,10 @@ Configuration of TARDIS
             quota: 8000 # CPU core quota
 
         Fake:
-          api_response_delay: !RandomGauss
+          api_response_delay: !TardisRandomGauss
                               mu: 0.1
                               sigma: 0.01
-          resource_boot_time: !RandomGauss
+          resource_boot_time: !TardisRandomGauss
                               mu: 60
                               sigma: 10
           MachineTypes:
@@ -182,7 +182,7 @@ Unified Configuration
             BatchSystem:
               adapter: FakeBatchSystem
               allocation: 1.0
-              utilization: !PeriodicValue
+              utilization: !TardisPeriodicValue
                            period: 3600
                            amplitude: 0.5
                            offset: 0.5
@@ -195,10 +195,10 @@ Unified Configuration
                 quota: 8000 # CPU core quota
 
             Fake:
-              api_response_delay: !RandomGauss
+              api_response_delay: !TardisRandomGauss
                                   mu: 0.1
                                   sigma: 0.01
-              resource_boot_time: !RandomGauss
+              resource_boot_time: !TardisRandomGauss
                                   mu: 60
                                   sigma: 10
               MachineTypes:
