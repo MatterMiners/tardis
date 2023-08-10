@@ -51,7 +51,13 @@ class FakeSiteAdapter(SiteAdapter):
         # check if resource should already run
         if (datetime.now() - created_time) > timedelta(
             seconds=resource_boot_time
-        ) and resource_attributes.resource_status is ResourceStatus.Booting:
+        ) and resource_attributes.get(
+            "resource_status",
+            ResourceStatus.Booting
+            # When cobald is restarted, "resource_status" is not set. Since this is a
+            # FakeAdapter, when can safely start the cycle again by assuming
+            # ResourceStatus.Booting and let TARDIS manage the drone's life cycle
+        ) is ResourceStatus.Booting:
             return self.handle_response(
                 AttributeDict(resource_status=ResourceStatus.Running)
             )
