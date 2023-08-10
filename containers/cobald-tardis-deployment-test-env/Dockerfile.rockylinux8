@@ -7,11 +7,14 @@ RUN curl -sL https://rpm.nodesource.com/setup_18.x | bash -
 
 RUN yum -y update \
     && yum -y install git \
-                      python38 \
+                      python39 \
                       gcc \
-                      python38-devel \
+                      python39-devel \
                       nodejs \
                       glibc-langpack-en \
     && yum clean all
+
+# Make Python3.9 default
+RUN alternatives --set python3 /usr/bin/python3.9
 
 SHELL [ "/bin/bash", "--noprofile", "--norc", "-e", "-o", "pipefail", "-c" ]

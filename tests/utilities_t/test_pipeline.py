@@ -1,6 +1,6 @@
 from tardis.utilities.pipeline import PipelineProcessor
 from tardis.utilities.pipeline import StopProcessing
-from ..utilities.utilities import run_async
+from tests.utilities.utilities import run_async
 
 from unittest import TestCase
 

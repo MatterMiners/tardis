@@ -15,10 +15,9 @@ with open(os.path.join(repo_base_dir, "README.md"), "r") as read_me:
 TESTS_REQUIRE = ["flake8", "httpx"]
 REST_REQUIRES = [
     "fastapi-jwt-auth",
-    "fastapi<0.84.0; python_version<'3.7'",  # to support python3.6 (Centos 7)
-    "fastapi; python_version>='3.7'",
+    "fastapi",
     "python-jose",
-    "uvicorn[standard]<=0.14.0",  # to support python3.6 (Centos 7)
+    "uvicorn[standard]",
     "typer",
     "bcrypt",
     "python-multipart",
@@ -53,11 +52,10 @@ setup(
         "Topic :: Utilities",
         "Framework :: AsyncIO",
         "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
     ],
     entry_points={
         "console_scripts": [
@@ -78,14 +76,14 @@ setup(
     },
     keywords=package_about["__keywords__"],
     packages=find_packages(exclude=["tests"]),
+    python_requires=">=3.8",
     install_requires=[
-        "aiohttp<4.0; python_version<'3.7'",  # to support python3.6 (Centos 7)
-        "aiohttp; python_version>='3.7'",
+        "aiohttp",
         get_cryptography_version(),
         "CloudStackAIO>=0.0.8",
         "PyYAML",
         "AsyncOpenStackClient>=0.9.0",
-        "cobald>=0.12.3",
+        "cobald>=0.14.0 ",
         "asyncssh",
         "aiotelegraf",
         "elasticsearch>=7.17,<8.0.0",
@@ -94,7 +92,6 @@ setup(
         "pydantic<2.0.0",
         "asyncstdlib",
         "typing_extensions",
-        "backports.cached_property",
         "python-auditor==0.1.0",
         "pytz",
         "tzlocal",

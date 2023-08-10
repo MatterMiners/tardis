@@ -1,27 +1,33 @@
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v3.1.0
     hooks:
       - id: check-merge-conflict
       - id: end-of-file-fixer
--   repo: https://github.com/psf/black
-    rev: 23.1.0
+  - repo: https://github.com/psf/black
+    rev: 23.7.0
     hooks:
-    -   id: black
+      - id: black
         args:
-        -   --target-version=py36
--   repo: https://github.com/PyCQA/flake8
+          - --target-version=py38
+  - repo: https://github.com/PyCQA/flake8
     rev: 6.0.0
     hooks:
       - id: flake8
--   repo: https://github.com/Matterminers/dev-tools
+  - repo: https://github.com/Matterminers/dev-tools
     rev: "87c2435b377bd932acbcc1b619320d98e67b630a"
     hooks:
-      -  id: contributors
-      -  id: changelog
-         args:
+      - id: contributors
+      - id: changelog
+        args:
           - docs/source/changes
           - compile
+          - --categories
+          - Added
+          - Changed
+          - Fixed
+          - Security
+          - Deprecated
           - --output=docs/source/changelog.rst
-         additional_dependencies:
-          - PyYAML  
+        additional_dependencies:
+          - PyYAML

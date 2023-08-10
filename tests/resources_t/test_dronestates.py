@@ -18,8 +18,8 @@ from tardis.resources.dronestates import ShuttingDownState
 from tardis.resources.dronestates import CleanupState
 from tardis.resources.dronestates import DownState
 from tardis.utilities.attributedict import AttributeDict
-from ..utilities.utilities import async_return
-from ..utilities.utilities import run_async
+from tests.utilities.utilities import async_return
+from tests.utilities.utilities import run_async
 
 from functools import partial
 from datetime import datetime, timedelta

@@ -12,8 +12,8 @@ from ..utilities.utils import load_states
 from cobald.daemon import service
 from cobald.interfaces import Pool
 
-from backports.cached_property import cached_property
 from datetime import datetime
+from functools import cached_property
 
 import asyncio
 import logging

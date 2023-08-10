@@ -1,6 +1,6 @@
 from tardis.interfaces.batchsystemadapter import BatchSystemAdapter
 
-from ..utilities.utilities import run_async
+from tests.utilities.utilities import run_async
 
 from unittest import TestCase
 from unittest.mock import patch

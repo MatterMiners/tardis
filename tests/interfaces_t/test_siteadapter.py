@@ -1,7 +1,7 @@
 from tardis.interfaces.siteadapter import SiteAdapter
 from tardis.utilities.attributedict import AttributeDict
 
-from ..utilities.utilities import run_async
+from tests.utilities.utilities import run_async
 
 from cobald.utility.primitives import infinity as inf
 from unittest import TestCase

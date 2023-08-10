@@ -6,7 +6,7 @@ from unittest import TestCase
 
 from tardis.utilities.asyncbulkcall import AsyncBulkCall
 
-from ..utilities.utilities import run_async
+from tests.utilities.utilities import run_async
 
 
 class CallCounter:

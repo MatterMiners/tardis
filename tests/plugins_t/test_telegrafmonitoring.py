@@ -7,8 +7,8 @@ from unittest import TestCase
 from unittest.mock import Mock
 from unittest.mock import patch
 
-from ..utilities.utilities import async_return
-from ..utilities.utilities import run_async
+from tests.utilities.utilities import async_return
+from tests.utilities.utilities import run_async
 
 import platform
 

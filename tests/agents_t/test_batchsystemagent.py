@@ -1,5 +1,5 @@
-from ..utilities.utilities import run_async
-from ..utilities.utilities import async_return
+from tests.utilities.utilities import run_async
+from tests.utilities.utilities import async_return
 from tardis.agents.batchsystemagent import BatchSystemAgent
 from tardis.interfaces.batchsystemadapter import BatchSystemAdapter
 from tardis.utilities.attributedict import AttributeDict

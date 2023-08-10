@@ -8,7 +8,7 @@ from unittest import TestCase
 from unittest.mock import Mock
 from unittest.mock import patch
 
-from ..utilities.utilities import get_free_port, run_async
+from tests.utilities.utilities import get_free_port, run_async
 
 
 class TestPrometheusMonitoring(TestCase):

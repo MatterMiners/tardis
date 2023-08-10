@@ -5,7 +5,7 @@ from tardis.resources.dronestates import RequestState, DownState
 from tardis.interfaces.state import State
 from tardis.plugins.sqliteregistry import SqliteRegistry
 from tardis.utilities.attributedict import AttributeDict
-from ..utilities.utilities import run_async
+from tests.utilities.utilities import run_async
 
 from unittest import TestCase
 from unittest.mock import patch
