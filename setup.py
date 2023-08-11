@@ -99,7 +99,7 @@ setup(
     ],
     extras_require={
         "docs": [
-            "sphinx",
+            "sphinx<7",
             "sphinx_rtd_theme",
             "sphinxcontrib-contentui",
             "myst_parser",
