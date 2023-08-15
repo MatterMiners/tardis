@@ -99,6 +99,7 @@ setup(
     ],
     extras_require={
         "docs": [
+            "docutils<0.17",  # fixes rendering issue with two column layout
             "sphinx",
             "sphinx_rtd_theme",
             "sphinxcontrib-contentui",
