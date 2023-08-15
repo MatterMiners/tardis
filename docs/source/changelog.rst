@@ -9,17 +9,18 @@ CHANGELOG
 [Unreleased] - 2023-10-04
 =========================
 
-Deprecated
-----------
-
-* Minimal Python version is 3.8
-
 Fixed
 -----
 
 * Fix auditor error handling when updating non-existing record
 * Pin TARDIS to use pydantic version 1
 * Fix missing `resource_status` attribute crashing Prometheus plugin on newly started drones
+
+Deprecated
+----------
+
+* Minimal Python version is 3.8
+* Lancium compute support
 
 [0.7.1] - 2023-05-16
 ====================
