@@ -6,8 +6,8 @@ from ..resources.dronestates import AvailableState, DownState
 
 import pyauditor
 
+import datetime
 import logging
-import pytz
 from tzlocal import get_localzone
 
 
@@ -83,13 +83,13 @@ class Auditor(Plugin):
             record.with_stop_time(
                 resource_attributes["updated"]
                 .replace(tzinfo=self._local_timezone)
-                .astimezone(pytz.utc)
+                .astimezone(datetime.timezone.utc)
             )
             try:
                 await self._client.update(record)
             except RuntimeError as e:
                 if str(e).startswith(
-                    "Reqwest Error: HTTP status client error (400 Bad Request)"
+                    "Reqwest Error: HTTP status client error (404 Not Found)"
                 ):
                     self.logger.debug(
                         f"Could not update record {record.record_id}, "
@@ -117,7 +117,7 @@ class Auditor(Plugin):
             resource_attributes["drone_uuid"],
             resource_attributes["updated"]
             .replace(tzinfo=self._local_timezone)
-            .astimezone(pytz.utc),
+            .astimezone(datetime.timezone.utc),
         ).with_meta(meta)
 
         for resource, amount in self._resources[resource_attributes["site_name"]][

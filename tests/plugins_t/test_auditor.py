@@ -145,7 +145,7 @@ class TestAuditor(TestCase):
 
         # test exception handling
         self.client.update.side_effect = RuntimeError(
-            "Reqwest Error: HTTP status client error (400 Bad Request) "
+            "Reqwest Error: HTTP status client error (404 Not Found) "
             "for url (http://127.0.0.1:8000/update)"
         )
         run_async(
