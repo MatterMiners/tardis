@@ -1,0 +1,13 @@
+category: fixed
+summary: "Fix utilization of updated timestamp and potential ignoring of drone minimum lifetime"
+description: |
+  The original idea was that created and updated timestamps indicate a change 
+  of the `DroneState`. However, in the meantime it was also updated in some 
+  SiteAdapters, when the resource status changed, e.g. through a 
+  `resource_status` call on certain SiteAdapters. Through the 
+  `drone_minimum_lifetime` setting seems to be ignored, because `resource_status` 
+  is called every minute, while `drone_minimum_lifetime` is usually in the order of hours.
+issues:
+  - 296
+pull requests:
+  - 307
