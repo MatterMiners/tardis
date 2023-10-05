@@ -1,7 +1,7 @@
 category: deprecated
 summary: "Lancium compute support"
-description: |
-  Since April 2023 Lancium compute does not offer Platform as a Service anymore, therefore the support of Lancium 
-  compute in TARDIS is now deprecated.
+description: "Since April 2023 Lancium compute does not offer Platform as a Service\
+  \ anymore, therefore the support of Lancium \ncompute in TARDIS is now deprecated.\n"
 pull requests:
-  - 308
+- 308
+version: 0.8.0
