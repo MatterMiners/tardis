@@ -9,6 +9,11 @@ CHANGELOG
 [Unreleased] - 2023-10-05
 =========================
 
+Changed
+-------
+
+* Bump pyauditor version to 0.2.0
+
 Fixed
 -----
 
