@@ -23,9 +23,6 @@ class FakeSiteAdapter(SiteAdapter):
         key_translator = StaticMapping(
             remote_resource_uuid="remote_resource_uuid",
             resource_status="resource_status",
-            created="created",
-            updated="updated",
-            resource_boot_time="resource_boot_time",
         )
 
         self.handle_response = partial(
@@ -34,72 +31,49 @@ class FakeSiteAdapter(SiteAdapter):
             translator_functions=StaticMapping(),
         )
 
-        self._stopped_n_terminated_resources = {}
-
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
         await asyncio.sleep(self._api_response_delay.get_value())
-        now = datetime.now()
         response = AttributeDict(
             remote_resource_uuid=uuid4().hex,
             resource_status=ResourceStatus.Booting,
-            created=now,
-            updated=now,
-            resource_boot_time=self._resource_boot_time.get_value(),
         )
         return self.handle_response(response)
-
-    def get_resource_boot_time(self, resource_attributes: AttributeDict) -> float:
-        try:
-            return resource_attributes.resource_boot_time
-        except AttributeError:
-            # In case tardis is restarted, resource_boot_time is not set, so re-set
-            resource_boot_time = resource_attributes[
-                "resource_boot_time"
-            ] = self._resource_boot_time.get_value()
-            return resource_boot_time
 
     async def resource_status(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
         await asyncio.sleep(self._api_response_delay.get_value())
-        try:  # check if resource has been stopped or terminated
-            resource_status = self._stopped_n_terminated_resources[
-                resource_attributes.drone_uuid
-            ]
-        except KeyError:
-            pass
-        else:
-            return self.handle_response(AttributeDict(resource_status=resource_status))
-
         created_time = resource_attributes.created
 
-        resource_boot_time = self.get_resource_boot_time(resource_attributes)
-        # check if resource is already running
-        if (datetime.now() - created_time) > timedelta(seconds=resource_boot_time):
+        resource_boot_time = self._resource_boot_time.get_value()
+        # check if resource should already run
+        if (datetime.now() - created_time) > timedelta(
+            seconds=resource_boot_time
+        ) and resource_attributes.get(
+            "resource_status",
+            ResourceStatus.Booting
+            # When cobald is restarted, "resource_status" is not set. Since this is a
+            # FakeAdapter, when can safely start the cycle again by assuming
+            # ResourceStatus.Booting and let TARDIS manage the drone's life cycle
+        ) is ResourceStatus.Booting:
             return self.handle_response(
                 AttributeDict(resource_status=ResourceStatus.Running)
             )
-        return self.handle_response(resource_attributes)
+        return AttributeDict()  # do not change anything
 
-    async def stop_resource(self, resource_attributes: AttributeDict):
+    async def stop_resource(self, resource_attributes: AttributeDict) -> None:
         await asyncio.sleep(self._api_response_delay.get_value())
-        self._stopped_n_terminated_resources[
-            resource_attributes.drone_uuid
-        ] = ResourceStatus.Stopped
-        return self.handle_response(
-            AttributeDict(resource_status=ResourceStatus.Stopped)
-        )
+        # update resource status manually to ResourceStatus.Stopped, so that
+        # the life cycle comes to an end.
+        resource_attributes.resource_status = ResourceStatus.Stopped
 
-    async def terminate_resource(self, resource_attributes: AttributeDict):
+    async def terminate_resource(self, resource_attributes: AttributeDict) -> None:
         await asyncio.sleep(self._api_response_delay.get_value())
-        self._stopped_n_terminated_resources[
-            resource_attributes.drone_uuid
-        ] = ResourceStatus.Deleted
-        return self.handle_response(
-            AttributeDict(resource_status=ResourceStatus.Deleted)
-        )
+        # update resource status manually to ResourceStatus.Deleted, so that
+        # the life cycle is ended.
+        resource_attributes.resource_status = ResourceStatus.Deleted
 
     @contextmanager
     def handle_exceptions(self) -> None:

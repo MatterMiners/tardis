@@ -12,7 +12,6 @@ from CloudStackAIO.CloudStack import CloudStack
 from CloudStackAIO.CloudStack import CloudStackClientException
 
 from contextlib import contextmanager
-from datetime import datetime
 from functools import partial
 
 import asyncio
@@ -37,8 +36,6 @@ class CloudStackAdapter(SiteAdapter):
         )
 
         translator_functions = StaticMapping(
-            created=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%S%z"),
-            updated=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%S%z"),
             state=lambda x, translator=StaticMapping(
                 Present=ResourceStatus.Booting,
                 Running=ResourceStatus.Running,

@@ -21,7 +21,7 @@ class KubernetesAdapter(SiteAdapter):
         self._machine_type = machine_type
         self._site_name = site_name
         key_translator = StaticMapping(
-            remote_resource_uuid="uid", drone_uuid="name", resource_status="type"
+            remote_resource_uuid="uid", resource_status="type"
         )
         translator_functions = StaticMapping(
             created=lambda date: datetime.strptime(date, "%Y-%m-%dT%H:%M:%S%z"),
@@ -113,7 +113,6 @@ class KubernetesAdapter(SiteAdapter):
         )
         response = {
             "uid": response_temp.metadata.uid,
-            "name": response_temp.metadata.name,
             "type": "Booting",
         }
         if self.machine_type_configuration.hpa:
@@ -163,23 +162,21 @@ class KubernetesAdapter(SiteAdapter):
         response = {"uid": response_uid, "name": response_name, "type": response_type}
         return self.handle_response(response)
 
-    async def stop_resource(self, resource_attributes: AttributeDict):
+    async def stop_resource(self, resource_attributes: AttributeDict) -> None:
         body = await self.client.read_namespaced_deployment(
             name=resource_attributes.drone_uuid,
             namespace=self.machine_type_configuration.namespace,
         )
         body.spec.replicas = 0
-        response = await self.client.replace_namespaced_deployment(
+        await self.client.replace_namespaced_deployment(
             name=resource_attributes.drone_uuid,
             namespace=self.machine_type_configuration.namespace,
             body=body,
         )
-        return response
 
-    async def terminate_resource(self, resource_attributes: AttributeDict):
-        response = None
+    async def terminate_resource(self, resource_attributes: AttributeDict) -> None:
         try:
-            response = await self.client.delete_namespaced_deployment(
+            await self.client.delete_namespaced_deployment(
                 name=resource_attributes.drone_uuid,
                 namespace=self.machine_type_configuration.namespace,
                 body=k8s_client.V1DeleteOptions(
@@ -200,7 +197,6 @@ class KubernetesAdapter(SiteAdapter):
                 if ex.status != 404:
                     logger.warning(f"deleting hpa failed: {ex}")
                     raise
-        return response
 
     @contextmanager
     def handle_exceptions(self):

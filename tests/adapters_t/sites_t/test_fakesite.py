@@ -44,8 +44,6 @@ class TestFakeSiteAdapter(TestCase):
     def test_deploy_resource(self):
         response = run_async(self.adapter.deploy_resource, AttributeDict())
         self.assertEqual(response.resource_status, ResourceStatus.Booting)
-        self.assertFalse(response.created - datetime.now() > timedelta(seconds=1))
-        self.assertFalse(response.updated - datetime.now() > timedelta(seconds=1))
 
     def test_machine_meta_data(self):
         self.assertEqual(
@@ -59,52 +57,80 @@ class TestFakeSiteAdapter(TestCase):
         self.assertEqual(self.adapter.site_name, "TestSite")
 
     def test_resource_status(self):
-        # test tardis restart, where resource_boot_time is not set
-        response = run_async(
-            self.adapter.resource_status,
-            AttributeDict(
-                created=datetime.now(),
-                resource_status=ResourceStatus.Booting,
-                drone_uuid="test-123",
+        # Booting resource, where boot time is not yet over
+        resource_attributes = AttributeDict(
+            created=datetime.now(),
+            resource_status=ResourceStatus.Booting,
+            drone_uuid="test-123",
+        )
+        self.assertEqual(
+            AttributeDict(),  # no update require, resource still in Booting state
+            run_async(
+                self.adapter.resource_status,
+                resource_attributes,
             ),
         )
-        self.assertEqual(response.resource_status, ResourceStatus.Booting)
 
-        deploy_response = run_async(self.adapter.deploy_resource, AttributeDict())
-        deploy_response.update(AttributeDict(drone_uuid="test-123"))
-        response = run_async(self.adapter.resource_status, deploy_response)
-        self.assertEqual(response.resource_status, ResourceStatus.Booting)
+        # Booting resource, where boot time is already over
+        created_timestamp = datetime.now() - timedelta(seconds=100)
+        resource_attributes.update(AttributeDict(created=created_timestamp))
 
-        past_timestamp = datetime.now() - timedelta(seconds=100)
-        deploy_response.update(
-            AttributeDict(created=past_timestamp, drone_uuid="test-123")
+        self.assertDictEqual(
+            AttributeDict(resource_status=ResourceStatus.Running),
+            run_async(self.adapter.resource_status, resource_attributes),
         )
-        response = run_async(self.adapter.resource_status, deploy_response)
-        self.assertEqual(response.resource_status, ResourceStatus.Running)
 
-        # test stopped resources
-        response.update(AttributeDict(drone_uuid="test-123"))
-        response = run_async(self.adapter.stop_resource, response)
-        self.assertEqual(response.resource_status, ResourceStatus.Stopped)
+        # test resource status of stop resources
+        resource_attributes.update(
+            AttributeDict(resource_status=ResourceStatus.Stopped)
+        )
+        self.assertEqual(
+            AttributeDict(),
+            run_async(self.adapter.resource_status, resource_attributes),
+        )
+        self.assertDictEqual(
+            AttributeDict(
+                created=created_timestamp,
+                resource_status=ResourceStatus.Stopped,
+                drone_uuid="test-123",
+            ),
+            resource_attributes,
+        )
 
-        # test terminated resources
-        response.update(AttributeDict(drone_uuid="test-123"))
-        response = run_async(self.adapter.terminate_resource, response)
-        self.assertEqual(response.resource_status, ResourceStatus.Deleted)
+        # test resource status of terminated resources
+        resource_attributes.update(
+            AttributeDict(resource_status=ResourceStatus.Deleted)
+        )
+        self.assertEqual(
+            AttributeDict(),
+            run_async(self.adapter.resource_status, resource_attributes),
+        )
+        self.assertDictEqual(
+            AttributeDict(
+                created=created_timestamp,
+                resource_status=ResourceStatus.Deleted,
+                drone_uuid="test-123",
+            ),
+            resource_attributes,
+        )
 
     def test_stop_resource(self):
-        deploy_response = run_async(self.adapter.deploy_resource, AttributeDict())
-        deploy_response.update(AttributeDict(drone_uuid="test-123"))
-        run_async(self.adapter.stop_resource, deploy_response)
-        response = run_async(self.adapter.resource_status, deploy_response)
-        self.assertEqual(response.resource_status, ResourceStatus.Stopped)
+        resource_attributes = AttributeDict(
+            drone_uuid="test-123",
+            created=datetime.now(),
+            resource_status=ResourceStatus.Running,
+        )
+        run_async(self.adapter.stop_resource, resource_attributes)
+        self.assertEqual(resource_attributes.resource_status, ResourceStatus.Stopped)
 
     def test_terminate_resource(self):
-        deploy_response = run_async(self.adapter.deploy_resource, AttributeDict())
-        deploy_response.update(AttributeDict(drone_uuid="test-123"))
-        run_async(self.adapter.terminate_resource, deploy_response)
-        response = run_async(self.adapter.resource_status, deploy_response)
-        self.assertEqual(response.resource_status, ResourceStatus.Deleted)
+        resource_attributes = AttributeDict(
+            drone_uuid="test-123",
+            created=datetime.now(),
+            resource_status=ResourceStatus.Running,
+        )
+        run_async(self.adapter.terminate_resource, resource_attributes)
+        self.assertEqual(resource_attributes.resource_status, ResourceStatus.Deleted)
 
     def test_exception_handling(self):
         def test_exception_handling(raise_it, catch_it):

@@ -45,8 +45,8 @@ class Drone(Pool):
             machine_type=self.site_agent.machine_type,
             obs_machine_meta_data_translation_mapping=self.batch_system_agent.machine_meta_data_translation_mapping,  # noqa B950
             remote_resource_uuid=remote_resource_uuid,
-            created=created or datetime.now(),
-            updated=updated or datetime.now(),
+            created=created or datetime.now(),  # timestamp drone creation
+            updated=updated or datetime.now(),  # timestamp last drone state update
             drone_uuid=drone_uuid or self.site_agent.drone_uuid(uuid.uuid4().hex[:10]),
         )
 

@@ -316,7 +316,13 @@ Available adapter configuration options
     +----------------+------------------------------------------------------------------------------------------------+-----------------+
     | Option         | Short Description                                                                              | Requirement     |
     +================+================================================================================================+=================+
-    | StatusUpdate   | The result of the status call is cached for `StatusUpdate` in minutes.                         |  **Required**   |
+    | bulk_size      | Maximum number of jobs to handle per bulk invocation of the ``showq`` command.                 |  **Optional**   |
+    +                +                                                                                                +                 +
+    |                | Default: 100                                                                                   |                 |
+    +----------------+------------------------------------------------------------------------------------------------+-----------------+
+    | bulk_delay     | Maximum duration in seconds to wait per bulk invocation of the ``showq`` command.              |  **Optional**   |
+    +                +                                                                                                +                 +
+    |                | Default: 1.0                                                                                   |                 |
     +----------------+------------------------------------------------------------------------------------------------+-----------------+
     | StartupCommand | The command executed in the batch job. (**Deprecated:** Moved to MachineTypeConfiguration!)    |  **Deprecated** |
     +----------------+------------------------------------------------------------------------------------------------+-----------------+
@@ -347,7 +353,6 @@ Available adapter configuration options
             username: clown
             client_keys:
               - /opt/tardis/ssh/tardis
-          StatusUpdate: 2
           MachineTypes:
             - singularity_d2.large
             - singularity_d1.large
@@ -468,7 +473,13 @@ Available adapter configuration options
     +----------------+---------------------------------------------------------------------------------------------+-----------------+
     | Option         | Short Description                                                                           | Requirement     |
     +================+=============================================================================================+=================+
-    | StatusUpdate   | The result of the status call is cached for `StatusUpdate` in minutes.                      |  **Required**   |
+    | bulk_size      | Maximum number of jobs to handle per bulk invocation of the ``squeue`` command.             |  **Optional**   |
+    +                +                                                                                             +                 +
+    |                | Default: 100                                                                                |                 |
+    +----------------+---------------------------------------------------------------------------------------------+-----------------+
+    | bulk_delay     | Maximum duration in seconds to wait per bulk invocation of the ``squeue`` command.          |  **Optional**   |
+    +                +                                                                                             +                 +
+    |                | Default: 1.0                                                                                |                 |
     +----------------+---------------------------------------------------------------------------------------------+-----------------+
     | StartUpCommand | The command executed in the batch job. (**Deprecated:** Moved to MachineTypeConfiguration!) |  **Deprecated** |
     +----------------+---------------------------------------------------------------------------------------------+-----------------+
@@ -511,7 +522,6 @@ Available machine type configuration options
             username: billy
             client_keys:
              - /opt/tardis/ssh/tardis
-          StatusUpdate: 2
           MachineTypes:
             - one_day
             - twelve_hours

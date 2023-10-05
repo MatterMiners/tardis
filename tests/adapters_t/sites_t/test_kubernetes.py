@@ -167,7 +167,6 @@ class TestKubernetesStackAdapter(TestCase):
             ),
             AttributeDict(
                 remote_resource_uuid="123456",
-                drone_uuid="testsite-089123",
                 resource_status=ResourceStatus.Booting,
             ),
         )
@@ -199,7 +198,6 @@ class TestKubernetesStackAdapter(TestCase):
             ),
             AttributeDict(
                 remote_resource_uuid="123456",
-                drone_uuid="testsite-089123",
                 resource_status=ResourceStatus.Running,
             ),
         )
@@ -216,7 +214,6 @@ class TestKubernetesStackAdapter(TestCase):
             ),
             AttributeDict(
                 remote_resource_uuid="123456",
-                drone_uuid="testsite-089123",
                 resource_status=ResourceStatus.Stopped,
             ),
         )
@@ -230,7 +227,6 @@ class TestKubernetesStackAdapter(TestCase):
             ),
             AttributeDict(
                 remote_resource_uuid="123456",
-                drone_uuid="testsite-089123",
                 resource_status=ResourceStatus.Booting,
             ),
         )
@@ -244,7 +240,6 @@ class TestKubernetesStackAdapter(TestCase):
             ),
             AttributeDict(
                 remote_resource_uuid="123456",
-                drone_uuid="testsite-089123",
                 resource_status=ResourceStatus.Deleted,
             ),
         )
