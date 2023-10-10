@@ -1,4 +1,4 @@
-.. Created by changelog.py at 2023-10-04, command
+.. Created by changelog.py at 2023-10-05, command
    '/Users/giffler/.cache/pre-commit/repor6pnmwlm/py_env-python3.10/bin/changelog docs/source/changes compile --categories Added Changed Fixed Security Deprecated --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
@@ -6,13 +6,27 @@
 CHANGELOG
 #########
 
-[Unreleased] - 2023-10-04
-=========================
+[0.8.0] - 2023-10-05
+====================
+
+Changed
+-------
+
+* Bump pyauditor version to 0.2.0
+
+Fixed
+-----
+
+* Fix auditor error handling when updating non-existing record
+* Pin TARDIS to use pydantic version 1
+* Fix missing `resource_status` attribute crashing Prometheus plugin on newly started drones
+* Fix utilization of updated timestamp and potential ignoring of drone minimum lifetime
 
 Deprecated
 ----------
 
 * Minimal Python version is 3.8
+* Lancium compute support
 
 [0.7.1] - 2023-05-16
 ====================

@@ -1,0 +1,11 @@
+category: fixed
+summary: "Fix auditor error handling when updating non-existing record"
+description: "It can happen that a drone is submitted but never reaches the AvailableState,\
+  \ since demand for resources is decreasing\nand the drone is cleaned-up before and\
+  \ it reaches DownState. This case is currently not handled correctly in the \nauditor\
+  \ plugin, since it tries to update a non-existing record.\n"
+issues:
+- 305
+pull requests:
+- 306
+version: 0.8.0

@@ -1,0 +1,46 @@
+# YAML 1.2
+# Metadata for citation of this software according to the CFF format (https://citation-file-format.github.io/)
+cff-version: 1.1.0
+message: If you use this software, please cite it using these metadata.
+title: "MatterMiners/tardis: 0.7.1"
+doi: 10.5281/zenodo.7943895
+authors:
+  - given-names: Manuel
+    family-names: Giffels
+    affiliation: Karlsruhe Institute of Technology
+    orcid: https://orcid.org/0000-0003-0193-3032
+  - given-names: Max
+    family-names: Fischer
+    affiliation: Karlsruhe Institute of Technology
+  - given-names: Alexander
+    family-names: Haas
+  - given-names: Stefan
+    family-names: Kroboth
+    affiliation: University of Freiburg
+  - given-names: Matthias
+    family-names: Schnepf
+    affiliation: Karlsruhe Institute of Technology
+  - given-names: Eileen
+    family-names: Kuehn
+    affiliation: Karlsruhe Institute of Technology
+  - given-names: Pascal
+    family-names: Schuhmacher
+  - given-names: Rene
+    family-names: Caspart
+    affiliation: Karlsruhe Institute of Technology
+  - given-names: Florian
+    family-names: von Cube
+    affiliation: Karlsruhe Institute of Technology
+  - given-names: Dirk
+    family-names: Sammel
+    affiliation: University of Freiburg
+  - given-names: Benjamin
+    family-names: Rottler
+    affiliation: University of Freiburg
+  - given-names: Peter
+    family-names: Wienemann
+    affiliation: University of Bonn
+version: 0.7.1
+date-released: 2023-05-17
+repository-code: https://github.com/MatterMiners/tardis
+license: MIT
