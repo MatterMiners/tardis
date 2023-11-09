@@ -90,7 +90,7 @@ class SSHExecutor(Executor):
         async with self.bounded_connection as ssh_connection:
             try:
                 response = await ssh_connection.run(
-                    command, check=True, input=stdin_input and stdin_input
+                    command, check=True, input=stdin_input
                 )
             except asyncssh.ProcessError as pe:
                 raise CommandExecutionFailure(
