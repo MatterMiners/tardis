@@ -6,6 +6,14 @@
 CHANGELOG
 #########
 
+[Unreleased] - 2023-11-09
+=========================
+
+Fixed
+-----
+
+* Fix type of sshexecutor stdin parameter
+
 [0.8.0] - 2023-10-05
 ====================
 
