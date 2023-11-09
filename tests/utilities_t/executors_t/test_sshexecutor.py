@@ -43,7 +43,7 @@ class MockConnection(object):
             elif command != "Test":
                 raise ValueError(f"Unsupported mock command: {command}")
             return AttributeDict(
-                stdout=input and input.decode(), stderr="TestError", exit_status=0
+                stdout=input and input, stderr="TestError", exit_status=0
             )
 
     async def create_process(self):
