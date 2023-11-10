@@ -97,3 +97,6 @@ class TestAsyncCacheMap(TestCase):
         # Make them equal again
         test_cache_map._last_update = self.async_cache_map._last_update
         self.assertTrue(self.async_cache_map == test_cache_map)
+
+        # Test different class
+        self.assertFalse(self.async_cache_map == self.test_data)
