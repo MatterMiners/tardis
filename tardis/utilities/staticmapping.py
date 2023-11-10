@@ -13,3 +13,8 @@ class StaticMapping(Mapping):
 
     def __len__(self):
         return len(self._data)
+
+    def __eq__(self, other):
+        if not isinstance(other, StaticMapping):
+            return False
+        return self._data == other._data
