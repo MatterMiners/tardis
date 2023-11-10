@@ -25,9 +25,10 @@ class TestPrometheusMonitoring(TestCase):
 
     @patch("tardis.plugins.prometheusmonitoring.logging", Mock())
     def setUp(self):
+        ip = "127.0.0.1"
         self.config = self.mock_config.return_value
-        self.config.Plugins.PrometheusMonitoring.addr = "127.0.0.1"
-        self.config.Plugins.PrometheusMonitoring.port = get_free_port()
+        self.config.Plugins.PrometheusMonitoring.addr = ip
+        self.config.Plugins.PrometheusMonitoring.port = get_free_port(ip)
 
         self.plugin = PrometheusMonitoring()
 
