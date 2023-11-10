@@ -42,9 +42,7 @@ class MockConnection(object):
                 await asyncio.sleep(float(duration))
             elif command != "Test":
                 raise ValueError(f"Unsupported mock command: {command}")
-            return AttributeDict(
-                stdout=input and input.decode(), stderr="TestError", exit_status=0
-            )
+            return AttributeDict(stdout=input, stderr="TestError", exit_status=0)
 
     async def create_process(self):
         @asynccontextmanager
