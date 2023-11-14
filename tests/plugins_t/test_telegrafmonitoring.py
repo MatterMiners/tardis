@@ -49,6 +49,7 @@ class TestTelegrafMonitoring(TestCase):
         test_param = AttributeDict(
             site_name="test-site",
             machine_type="test_machine_type",
+            drone_uuid="test_drone_uuid",
             created=datetime.now(),
             updated=datetime.now(),
         )
@@ -59,7 +60,9 @@ class TestTelegrafMonitoring(TestCase):
             updated=datetime.timestamp(test_param.updated),
         )
         test_tags = dict(
-            site_name=test_param.site_name, machine_type=test_param.machine_type
+            site_name=test_param.site_name,
+            machine_type=test_param.machine_type,
+            drone_uuid=test_param.drone_uuid,
         )
         run_async(self.plugin.notify, test_state, test_param)
         self.mock_aiotelegraf.Client.assert_called_with(

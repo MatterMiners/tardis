@@ -50,6 +50,7 @@ class TelegrafMonitoring(Plugin):
         tags = dict(
             site_name=resource_attributes.site_name,
             machine_type=resource_attributes.machine_type,
+            drone_uuid=resource_attributes.drone_uuid,
         )
         self.client.metric(self.metric, data, tags=tags)
         await self.client.close()
