@@ -1,0 +1,6 @@
+category: changed
+summary: "Bump pyauditor version to 0.3.0"
+description: |
+  Bump `pyauditor` to version 0.3.0
+pull requests:
+- 319
