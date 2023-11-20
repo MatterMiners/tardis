@@ -40,6 +40,9 @@ authors:
   - given-names: Peter
     family-names: Wienemann
     affiliation: University of Bonn
+  - given-names:Raphael
+    family-names: Kleinemühl
+    affiliation: University of Wuppertal
 version: 0.8.1
 date-released: 2023-11-09
 repository-code: https://github.com/MatterMiners/tardis
