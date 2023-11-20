@@ -13,6 +13,7 @@ Changed
 -------
 
 * Enable support for SSH command restrictions in Moab adapter
+* Add drone_uuid tag to the telegraf record
 * Bump pyauditor version to 0.3.0
 
 Fixed
