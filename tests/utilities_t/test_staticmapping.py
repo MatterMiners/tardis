@@ -26,3 +26,17 @@ class TestStaticMapping(TestCase):
             self.static_map["testB"] = 456
         with self.assertRaises(TypeError):
             self.static_map["testC"] = 456
+
+    def test_eq_async_cache_map(self):
+        test_static_map = StaticMapping(**self.test_data)
+        self.assertTrue(self.static_map == test_static_map)
+
+        # Test the opposite
+        self.assertFalse(self.static_map != test_static_map)
+
+        # Change the data dictionary
+        test_static_map = StaticMapping(test=123)
+        self.assertFalse(self.static_map == test_static_map)
+
+        # Test different class
+        self.assertFalse(self.static_map == self.test_data)

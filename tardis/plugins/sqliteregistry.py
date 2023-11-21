@@ -96,7 +96,7 @@ class SqliteRegistry(Plugin):
                 "CONSTRAINT unique_machine_type_per_site UNIQUE (machine_type, site_id)",  # noqa B950
             ],
             "Resources": [
-                "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                "id INTEGER PRIMARY KEY AUTOINCREMENT",
                 "remote_resource_uuid VARCHAR(255)",
                 "drone_uuid VARCHAR(255) UNIQUE",
                 "state_id INTEGER",

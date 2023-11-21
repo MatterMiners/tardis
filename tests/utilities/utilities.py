@@ -11,9 +11,9 @@ def async_return(*args, return_value=None, **kwargs):
     return f
 
 
-def get_free_port():  # from https://gist.github.com/dbrgn/3979133
+def get_free_port(ip: str):  # from https://gist.github.com/dbrgn/3979133
     s = socket.socket()
-    s.bind(("", 0))
+    s.bind((ip, 0))
     port = s.getsockname()[1]
     s.close()
     return port
