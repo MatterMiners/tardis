@@ -92,7 +92,7 @@ setup(
         "pydantic<2.0.0",
         "asyncstdlib",
         "typing_extensions",
-        "python-auditor==0.2.0",
+        "python-auditor==0.3.0",
         "tzlocal",
         *REST_REQUIRES,
     ],
