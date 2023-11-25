@@ -9,6 +9,11 @@ CHANGELOG
 [Unreleased] - 2023-11-25
 =========================
 
+Changed
+-------
+
+* Enable support for SSH command restrictions in Moab adapter
+
 Fixed
 -----
 
