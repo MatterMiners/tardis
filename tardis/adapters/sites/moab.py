@@ -31,12 +31,16 @@ logger = logging.getLogger("cobald.runtime.tardis.adapters.sites.moab")
 async def showq(
     *resource_attributes: Tuple[AttributeDict, ...], executor: Executor
 ) -> Iterable[Mapping]:
-    cmd = "showq --xml -w user=$(whoami) && showq -c --xml -w user=$(whoami)"
+    showq_active_cmd = "showq --xml -w user=$(USER)"
+    showq_completed_cmd = "showq -c --xml -w user=$(USER)"
     logger.debug("Moab status update is running.")
-    response = await executor.run_command(cmd)
+    combined_response_stdout = ""
+    for cmd in (showq_active_cmd, showq_completed_cmd):
+        response = await executor.run_command(cmd)
+        combined_response_stdout += response.stdout
     # combine two XML outputs to one
     xml_output = minidom.parseString(
-        response["stdout"].replace("\n", "").replace("</Data><Data>", "")
+        combined_response_stdout.replace("\n", "").replace("</Data><Data>", "")
     )
     xml_jobs_list = xml_output.getElementsByTagName("queue")
     # parse XML output

@@ -9,7 +9,7 @@ from tests.utilities.utilities import mock_executor_run_command
 from tests.utilities.utilities import run_async
 
 from unittest import TestCase
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 from datetime import datetime
 from warnings import filterwarnings
@@ -283,6 +283,7 @@ class TestMoabAdapter(TestCase):
 
     @mock_executor_run_command(TEST_RESOURCE_STATE_TRANSLATION_RESPONSE)
     def test_resource_state_translation(self):
+        self.mock_executor.reset_mock()
         for num, (_, state) in enumerate(STATE_TRANSLATIONS):
             job_id = f"76242{num:02}"
             return_resource_attributes = run_async(
@@ -291,9 +292,13 @@ class TestMoabAdapter(TestCase):
             )
             self.assertEqual(return_resource_attributes.resource_status, state)
 
-        self.mock_executor.return_value.run_command.assert_called_with(
-            "showq --xml -w user=$(whoami) && showq -c --xml -w user=$(whoami)"
-        )
+            self.mock_executor.return_value.run_command.assert_has_calls(
+                [
+                    call("showq --xml -w user=$(USER)"),
+                    call("showq -c --xml -w user=$(USER)"),
+                ]
+            )
+            self.mock_executor.reset_mock()
 
     @mock_executor_run_command(TEST_RESOURCE_STATUS_RESPONSE_RUNNING)
     def test_resource_status_update(self):
