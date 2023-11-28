@@ -294,8 +294,8 @@ class TestMoabAdapter(TestCase):
 
             self.mock_executor.return_value.run_command.assert_has_calls(
                 [
-                    call("showq --xml -w user=$(USER)"),
-                    call("showq -c --xml -w user=$(USER)"),
+                    call("showq --xml -w user=${USER}"),
+                    call("showq -c --xml -w user=${USER}"),
                 ]
             )
             self.mock_executor.reset_mock()
