@@ -1,4 +1,4 @@
-.. Created by changelog.py at 2023-11-28, command
+.. Created by changelog.py at 2023-11-29, command
    '/Users/giffler/.cache/pre-commit/repor6pnmwlm/py_env-python3.10/bin/changelog docs/source/changes compile --categories Added Changed Fixed Security Deprecated --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
@@ -6,15 +6,15 @@
 CHANGELOG
 #########
 
-[Unreleased] - 2023-11-28
-=========================
+[0.8.1] - 2023-11-29
+====================
 
 Changed
 -------
 
-* Enable support for SSH command restrictions in Moab adapter
 * Add drone_uuid tag to the telegraf record
 * Bump pyauditor version to 0.3.1
+* Enable support for SSH command restrictions in Moab adapter
 
 Fixed
 -----

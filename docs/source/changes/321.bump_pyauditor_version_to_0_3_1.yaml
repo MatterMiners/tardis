@@ -2,7 +2,8 @@ category: changed
 summary: "Bump pyauditor version to 0.3.1"
 description: |
   Bump `pyauditor` to version 0.3.1
-pull requests:
-- 321
 issues:
 - 320
+pull requests:
+- 321
+version: 0.8.1
