@@ -1,7 +1,8 @@
 category: changed
 summary: "Enable support for SSH command restrictions in Moab adapter"
-description: |
-  The NEMO HPC is going to enable 2FA on the login nodes and SSH can be restricted to certain commands only. This 
-  requires to avoid `&&` and `$(whoami)` in commands.
+description: "The NEMO HPC is going to enable 2FA on the login nodes and SSH can be\
+  \ restricted to certain commands only. This \nrequires to avoid `&&` and `$(whoami)`\
+  \ in commands.\n"
 pull requests:
 - 322
+version: 0.8.1

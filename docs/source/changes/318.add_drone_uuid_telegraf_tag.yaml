@@ -1,0 +1,11 @@
+category: changed
+summary: "Add drone_uuid tag to the telegraf record"
+description: "So far, the telegraf plugin sends only state changes of the drones to\
+  \ telegraf, however it does not include \nthe `drone_uuid`, so that the information\
+  \ cannot be associated to a specific drone. Now, the `drone_uuid` is added as \n\
+  a tag to the record send to telegraf.\n"
+issues:
+- 313
+pull requests:
+- 318
+version: 0.8.1

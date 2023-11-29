@@ -91,6 +91,7 @@ setup(
         "kubernetes_asyncio",
         "pydantic<2.0.0",
         "asyncstdlib",
+        "async-timeout",
         "typing_extensions",
         "python-auditor==0.3.1",
         "tzlocal",

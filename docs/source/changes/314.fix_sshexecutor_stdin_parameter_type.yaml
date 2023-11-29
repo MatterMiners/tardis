@@ -1,8 +1,9 @@
 category: fixed
 summary: "Fix type of sshexecutor stdin parameter"
-description: |
-  In the SSHExecutor it was assumed that asyncssh requires stdin to be in bytes format. 
-  However, according to the documentation it is required to be in string format. Therefore, the type of stdin parameter 
-  has been changed from byte format into string format.
+description: "In the SSHExecutor it was assumed that asyncssh requires stdin to be\
+  \ in bytes format. \nHowever, according to the documentation it is required to be\
+  \ in string format. Therefore, the type of stdin parameter \nhas been changed from\
+  \ byte format into string format.\n"
 pull requests:
 - 314
+version: 0.8.1
