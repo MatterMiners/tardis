@@ -343,6 +343,32 @@ class TestSlurmAdapter(TestCase):
             'squeue -o "%A|%N|%T" -h -t all --job=1351043'
         )
 
+        # test that exception is re-raised if two or more job ids are specified,
+        # since Slurm does not fail in that case.
+
+        tasks = [
+            self.slurm_adapter.resource_status(
+                AttributeDict(
+                    resource_id="1390065",
+                    remote_resource_uuid="1351043",
+                ),
+            ),
+            self.slurm_adapter.resource_status(
+                AttributeDict(
+                    resource_id="1390066",
+                    remote_resource_uuid="1351044",
+                ),
+            ),
+        ]
+
+        with self.assertLogs(level=logging.WARNING):
+            with self.assertRaises(CommandExecutionFailure):
+                run_async(asyncio.gather, *tasks)
+
+        self.mock_executor.return_value.run_command.assert_called_with(
+            'squeue -o "%A|%N|%T" -h -t all --job=1351043,1351044'
+        )
+
     @mock_executor_run_command(
         stdout="",
         raise_exception=CommandExecutionFailure(
