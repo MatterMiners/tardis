@@ -6,6 +6,14 @@
 CHANGELOG
 #########
 
+[Unreleased] - 2023-12-18
+=========================
+
+Fixed
+-----
+
+* Fix handling of squeue call with invalid jobid
+
 [0.8.1] - 2023-11-29
 ====================
 
