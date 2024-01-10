@@ -1,10 +1,18 @@
-.. Created by changelog.py at 2023-12-16, command
+.. Created by changelog.py at 2023-12-18, command
    '/Users/giffler/.cache/pre-commit/repor6pnmwlm/py_env-python3.10/bin/changelog docs/source/changes compile --categories Added Changed Fixed Security Deprecated --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
 #########
 CHANGELOG
 #########
+
+[Unreleased] - 2023-12-18
+=========================
+
+Fixed
+-----
+
+* Fix handling of squeue call with invalid jobid
 
 [0.8.1] - 2023-11-29
 ====================

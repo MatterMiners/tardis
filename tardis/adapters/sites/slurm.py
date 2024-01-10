@@ -45,8 +45,18 @@ async def squeue(
     try:
         slurm_status = await executor.run_command(cmd)
     except CommandExecutionFailure as cf:
+        # In case a job is already completed and
+        # only **one** non-existing job id is provided
+        # squeue is failing with exit code 1
+        # and prints "Invalid job id specified" to stderr
+        if "Invalid job id specified" in cf.stderr and len(resource_attributes) == 1:
+            logger.info(
+                f"{remote_resource_ids} is not valid anymore. Assuming it is completed."
+            )
+            return [{"State": "COMPLETED"}]
         logger.warning(f"Slurm status update has failed due to {cf}.")
         raise
+
     else:
         for row in csv_parser(
             slurm_status.stdout, fieldnames=tuple(attributes.keys()), delimiter="|"

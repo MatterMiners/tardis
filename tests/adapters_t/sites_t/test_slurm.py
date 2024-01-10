@@ -304,7 +304,7 @@ class TestSlurmAdapter(TestCase):
             self.mock_executor.reset_mock()
 
     @mock_executor_run_command("")
-    def test_resource_status_of_completed_jobs(self):
+    def test_resource_status_of_completed_jobs_w_empty_reply(self):
         response = run_async(
             self.slurm_adapter.resource_status,
             AttributeDict(
@@ -317,6 +317,56 @@ class TestSlurmAdapter(TestCase):
 
         self.mock_executor.return_value.run_command.assert_called_with(
             'squeue -o "%A|%N|%T" -h -t all --job=1351043'
+        )
+
+    @mock_executor_run_command(
+        stdout="",
+        raise_exception=CommandExecutionFailure(
+            message="Run command squeue --job=1351043 via SSHExecutor failed",
+            stdout="",
+            stderr="slurm_load_jobs error: Invalid job id specified",
+            exit_code=1,
+        ),
+    )
+    def test_resource_status_of_completed_jobs_w_raised_exception(self):
+        response = run_async(
+            self.slurm_adapter.resource_status,
+            AttributeDict(
+                resource_id="1390065",
+                remote_resource_uuid="1351043",
+            ),
+        )
+
+        self.assertEqual(response.resource_status, ResourceStatus.Deleted)
+
+        self.mock_executor.return_value.run_command.assert_called_with(
+            'squeue -o "%A|%N|%T" -h -t all --job=1351043'
+        )
+
+        # test that exception is re-raised if two or more job ids are specified,
+        # since Slurm does not fail in that case.
+
+        tasks = [
+            self.slurm_adapter.resource_status(
+                AttributeDict(
+                    resource_id="1390065",
+                    remote_resource_uuid="1351043",
+                ),
+            ),
+            self.slurm_adapter.resource_status(
+                AttributeDict(
+                    resource_id="1390066",
+                    remote_resource_uuid="1351044",
+                ),
+            ),
+        ]
+
+        with self.assertLogs(level=logging.WARNING):
+            with self.assertRaises(CommandExecutionFailure):
+                run_async(asyncio.gather, *tasks)
+
+        self.mock_executor.return_value.run_command.assert_called_with(
+            'squeue -o "%A|%N|%T" -h -t all --job=1351043,1351044'
         )
 
     @mock_executor_run_command(
