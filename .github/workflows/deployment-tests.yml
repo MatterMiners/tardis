@@ -39,7 +39,7 @@ jobs:
         os_container: ['centos7', 'rockylinux8', 'rockylinux9', 'ubuntu20_04', 'ubuntu22_04']
     container: matterminers/cobald-tardis-deployment-test-env:${{ matrix.os_container }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install dependencies on ${{ matrix.os_container }}
         run: |
           python3 -m pip install --upgrade pip
@@ -55,7 +55,7 @@ jobs:
         platform: ['macos-latest']
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Add Python 3.11 to GITHUB_PATH
         run: echo "/Library/Frameworks/Python.framework/Versions/3.11/bin" >> $GITHUB_PATH
       - name: Install dependencies on ${{ matrix.platform }}
