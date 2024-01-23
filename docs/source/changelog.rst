@@ -1,12 +1,12 @@
-.. Created by changelog.py at 2024-01-19, command
-   '/Users/giffler/.cache/pre-commit/repohwjkpq_d/py_env-python3.12/bin/changelog docs/source/changes compile --categories Added Changed Fixed Security Deprecated --output=docs/source/changelog.rst'
+.. Created by changelog.py at 2024-01-23, command
+   '/Users/giffler/.cache/pre-commit/repoecmh3ah8/py_env-python3.12/bin/changelog docs/source/changes compile --categories Added Changed Fixed Security Deprecated --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
 #########
 CHANGELOG
 #########
 
-[Unreleased] - 2024-01-19
+[Unreleased] - 2024-01-23
 =========================
 
 Fixed
