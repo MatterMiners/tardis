@@ -53,7 +53,7 @@ class FakeSiteAdapter(SiteAdapter):
             seconds=resource_boot_time
         ) and resource_attributes.get(
             "resource_status",
-            ResourceStatus.Booting
+            ResourceStatus.Booting,
             # When cobald is restarted, "resource_status" is not set. Since this is a
             # FakeAdapter, when can safely start the cycle again by assuming
             # ResourceStatus.Booting and let TARDIS manage the drone's life cycle
