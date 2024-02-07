@@ -20,8 +20,7 @@ class BulkCommand(Protocol[T, R]):
     :py:class:`Exception` means that all tasks failed with that :py:class:`Exception`.
     """
 
-    async def __call__(self, *__tasks: T) -> Optional[Iterable[R]]:
-        ...
+    async def __call__(self, *__tasks: T) -> Optional[Iterable[R]]: ...  # noqa E704
 
 
 class AsyncBulkCall(Generic[T, R]):

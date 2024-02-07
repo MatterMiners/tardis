@@ -48,9 +48,9 @@ class TestBatchSystemAgent(TestCase):
             return_value=AttributeDict(Cores=1, Memory=1024, Disk=1024)
         )
 
-        type(
-            self.batch_system_adapter
-        ).machine_meta_data_translation_mapping = machine_meta_data_translation_mock
+        type(self.batch_system_adapter).machine_meta_data_translation_mapping = (
+            machine_meta_data_translation_mock
+        )
 
         self.assertEqual(
             AttributeDict(Cores=1, Memory=1024, Disk=1024),
