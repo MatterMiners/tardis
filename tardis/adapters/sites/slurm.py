@@ -58,8 +58,14 @@ async def squeue(
         raise
 
     else:
+        # Not all lines returned in slurm_status.stdout belong to the actual squeue output
+        # Only keep lines containing the delimiter
+        cleaned_stdout = []
+        for row in slurm_status.stdout.splitlines():
+            if "|" in row:
+                cleaned_stdout.append(row)
         for row in csv_parser(
-            slurm_status.stdout, fieldnames=tuple(attributes.keys()), delimiter="|"
+            "\n".join(cleaned_stdout), fieldnames=tuple(attributes.keys()), delimiter="|"
         ):
             row["State"] = row["State"].strip()
             slurm_resource_status[row["JobId"]] = row
