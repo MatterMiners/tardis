@@ -12,6 +12,7 @@ CHANGELOG
 Fixed
 -----
 
+* Handle littered status feedback in csv_parser
 * Fix handling of squeue call with invalid jobid
 
 [0.8.1] - 2023-11-29
