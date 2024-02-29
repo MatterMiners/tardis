@@ -1,0 +1,10 @@
+category: fixed
+summary: "Handle littered status feedback in csv_parser"
+description: |
+  In rare cases it can happen, that a `squeue` call is returning not only the
+  desired status csv of jobs in the batch system, but some additional messages
+  like `Switch to work directory on corresponding scratch directory.` The 
+  `csv_parser` has been modified to ignore such additional messages while 
+  parsing the csv.
+pull requests:
+- 338

@@ -1,7 +1,7 @@
 #!/bin/bash
 PROJECT=tardis
 
-source ../venv/bin/activate
+source ${VIRTUAL_ENV}/bin/activate
 sphinx-apidoc --force --module-first --separate -o source/api ../${PROJECT} && \
 make html && \
 open _build/html/index.html
