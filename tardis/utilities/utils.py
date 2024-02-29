@@ -51,6 +51,8 @@ def csv_parser(
     if skiptrailingspace:
         input_csv = "\n".join((line.strip() for line in input_csv.splitlines()))
 
+    input_csv = "\n".join((line for line in input_csv.splitlines() if delimiter in line))
+
     replacements = replacements or {}
     with StringIO(input_csv) as csv_input:
         csv_reader = csv.DictReader(
