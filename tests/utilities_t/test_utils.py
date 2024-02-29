@@ -165,6 +165,43 @@ class TestCSVParser(TestCase):
             ),
         )
 
+    def test_csv_parser_cleaning(self):
+        littered_input = "\n".join(
+            [
+                "Site-Admins wish you happy holidays!",
+                "5545112||PENDING",
+                "Services will be unavailable.",
+                "5545113||PENDING",
+            ]
+        )
+
+        parsed_rows = csv_parser(
+            input_csv=littered_input,
+            fieldnames=("JobId", "Host", "State"),
+            replacements=dict(undefined=None),
+            delimiter="|",
+            skipinitialspace=True,
+            skiptrailingspace=True,
+        )
+
+        self.assertEqual(
+            next(parsed_rows),
+            dict(
+                JobId="5545112",
+                Host="",
+                State="PENDING",
+            ),
+        )
+
+        self.assertEqual(
+            next(parsed_rows),
+            dict(
+                JobId="5545113",
+                Host="",
+                State="PENDING",
+            ),
+        )
+
 
 class TestDisableLogging(TestCase):
     def test_disable_logging(self):
