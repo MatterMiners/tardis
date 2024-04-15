@@ -15,7 +15,7 @@ class TestHashCredentials(TestCase):
     def test_hash_credentials(self):
         result = self.runner.invoke(self.app)
         self.assertNotEqual(result.exit_code, 0)
-        self.assertTrue("Error: Missing argument 'PASSWORD'." in result.stdout)
+        self.assertTrue("Missing argument 'PASSWORD'." in result.stdout)
 
         result = self.runner.invoke(self.app, "test_password")
         self.assertEqual(result.exit_code, 0)
