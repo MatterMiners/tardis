@@ -272,9 +272,14 @@ Available adapter configuration options
         request_cpus=${Cores}
         request_memory=${Memory}
         request_disk=${Disk}
-
+  
     The ``Environment`` contains the following variables, ``TardisDroneCores``. ``TardisDroneMemory``. ``TardisDroneDisk``
     and ``TardisDroneUuid``.
+
+    .. Note::
+        ‘TardisDroneUuid’ needs to be added to the attributes of each drone in your overlay batch system (OBS) if the hostname of the drone is 
+        chosen to be different from the default host worker node. TardisDroneUuid supersedes the identification and steering of drones via the 
+        hostname.
 
     .. rubric:: Example HTCondor JDL (Grid Universe)
 
