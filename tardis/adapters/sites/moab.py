@@ -48,7 +48,7 @@ async def showq(
     for queue in xml_jobs_list:
         queue_jobs_list = queue.getElementsByTagName("job")
         for line in queue_jobs_list:
-            moab_resource_status[line.attributes["JobID"].value] = {
+            moab_resource_status[line.attributes["JobID"].value] = {  # noqa B909
                 "JobID": line.attributes["JobID"].value,
                 "State": line.attributes["State"].value,
             }
