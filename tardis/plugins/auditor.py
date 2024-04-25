@@ -30,8 +30,8 @@ class Auditor(Plugin):
         self._resources = {}
         self._components = {}
         for site in config.Sites:
-            self._resources[site.name] = {}
-            self._components[site.name] = {}
+            self._resources[site.name] = {}  # noqa B909
+            self._components[site.name] = {}  # noqa B909
             for machine_type in getattr(config, site.name).MachineTypes:
                 self._resources[site.name][machine_type] = {}
                 self._components[site.name][machine_type] = {}
