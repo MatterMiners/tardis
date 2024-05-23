@@ -102,7 +102,9 @@ class TestSSHExecutor(TestCase):
             run_async(self.executor._establish_connection), MockConnection
         )
 
-        self.mock_asyncssh.connect.assert_called_with(**self.test_asyncssh_params)
+        self.mock_asyncssh.connect.assert_called_with(
+            client_factory=None, **self.test_asyncssh_params
+        )
 
         test_exceptions = [
             ConnectionResetError(),
@@ -163,7 +165,10 @@ class TestSSHExecutor(TestCase):
     def test_run_command(self):
         self.assertIsNone(run_async(self.executor.run_command, command="Test").stdout)
         self.mock_asyncssh.connect.assert_called_with(
-            host="test_host", username="test", client_keys=["TestKey"]
+            client_factory=None,
+            host="test_host",
+            username="test",
+            client_keys=["TestKey"],
         )
         self.mock_asyncssh.reset_mock()
 
@@ -223,5 +228,8 @@ class TestSSHExecutor(TestCase):
             "Test",
         )
         self.mock_asyncssh.connect.assert_called_with(
-            host="test_host", username="test", client_keys=["TestKey"]
+            client_factory=None,
+            host="test_host",
+            username="test",
+            client_keys=["TestKey"],
         )
