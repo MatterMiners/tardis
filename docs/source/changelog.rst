@@ -1,4 +1,4 @@
-.. Created by changelog.py at 2024-04-16, command
+.. Created by changelog.py at 2024-05-15, command
    '/Users/giffler/.cache/pre-commit/repoecmh3ah8/py_env-python3.12/bin/changelog docs/source/changes compile --categories Added Changed Fixed Security Deprecated --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
@@ -6,12 +6,18 @@
 CHANGELOG
 #########
 
-[Unreleased] - 2024-04-16
-=========================
+[0.8.2] - 2024-05-15
+====================
+
+Changed
+-------
+
+* Bump pyauditor version to 0.5.0
 
 Fixed
 -----
 
+* Handle littered status feedback in csv_parser
 * Fix handling of squeue call with invalid jobid
 
 [0.8.1] - 2023-11-29

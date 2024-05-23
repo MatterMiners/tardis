@@ -348,7 +348,7 @@ Available adapter configuration options
             quota: 2000
 
         moab-site:
-          executor: !SSHExecutor
+          executor: !TardisSSHExecutor
             host: login.dorie.somewherein.de
             username: clown
             client_keys:
@@ -517,7 +517,7 @@ Available machine type configuration options
             quota: 100
 
         hpc2000:
-          executor: !SSHExecutor
+          executor: !TardisSSHExecutor
             host: hpc2000.hpc.org
             username: billy
             client_keys:

@@ -1,8 +1,8 @@
 category: fixed
 summary: "Fix handling of squeue call with invalid jobid"
-description: |
-  In case a job is already completed and only one non-existing job id is provided
-  the `squeue` command is failing with exit code 1 and it prints 
-  "Invalid job id specified" to stderr.
+description: "In case a job is already completed and only one non-existing job id\
+  \ is provided\nthe `squeue` command is failing with exit code 1 and it prints \n\
+  \"Invalid job id specified\" to stderr.\n"
 pull requests:
 - 326
+version: 0.8.2
