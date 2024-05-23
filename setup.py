@@ -95,6 +95,7 @@ setup(
         "typing_extensions",
         "python-auditor==0.5.0",
         "tzlocal",
+        "pyotp",
         *REST_REQUIRES,
     ],
     extras_require={

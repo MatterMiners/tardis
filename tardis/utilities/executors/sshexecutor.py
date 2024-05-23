@@ -6,10 +6,17 @@ from ..attributedict import AttributeDict
 
 import asyncio
 import asyncssh
+import pyotp
+from asyncssh.auth import KbdIntPrompts, KbdIntResponse
+from asyncssh.client import SSHClient
+from asyncssh.misc import MaybeAwait
+
 from asyncstdlib import (
     ExitStack as AsyncExitStack,
     contextmanager as asynccontextmanager,
 )
+
+from functools import partial
 
 
 async def probe_max_session(connection: asyncssh.SSHClientConnection):
@@ -31,9 +38,49 @@ async def probe_max_session(connection: asyncssh.SSHClientConnection):
     return sessions
 
 
+class MFASSHClient(SSHClient):
+    def __init__(self, *args, mfa_secrets, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._mfa_responses = {}
+        for mfa_secret in mfa_secrets:
+            self._mfa_responses[mfa_secret["prompt"].strip()] = pyotp.TOTP(
+                mfa_secret["secret"]
+            )
+
+    async def kbdint_auth_requested(self) -> MaybeAwait[Optional[str]]:
+        """
+        Keyboard-interactive authentication has been requested
+
+        This method should return a string containing a comma-separated
+        list of submethods that the server should use for
+        keyboard-interactive authentication. An empty string can be
+        returned to let the server pick the type of keyboard-interactive
+        authentication to perform.
+        """
+        return ""
+
+    async def kbdint_challenge_received(
+        self, name: str, instructions: str, lang: str, prompts: KbdIntPrompts
+    ) -> MaybeAwait[Optional[KbdIntResponse]]:
+        """
+        A keyboard-interactive auth challenge has been received
+
+        This method is called when the server sends a keyboard-interactive
+        authentication challenge.
+
+        The return value should be a list of strings of the same length
+        as the number of prompts provided if the challenge can be
+        answered, or `None` to indicate that some other form of
+        authentication should be attempted.
+        """
+        # prompts is of type Sequence[Tuple[str, bool]]
+        return [self._mfa_responses[prompt[0].strip()].now() for prompt in prompts]
+
+
 @enable_yaml_load("!SSHExecutor")
 class SSHExecutor(Executor):
     def __init__(self, **parameters):
+        self._mfa_secrets = parameters.pop("mfa_secrets", None)
         self._parameters = parameters
         # the current SSH connection or None if it must be (re-)established
         self._ssh_connection: Optional[asyncssh.SSHClientConnection] = None
@@ -42,9 +89,14 @@ class SSHExecutor(Executor):
         self._lock = None
 
     async def _establish_connection(self):
+        client_factory = None
+        if self._mfa_secrets:
+            client_factory = partial(MFASSHClient, mfa_secrets=self._mfa_secrets)
         for retry in range(1, 10):
             try:
-                return await asyncssh.connect(**self._parameters)
+                return await asyncssh.connect(
+                    client_factory=client_factory, **self._parameters
+                )
             except (
                 ConnectionResetError,
                 asyncssh.DisconnectError,
@@ -52,7 +104,7 @@ class SSHExecutor(Executor):
                 BrokenPipeError,
             ):
                 await asyncio.sleep(retry * 10)
-        return await asyncssh.connect(**self._parameters)
+        return await asyncssh.connect(client_factory=client_factory, **self._parameters)
 
     @property
     @asynccontextmanager
