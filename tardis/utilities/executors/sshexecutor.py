@@ -4,6 +4,7 @@ from ...exceptions.tardisexceptions import TardisAuthError
 from ...exceptions.executorexceptions import CommandExecutionFailure
 from ...interfaces.executor import Executor
 from ..attributedict import AttributeDict
+from cobald.daemon.plugins import yaml_tag
 
 import asyncio
 import asyncssh
@@ -88,6 +89,7 @@ class MFASSHClient(SSHClient):
 
 
 @enable_yaml_load("!SSHExecutor")
+@yaml_tag(eager=True)
 class SSHExecutor(Executor):
     def __init__(self, **parameters):
         self._parameters = dict(parameters)
