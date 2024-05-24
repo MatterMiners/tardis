@@ -80,8 +80,12 @@ class MFASSHClient(SSHClient):
 @enable_yaml_load("!SSHExecutor")
 class SSHExecutor(Executor):
     def __init__(self, **parameters):
-        self._mfa_secrets = parameters.pop("mfa_secrets", None)
-        self._parameters = parameters
+        self._parameters = dict(parameters)
+        # enable Multi-factor Authentication if required
+        if mfa_secrets := self._parameters.pop("mfa_secrets", None):
+            self._parameters["client_factory"] = partial(
+                MFASSHClient, mfa_secrets=mfa_secrets
+            )
         # the current SSH connection or None if it must be (re-)established
         self._ssh_connection: Optional[asyncssh.SSHClientConnection] = None
         # the bound on MaxSession running concurrently
@@ -89,14 +93,9 @@ class SSHExecutor(Executor):
         self._lock = None
 
     async def _establish_connection(self):
-        client_factory = None
-        if self._mfa_secrets:
-            client_factory = partial(MFASSHClient, mfa_secrets=self._mfa_secrets)
         for retry in range(1, 10):
             try:
-                return await asyncssh.connect(
-                    client_factory=client_factory, **self._parameters
-                )
+                return await asyncssh.connect(**self._parameters)
             except (
                 ConnectionResetError,
                 asyncssh.DisconnectError,
@@ -104,7 +103,7 @@ class SSHExecutor(Executor):
                 BrokenPipeError,
             ):
                 await asyncio.sleep(retry * 10)
-        return await asyncssh.connect(client_factory=client_factory, **self._parameters)
+        return await asyncssh.connect(**self._parameters)
 
     @property
     @asynccontextmanager
