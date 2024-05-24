@@ -45,13 +45,11 @@ async def probe_max_session(connection: asyncssh.SSHClientConnection):
 
 
 class MFASSHClient(SSHClient):
-    def __init__(self, *args, mfa_secrets, **kwargs):
+    def __init__(self, *args, mfa_config, **kwargs):
         super().__init__(*args, **kwargs)
         self._mfa_responses = {}
-        for mfa_secret in mfa_secrets:
-            self._mfa_responses[mfa_secret["prompt"].strip()] = pyotp.TOTP(
-                mfa_secret["secret"]
-            )
+        for entry in mfa_config:
+            self._mfa_responses[entry["prompt"].strip()] = pyotp.TOTP(entry["totp"])
 
     async def kbdint_auth_requested(self) -> MaybeAwait[Optional[str]]:
         """
@@ -94,9 +92,9 @@ class SSHExecutor(Executor):
     def __init__(self, **parameters):
         self._parameters = parameters
         # enable Multi-factor Authentication if required
-        if mfa_secrets := self._parameters.pop("mfa_secrets", None):
+        if mfa_config := self._parameters.pop("mfa_config", None):
             self._parameters["client_factory"] = partial(
-                MFASSHClient, mfa_secrets=mfa_secrets
+                MFASSHClient, mfa_config=mfa_config
             )
         # the current SSH connection or None if it must be (re-)established
         self._ssh_connection: Optional[asyncssh.SSHClientConnection] = None

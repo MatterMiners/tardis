@@ -47,7 +47,7 @@ SSH Executor
     `asyncssh documentation`_
 
     Additionally the ``SSHExecutor`` supports Multi-factor Authentication (MFA). In order to activate it, you need to
-    add ``mfa_secrets`` as parameter to the ``SSHExecutor`` containing a list of command line prompt to TOTP secrets
+    add ``mfa_config`` as parameter to the ``SSHExecutor`` containing a list of command line prompt to TOTP secrets
     mappings.
 
     .. note::
@@ -77,9 +77,9 @@ SSH Executor
         username: clown
         client_keys:
           - /opt/tardis/ssh/tardis
-        mfa_secrets:
+        mfa_config:
           - prompt: "Enter 2FA Token:"
-            secret: "IMIZDDO2I45ZSTR6XDGFSPFDUY"
+            totp: "IMIZDDO2I45ZSTR6XDGFSPFDUY"
 
 
     .. rubric:: Example configuration (`COBalD` legacy object initialisation)

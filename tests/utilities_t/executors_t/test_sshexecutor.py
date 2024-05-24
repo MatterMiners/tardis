@@ -75,17 +75,17 @@ class TestSSHExecutorUtilities(TestCase):
 
 class TestMFASSHClient(TestCase):
     def setUp(self):
-        mfa_secrets = [
+        mfa_config = [
             {
                 "prompt": "Enter MFA token:",
-                "secret": "EJL2DAWFOH7QPJ3D6I2DK2ARTBEJDBIB",
+                "totp": "EJL2DAWFOH7QPJ3D6I2DK2ARTBEJDBIB",
             },
             {
                 "prompt": "Yet another token:",
-                "secret": "D22246GDKKEDK7AAM77ZH5VRDRL7Z6W7",
+                "totp": "D22246GDKKEDK7AAM77ZH5VRDRL7Z6W7",
             },
         ]
-        self.mfa_ssh_client = MFASSHClient(mfa_secrets=mfa_secrets)
+        self.mfa_ssh_client = MFASSHClient(mfa_config=mfa_config)
 
     def test_kbdint_auth_requested(self):
         self.assertEqual(run_async(self.mfa_ssh_client.kbdint_auth_requested), "")
@@ -306,9 +306,9 @@ class TestSSHExecutor(TestCase):
                    username: test
                    client_keys:
                      - TestKey
-                   mfa_secrets:
+                   mfa_config:
                      - prompt: 'Token: '
-                       secret: 123TopSecret
+                       totp: 123TopSecret
                    """
         )
 
