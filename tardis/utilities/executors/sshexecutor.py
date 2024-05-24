@@ -92,7 +92,7 @@ class MFASSHClient(SSHClient):
 @yaml_tag(eager=True)
 class SSHExecutor(Executor):
     def __init__(self, **parameters):
-        self._parameters = dict(parameters)
+        self._parameters = parameters
         # enable Multi-factor Authentication if required
         if mfa_secrets := self._parameters.pop("mfa_secrets", None):
             self._parameters["client_factory"] = partial(
