@@ -1,11 +1,13 @@
 from typing import Optional
 from ...configuration.utilities import enable_yaml_load
+from ...exceptions.tardisexceptions import TardisAuthError
 from ...exceptions.executorexceptions import CommandExecutionFailure
 from ...interfaces.executor import Executor
 from ..attributedict import AttributeDict
 
 import asyncio
 import asyncssh
+import logging
 import pyotp
 from asyncssh.auth import KbdIntPrompts, KbdIntResponse
 from asyncssh.client import SSHClient
@@ -17,6 +19,9 @@ from asyncstdlib import (
 )
 
 from functools import partial
+
+
+logger = logging.getLogger("cobald.runtime.tardis.utilities.executors.sshexecutor")
 
 
 async def probe_max_session(connection: asyncssh.SSHClientConnection):
@@ -74,7 +79,12 @@ class MFASSHClient(SSHClient):
         authentication should be attempted.
         """
         # prompts is of type Sequence[Tuple[str, bool]]
-        return [self._mfa_responses[prompt[0].strip()].now() for prompt in prompts]
+        try:
+            return [self._mfa_responses[prompt[0].strip()].now() for prompt in prompts]
+        except KeyError as ke:
+            msg = f"Keyboard interactive authentication failed: Unexpected Prompt {ke}"
+            logger.error(msg)
+            raise TardisAuthError(msg) from ke
 
 
 @enable_yaml_load("!SSHExecutor")
