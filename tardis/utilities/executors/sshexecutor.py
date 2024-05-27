@@ -1,15 +1,28 @@
 from typing import Optional
 from ...configuration.utilities import enable_yaml_load
+from ...exceptions.tardisexceptions import TardisAuthError
 from ...exceptions.executorexceptions import CommandExecutionFailure
 from ...interfaces.executor import Executor
 from ..attributedict import AttributeDict
+from cobald.daemon.plugins import yaml_tag
 
 import asyncio
 import asyncssh
+import logging
+import pyotp
+from asyncssh.auth import KbdIntPrompts, KbdIntResponse
+from asyncssh.client import SSHClient
+from asyncssh.misc import MaybeAwait
+
 from asyncstdlib import (
     ExitStack as AsyncExitStack,
     contextmanager as asynccontextmanager,
 )
+
+from functools import partial
+
+
+logger = logging.getLogger("cobald.runtime.tardis.utilities.executors.sshexecutor")
 
 
 async def probe_max_session(connection: asyncssh.SSHClientConnection):
@@ -31,10 +44,58 @@ async def probe_max_session(connection: asyncssh.SSHClientConnection):
     return sessions
 
 
+class MFASSHClient(SSHClient):
+    def __init__(self, *args, mfa_config, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._mfa_responses = {}
+        for entry in mfa_config:
+            self._mfa_responses[entry["prompt"].strip()] = pyotp.TOTP(entry["totp"])
+
+    async def kbdint_auth_requested(self) -> MaybeAwait[Optional[str]]:
+        """
+        Keyboard-interactive authentication has been requested
+
+        This method should return a string containing a comma-separated
+        list of submethods that the server should use for
+        keyboard-interactive authentication. An empty string can be
+        returned to let the server pick the type of keyboard-interactive
+        authentication to perform.
+        """
+        return ""
+
+    async def kbdint_challenge_received(
+        self, name: str, instructions: str, lang: str, prompts: KbdIntPrompts
+    ) -> MaybeAwait[Optional[KbdIntResponse]]:
+        """
+        A keyboard-interactive auth challenge has been received
+
+        This method is called when the server sends a keyboard-interactive
+        authentication challenge.
+
+        The return value should be a list of strings of the same length
+        as the number of prompts provided if the challenge can be
+        answered, or `None` to indicate that some other form of
+        authentication should be attempted.
+        """
+        # prompts is of type Sequence[Tuple[str, bool]]
+        try:
+            return [self._mfa_responses[prompt[0].strip()].now() for prompt in prompts]
+        except KeyError as ke:
+            msg = f"Keyboard interactive authentication failed: Unexpected Prompt {ke}"
+            logger.error(msg)
+            raise TardisAuthError(msg) from ke
+
+
 @enable_yaml_load("!SSHExecutor")
+@yaml_tag(eager=True)
 class SSHExecutor(Executor):
     def __init__(self, **parameters):
         self._parameters = parameters
+        # enable Multi-factor Authentication if required
+        if mfa_config := self._parameters.pop("mfa_config", None):
+            self._parameters["client_factory"] = partial(
+                MFASSHClient, mfa_config=mfa_config
+            )
         # the current SSH connection or None if it must be (re-)established
         self._ssh_connection: Optional[asyncssh.SSHClientConnection] = None
         # the bound on MaxSession running concurrently
