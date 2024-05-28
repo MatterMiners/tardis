@@ -130,6 +130,12 @@ Available configuration options
             options:
                 pool: my-htcondor.mysite.mydomain
 
+Note:
+The attribute ‘TardisDroneUuid’ needs to be added to the attributes (e.g., StartD attribute) of each drone in the worker configuration of 
+HTCondor Batch System if the hostname of the drone is chosen to be different from the default host worker node. TardisDroneUuid supersedes the 
+identification and steering of drones via the hostname such that they are recognised exactly.
+
+
 SLURM Batch System Adapter
 -----------------------------
 
