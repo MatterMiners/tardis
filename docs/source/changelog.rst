@@ -6,6 +6,14 @@
 CHANGELOG
 #########
 
+[Unreleased] - 2024-10-16
+=========================
+
+Added
+-----
+
+* Add support for submit options to HTCondor site adapter
+
 [0.8.2] - 2024-05-15
 ====================
 
