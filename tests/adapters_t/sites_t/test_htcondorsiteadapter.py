@@ -139,6 +139,7 @@ class TestHTCondorSiteAdapter(TestCase):
             test2large_args=AttributeDict(Cores=8, Memory=32, Disk=160),
             test2large_deprecated=AttributeDict(Cores=8, Memory=32, Disk=160),
             testunkownresource=AttributeDict(Cores=8, Memory=32, Disk=160, Foo=3),
+            testsubmitoptions=AttributeDict(Cores=8, Memory=32, Disk=160),
         )
 
     @property
@@ -148,6 +149,10 @@ class TestHTCondorSiteAdapter(TestCase):
             test2large_args=AttributeDict(jdl="tests/data/submit_per_arguments.jdl"),
             test2large_deprecated=AttributeDict(jdl="tests/data/submit_deprecated.jdl"),
             testunkownresource=AttributeDict(jdl="tests/data/submit.jdl"),
+            testsubmitoptions=AttributeDict(
+                jdl="tests/data/submit.jdl",
+                SubmitOptions=AttributeDict(pool="my_remote_pool", spool=None),
+            ),
         )
 
     @mock_executor_run_command(stdout=CONDOR_SUBMIT_OUTPUT)
@@ -230,6 +235,28 @@ class TestHTCondorSiteAdapter(TestCase):
             CONDOR_SUBMIT_PER_ARGUMENTS_JDL_CONDOR_OBS,
         )
         self.mock_executor.reset()
+
+        self.adapter = HTCondorAdapter(
+            machine_type="testsubmitoptions", site_name="TestSite"
+        )
+
+        # Test support for submit options
+        run_async(
+            self.adapter.deploy_resource,
+            AttributeDict(
+                drone_uuid="test-123",
+                obs_machine_meta_data_translation_mapping=AttributeDict(
+                    Cores=1,
+                    Memory=1024,
+                    Disk=1024 * 1024,
+                ),
+            ),
+        )
+
+        args, _ = self.mock_executor.return_value.run_command.call_args
+        self.assertEqual(
+            "condor_submit -verbose -maxjobs 1 -pool my_remote_pool -spool", args[0]
+        )
 
     def test_translate_resources_raises_logs(self):
         self.adapter = HTCondorAdapter(
