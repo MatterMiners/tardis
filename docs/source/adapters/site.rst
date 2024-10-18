@@ -213,9 +213,22 @@ Available adapter configuration options
     |                | Default: ShellExecutor is used!                                                   |                 |
     +----------------+-----------------------------------------------------------------------------------+-----------------+
 
-    The only available option in the `MachineTypeConfiguration` section is a template jdl used to submit drones to the
-    HTCondor batch system. The template jdl is using the `Python template string`_ syntax
-    (see example HTCondor JDL for details).
+
+Available machine type configuration options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. content-tabs:: left-col
+
+    +----------------+------------------------------------------------------------------------------+-----------------+
+    | Option         | Short Description                                                            | Requirement     |
+    +================+==============================================================================+=================+
+    | jdl            | Path to the templated jdl used to submit drones to the HTCondor batch system |  **Required**   |
+    +----------------+------------------------------------------------------------------------------+-----------------+
+    | SubmitOptions  | Options to add to the `condor_submit` command. (see example)                 |  **Optional**   |
+    +----------------+------------------------------------------------------------------------------+-----------------+
+
+    .. Note::
+        The template jdl is using the `Python template string`_ syntax (see example HTCondor JDL for details).
 
     .. Warning::
         The `$(...)` used for HTCondor variables needs to be replaced by `$$(...)` in the templated JDL.
@@ -245,14 +258,24 @@ Available adapter configuration options
           max_age: 1
           MachineTypes:
             - wholenode
+            - remotenode
           MachineTypeConfiguration:
             wholenode:
               jdl: pilot_wholenode.jdl
+            remotenode:
+              jdl: pilot_remotenode.jdl
+              SubmitOptions:
+                spool: null
+                pool: remote-pool.somewhere.de
           MachineMetaData:
             wholenode:
               Cores: 42
               Memory: 256
               Disk: 840
+            remotenode:
+              Cores: 8
+              Memory: 20
+              Disk: 100
 
     .. rubric:: Example HTCondor JDL (Vanilla Universe)
 

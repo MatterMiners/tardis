@@ -12,6 +12,7 @@ from ...utilities.asyncbulkcall import AsyncBulkCall
 from ...utilities.utils import (
     csv_parser,
     drone_environment_to_str,
+    htcondor_cmd_option_formatter,
     machine_meta_data_translation,
 )
 
@@ -44,7 +45,9 @@ async def condor_q(
         _job_id(resource.remote_resource_uuid) for resource in resource_attributes
     )
 
-    queue_command = f"condor_q {remote_resource_ids} -af:t {attributes_string}"
+    queue_command = (
+        f"condor_q {remote_resource_ids} -af:t {attributes_string}"  # noqa E231
+    )
 
     htcondor_queue = {}
     try:
@@ -97,7 +100,9 @@ def _submit_description(resource_jdls: Tuple[JDL, ...]) -> str:
     return "\n".join(commands)
 
 
-async def condor_submit(*resource_jdls: JDL, executor: Executor) -> Iterable[str]:
+async def condor_submit(
+    *resource_jdls: JDL, executor: Executor, submit_option_string: str
+) -> Iterable[str]:
     """Submit a number of resources from their JDL, reporting the new Job ID for each"""
     # verbose submit gives an ordered listing of class ads, such as
     # ** Proc 15556.0:
@@ -110,7 +115,9 @@ async def condor_submit(*resource_jdls: JDL, executor: Executor) -> Iterable[str
     #
     # ** Proc 15556.1:
     # ...
-    command = f"condor_submit -verbose -maxjobs {len(resource_jdls)}"
+    command = (
+        f"condor_submit -verbose -maxjobs {len(resource_jdls)} {submit_option_string}"
+    )
     response = await executor.run_command(
         command,
         stdin_input=_submit_description(resource_jdls),
@@ -213,20 +220,30 @@ class HTCondorAdapter(SiteAdapter):
         self._machine_type = machine_type
         self._site_name = site_name
         self._executor = getattr(self.configuration, "executor", ShellExecutor())
+
+        submit_option_string = htcondor_cmd_option_formatter(
+            self.machine_type_configuration.get("SubmitOptions", AttributeDict())
+        )
+
         bulk_size = getattr(self.configuration, "bulk_size", 100)
         bulk_delay = getattr(self.configuration, "bulk_delay", 1.0)
-        self._condor_submit, self._condor_suspend, self._condor_rm = (
+
+        self._condor_submit = AsyncBulkCall(
+            partial(
+                condor_submit,
+                executor=self._executor,
+                submit_option_string=submit_option_string,
+            ),
+            size=bulk_size,
+            delay=bulk_delay,
+        )
+        self._condor_suspend, self._condor_rm, self._condor_q = (
             AsyncBulkCall(
                 partial(tool, executor=self._executor),
                 size=bulk_size,
                 delay=bulk_delay,
             )
-            for tool in (condor_submit, condor_suspend, condor_rm)
-        )
-        self._condor_q = AsyncBulkCall(
-            partial(condor_q, executor=self._executor),
-            size=bulk_size,
-            delay=bulk_delay,
+            for tool in (condor_suspend, condor_rm, condor_q)
         )
 
         key_translator = StaticMapping(
