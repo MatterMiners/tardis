@@ -1,4 +1,4 @@
-.. Created by changelog.py at 2024-10-16, command
+.. Created by changelog.py at 2024-10-21, command
    '/Users/giffler/.cache/pre-commit/repoecmh3ah8/py_env-python3.12/bin/changelog docs/source/changes compile --categories Added Changed Fixed Security Deprecated --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
@@ -6,8 +6,8 @@
 CHANGELOG
 #########
 
-[Unreleased] - 2024-10-16
-=========================
+[0.8.3] - 2024-10-21
+====================
 
 Added
 -----
