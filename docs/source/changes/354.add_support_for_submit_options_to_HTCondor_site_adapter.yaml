@@ -1,9 +1,10 @@
 category: added
 summary: "Add support for submit options to HTCondor site adapter"
-description: |
-  Add support for additional submit options to the `condor_submit` command used to submit HTCondor batch jobs in the 
-  HTCondor site adapter. For example: `-spool` to transfer input files to a remote HTCondor Schedd for job submission.
-pull requests:
-  - 354
+description: "Add support for additional submit options to the `condor_submit` command\
+  \ used to submit HTCondor batch jobs in the \nHTCondor site adapter. For example:\
+  \ `-spool` to transfer input files to a remote HTCondor Schedd for job submission.\n"
 issues:
-  - 353
+- 353
+pull requests:
+- 354
+version: 0.8.3
