@@ -17,6 +17,7 @@ RUN dnf -y update \
                       gcc \
                       python3.11-devel \
                       python3.11-pip \
+                      slurm \
     && dnf clean all
 
 RUN python3.11 -m pip install --no-cache-dir --upgrade pip \
