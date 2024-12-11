@@ -21,7 +21,9 @@ RUN dnf -y update \
     && dnf clean all
 
 RUN python3.11 -m pip install --no-cache-dir --upgrade pip \
-    && python3.11 -m pip install --no-cache-dir git+$SOURCE_REPO_URL@$SOURCE_BRANCH
+    && python3.11 -m pip install --no-cache-dir git+$SOURCE_REPO_URL@$SOURCE_BRANCH \
+    && python3.11 -m pip install --no-cache-dir cobald-hep-plugins \
+    && python3.11 -m pip install --no-cache-dir htcondor-queue-poller
 
 WORKDIR /srv
 
