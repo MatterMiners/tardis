@@ -1,4 +1,4 @@
-FROM python:3.10-alpine
+FROM python:3.11-alpine
 LABEL maintainer="Manuel Giffels <giffels@gmail.com>"
 ARG SOURCE_BRANCH=master
 ARG SOURCE_REPO_URL=https://github.com/MatterMiners/tardis
