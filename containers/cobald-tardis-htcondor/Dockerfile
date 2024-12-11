@@ -26,5 +26,5 @@ WORKDIR /srv
 
 COPY cobald.yml /srv/cobald.yml
 
-ENTRYPOINT ["python3.9", "-m", "cobald.daemon"]
+ENTRYPOINT ["python3.11", "-m", "cobald.daemon"]
 CMD ["/srv/cobald.yml"]
