@@ -67,6 +67,7 @@ setup(
             "TardisPeriodicValue = tardis.utilities.simulators.periodicvalue:PeriodicValue",  # noqa: B950
             "TardisRandomGauss = tardis.utilities.simulators.randomgauss:RandomGauss",
             "TardisRestApi = tardis.rest.service:RestService",
+            "TardisDupingSSHExecutor = tardis.utilities.executors.sshexecutor:DupingSSHExecutor",  # noqa: B950
             "TardisSSHExecutor = tardis.utilities.executors.sshexecutor:SSHExecutor",
             "TardisShellExecutor = tardis.utilities.executors.shellexecutor:ShellExecutor",  # noqa: B950
         ],
