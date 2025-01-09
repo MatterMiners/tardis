@@ -2,7 +2,7 @@ from tardis.rest.app.security import get_user
 from tardis.utilities.attributedict import AttributeDict
 from tests.utilities.utilities import run_async
 
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 
 from unittest import TestCase
 from unittest.mock import patch
@@ -44,7 +44,9 @@ class TestCaseRouters(TestCase):
             app,
         )  # has to be imported after SqliteRegistry patch
 
-        self.client = AsyncClient(app=app, base_url="http://test")
+        self.client = AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        )
         self.test_user = {
             "user_name": "test1",
             "password": "test",
