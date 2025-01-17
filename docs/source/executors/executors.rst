@@ -91,3 +91,51 @@ SSH Executor
         username: clown
         client_keys:
           - /opt/tardis/ssh/tardis
+
+Duping SSH Executor
+------------
+
+.. content-tabs:: left-col
+
+        The duping ssh executor is a special solution for High Performance Compute Centers,
+        which offer the opportunity to register so called ssh command keys. That means you
+        are able to register a ssh key that can access the cluster without multi-factor
+        authentication, but that is restricted to execute one single command without any
+        additional command line arguments.
+
+        The duping ssh executor provides the possibility to register a command, a so-called
+        wrapper, which itself executes commands that are passed over to the wrapper over
+        standard input. The ``wrapper`` parameter is optional, if no ``wrapper`` parameter
+        is specified, `/bin/bash` is chosen, which per default executes everything that is
+        passed over by standard input.
+
+    .. warning::
+        Albeit this mechanism is weakening the security of the compute system, you could
+        increase it by restricting the commands that are allowed to be executed by the
+        wrapper to ones that are absolutely necessary for the integration. In case of the
+        SLURM batch system, to the command `squeue`, `sbatch` and `scancel`. In particular,
+        we recommend to **not** use the default `/bin/bash`.
+
+.. content-tabs:: right-col
+
+    .. rubric:: Example configuration
+
+    .. code-block:: yaml
+
+      !TardisDupingSSHExecutor
+        host: login.dorie.somewherein.de
+        username: clown
+        client_keys:
+          - /opt/tardis/ssh/tardis
+        wrapper: /home/dorie/my_script.sh
+
+    .. rubric:: Example configuration (`COBalD` legacy object initialisation)
+
+    .. code-block:: yaml
+
+        __type__: tardis.utilities.executors.sshexecutor.DupingSSHExecutor
+        host: login.dorie.somewherein.de
+        username: clown
+        client_keys:
+          - /opt/tardis/ssh/tardis
+        wrapper: /home/dorie/my_script.sh

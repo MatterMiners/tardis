@@ -1,10 +1,19 @@
-.. Created by changelog.py at 2024-12-18, command
+.. Created by changelog.py at 2025-01-17, command
    '/Users/giffler/.cache/pre-commit/repoecmh3ah8/py_env-python3.12/bin/changelog docs/source/changes compile --categories Added Changed Fixed Security Deprecated --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
 #########
 CHANGELOG
 #########
+
+[Unreleased] - 2025-01-17
+=========================
+
+Added
+-----
+
+* Add new duping SSH executor to support HPC ssh command keys
+* Added Auditor accounting plugin
 
 [0.8.3] - 2024-10-21
 ====================
