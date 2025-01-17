@@ -14,6 +14,12 @@ Fixed
 
 * Fix failing condor_suspend on not running resources
 
+Added
+-----
+
+* Add new duping SSH executor to support HPC ssh command keys
+* Added Auditor accounting plugin
+
 [0.8.3] - 2024-10-21
 ====================
 
