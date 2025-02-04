@@ -6,6 +6,14 @@
 CHANGELOG
 #########
 
+[Unreleased] - 2025-02-04
+=========================
+
+Fixed
+-----
+
+* Fix failing condor_suspend on not running resources
+
 [0.8.3] - 2024-10-21
 ====================
 

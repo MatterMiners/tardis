@@ -1,0 +1,10 @@
+category: fixed
+summary: "Fix failing condor_suspend on not running resources"
+description: |
+  In case a job is not running (anymore) and a `condor_suspend` command is issued it fails with exit code 1 and prints 
+  the following message 'Job 15611.0 not running to be suspended'. This is now correctly handled and does lead to crash 
+  of TARDIS.
+pull requests:
+  - 361
+issues:
+  - 360
