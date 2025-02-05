@@ -50,7 +50,10 @@ CONDOR_RM_FAILED_OUTPUT = "Job 1351043.0 not found"
 CONDOR_RM_FAILED_MESSAGE = "Run command condor_rm 1351043.0 via ShellExecutor failed"
 
 CONDOR_SUSPEND_OUTPUT = """Job 1351043.0 suspended"""
-CONDOR_SUSPEND_FAILED_OUTPUT = """Job 1351043.0 not found"""
+CONDOR_SUSPEND_FAILED_OUTPUT_NOT_FOUND = """Job 1351043.0 not found"""
+CONDOR_SUSPEND_FAILED_OUTPUT_NOT_RUNNING = (
+    """Job 1351043.0 not running to be suspended"""
+)
 CONDOR_SUSPEND_FAILED_MESSAGE = """Run command condor_suspend 1351043 via
 ShellExecutor failed"""
 
@@ -379,12 +382,29 @@ class TestHTCondorSiteAdapter(TestCase):
         raise_exception=CommandExecutionFailure(
             message=CONDOR_SUSPEND_FAILED_MESSAGE,
             exit_code=1,
-            stderr=CONDOR_SUSPEND_FAILED_OUTPUT,
+            stderr=CONDOR_SUSPEND_FAILED_OUTPUT_NOT_FOUND,
             stdout="",
             stdin="",
         ),
     )
-    def test_stop_resource_failed_redo(self):
+    def test_stop_resource_failed_redo_not_found(self):
+        with self.assertRaises(TardisResourceStatusUpdateFailed):
+            run_async(
+                self.adapter.stop_resource,
+                AttributeDict(remote_resource_uuid="1351043.0"),
+            )
+
+    @mock_executor_run_command(
+        stdout="",
+        raise_exception=CommandExecutionFailure(
+            message=CONDOR_SUSPEND_FAILED_MESSAGE,
+            exit_code=1,
+            stderr=CONDOR_SUSPEND_FAILED_OUTPUT_NOT_RUNNING,
+            stdout="",
+            stdin="",
+        ),
+    )
+    def test_stop_resource_failed_redo_not_running(self):
         with self.assertRaises(TardisResourceStatusUpdateFailed):
             run_async(
                 self.adapter.stop_resource,
@@ -396,7 +416,7 @@ class TestHTCondorSiteAdapter(TestCase):
         raise_exception=CommandExecutionFailure(
             message=CONDOR_SUSPEND_FAILED_MESSAGE,
             exit_code=2,
-            stderr=CONDOR_SUSPEND_FAILED_OUTPUT,
+            stderr=CONDOR_SUSPEND_FAILED_OUTPUT_NOT_FOUND,
             stdout="",
             stdin="",
         ),
