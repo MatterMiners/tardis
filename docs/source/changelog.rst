@@ -6,7 +6,7 @@
 CHANGELOG
 #########
 
-[Unreleased] - 2025-02-04
+[Unreleased] - 2025-02-06
 =========================
 
 Fixed

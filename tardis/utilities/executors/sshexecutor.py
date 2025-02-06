@@ -186,7 +186,7 @@ class SSHExecutor(Executor):
 @enable_yaml_load("!DupingSSHExecutor")
 @yaml_tag(eager=True)
 class DupingSSHExecutor(SSHExecutor):
-    def __init__(self, *, wrapper = "/bin/bash", **parameters):
+    def __init__(self, *, wrapper="/bin/bash", **parameters):
         self._wrapper_script = wrapper
         super().__init__(**parameters)
 
