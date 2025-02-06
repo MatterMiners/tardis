@@ -127,7 +127,7 @@ Duping SSH Executor
         username: clown
         client_keys:
           - /opt/tardis/ssh/tardis
-        wrapper: /home/dorie/my_script.sh
+        wrapper: /home/clown/my_script.sh
 
     .. rubric:: Example configuration (`COBalD` legacy object initialisation)
 
@@ -138,4 +138,4 @@ Duping SSH Executor
         username: clown
         client_keys:
           - /opt/tardis/ssh/tardis
-        wrapper: /home/dorie/my_script.sh
+        wrapper: /home/clown/my_script.sh
