@@ -361,7 +361,7 @@ class TestDupingSSHExecutor(TestCase):
     def test_run_command(self):
         def test_wrapper_and_response(wrapper, response):
             self.assertEqual(
-                response.stdout, f"command={wrapper}, stdin=Test <<< TestStdInput"
+                response.stdout, f"command={wrapper}, stdin=Test <<< TestStdInput\n"
             )
             self.assertEqual(response.stderr, "TestError")
             self.assertEqual(response.exit_code, 0)
@@ -391,7 +391,7 @@ class TestDupingSSHExecutor(TestCase):
                     command=command,
                     stdin_input="TestStdInput",
                 ).stdout,
-                f"command={wrapper}, stdin={command} <<< TestStdInput",
+                f"command={wrapper}, stdin={command} <<< TestStdInput\n",
             )
             self.mock_asyncssh.connect.assert_called_with(*args, **kwargs)
 

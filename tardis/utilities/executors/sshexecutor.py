@@ -192,6 +192,6 @@ class DupingSSHExecutor(SSHExecutor):
 
     async def run_command(self, command, stdin_input=None):
         stdin_input = (
-            f"{command} <<< {quote(stdin_input)}" if stdin_input else f"{command}"
+            f"{command} <<< {quote(stdin_input)}\n" if stdin_input else f"{command}\n"
         )
         return await super().run_command(self._wrapper_script, stdin_input=stdin_input)
