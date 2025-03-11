@@ -180,3 +180,15 @@ class SSHExecutor(Executor):
                     stderr=response.stderr,
                     exit_code=response.exit_status,
                 )
+
+
+@enable_yaml_load("!DupingSSHExecutor")
+@yaml_tag(eager=True)
+class DupingSSHExecutor(SSHExecutor):
+    def __init__(self, *, wrapper="/bin/bash", **parameters):
+        self._wrapper_script = wrapper
+        super().__init__(**parameters)
+
+    async def run_command(self, command, stdin_input=None):
+        stdin_input = f"{command}\n{stdin_input}\n" if stdin_input else f"{command}\n"
+        return await super().run_command(self._wrapper_script, stdin_input=stdin_input)

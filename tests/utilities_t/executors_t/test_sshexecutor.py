@@ -4,6 +4,7 @@ from tardis.utilities.executors.sshexecutor import (
     SSHExecutor,
     probe_max_session,
     MFASSHClient,
+    DupingSSHExecutor,
 )
 from tardis.exceptions.executorexceptions import CommandExecutionFailure
 from tardis.exceptions.tardisexceptions import TardisAuthError
@@ -46,9 +47,13 @@ class MockConnection(object):
             if command.startswith("sleep"):
                 _, duration = command.split()
                 await asyncio.sleep(float(duration))
-            elif command != "Test":
+            elif command not in ("Test", "/bin/bash", "test_wrapper"):
                 raise ValueError(f"Unsupported mock command: {command}")
-            return AttributeDict(stdout=input, stderr="TestError", exit_status=0)
+            return AttributeDict(
+                stdout=f"command={command}, stdin={input}",
+                stderr="TestError",
+                exit_status=0,
+            )
 
     async def create_process(self):
         @asynccontextmanager
@@ -224,7 +229,10 @@ class TestSSHExecutor(TestCase):
                 )
 
     def test_run_command(self):
-        self.assertIsNone(run_async(self.executor.run_command, command="Test").stdout)
+        self.assertEqual(
+            run_async(self.executor.run_command, command="Test").stdout,
+            "command=Test, stdin=None",
+        )
         self.mock_asyncssh.connect.assert_called_with(
             host="test_host", username="test", client_keys=["TestKey"]
         )
@@ -234,7 +242,7 @@ class TestSSHExecutor(TestCase):
             self.executor.run_command, command="Test", stdin_input="Test"
         )
 
-        self.assertEqual(response.stdout, "Test")
+        self.assertEqual(response.stdout, "command=Test, stdin=Test")
 
         self.assertEqual(response.stderr, "TestError")
 
@@ -276,7 +284,7 @@ class TestSSHExecutor(TestCase):
                 run_async(
                     test_executor.run_command, command="Test", stdin_input="Test"
                 ).stdout,
-                "Test",
+                "command=Test, stdin=Test",
             )
             self.mock_asyncssh.connect.assert_called_with(*args, **kwargs)
 
@@ -318,4 +326,110 @@ class TestSSHExecutor(TestCase):
             username="test",
             client_keys=["TestKey"],
             client_factory=mfa_executor._parameters["client_factory"],
+        )
+
+
+class TestDupingSSHExecutor(TestCase):
+    mock_asyncssh = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.mock_asyncssh_patcher = patch(
+            "tardis.utilities.executors.sshexecutor.asyncssh"
+        )
+        cls.mock_asyncssh = cls.mock_asyncssh_patcher.start()
+        cls.mock_asyncssh.ChannelOpenError = ChannelOpenError
+        cls.mock_asyncssh.ConnectionLost = ConnectionLost
+        cls.mock_asyncssh.DisconnectError = DisconnectError
+        cls.mock_asyncssh.ProcessError = ProcessError
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.mock_asyncssh.stop()
+
+    def setUp(self) -> None:
+        self.response = AttributeDict(stderr="", exit_status=0)
+        self.mock_asyncssh.connect.return_value = async_return(
+            return_value=MockConnection()
+        )
+        self.test_asyncssh_params = AttributeDict(
+            host="test_host", username="test", client_keys=["TestKey"]
+        )
+        self.executor = DupingSSHExecutor(**self.test_asyncssh_params)
+        self.mock_asyncssh.reset_mock()
+
+    def test_run_command(self):
+        def test_wrapper_and_response(wrapper, response):
+            self.assertEqual(
+                response.stdout, f"command={wrapper}, stdin=Test\nTestStdInput\n"
+            )
+            self.assertEqual(response.stderr, "TestError")
+            self.assertEqual(response.exit_code, 0)
+
+        response = run_async(
+            self.executor.run_command, command="Test", stdin_input="TestStdInput"
+        )
+
+        test_wrapper_and_response(wrapper="/bin/bash", response=response)
+
+        self.executor = DupingSSHExecutor(
+            wrapper="test_wrapper", **self.test_asyncssh_params
+        )
+
+        response = run_async(
+            self.executor.run_command, command="Test", stdin_input="TestStdInput"
+        )
+
+        test_wrapper_and_response(wrapper="test_wrapper", response=response)
+
+    def test_construction_by_yaml(self):
+        def test_yaml_construction(test_executor, wrapper, *args, **kwargs):
+            command = "Test"
+            self.assertEqual(
+                run_async(
+                    test_executor.run_command,
+                    command=command,
+                    stdin_input="TestStdInput",
+                ).stdout,
+                f"command={wrapper}, stdin={command}\nTestStdInput\n",
+            )
+            self.mock_asyncssh.connect.assert_called_with(*args, **kwargs)
+
+            self.mock_asyncssh.reset_mock()
+
+        executor_to_test = yaml.safe_load(
+            """
+        !DupingSSHExecutor
+        host: test_host
+        username: test
+        client_keys:
+          - TestKey
+        """
+        )
+
+        test_yaml_construction(
+            executor_to_test,
+            "/bin/bash",
+            host="test_host",
+            username="test",
+            client_keys=["TestKey"],
+        )
+
+        test_executor_w_wrapper = yaml.safe_load(
+            """
+        !DupingSSHExecutor
+        host: test_host
+        username: test
+        client_keys:
+          - TestKey
+        wrapper: test_wrapper
+        """
+        )
+
+        test_yaml_construction(
+            test_executor_w_wrapper,
+            "test_wrapper",
+            host="test_host",
+            username="test",
+            client_keys=["TestKey"],
         )
