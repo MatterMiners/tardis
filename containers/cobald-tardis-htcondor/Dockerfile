@@ -5,7 +5,7 @@ ARG SOURCE_BRANCH=master
 ARG SOURCE_REPO_URL=https://github.com/MatterMiners/tardis
 
 RUN rpm --import http://research.cs.wisc.edu/htcondor/yum/RPM-GPG-KEY-HTCondor
-RUN dnf install -y https://research.cs.wisc.edu/htcondor/repo/23.x/el8/x86_64/release/htcondor-release-23.x-1.el8.noarch.rpm
+RUN dnf install -y https://research.cs.wisc.edu/htcondor/repo/24.0/el8/x86_64/release/htcondor-release-24.0-1.el8.noarch.rpm
 
 RUN dnf -y install epel-release && dnf clean all
 RUN dnf config-manager --set-enabled powertools
