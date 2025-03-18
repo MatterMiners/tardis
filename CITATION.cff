@@ -2,7 +2,7 @@
 # Metadata for citation of this software according to the CFF format (https://citation-file-format.github.io/)
 cff-version: 1.1.0
 message: If you use this software, please cite it using these metadata.
-title: "MatterMiners/tardis: 0.8.2"
+title: "MatterMiners/tardis: 0.8.4"
 doi: 10.5281/zenodo.8426261
 authors:
   - given-names: Manuel
@@ -46,7 +46,7 @@ authors:
   - given-names: Sebastian
     family-names: Wozniewski
     affiliation: University of Göttingen
-version: 0.8.2
-date-released: 2024-05-15
+version: 0.8.4
+date-released: 2025-03-17
 repository-code: https://github.com/MatterMiners/tardis
 license: MIT

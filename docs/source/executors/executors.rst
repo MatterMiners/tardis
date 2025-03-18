@@ -93,7 +93,7 @@ SSH Executor
           - /opt/tardis/ssh/tardis
 
 Duping SSH Executor
-------------
+-------------------
 
 .. content-tabs:: left-col
 

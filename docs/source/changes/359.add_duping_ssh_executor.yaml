@@ -1,9 +1,10 @@
 category: added
 summary: "Add new duping SSH executor to support HPC ssh command keys"
-description: | 
+description: |
   The new duping ssh executor is a special solution for High Performance Compute Centers, which offer the opportunity to
   register so called ssh command keys (ssh key that can access the cluster without multi-factor authentication, but that
   is restricted to execute one single command without any additional command line arguments). The duping ssh executor
   executes commands passed over via standard input to a wrapper script, that takes care of the actual execution.
 pull requests:
 - 359
+version: 0.8.4
