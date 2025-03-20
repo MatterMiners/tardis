@@ -238,6 +238,31 @@ class TestSlurmAdapter(TestCase):
             'squeue -o "%A|%N|%T" -h -t all --job=1390065'
         )
 
+    @mock_executor_run_command(TEST_RESOURCE_STATUS_RESPONSE)
+    def test_resource_status_w_options(self):
+        self.test_site_config.MachineTypeConfiguration.test2large.StatusOptions = (
+            AttributeDict(
+                long=AttributeDict(cluster="cm4"),
+                short=AttributeDict(p="cm4_tiny"),
+            )
+        )
+
+        slurm_adapter = SlurmAdapter(machine_type="test2large", site_name="TestSite")
+
+        self.assertDictEqual(
+            AttributeDict(
+                resource_status=ResourceStatus.Booting, remote_resource_uuid=1390065
+            ),
+            run_async(
+                slurm_adapter.resource_status,
+                resource_attributes=self.resource_attributes,
+            ),
+        )
+
+        self.mock_executor.return_value.run_command.assert_called_with(
+            'squeue -p cm4_tiny --cluster=cm4 -o "%A|%N|%T" -h -t all --job=1390065'
+        )
+
     @mock_executor_run_command(TEST_RESOURCE_STATUS_RESPONSE_RUNNING)
     def test_update_resource_status(self):
         self.assertEqual(
@@ -407,6 +432,26 @@ class TestSlurmAdapter(TestCase):
 
         self.mock_executor.return_value.run_command.assert_called_with(
             "scancel 1390065"
+        )
+
+    @mock_executor_run_command(stdout="", stderr="", exit_code=0)
+    def test_terminate_resource_w_options(self):
+        self.test_site_config.MachineTypeConfiguration.test2large.TerminateOptions = (
+            AttributeDict(
+                long=AttributeDict(cluster="cm4"),
+                short=AttributeDict(p="cm4_tiny"),
+            )
+        )
+
+        slurm_adapter = SlurmAdapter(machine_type="test2large", site_name="TestSite")
+
+        run_async(
+            slurm_adapter.terminate_resource,
+            resource_attributes=self.resource_attributes,
+        )
+
+        self.mock_executor.return_value.run_command.assert_called_with(
+            "scancel -p cm4_tiny --cluster=cm4 1390065"
         )
 
     def test_exception_handling(self):
