@@ -29,7 +29,9 @@ logger = logging.getLogger("cobald.runtime.tardis.adapters.sites.slurm")
 
 
 async def squeue(
-    *resource_attributes: Tuple[AttributeDict, ...], executor: Executor
+    *resource_attributes: Tuple[AttributeDict, ...],
+    squeue_options: AttributeDict,
+    executor: Executor,
 ) -> Iterable[Mapping]:
     attributes = dict(JobId="%A", Host="%N", State="%T")
     attributes_string = "|".join(attributes.values())
@@ -38,7 +40,10 @@ async def squeue(
         str(resource.remote_resource_uuid) for resource in resource_attributes
     )
 
-    cmd = f'squeue -o "{attributes_string}" -h -t all --job={remote_resource_ids}'
+    squeue_options_str = submit_cmd_option_formatter(squeue_options)
+    # strip whitespace, if no options provided
+    squeue_cmd = f"squeue {squeue_options_str}".strip()
+    cmd = f'{squeue_cmd} -o "{attributes_string}" -h -t all --job={remote_resource_ids}'
 
     slurm_resource_status = {}
     logger.debug("Slurm status update is started.")
@@ -135,8 +140,12 @@ class SlurmAdapter(SiteAdapter):
         bulk_size = getattr(self.configuration, "bulk_size", 100)
         bulk_delay = getattr(self.configuration, "bulk_delay", 1.0)
 
+        squeue_options = self.machine_type_configuration.get(
+            "StatusOptions", AttributeDict()
+        )
+
         self._squeue = AsyncBulkCall(
-            partial(squeue, executor=self._executor),
+            partial(squeue, squeue_options=squeue_options, executor=self._executor),
             size=bulk_size,
             delay=bulk_delay,
         )
@@ -171,7 +180,13 @@ class SlurmAdapter(SiteAdapter):
         return self.handle_response(await self._squeue(resource_attributes))
 
     async def terminate_resource(self, resource_attributes: AttributeDict) -> None:
-        request_command = f"scancel {resource_attributes.remote_resource_uuid}"
+        scancel_options = self.machine_type_configuration.get(
+            "TerminateOptions", AttributeDict()
+        )
+        scancel_options_str = submit_cmd_option_formatter(scancel_options)
+        # strip whitespace, if no options provided
+        scancel_cmd = f"scancel {scancel_options_str}".strip()
+        request_command = f"{scancel_cmd} {resource_attributes.remote_resource_uuid}"
         await self._executor.run_command(request_command)
 
     def sbatch_cmdline_options(self, drone_uuid, machine_meta_data_translation_mapping):
@@ -204,7 +219,7 @@ class SlurmAdapter(SiteAdapter):
                 # to http://cern.ch/go/x7p8 SLURM is using factors of 1024 to convert
                 # between memory units
                 mem=f"{int(self.machine_meta_data.Memory * 1024)}mb",
-                export=f"SLURM_Walltime={walltime},{drone_environment}",
+                export=f"SLURM_Walltime={walltime},{drone_environment}",  # noqa E231
             ),
         )
 
