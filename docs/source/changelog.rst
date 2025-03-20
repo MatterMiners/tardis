@@ -6,6 +6,14 @@
 CHANGELOG
 #########
 
+[Unreleased] - 2025-03-20
+=========================
+
+Added
+-----
+
+* Add status and terminate command line options to SLURM adapter
+
 [0.8.4] - 2025-03-17
 ====================
 
