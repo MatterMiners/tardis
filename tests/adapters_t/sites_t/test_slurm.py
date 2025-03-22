@@ -295,7 +295,7 @@ class TestSlurmAdapter(TestCase):
             )
             self.assertEqual(returned_resource_attributes.resource_status, value)
 
-            self.mock_executor.return_value.run_command.called_once()
+            self.assertTrue(self.mock_executor.return_value.run_command.called)
 
             self.mock_executor.return_value.run_command.assert_called_with(
                 f'squeue -o "%A|%N|%T" -h -t all --job={job_id}'

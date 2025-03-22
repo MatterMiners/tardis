@@ -103,11 +103,11 @@ class TestPoolFactory(TestCase):
             ],
         )
 
-        mock_weighted_composite.has_calls(
+        mock_weighted_composite.assert_has_calls(
             [
+                call(mock_logger(), weight="utilisation"),
                 call(mock_standardiser(), weight="utilisation"),
-                call(mock_weighted_composite(), weight="utilisation"),
-            ]
+            ],
         )
 
     @patch("tardis.resources.poolfactory.Drone")
