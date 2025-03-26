@@ -47,6 +47,8 @@ class MockConnection(object):
             if command.startswith("sleep"):
                 _, duration = command.split()
                 await asyncio.sleep(float(duration))
+            elif command == "lost_connection":
+                return AttributeDict(stdout="", stderr="", exit_status=None)
             elif command not in ("Test", "/bin/bash", "test_wrapper"):
                 raise ValueError(f"Unsupported mock command: {command}")
             return AttributeDict(
@@ -247,6 +249,15 @@ class TestSSHExecutor(TestCase):
         self.assertEqual(response.stderr, "TestError")
 
         self.assertEqual(response.exit_code, 0)
+
+        with self.assertRaises(CommandExecutionFailure) as cef:
+            run_async(self.executor.run_command, command="lost_connection")
+        self.assertEqual(
+            cef.exception.message,
+            "Could not run command lost_connection due to a connection loss!",
+        )
+        self.assertEqual(cef.exception.stderr, "SSH connection lost")
+        self.assertEqual(cef.exception.exit_code, 255)
 
         raising_executor = SSHExecutor(**self.test_asyncssh_params)
 
