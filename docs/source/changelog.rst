@@ -14,6 +14,11 @@ Added
 
 * Add support for Python 3.12
 
+Fixed
+-----
+
+* Fix ssh loss of already established connection
+
 [0.8.4] - 2025-03-17
 ====================
 
