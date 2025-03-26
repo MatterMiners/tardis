@@ -175,6 +175,18 @@ class SSHExecutor(Executor):
                     stderr="SSH Broken Connection",
                 ) from coe
             else:
+                # In case asyncssh loses the connection while running a command, the
+                # connection loss seems to be silently ignored, however the
+                # exit_status is None in that case.
+                if response.exit_status is None:
+                    raise CommandExecutionFailure(
+                        message=(
+                            f"Could not run command {command} due to a connection loss!"
+                        ),
+                        exit_code=255,
+                        stdout="",
+                        stderr="SSH connection lost",
+                    )
                 return AttributeDict(
                     stdout=response.stdout,
                     stderr=response.stderr,
