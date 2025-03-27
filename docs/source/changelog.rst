@@ -1,10 +1,18 @@
-.. Created by changelog.py at 2025-03-18, command
-   '/Users/giffler/.cache/pre-commit/repoecmh3ah8/py_env-python3.13/bin/changelog docs/source/changes compile --categories Added Changed Fixed Security Deprecated --output=docs/source/changelog.rst'
+.. Created by changelog.py at 2025-03-26, command
+   '/Users/giffler/.cache/pre-commit/repoecmh3ah8/py_env-python3.12/bin/changelog docs/source/changes compile --categories Added Changed Fixed Security Deprecated --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
 #########
 CHANGELOG
 #########
+
+[Unreleased] - 2025-03-26
+=========================
+
+Added
+-----
+
+* Add support for Python 3.12
 
 [0.8.4] - 2025-03-17
 ====================

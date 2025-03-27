@@ -56,13 +56,13 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
-      - name: Add Python 3.11 to GITHUB_PATH
-        run: echo "/Library/Frameworks/Python.framework/Versions/3.11/bin" >> $GITHUB_PATH
+      - name: Add Python 3.12 to GITHUB_PATH
+        run: echo "/Library/Frameworks/Python.framework/Versions/3.12/bin" >> $GITHUB_PATH
       - name: Install dependencies on ${{ matrix.platform }}
         run: |
-          python3.11 -m pip install --upgrade pip
-          python3.11 -m pip install .[contrib]
-          python3.11 -m pip install coverage codecov
+          python3.12 -m pip install --upgrade pip
+          python3.12 -m pip install .[contrib]
+          python3.12 -m pip install coverage codecov
       - name: Test with unittest on ${{ matrix.platform }}
         run: |
           coverage run -m unittest -v

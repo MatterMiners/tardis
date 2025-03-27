@@ -1,0 +1,6 @@
+category: added
+summary: "Add support for Python 3.12"
+description: |
+  TARDIS including tests is now working with Pythin 3.12
+pull requests:
+- 366
