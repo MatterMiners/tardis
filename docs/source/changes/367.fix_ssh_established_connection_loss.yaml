@@ -1,0 +1,8 @@
+category: fixed
+summary: "Fix ssh loss of already established connection"
+description: |
+  The asyncssh client seems to silently ignore a loss of an already established connection, however the `exit_status` of 
+  `SSHClient.run` is `None`. Now, the `SSHExecutor` is throwing a `CommandExecutionFailure`, which lead to a retry of
+  of the command execution later on, once the connection has been re-established.
+pull requests:
+- 367

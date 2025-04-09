@@ -115,6 +115,23 @@ class SSHExecutor(Executor):
                 await asyncio.sleep(retry * 10)
         return await asyncssh.connect(**self._parameters)
 
+    def _handle_broken_ssh_connection(
+        self,
+        ssh_connection: asyncssh.SSHClientConnection,
+        command: str,
+        chained_exception: Exception = None,
+    ):
+        # clear broken connection to get it replaced
+        # by a new connection during next command
+        if ssh_connection is self._ssh_connection:
+            self._ssh_connection = None
+        raise CommandExecutionFailure(
+            message=(f"Could not run command {command} due to a connection loss!"),
+            exit_code=255,
+            stdout="",
+            stderr="SSH connection lost",
+        ) from chained_exception
+
     @property
     @asynccontextmanager
     async def bounded_connection(self):
@@ -162,19 +179,15 @@ class SSHExecutor(Executor):
                     stderr=pe.stderr,
                 ) from pe
             except asyncssh.ChannelOpenError as coe:
-                # clear broken connection to get it replaced
-                # by a new connection during next command
-                if ssh_connection is self._ssh_connection:
-                    self._ssh_connection = None
-                raise CommandExecutionFailure(
-                    message=(
-                        f"Could not run command {command} due to SSH failure: {coe}"
-                    ),
-                    exit_code=255,
-                    stdout="",
-                    stderr="SSH Broken Connection",
-                ) from coe
+                self._handle_broken_ssh_connection(
+                    ssh_connection, command, chained_exception=coe
+                )
             else:
+                # In case asyncssh loses the connection while running a command, the
+                # connection loss seems to be silently ignored, however the
+                # exit_status is None in that case.
+                if response.exit_status is None:
+                    self._handle_broken_ssh_connection(ssh_connection, command)
                 return AttributeDict(
                     stdout=response.stdout,
                     stderr=response.stderr,
