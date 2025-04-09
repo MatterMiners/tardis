@@ -13,6 +13,7 @@ Added
 -----
 
 * Add support for Python 3.12
+* Add status and terminate command line options to SLURM adapter
 
 Fixed
 -----
