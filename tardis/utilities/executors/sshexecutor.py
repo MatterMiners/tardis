@@ -119,7 +119,7 @@ class SSHExecutor(Executor):
         self,
         ssh_connection: asyncssh.SSHClientConnection,
         command: str,
-        chained_exception: Exception = None,
+        chained_exception: "Exception | None" = None,
     ):
         # clear broken connection to get it replaced
         # by a new connection during next command
