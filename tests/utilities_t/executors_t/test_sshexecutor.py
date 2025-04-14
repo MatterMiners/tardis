@@ -199,7 +199,7 @@ class TestSSHExecutor(TestCase):
 
         self.assertIsNone(self.executor._ssh_connection)
         run_async(force_connection)
-        self.assertIsInstance(self.executor._ssh_connection, MockConnection)
+        self.assertIsInstance(self.executor._ssh_connection[0], MockConnection)
         current_ssh_connection = self.executor._ssh_connection
         run_async(force_connection)
         # make sure the connection is not needlessly replaced
