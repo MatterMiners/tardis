@@ -142,7 +142,7 @@ class SSHExecutor(Executor):
         :py:class:`~asyncssh.SSHClientConnection`
         so that only `MaxSessions` commands run at once.
         """
-        if self._ssh_connection is None:
+        if self._ssh_connection is None or self._session_bound is None:
             async with self.lock:
                 # check that connection has not been initialized in a different task
                 while self._ssh_connection is None:
