@@ -146,9 +146,12 @@ class SSHExecutor(Executor):
             async with self.lock:
                 # check that connection has not been initialized in a different task
                 while self._ssh_connection is None:
-                    self._ssh_connection = await self._establish_connection()
-                    max_session = await probe_max_session(self._ssh_connection)
-                    self._session_bound = asyncio.Semaphore(value=max_session)
+                    connection = await self._establish_connection()
+                    max_session = await probe_max_session(connection)
+                    self._ssh_connection, self._session_bound = (
+                        connection,
+                        asyncio.Semaphore(value=max_session),
+                    )
         assert self._ssh_connection is not None
         assert self._session_bound is not None
         bound, session = self._session_bound, self._ssh_connection
