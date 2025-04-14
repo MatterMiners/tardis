@@ -96,10 +96,10 @@ class SSHExecutor(Executor):
             self._parameters["client_factory"] = partial(
                 MFASSHClient, mfa_config=mfa_config
             )
-        # the current SSH connection or None if it must be (re-)established
-        self._ssh_connection: Optional[asyncssh.SSHClientConnection] = None
-        # the bound on MaxSession running concurrently
-        self._session_bound: Optional[asyncio.Semaphore] = None
+        # the current SSH connection and bound unless it must be (re-)established
+        self._ssh_connection: (
+            "tuple[asyncssh.SSHClientConnection, asyncio.Semaphore] | None"
+        ) = None
         self._lock = None
 
     async def _establish_connection(self):
@@ -123,7 +123,10 @@ class SSHExecutor(Executor):
     ):
         # clear broken connection to get it replaced
         # by a new connection during next command
-        if ssh_connection is self._ssh_connection:
+        if (
+            self._ssh_connection is not None
+            and ssh_connection is self._ssh_connection[0]
+        ):
             self._ssh_connection = None
         raise CommandExecutionFailure(
             message=(f"Could not run command {command} due to a connection loss!"),
@@ -148,13 +151,12 @@ class SSHExecutor(Executor):
                 while self._ssh_connection is None:
                     connection = await self._establish_connection()
                     max_session = await probe_max_session(connection)
-                    self._ssh_connection, self._session_bound = (
+                    self._ssh_connection = (
                         connection,
                         asyncio.Semaphore(value=max_session),
                     )
         assert self._ssh_connection is not None
-        assert self._session_bound is not None
-        bound, session = self._session_bound, self._ssh_connection
+        session, bound = self._ssh_connection
         async with bound:
             yield session
 
