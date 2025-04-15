@@ -205,6 +205,35 @@ class TestSSHExecutor(TestCase):
         # make sure the connection is not needlessly replaced
         self.assertEqual(self.executor._ssh_connection, current_ssh_connection)
 
+    def test_connection_race(self):
+        # see https://github.com/MatterMiners/tardis/issues/369
+        waiter = asyncio.Event()
+
+        async def mocked_probe_max_session(connection):
+            await waiter.wait()
+            return 10
+
+        async def run_bounded_connection():
+            async with self.executor.bounded_connection as connection:
+                return connection
+
+        async def run_race_condition():
+            first_connection = asyncio.ensure_future(run_bounded_connection())
+            await asyncio.sleep(0.1)  # give some time to hit the waiter
+            self.assertIsNone(self.executor._ssh_connection)
+            second_connection = asyncio.ensure_future(run_bounded_connection())
+            await asyncio.sleep(0.1)  # give some time to schedule the second tasks
+            waiter.set()
+            # check that no new connection is established
+            self.assertEqual(await first_connection, await second_connection)
+
+        # monkey patch prob session
+        with patch(
+            "tardis.utilities.executors.sshexecutor.probe_max_session",
+            mocked_probe_max_session,
+        ):
+            run_async(run_race_condition)
+
     def test_lock(self):
         self.assertIsInstance(self.executor.lock, asyncio.Lock)
 
