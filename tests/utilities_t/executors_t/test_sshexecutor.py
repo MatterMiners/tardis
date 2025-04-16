@@ -197,13 +197,15 @@ class TestSSHExecutor(TestCase):
             async with self.executor.bounded_connection as connection:
                 return connection
 
-        self.assertIsNone(self.executor._ssh_connection)
+        self.assertIsNone(self.executor._connection_state)
         run_async(force_connection)
-        self.assertIsInstance(self.executor._ssh_connection[0], MockConnection)
-        current_ssh_connection = self.executor._ssh_connection
+        self.assertIsInstance(
+            self.executor._connection_state.connection, MockConnection
+        )
+        current_ssh_connection = self.executor._connection_state
         run_async(force_connection)
         # make sure the connection is not needlessly replaced
-        self.assertEqual(self.executor._ssh_connection, current_ssh_connection)
+        self.assertEqual(self.executor._connection_state, current_ssh_connection)
 
     def test_connection_race(self):
         # see https://github.com/MatterMiners/tardis/issues/369
@@ -220,7 +222,7 @@ class TestSSHExecutor(TestCase):
         async def run_race_condition():
             first_connection = asyncio.ensure_future(run_bounded_connection())
             await asyncio.sleep(0.1)  # give some time to hit the waiter
-            self.assertIsNone(self.executor._ssh_connection)
+            self.assertIsNone(self.executor._connection_state)
             second_connection = asyncio.ensure_future(run_bounded_connection())
             await asyncio.sleep(0.1)  # give some time to schedule the second tasks
             waiter.set()
