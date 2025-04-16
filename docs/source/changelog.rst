@@ -18,6 +18,7 @@ Added
 Fixed
 -----
 
+* Fix race conditions when establishing SSH connections
 * Fix ssh loss of already established connection
 
 [0.8.4] - 2025-03-17
