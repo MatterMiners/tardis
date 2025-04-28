@@ -1,9 +1,10 @@
 category: added
 summary: "Add status and terminate command line options to SLURM adapter"
-description: |
-  Depending on the setup of the SLURM clusters, some might need to also add specific command line options to the 
-  `squeue` and `scancel` in order to work correctly. For example: `squeue -M cm4 -p cm4_tiny`. Therefore, a general
-  approach has been implemented to allow for using arbitary command line options for the status update and termination 
-  of jobs.
+description: "Depending on the setup of the SLURM clusters, some might need to also\
+  \ add specific command line options to the \n`squeue` and `scancel` in order to\
+  \ work correctly. For example: `squeue -M cm4 -p cm4_tiny`. Therefore, a general\n\
+  approach has been implemented to allow for using arbitary command line options for\
+  \ the status update and termination \nof jobs.\n"
 pull requests:
 - 365
+version: 0.8.5
