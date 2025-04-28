@@ -1,9 +1,10 @@
 category: fixed
 summary: "Fix race conditions when establishing SSH connections"
-description: |
-  A race conditions that crashed TARDIS when two concurrent tasks tried to (re-)establish a new ssh connection 
-  simultaneously has been fixed by handling the state of bound and connection as a single entity.
+description: "A race conditions that crashed TARDIS when two concurrent tasks tried\
+  \ to (re-)establish a new ssh connection \nsimultaneously has been fixed by handling\
+  \ the state of bound and connection as a single entity.\n"
 issues:
-  - 369
+- 369
 pull requests:
-  - 371
+- 371
+version: 0.8.5
