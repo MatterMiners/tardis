@@ -516,17 +516,21 @@ Available machine type configuration options
 
 .. content-tabs:: left-col
 
-    +----------------+--------------------------------------------------------------------------------------------------+-----------------+
-    | Option         | Short Description                                                                                | Requirement     |
-    +================+==================================================================================================+=================+
-    | Walltime       | Expected walltime of drone                                                                       |  **Required**   |
-    +----------------+--------------------------------------------------------------------------------------------------+-----------------+
-    | Partition      | Name of the Slurm partition to run in                                                            |  **Required**   |
-    +----------------+--------------------------------------------------------------------------------------------------+-----------------+
-    | StartupCommand | The command to execute at job start                                                              |  **Required**   |
-    +----------------+--------------------------------------------------------------------------------------------------+-----------------+
-    | SubmitOptions  | Options to add to the `sbatch` command. `long` and `short` arguments are supported (see example) |  **Optional**   |
-    +----------------+--------------------------------------------------------------------------------------------------+-----------------+
+    +------------------+---------------------------------------------------------------------------------------------------+-----------------+
+    | Option           | Short Description                                                                                 | Requirement     |
+    +==================+===================================================================================================+=================+
+    | Walltime         | Expected walltime of drone                                                                        |  **Required**   |
+    +------------------+---------------------------------------------------------------------------------------------------+-----------------+
+    | Partition        | Name of the Slurm partition to run in                                                             |  **Required**   |
+    +------------------+---------------------------------------------------------------------------------------------------+-----------------+
+    | StartupCommand   | The command to execute at job start                                                               |  **Required**   |
+    +------------------+---------------------------------------------------------------------------------------------------+-----------------+
+    | SubmitOptions    | Options to add to the `sbatch` command. `long` and `short` arguments are supported (see example)  |  **Optional**   |
+    +------------------+---------------------------------------------------------------------------------------------------+-----------------+
+    | StatusOptions    | Options to add to the `squeue` command. `long` and `short` arguments are supported (see example)  |  **Optional**   |
+    +------------------+---------------------------------------------------------------------------------------------------+-----------------+
+    | TerminateOptions | Options to add to the `scancel` command. `long` and `short` arguments are supported (see example) |  **Optional**   |
+    +------------------+---------------------------------------------------------------------------------------------------+-----------------+
 
 .. content-tabs:: right-col
 
@@ -569,6 +573,16 @@ Available machine type configuration options
               Walltime: '720'
               Partition: normal
               StartupCommand: 'pilot_clean.sh'
+              StatusOptions:
+                long:
+                  cluster: "cm4"
+                short:
+                  p: "cm4_tiny"
+              TerminateOptions:
+                long:
+                  cluster: "cm4"
+                short:
+                  p: "cm4_tiny"
           MachineMetaData:
             one_day:
               Cores: 20
