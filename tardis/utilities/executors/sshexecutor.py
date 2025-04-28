@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, NamedTuple
 from ...configuration.utilities import enable_yaml_load
 from ...exceptions.tardisexceptions import TardisAuthError
 from ...exceptions.executorexceptions import CommandExecutionFailure
@@ -86,6 +86,15 @@ class MFASSHClient(SSHClient):
             raise TardisAuthError(msg) from ke
 
 
+class ConnectionState(NamedTuple):
+    """State associated with an active SSH connection"""
+
+    #: the SSH connection itself
+    connection: asyncssh.SSHClientConnection
+    #: bound on concurrent sessions over the connection
+    bound: asyncio.Semaphore
+
+
 @enable_yaml_load("!SSHExecutor")
 @yaml_tag(eager=True)
 class SSHExecutor(Executor):
@@ -96,10 +105,8 @@ class SSHExecutor(Executor):
             self._parameters["client_factory"] = partial(
                 MFASSHClient, mfa_config=mfa_config
             )
-        # the current SSH connection or None if it must be (re-)established
-        self._ssh_connection: Optional[asyncssh.SSHClientConnection] = None
-        # the bound on MaxSession running concurrently
-        self._session_bound: Optional[asyncio.Semaphore] = None
+        # the current SSH connection unless it must be (re-)established
+        self._connection_state: "ConnectionState | None" = None
         self._lock = None
 
     async def _establish_connection(self):
@@ -119,12 +126,15 @@ class SSHExecutor(Executor):
         self,
         ssh_connection: asyncssh.SSHClientConnection,
         command: str,
-        chained_exception: Exception = None,
+        chained_exception: "Exception | None" = None,
     ):
         # clear broken connection to get it replaced
         # by a new connection during next command
-        if ssh_connection is self._ssh_connection:
-            self._ssh_connection = None
+        if (
+            self._connection_state is not None
+            and ssh_connection is self._connection_state.connection
+        ):
+            self._connection_state = None
         raise CommandExecutionFailure(
             message=(f"Could not run command {command} due to a connection loss!"),
             exit_code=255,
@@ -142,16 +152,17 @@ class SSHExecutor(Executor):
         :py:class:`~asyncssh.SSHClientConnection`
         so that only `MaxSessions` commands run at once.
         """
-        if self._ssh_connection is None:
+        if self._connection_state is None:
             async with self.lock:
                 # check that connection has not been initialized in a different task
-                while self._ssh_connection is None:
-                    self._ssh_connection = await self._establish_connection()
-                    max_session = await probe_max_session(self._ssh_connection)
-                    self._session_bound = asyncio.Semaphore(value=max_session)
-        assert self._ssh_connection is not None
-        assert self._session_bound is not None
-        bound, session = self._session_bound, self._ssh_connection
+                while self._connection_state is None:
+                    connection = await self._establish_connection()
+                    max_session = await probe_max_session(connection)
+                    self._connection_state = ConnectionState(
+                        connection, asyncio.Semaphore(value=max_session)
+                    )
+        assert self._connection_state is not None
+        session, bound = self._connection_state
         async with bound:
             yield session
 
