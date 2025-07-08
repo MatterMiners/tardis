@@ -41,13 +41,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies on ${{ matrix.os_container }}
+        shell: bash
         run: |
+          python3 -m venv test_env
+          source test_env/bin/activate
           python3 -m pip install --upgrade pip
           python3 -m pip install .[contrib]
           python3 -m pip install coverage codecov
       - name: Test with unittest on ${{ matrix.os_container }}
         run: |
           export LANG=en_US.utf8
+          export PATH=$PATH:test_env/bin
           coverage run -m unittest -v
   deployment-macos:
     strategy:
@@ -59,10 +63,14 @@ jobs:
       - name: Add Python 3.12 to GITHUB_PATH
         run: echo "/Library/Frameworks/Python.framework/Versions/3.12/bin" >> $GITHUB_PATH
       - name: Install dependencies on ${{ matrix.platform }}
+        shell: bash
         run: |
+          python3.12 -m venv test_env
+          source test_env/bin/activate
           python3.12 -m pip install --upgrade pip
           python3.12 -m pip install .[contrib]
           python3.12 -m pip install coverage codecov
       - name: Test with unittest on ${{ matrix.platform }}
         run: |
+          export PATH=$PATH:test_env/bin
           coverage run -m unittest -v
