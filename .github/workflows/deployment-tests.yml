@@ -49,9 +49,11 @@ jobs:
           python3 -m pip install .[contrib]
           python3 -m pip install coverage codecov
       - name: Test with unittest on ${{ matrix.os_container }}
+        shell: bash
+        env:
+          LANG: en_US.utf8
         run: |
-          export LANG=en_US.utf8
-          export PATH=$PATH:test_env/bin
+          source test_env/bin/activate
           coverage run -m unittest -v
   deployment-macos:
     strategy:
@@ -71,6 +73,7 @@ jobs:
           python3.12 -m pip install .[contrib]
           python3.12 -m pip install coverage codecov
       - name: Test with unittest on ${{ matrix.platform }}
+        shell: bash
         run: |
-          export PATH=$PATH:test_env/bin
+          source test_env/bin/activate
           coverage run -m unittest -v
