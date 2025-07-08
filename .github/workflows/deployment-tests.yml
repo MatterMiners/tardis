@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        os_container: ['rockylinux8', 'rockylinux9', 'ubuntu20_04', 'ubuntu22_04']
+        os_container: ['rockylinux8', 'rockylinux9', 'ubuntu22_04', 'ubuntu24_04']
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        os_container: ['rockylinux8', 'rockylinux9', 'ubuntu20_04', 'ubuntu22_04']
+        os_container: ['rockylinux8', 'rockylinux9', 'ubuntu22_04', 'ubuntu24_04']
     container: matterminers/cobald-tardis-deployment-test-env:${{ matrix.os_container }}
     steps:
       - uses: actions/checkout@v4
