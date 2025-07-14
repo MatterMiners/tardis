@@ -15,7 +15,7 @@ with open(os.path.join(repo_base_dir, "README.md"), "r") as read_me:
 TESTS_REQUIRE = ["flake8", "httpx"]
 REST_REQUIRES = [
     "fastapi-jwt-auth",
-    "fastapi",
+    "fastapi>=0.100.0",
     "python-jose",
     "uvicorn[standard]",
     "typer",

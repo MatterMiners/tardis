@@ -1,5 +1,5 @@
-.. Created by changelog.py at 2025-04-28, command
-   '/Users/giffler/.cache/pre-commit/repoecmh3ah8/py_env-python3.12/bin/changelog docs/source/changes compile --categories Added Changed Fixed Security Deprecated --output=docs/source/changelog.rst'
+.. Created by changelog.py at 2025-07-08, command
+   '/Users/giffler/.cache/pre-commit/repoecmh3ah8/py_env-python3.13/bin/changelog docs/source/changes compile --categories Added Changed Fixed Security Deprecated --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
 #########
