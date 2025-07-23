@@ -52,12 +52,32 @@ class Auditor(Plugin):
         self._group = getattr(config_auditor, "group", "tardis")
         auditor_timeout = getattr(config_auditor, "timeout", 30)
         self._local_timezone = get_localzone()
-        self._client = (
+
+        tls_config = getattr(config_auditor, "tls_config", {})
+        use_tls = bool(getattr(tls_config, "use_tls", False))
+
+        client_builder = (
             pyauditor.AuditorClientBuilder()
             .address(config_auditor.host, config_auditor.port)
             .timeout(auditor_timeout)
-            .build()
         )
+
+        if use_tls:
+            required_tls_paths = ["client_cert_path", "client_key_path", "ca_cert_path"]
+
+            for path_key in required_tls_paths:
+                if not hasattr(tls_config, path_key):
+                    raise ValueError(f"Missing TLS configuration: {path_key}")
+
+            self._client = client_builder.with_tls(
+                tls_config.client_cert_path,
+                tls_config.client_key_path,
+                tls_config.ca_cert_path,
+            ).build()
+            self.logger.debug("TLS configuration completed successfully")
+
+        else:
+            self._client = client_builder.build()
 
     async def notify(self, state: State, resource_attributes: AttributeDict) -> None:
         """
