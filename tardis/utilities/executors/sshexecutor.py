@@ -1,7 +1,7 @@
 from typing import Optional, NamedTuple
 from ...configuration.utilities import enable_yaml_load
 from ...exceptions.tardisexceptions import TardisAuthError
-from ...exceptions.executorexceptions import CommandExecutionFailure
+from ...exceptions.executorexceptions import CommandExecutionFailure, ExecutorFailure
 from ...interfaces.executor import Executor
 from ..attributedict import AttributeDict
 from cobald.daemon.plugins import yaml_tag
@@ -135,11 +135,9 @@ class SSHExecutor(Executor):
             and ssh_connection is self._connection_state.connection
         ):
             self._connection_state = None
-        raise CommandExecutionFailure(
-            message=(f"Could not run command {command} due to a connection loss!"),
-            exit_code=255,
-            stdout="",
-            stderr="SSH connection lost",
+        raise ExecutorFailure(
+            description="SSH connection lost",
+            executor=self,
         ) from chained_exception
 
     @property
