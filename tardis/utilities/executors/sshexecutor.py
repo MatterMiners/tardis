@@ -125,7 +125,6 @@ class SSHExecutor(Executor):
     def _handle_broken_ssh_connection(
         self,
         ssh_connection: asyncssh.SSHClientConnection,
-        command: str,
         chained_exception: "Exception | None" = None,
     ):
         # clear broken connection to get it replaced
@@ -189,14 +188,14 @@ class SSHExecutor(Executor):
                 ) from pe
             except asyncssh.ChannelOpenError as coe:
                 self._handle_broken_ssh_connection(
-                    ssh_connection, command, chained_exception=coe
+                    ssh_connection, chained_exception=coe
                 )
             else:
                 # In case asyncssh loses the connection while running a command, the
                 # connection loss seems to be silently ignored, however the
                 # exit_status is None in that case.
                 if response.exit_status is None:
-                    self._handle_broken_ssh_connection(ssh_connection, command)
+                    self._handle_broken_ssh_connection(ssh_connection)
                 return AttributeDict(
                     stdout=response.stdout,
                     stderr=response.stderr,

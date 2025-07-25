@@ -4,10 +4,10 @@ class CommandExecutionFailure(Exception):
     def __init__(
         self,
         message: str,
-        exit_code: int = None,
-        stdout: str = None,
-        stderr: str = None,
-        stdin: str = None,
+        exit_code: int,
+        stdout: str,
+        stderr: str,
+        stdin: "str | None" = None,
     ):
         self.message = message
         self.exit_code = exit_code

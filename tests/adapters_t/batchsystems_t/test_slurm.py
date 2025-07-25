@@ -178,7 +178,9 @@ class TestSlurmAdapter(TestCase):
         self.mock_executor.reset_mock()
 
         self.mock_executor.return_value.run_command.side_effect = (
-            CommandExecutionFailure(message="Test", exit_code=123, stderr="Test")
+            CommandExecutionFailure(
+                message="Test", exit_code=123, stderr="Test", stdout="Test"
+            )
         )
 
         attributes = {

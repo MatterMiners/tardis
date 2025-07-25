@@ -108,7 +108,10 @@ class TestHTCondorAdapter(TestCase):
         )
         self.mock_executor.return_value.run_command.side_effect = (
             CommandExecutionFailure(
-                message="Does not exists", exit_code=1, stderr="Does not exists"
+                message="Does not exists",
+                exit_code=1,
+                stderr="Does not exists",
+                stdout="Does not exists",
             )
         )
         with self.assertLogs(level=logging.WARNING):
@@ -118,7 +121,10 @@ class TestHTCondorAdapter(TestCase):
 
         self.mock_executor.return_value.run_command.side_effect = (
             CommandExecutionFailure(
-                message="Unhandled error", exit_code=2, stderr="Unhandled error"
+                message="Unhandled error",
+                exit_code=2,
+                stderr="Unhandled error",
+                stdout="Unhandled error",
             )
         )
 
@@ -257,7 +263,9 @@ class TestHTCondorAdapter(TestCase):
         self.mock_executor.reset_mock()
 
         self.mock_executor.return_value.run_command.side_effect = (
-            CommandExecutionFailure(message="Test", exit_code=123, stderr="Test")
+            CommandExecutionFailure(
+                message="Test", exit_code=123, stderr="Test", stdout="Test"
+            )
         )
 
         attributes = {
