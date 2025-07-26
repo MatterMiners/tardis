@@ -129,7 +129,7 @@ class SSHExecutor(Executor):
         self._lock = None
 
     async def _establish_connection(self):
-        for retry in range(1, 10):
+        for retry in range(0, 9):
             try:
                 return await asyncssh.connect(**self._parameters)
             except (
@@ -138,7 +138,7 @@ class SSHExecutor(Executor):
                 asyncssh.ConnectionLost,
                 BrokenPipeError,
             ):
-                await asyncio.sleep(retry * 10)
+                await asyncio.sleep(2**retry)
         return await asyncssh.connect(**self._parameters)
 
     def _handle_broken_ssh_connection(
