@@ -4,7 +4,7 @@ class CommandExecutionFailure(Exception):
     def __init__(
         self,
         message: str,
-        exit_code: int,
+        exit_code: "int | None",
         stdout: str,
         stderr: str,
         stdin: "str | None" = None,
