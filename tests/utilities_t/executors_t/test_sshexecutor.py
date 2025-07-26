@@ -6,7 +6,10 @@ from tardis.utilities.executors.sshexecutor import (
     MFASSHClient,
     DupingSSHExecutor,
 )
-from tardis.exceptions.executorexceptions import CommandExecutionFailure
+from tardis.exceptions.executorexceptions import (
+    CommandExecutionFailure,
+    ExecutorFailure,
+)
 from tardis.exceptions.tardisexceptions import TardisAuthError
 
 from asyncssh import ChannelOpenError, ConnectionLost, DisconnectError, ProcessError
@@ -281,14 +284,9 @@ class TestSSHExecutor(TestCase):
 
         self.assertEqual(response.exit_code, 0)
 
-        with self.assertRaises(CommandExecutionFailure) as cef:
+        with self.assertRaises(ExecutorFailure) as cef:
             run_async(self.executor.run_command, command="lost_connection")
-        self.assertEqual(
-            cef.exception.message,
-            "Could not run command lost_connection due to a connection loss!",
-        )
-        self.assertEqual(cef.exception.stderr, "SSH connection lost")
-        self.assertEqual(cef.exception.exit_code, 255)
+        self.assertEqual(cef.exception.executor, self.executor)
 
         raising_executor = SSHExecutor(**self.test_asyncssh_params)
 
@@ -317,7 +315,7 @@ class TestSSHExecutor(TestCase):
             )
         )
 
-        with self.assertRaises(CommandExecutionFailure):
+        with self.assertRaises(ExecutorFailure):
             run_async(raising_executor.run_command, command="Test", stdin_input="Test")
 
     def test_construction_by_yaml(self):
