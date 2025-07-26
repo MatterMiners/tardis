@@ -98,6 +98,22 @@ class ConnectionState(NamedTuple):
 @enable_yaml_load("!SSHExecutor")
 @yaml_tag(eager=True)
 class SSHExecutor(Executor):
+    """
+    Execute shell commands via an SSH connection
+
+    This class provides several convenience features over a raw SSH connection:
+
+    - Establishing a connection includes retries for temporary unavailability
+    - An established connection is multiplexed for concurrent commands
+    - Executing commands are used as feedback on the connection state
+    - On connection failure both connection and commands are automatically retried
+
+    Notably, these features work in accord:
+    Once a single command fails due to a broken connection,
+    multiplexing means all commands are queued until the connection is reestablished.
+    Retrying failed commands efficiently waits for the single connection to be retried.
+    """
+
     def __init__(self, **parameters):
         self._parameters = parameters
         # enable Multi-factor Authentication if required
