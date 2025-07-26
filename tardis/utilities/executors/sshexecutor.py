@@ -112,9 +112,12 @@ class SSHExecutor(Executor):
     Once a single command fails due to a broken connection,
     multiplexing means all commands are queued until the connection is reestablished.
     Retrying failed commands efficiently waits for the single connection to be retried.
+
+    :param on_disconnect_retry: Whether to retry commands if the connection is lost
     """
 
-    def __init__(self, **parameters):
+    def __init__(self, *, on_disconnect_retry: "int | bool" = 3, **parameters):
+        self.on_disconnect_retry = int(on_disconnect_retry)
         self._parameters = parameters
         # enable Multi-factor Authentication if required
         if mfa_config := self._parameters.pop("mfa_config", None):
@@ -188,7 +191,18 @@ class SSHExecutor(Executor):
             self._lock = asyncio.Lock()
         return self._lock
 
-    async def run_command(self, command, stdin_input=None):
+    async def run_command(self, command: str, stdin_input: "str | None" = None):
+        try:
+            return await self._run_command_once(command, stdin_input)
+        except ExecutorFailure:
+            for _ in range(self.on_disconnect_retry):
+                try:
+                    return await self._run_command_once(command, stdin_input)
+                except ExecutorFailure:
+                    pass
+            raise
+
+    async def _run_command_once(self, command, stdin_input=None):
         async with self.bounded_connection as ssh_connection:
             try:
                 response = await ssh_connection.run(
