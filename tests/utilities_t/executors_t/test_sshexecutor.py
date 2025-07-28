@@ -31,10 +31,10 @@ class MockConnection(object):
     def __init__(
         self,
         exception: "BaseException | None" = None,
-        __max_sessions=DEFAULT_MAX_SESSIONS,
+        max_sessions: int = DEFAULT_MAX_SESSIONS,
     ):
         self.exception = exception
-        self.max_sessions = __max_sessions
+        self.max_sessions = max_sessions
         self.current_sessions = 0
 
     @contextlib.contextmanager
@@ -83,7 +83,7 @@ class TestSSHExecutorUtilities(TestCase):
             with self.subTest(sessions=expected):
                 self.assertEqual(
                     expected,
-                    run_async(probe_max_session, MockConnection(None, expected)),
+                    run_async(probe_max_session, MockConnection(max_sessions=expected)),
                 )
 
 
