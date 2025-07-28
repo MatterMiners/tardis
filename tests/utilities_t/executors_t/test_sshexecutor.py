@@ -34,6 +34,7 @@ class MockConnection(object):
         max_sessions: int = DEFAULT_MAX_SESSIONS,
     ):
         self.exception = exception
+        # simulate limited multiplex sessions
         self.max_sessions = max_sessions
         self.current_sessions = 0
 
