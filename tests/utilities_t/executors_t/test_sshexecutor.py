@@ -324,6 +324,42 @@ class TestSSHExecutor(TestCase):
         with self.assertRaises(ExecutorFailure):
             run_async(raising_executor.run_command, command="Test", stdin_input="Test")
 
+    def test_run_command_retry(self):
+        """Test that a failed command is retried and may succeed"""
+
+        broken_connection = MockConnection(
+            exception=ChannelOpenError(reason="test_reason", code=255)
+        )
+        # acceptable failure number
+        self.mock_asyncssh.connect.side_effect = [
+            async_return(return_value=broken_connection),
+            async_return(return_value=MockConnection()),
+        ]
+        reconnected_executor = SSHExecutor(
+            on_disconnect_retry=1, **self.test_asyncssh_params
+        )
+
+        response = run_async(
+            reconnected_executor.run_command, command="Test", stdin_input="Test"
+        )
+        self.assertEqual(response.stdout, "command=Test, stdin=Test")
+        self.assertEqual(response.exit_code, 0)
+
+        # too many failures
+        self.mock_asyncssh.connect.side_effect = [
+            async_return(return_value=broken_connection),
+            async_return(return_value=broken_connection),
+            async_return(return_value=MockConnection()),
+        ]
+        disconnected_executor = SSHExecutor(
+            on_disconnect_retry=1, **self.test_asyncssh_params
+        )
+
+        with self.assertRaises(ExecutorFailure):
+            run_async(
+                disconnected_executor.run_command, command="Test", stdin_input="Test"
+            )
+
     def test_construction_by_yaml(self):
         def test_yaml_construction(test_executor, *args, **kwargs):
             self.assertEqual(
