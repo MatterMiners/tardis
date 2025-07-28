@@ -28,8 +28,12 @@ DEFAULT_MAX_SESSIONS = 10
 
 
 class MockConnection(object):
-    def __init__(self, exception=None, __max_sessions=DEFAULT_MAX_SESSIONS, **kwargs):
-        self.exception = exception and exception(**kwargs)
+    def __init__(
+        self,
+        exception: "BaseException | None" = None,
+        __max_sessions=DEFAULT_MAX_SESSIONS,
+    ):
+        self.exception = exception
         self.max_sessions = __max_sessions
         self.current_sessions = 0
 
@@ -292,15 +296,16 @@ class TestSSHExecutor(TestCase):
 
         self.mock_asyncssh.connect.return_value = async_return(
             return_value=MockConnection(
-                exception=ProcessError,
-                env="Test",
-                command="Test",
-                subsystem="Test",
-                exit_status=1,
-                exit_signal=None,
-                returncode=1,
-                stdout="TestError",
-                stderr="TestError",
+                exception=ProcessError(
+                    env="Test",
+                    command="Test",
+                    subsystem="Test",
+                    exit_status=1,
+                    exit_signal=None,
+                    returncode=1,
+                    stdout="TestError",
+                    stderr="TestError",
+                )
             )
         )
 
@@ -311,7 +316,7 @@ class TestSSHExecutor(TestCase):
 
         self.mock_asyncssh.connect.return_value = async_return(
             return_value=MockConnection(
-                exception=ChannelOpenError, reason="test_reason", code=255
+                exception=ChannelOpenError(reason="test_reason", code=255)
             )
         )
 
