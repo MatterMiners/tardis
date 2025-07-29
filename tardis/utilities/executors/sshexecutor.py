@@ -129,7 +129,7 @@ class SSHExecutor(Executor):
         self._lock = None
 
     async def _establish_connection(self):
-        for retry in range(0, 9):
+        for retry in range(9):
             try:
                 return await asyncssh.connect(**self._parameters)
             except (
