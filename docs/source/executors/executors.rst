@@ -47,7 +47,7 @@ SSH Executor
     `asyncssh documentation`_
 
     To handle unreliable connections, the ``SSHExecutor`` defaults to retrying commands failed due to lost connections.
-    Use the parameter ``on_disconnect_retry`` to enable/disable this (``True`` / ``False``) or set an integer count
+    Use the parameter ``on_disconnect_retry`` to enable/disable this (``true`` / ``false``) or set an integer count
     how often each failed command may be retried.
 
     Additionally the ``SSHExecutor`` supports Multi-factor Authentication (MFA). In order to activate it, you need to
