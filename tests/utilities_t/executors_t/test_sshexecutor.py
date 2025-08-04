@@ -6,7 +6,10 @@ from tardis.utilities.executors.sshexecutor import (
     MFASSHClient,
     DupingSSHExecutor,
 )
-from tardis.exceptions.executorexceptions import CommandExecutionFailure
+from tardis.exceptions.executorexceptions import (
+    CommandExecutionFailure,
+    ExecutorFailure,
+)
 from tardis.exceptions.tardisexceptions import TardisAuthError
 
 from asyncssh import ChannelOpenError, ConnectionLost, DisconnectError, ProcessError
@@ -25,9 +28,14 @@ DEFAULT_MAX_SESSIONS = 10
 
 
 class MockConnection(object):
-    def __init__(self, exception=None, __max_sessions=DEFAULT_MAX_SESSIONS, **kwargs):
-        self.exception = exception and exception(**kwargs)
-        self.max_sessions = __max_sessions
+    def __init__(
+        self,
+        exception: "BaseException | None" = None,
+        max_sessions: int = DEFAULT_MAX_SESSIONS,
+    ):
+        self.exception = exception
+        # simulate limited multiplex sessions
+        self.max_sessions = max_sessions
         self.current_sessions = 0
 
     @contextlib.contextmanager
@@ -76,7 +84,7 @@ class TestSSHExecutorUtilities(TestCase):
             with self.subTest(sessions=expected):
                 self.assertEqual(
                     expected,
-                    run_async(probe_max_session, MockConnection(None, expected)),
+                    run_async(probe_max_session, MockConnection(max_sessions=expected)),
                 )
 
 
@@ -281,28 +289,24 @@ class TestSSHExecutor(TestCase):
 
         self.assertEqual(response.exit_code, 0)
 
-        with self.assertRaises(CommandExecutionFailure) as cef:
+        with self.assertRaises(ExecutorFailure) as cef:
             run_async(self.executor.run_command, command="lost_connection")
-        self.assertEqual(
-            cef.exception.message,
-            "Could not run command lost_connection due to a connection loss!",
-        )
-        self.assertEqual(cef.exception.stderr, "SSH connection lost")
-        self.assertEqual(cef.exception.exit_code, 255)
+        self.assertEqual(cef.exception.executor, self.executor)
 
         raising_executor = SSHExecutor(**self.test_asyncssh_params)
 
         self.mock_asyncssh.connect.return_value = async_return(
             return_value=MockConnection(
-                exception=ProcessError,
-                env="Test",
-                command="Test",
-                subsystem="Test",
-                exit_status=1,
-                exit_signal=None,
-                returncode=1,
-                stdout="TestError",
-                stderr="TestError",
+                exception=ProcessError(
+                    env="Test",
+                    command="Test",
+                    subsystem="Test",
+                    exit_status=1,
+                    exit_signal=None,
+                    returncode=1,
+                    stdout="TestError",
+                    stderr="TestError",
+                )
             )
         )
 
@@ -313,12 +317,48 @@ class TestSSHExecutor(TestCase):
 
         self.mock_asyncssh.connect.return_value = async_return(
             return_value=MockConnection(
-                exception=ChannelOpenError, reason="test_reason", code=255
+                exception=ChannelOpenError(reason="test_reason", code=255)
             )
         )
 
-        with self.assertRaises(CommandExecutionFailure):
+        with self.assertRaises(ExecutorFailure):
             run_async(raising_executor.run_command, command="Test", stdin_input="Test")
+
+    def test_run_command_retry(self):
+        """Test that a failed command is retried and may succeed"""
+
+        broken_connection = MockConnection(
+            exception=ChannelOpenError(reason="test_reason", code=255)
+        )
+        # acceptable failure number
+        self.mock_asyncssh.connect.side_effect = [
+            async_return(return_value=broken_connection),
+            async_return(return_value=MockConnection()),
+        ]
+        reconnected_executor = SSHExecutor(
+            on_disconnect_retry=1, **self.test_asyncssh_params
+        )
+
+        response = run_async(
+            reconnected_executor.run_command, command="Test", stdin_input="Test"
+        )
+        self.assertEqual(response.stdout, "command=Test, stdin=Test")
+        self.assertEqual(response.exit_code, 0)
+
+        # too many failures
+        self.mock_asyncssh.connect.side_effect = [
+            async_return(return_value=broken_connection),
+            async_return(return_value=broken_connection),
+            async_return(return_value=MockConnection()),
+        ]
+        disconnected_executor = SSHExecutor(
+            on_disconnect_retry=1, **self.test_asyncssh_params
+        )
+
+        with self.assertRaises(ExecutorFailure):
+            run_async(
+                disconnected_executor.run_command, command="Test", stdin_input="Test"
+            )
 
     def test_construction_by_yaml(self):
         def test_yaml_construction(test_executor, *args, **kwargs):

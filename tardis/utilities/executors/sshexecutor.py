@@ -1,7 +1,7 @@
 from typing import Optional, NamedTuple
 from ...configuration.utilities import enable_yaml_load
 from ...exceptions.tardisexceptions import TardisAuthError
-from ...exceptions.executorexceptions import CommandExecutionFailure
+from ...exceptions.executorexceptions import CommandExecutionFailure, ExecutorFailure
 from ...interfaces.executor import Executor
 from ..attributedict import AttributeDict
 from cobald.daemon.plugins import yaml_tag
@@ -98,7 +98,26 @@ class ConnectionState(NamedTuple):
 @enable_yaml_load("!SSHExecutor")
 @yaml_tag(eager=True)
 class SSHExecutor(Executor):
-    def __init__(self, **parameters):
+    """
+    Execute shell commands via an SSH connection
+
+    This class provides several convenience features over a raw SSH connection:
+
+    - Establishing a connection includes retries for temporary unavailability
+    - An established connection is multiplexed for concurrent commands
+    - Executing commands are used as feedback on the connection state
+    - On connection failure both connection and commands are automatically retried
+
+    Notably, these features work in accord:
+    Once a single command fails due to a broken connection,
+    multiplexing means all commands are queued until the connection is reestablished.
+    Retrying failed commands efficiently waits for the single connection to be retried.
+
+    :param on_disconnect_retry: Whether to retry commands if the connection is lost
+    """
+
+    def __init__(self, *, on_disconnect_retry: "int | bool" = 3, **parameters):
+        self.on_disconnect_retry = int(on_disconnect_retry)
         self._parameters = parameters
         # enable Multi-factor Authentication if required
         if mfa_config := self._parameters.pop("mfa_config", None):
@@ -110,7 +129,7 @@ class SSHExecutor(Executor):
         self._lock = None
 
     async def _establish_connection(self):
-        for retry in range(1, 10):
+        for retry in range(9):
             try:
                 return await asyncssh.connect(**self._parameters)
             except (
@@ -119,13 +138,12 @@ class SSHExecutor(Executor):
                 asyncssh.ConnectionLost,
                 BrokenPipeError,
             ):
-                await asyncio.sleep(retry * 10)
+                await asyncio.sleep(2**retry)
         return await asyncssh.connect(**self._parameters)
 
     def _handle_broken_ssh_connection(
         self,
         ssh_connection: asyncssh.SSHClientConnection,
-        command: str,
         chained_exception: "Exception | None" = None,
     ):
         # clear broken connection to get it replaced
@@ -135,11 +153,9 @@ class SSHExecutor(Executor):
             and ssh_connection is self._connection_state.connection
         ):
             self._connection_state = None
-        raise CommandExecutionFailure(
-            message=(f"Could not run command {command} due to a connection loss!"),
-            exit_code=255,
-            stdout="",
-            stderr="SSH connection lost",
+        raise ExecutorFailure(
+            description="SSH connection lost",
+            executor=self,
         ) from chained_exception
 
     @property
@@ -175,7 +191,18 @@ class SSHExecutor(Executor):
             self._lock = asyncio.Lock()
         return self._lock
 
-    async def run_command(self, command, stdin_input=None):
+    async def run_command(self, command: str, stdin_input: "str | None" = None):
+        try:
+            return await self._run_command_once(command, stdin_input)
+        except ExecutorFailure:
+            for _ in range(self.on_disconnect_retry):
+                try:
+                    return await self._run_command_once(command, stdin_input)
+                except ExecutorFailure:
+                    pass
+            raise
+
+    async def _run_command_once(self, command, stdin_input=None):
         async with self.bounded_connection as ssh_connection:
             try:
                 response = await ssh_connection.run(
@@ -191,14 +218,14 @@ class SSHExecutor(Executor):
                 ) from pe
             except asyncssh.ChannelOpenError as coe:
                 self._handle_broken_ssh_connection(
-                    ssh_connection, command, chained_exception=coe
+                    ssh_connection, chained_exception=coe
                 )
             else:
                 # In case asyncssh loses the connection while running a command, the
                 # connection loss seems to be silently ignored, however the
                 # exit_status is None in that case.
                 if response.exit_status is None:
-                    self._handle_broken_ssh_connection(ssh_connection, command)
+                    self._handle_broken_ssh_connection(ssh_connection)
                 return AttributeDict(
                     stdout=response.stdout,
                     stderr=response.stderr,
