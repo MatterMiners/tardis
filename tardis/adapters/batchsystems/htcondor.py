@@ -18,6 +18,29 @@ import logging
 logger = logging.getLogger("cobald.runtime.tardis.adapters.batchsystem.htcondor")
 
 
+async def htcondor_get_master_start_date(
+    options: AttributeDict, executor: Executor
+) -> dict[str, int]:
+    options_string = htcondor_cmd_option_formatter(options)
+    class_ads = ("Machine", "DaemonStartTime")
+    cmd = f'condor_status -master -af:t {" ".join(class_ads)}'  # noqa: E231
+
+    if options_string:
+        cmd = f"{cmd} {options_string}"
+
+    condor_status = await executor.run_command(cmd)
+
+    return {
+        row["Machine"]: row["DaemonStartTime"]
+        for row in csv_parser(
+            input_csv=condor_status.stdout,
+            fieldnames=class_ads,
+            delimiter="\t",
+            replacements=dict(undefined=None),
+        )
+    }
+
+
 async def htcondor_status_updater(
     options: AttributeDict,
     attributes: AttributeDict,
