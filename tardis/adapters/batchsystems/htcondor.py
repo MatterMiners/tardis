@@ -11,6 +11,7 @@ from ...utilities.attributedict import AttributeDict
 
 from functools import partial
 from shlex import quote
+from types import MappingProxyType
 from typing import Iterable
 import logging
 
@@ -18,7 +19,10 @@ logger = logging.getLogger("cobald.runtime.tardis.adapters.batchsystem.htcondor"
 
 
 async def htcondor_status_updater(
-    options: AttributeDict, attributes: AttributeDict, executor: Executor
+    options: AttributeDict,
+    attributes: AttributeDict,
+    executor: Executor,
+    ro_cached_data: MappingProxyType,
 ) -> dict:
     """
     Helper function to call ``condor_status -af`` asynchronously and to translate
@@ -35,7 +39,7 @@ async def htcondor_status_updater(
     :rtype: dict
     """
 
-    attributes_string = f'-af:t {" ".join(attributes.values())}'
+    attributes_string = f'-af:t {" ".join(attributes.values())}'  # noqa: E231
 
     options_string = htcondor_cmd_option_formatter(options)
 
@@ -101,6 +105,7 @@ class HTCondorAdapter(BatchSystemAdapter):
                 self._executor,
             ),
             max_age=config.BatchSystem.max_age * 60,
+            update_coroutine_receives_cache=True,
         )
 
     async def disintegrate_machine(self, drone_uuid: str) -> None:

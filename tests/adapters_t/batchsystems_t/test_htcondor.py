@@ -8,6 +8,7 @@ from tardis.utilities.attributedict import AttributeDict
 
 from functools import partial
 from shlex import quote
+from types import MappingProxyType
 from unittest.mock import patch
 from unittest import TestCase
 
@@ -279,6 +280,9 @@ class TestHTCondorAdapter(TestCase):
         attributes.update(
             {key: quote(value) for key, value in self.config.BatchSystem.ratios.items()}
         )
+
+        ro_cached_data = MappingProxyType({})
+
         with self.assertLogs(level=logging.WARNING):
             with self.assertRaises(CommandExecutionFailure):
                 run_async(
@@ -287,6 +291,7 @@ class TestHTCondorAdapter(TestCase):
                         self.config.BatchSystem.options,
                         attributes,
                         self.mock_executor.return_value,
+                        ro_cached_data,
                     )
                 )
         self.mock_executor.return_value.run_command.assert_called_with(self.command)
