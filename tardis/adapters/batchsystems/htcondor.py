@@ -105,7 +105,7 @@ class HTCondorAdapter(BatchSystemAdapter):
                 self._executor,
             ),
             max_age=config.BatchSystem.max_age * 60,
-            update_coroutine_receives_cache=True,
+            update_coroutine_receives_ro_cache=True,
         )
 
     async def disintegrate_machine(self, drone_uuid: str) -> None:

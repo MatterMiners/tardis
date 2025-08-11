@@ -17,12 +17,12 @@ class AsyncCacheMap(Mapping):
         self,
         update_coroutine,
         max_age: int = 60 * 15,
-        update_coroutine_receives_cache: bool = False,
+        update_coroutine_receives_ro_cache: bool = False,
     ):
         self._update_coroutine = update_coroutine
         self._max_age = max_age
         self._last_update = datetime.fromtimestamp(0)
-        self._update_coroutine_receives_cache = update_coroutine_receives_cache
+        self._update_coroutine_receives_cache = update_coroutine_receives_ro_cache
         self._data = {}
         self._lock = None
 
