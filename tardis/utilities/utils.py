@@ -2,7 +2,7 @@ from .attributedict import AttributeDict
 
 from contextlib import contextmanager
 from io import StringIO
-from typing import Any, Callable, Dict, List, TypeVar, Tuple
+from typing import Any, Callable, Dict, Optional, TypeVar, Union
 
 
 import csv
@@ -26,9 +26,9 @@ def htcondor_cmd_option_formatter(options: AttributeDict) -> str:
 
 def csv_parser(
     input_csv: str,
-    fieldnames: [List, Tuple],
+    fieldnames: Union[list[str], tuple[str, ...]],
     delimiter: str = "\t",
-    replacements: dict = None,
+    replacements: Optional[dict[str, Any]] = None,
     skipinitialspace: bool = False,
     skiptrailingspace: bool = False,
 ):
@@ -38,11 +38,11 @@ def csv_parser(
     :param input_csv: CSV formatted input
     :type input_csv: str
     :param fieldnames: corresponding field names
-    :type fieldnames: [List, Tuple]
+    :type fieldnames: Union[List[str], Tuple[str, ...]]
     :param delimiter: delimiter between entries
     :type delimiter: str
     :param replacements: fields to be replaced
-    :type replacements: dict
+    :type replacements: Optional[Dict[str, str]]
     :param skipinitialspace: ignore whitespace immediately following the delimiter
     :type skipinitialspace: bool
     :param skiptrailingspace: ignore whitespace at the end of each csv row
