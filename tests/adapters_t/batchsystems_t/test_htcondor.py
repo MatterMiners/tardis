@@ -20,6 +20,8 @@ from unittest import TestCase
 
 import logging
 
+NOW = int(datetime.now().timestamp())
+
 CPU_RATIO = 0.9
 MEMORY_RATIO = 0.8
 CONDOR_STATUS_RETURN = "\n".join(
@@ -35,6 +37,85 @@ CONDOR_STATUS_RETURN = "\n".join(
     ]
 )
 
+CONDOR_STATUS_RETURN_DICT = {
+    "test": {
+        "Machine": "test",
+        "Name": "slot1@test",
+        "State": "Unclaimed",
+        "Activity": "Idle",
+        "TardisDroneUuid": None,
+        "cpu_ratio": "0.9",
+        "memory_ratio": "0.8",
+    },
+    "test_drain": {
+        "Machine": "test_drain",
+        "Name": "slot1@test",
+        "State": "Drained",
+        "Activity": "Retiring",
+        "TardisDroneUuid": None,
+        "cpu_ratio": "0.9",
+        "memory_ratio": "0.8",
+    },
+    "test_drained": {
+        "Machine": "test_drained",
+        "Name": "slot1@test",
+        "State": "Drained",
+        "Activity": "Idle",
+        "TardisDroneUuid": None,
+        "cpu_ratio": "0.9",
+        "memory_ratio": "0.8",
+    },
+    "test_owner": {
+        "Machine": "test_owner",
+        "Name": "slot1@test",
+        "State": "Owner",
+        "Activity": "Idle",
+        "TardisDroneUuid": None,
+        "cpu_ratio": "0.9",
+        "memory_ratio": "0.8",
+    },
+    "test_uuid": {
+        "Machine": "test_uuid_plus",
+        "Name": "slot1@test_uuid@test",
+        "State": "Unclaimed",
+        "Activity": "Idle",
+        "TardisDroneUuid": "test_uuid",
+        "cpu_ratio": "0.9",
+        "memory_ratio": "0.8",
+    },
+    "test_undefined": {
+        "Machine": "test_undefined",
+        "Name": "slot1@test",
+        "State": "Unclaimed",
+        "Activity": "Idle",
+        "TardisDroneUuid": None,
+        "cpu_ratio": None,
+        "memory_ratio": "0.8",
+    },
+    "test_error": {
+        "Machine": "test_error",
+        "Name": "slot1@test",
+        "State": "Unclaimed",
+        "Activity": "Idle",
+        "TardisDroneUuid": None,
+        "cpu_ratio": "error",
+        "memory_ratio": "0.8",
+    },
+    "exoscale-26d361290f": {
+        "Machine": "exoscale-26d361290f",
+        "Name": "slot1@exoscale-26d361290f",
+        "State": "Unclaimed",
+        "Activity": "Idle",
+        "TardisDroneUuid": None,
+        "cpu_ratio": "0.125",
+        "memory_ratio": "0.125",
+    },
+}
+
+CONDOR_STATUS_GRACEFUL_RETURN = (
+    ""  # worst case no resources are displayed after collector restart
+)
+
 CONDOR_COLLECTOR_STATUS_RETURN = """
 cloud-htcondor-rhel8.gridka.de
 cloud-htcondor.gridka.de
@@ -46,6 +127,15 @@ cloud-htcondor-ce-2-kit.gridka.de\t1745338074
 cloud-htcondor-ce-3-kit.gridka.de\t1750838558
 cloud-htcondor-rhel8.gridka.de\t1753949919
 cloud-htcondor.gridka.de\t1753947411
+cloud-tardis.gridka.de\t1753949555
+"""
+
+CONDOR_MASTER_STATUS_GRACEFUL_RETURN = f"""
+cloud-htcondor-ce-1-kit.gridka.de\t1744879933
+cloud-htcondor-ce-2-kit.gridka.de\t1745338074
+cloud-htcondor-ce-3-kit.gridka.de\t1750838558
+cloud-htcondor-rhel8.gridka.de\t1753949919
+cloud-htcondor.gridka.de\t{NOW}
 cloud-tardis.gridka.de\t1753949555
 """
 
@@ -385,7 +475,7 @@ class TestHTCondorAdapter(TestCase):
             ),  # call in htcondor_status_updater
         ]
     )
-    def test_htcondor_status_updater(self):  # ToDo
+    def test_htcondor_status_updater(self):
         attributes = {
             "Machine": "Machine",
             "Name": "Name",
@@ -400,83 +490,8 @@ class TestHTCondorAdapter(TestCase):
 
         ro_cached_data = MappingProxyType({})
 
-        expected_result = {
-            "test": {
-                "Machine": "test",
-                "Name": "slot1@test",
-                "State": "Unclaimed",
-                "Activity": "Idle",
-                "TardisDroneUuid": None,
-                "cpu_ratio": "0.9",
-                "memory_ratio": "0.8",
-            },
-            "test_drain": {
-                "Machine": "test_drain",
-                "Name": "slot1@test",
-                "State": "Drained",
-                "Activity": "Retiring",
-                "TardisDroneUuid": None,
-                "cpu_ratio": "0.9",
-                "memory_ratio": "0.8",
-            },
-            "test_drained": {
-                "Machine": "test_drained",
-                "Name": "slot1@test",
-                "State": "Drained",
-                "Activity": "Idle",
-                "TardisDroneUuid": None,
-                "cpu_ratio": "0.9",
-                "memory_ratio": "0.8",
-            },
-            "test_owner": {
-                "Machine": "test_owner",
-                "Name": "slot1@test",
-                "State": "Owner",
-                "Activity": "Idle",
-                "TardisDroneUuid": None,
-                "cpu_ratio": "0.9",
-                "memory_ratio": "0.8",
-            },
-            "test_uuid": {
-                "Machine": "test_uuid_plus",
-                "Name": "slot1@test_uuid@test",
-                "State": "Unclaimed",
-                "Activity": "Idle",
-                "TardisDroneUuid": "test_uuid",
-                "cpu_ratio": "0.9",
-                "memory_ratio": "0.8",
-            },
-            "test_undefined": {
-                "Machine": "test_undefined",
-                "Name": "slot1@test",
-                "State": "Unclaimed",
-                "Activity": "Idle",
-                "TardisDroneUuid": None,
-                "cpu_ratio": None,
-                "memory_ratio": "0.8",
-            },
-            "test_error": {
-                "Machine": "test_error",
-                "Name": "slot1@test",
-                "State": "Unclaimed",
-                "Activity": "Idle",
-                "TardisDroneUuid": None,
-                "cpu_ratio": "error",
-                "memory_ratio": "0.8",
-            },
-            "exoscale-26d361290f": {
-                "Machine": "exoscale-26d361290f",
-                "Name": "slot1@exoscale-26d361290f",
-                "State": "Unclaimed",
-                "Activity": "Idle",
-                "TardisDroneUuid": None,
-                "cpu_ratio": "0.125",
-                "memory_ratio": "0.125",
-            },
-        }
-
         self.assertDictEqual(
-            expected_result,
+            CONDOR_STATUS_RETURN_DICT,
             run_async(
                 partial(
                     htcondor_status_updater,
@@ -490,6 +505,51 @@ class TestHTCondorAdapter(TestCase):
 
         # cache should be empty on first access
         self.assertDictEqual(dict(ro_cached_data), {})
+
+        self.mock_executor.return_value.run_command.assert_called_with(self.command)
+
+    @mock_executor_run_command_new(
+        [
+            AttributeDict(
+                stdout=CONDOR_COLLECTOR_STATUS_RETURN, stderr="", exit_code=0
+            ),  # call in htcondor_get_collectors
+            AttributeDict(
+                stdout=CONDOR_MASTER_STATUS_GRACEFUL_RETURN, stderr="", exit_code=0
+            ),  # call in htcondor_get_collector_start_dates
+            AttributeDict(
+                stdout=CONDOR_STATUS_GRACEFUL_RETURN, stderr="", exit_code=0
+            ),  # call in htcondor_status_updater
+        ]
+    )
+    def test_htcondor_status_updater_graceful(self):
+        attributes = {
+            "Machine": "Machine",
+            "Name": "Name",
+            "State": "State",
+            "Activity": "Activity",
+            "TardisDroneUuid": "TardisDroneUuid",
+        }
+        # Escape htcondor expressions and add them to attributes
+        attributes.update(
+            {key: quote(value) for key, value in self.config.BatchSystem.ratios.items()}
+        )
+
+        # Populate cache with expected results
+        ro_cached_data = MappingProxyType(CONDOR_STATUS_RETURN_DICT)
+
+        # check that no resources have been deleted and cached data is used
+        self.assertDictEqual(
+            CONDOR_STATUS_RETURN_DICT,
+            run_async(
+                partial(
+                    htcondor_status_updater,
+                    self.config.BatchSystem.options,
+                    attributes,
+                    self.mock_executor.return_value,
+                    ro_cached_data,
+                )
+            ),
+        )
 
         self.mock_executor.return_value.run_command.assert_called_with(self.command)
 
@@ -690,6 +750,37 @@ class TestHTCondorAdapter(TestCase):
         )
         self.mock_executor.return_value.run_command.assert_any_call(
             "condor_status -master -af:t Machine DaemonStartTime"
+        )
+
+    @mock_executor_run_command_new(
+        [
+            AttributeDict(  # call in htcondor_get_collectors
+                stdout=CONDOR_COLLECTOR_STATUS_RETURN, stderr="", exit_code=0
+            ),
+            AttributeDict(  # call in htcondor_get_collector_start_dates
+                stdout=CONDOR_MASTER_STATUS_GRACEFUL_RETURN, stderr="", exit_code=0
+            ),
+        ]
+    )
+    def test_htcondor_get_collector_start_dates_graceful(self):
+        options = self.config.BatchSystem.options
+        executor = self.mock_executor.return_value
+
+        result = run_async(htcondor_get_collector_start_dates, options, executor)
+
+        # We expect only machines from CONDOR_COLLECTOR_STATUS_RETURN to be included
+        expected_times = [
+            datetime.fromtimestamp(1753949919),
+            datetime.fromtimestamp(NOW),
+        ]
+        self.assertEqual(result, expected_times)
+
+        # Ensure both commands were called with proper formatting
+        self.mock_executor.return_value.run_command.assert_any_call(
+            "condor_status -collector -af:t Machine -pool my-htcondor.local -test"
+        )
+        self.mock_executor.return_value.run_command.assert_any_call(
+            "condor_status -master -af:t Machine DaemonStartTime -pool my-htcondor.local -test"  # noqa B950
         )
 
     @mock_executor_run_command_new(
