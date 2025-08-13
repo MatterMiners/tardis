@@ -9,6 +9,7 @@ from ...utilities.utils import csv_parser
 from ...utilities.asynccachemap import AsyncCacheMap
 from ...utilities.attributedict import AttributeDict
 
+from datetime import datetime, timedelta
 from functools import partial
 from shlex import quote
 from types import MappingProxyType
@@ -18,11 +19,74 @@ import logging
 logger = logging.getLogger("cobald.runtime.tardis.adapters.batchsystem.htcondor")
 
 
-async def htcondor_get_master_start_date(
+async def htcondor_get_collectors(
     options: AttributeDict, executor: Executor
-) -> dict[str, int]:
+) -> list[str]:
+    """
+    Asynchronously retrieve a list of HTCondor collector machine names.
+
+    Runs ``condor_status -collector -af:t Machine`` (plus any additional formatted
+    options) using the provided executor, then parses the tab-delimited output
+    to extract and return the list of collector machine names.
+
+    :param options: Additional options for the ``condor_status`` call, such as
+        ``{'pool': 'htcondor.example'}``, which will be formatted and appended
+        to the command.
+    :type options: AttributeDict
+    :param executor: Executor used to run the ``condor_status`` command
+        asynchronously.
+    :type executor: Executor
+    :return: List of collector machine names.
+    :rtype: list[str]
+    """
+    options_string = htcondor_cmd_option_formatter(options)
+    class_ads = ("Machine",)
+    cmd = f'condor_status -collector -af:t {" ".join(class_ads)}'  # noqa: E231
+
+    if options_string:
+        cmd = f"{cmd} {options_string}"
+
+    condor_status = await executor.run_command(cmd)
+
+    return [
+        row["Machine"]
+        for row in csv_parser(
+            input_csv=condor_status.stdout,
+            fieldnames=class_ads,
+            delimiter="\t",
+        )
+    ]
+
+
+async def htcondor_get_collector_start_dates(
+    options: AttributeDict, executor: Executor
+) -> list[datetime]:
+    """
+    Asynchronously retrieve the master daemon start times from HTCondor for machines
+    running a collector daemon as well. Assuming both daemons have a similar start date.
+    Due to potential bug/feature in HTCondor, the DaemonStartTime of the Collector can
+    not be used directly.
+    (see https://www-auth.cs.wisc.edu/lists/htcondor-users/2025-July/msg00092.shtml)
+
+    Runs ``condor_status -master -af:t Machine DaemonStartTime`` (plus any
+    additional formatted options) using the provided executor, and parses
+    the tab-delimited output into a dictionary.
+
+    :param options: Additional options for the ``condor_status`` call, such as
+        ``{'pool': 'htcondor.example'}``, which will be formatted and appended
+        to the command.
+    :type options: AttributeDict
+    :param executor: Executor used to run the ``condor_status`` command
+        asynchronously.
+    :type executor: Executor
+    :return: List of master daemon start time for host running a collector as well.
+        (in datetime format).
+    :rtype: list[datetime]
+    """
     options_string = htcondor_cmd_option_formatter(options)
     class_ads = ("Machine", "DaemonStartTime")
+    htcondor_collectors = await htcondor_get_collectors(options, executor)
+
     cmd = f'condor_status -master -af:t {" ".join(class_ads)}'  # noqa: E231
 
     if options_string:
@@ -30,15 +94,15 @@ async def htcondor_get_master_start_date(
 
     condor_status = await executor.run_command(cmd)
 
-    return {
-        row["Machine"]: row["DaemonStartTime"]
+    return [
+        datetime.fromtimestamp(int(row["DaemonStartTime"]))
         for row in csv_parser(
             input_csv=condor_status.stdout,
             fieldnames=class_ads,
             delimiter="\t",
-            replacements=dict(undefined=None),
         )
-    }
+        if row["Machine"] in htcondor_collectors
+    ]
 
 
 async def htcondor_status_updater(
@@ -49,7 +113,11 @@ async def htcondor_status_updater(
 ) -> dict:
     """
     Helper function to call ``condor_status -af`` asynchronously and to translate
-    the output into a dictionary
+    the output into a dictionary.
+
+    If the HTCondor Collector has been running for less than 3600 seconds,
+    previously cached status data is used for machines that were already
+    available before the restart; otherwise, fresh status data is used.
 
     :param options: Additional options for the condor_status call. For example
         ``{'pool': 'htcondor.example'}`` will be translated into
@@ -58,9 +126,16 @@ async def htcondor_status_updater(
     :param attributes: Additional fields to add to output of the
         ``condor_status -af`` response.
     :type attributes: AttributeDict
-    :return: Dictionary containing the output of the ``condor_status`` command
+    :param executor: Executor to run the ``condor_status`` command asynchronously.
+    :type executor: Executor
+    :param ro_cached_data: Cached output from previous ``condor_status -af`` call
+    :type ro_cached_data: MappingProxyType
+    :return: Dictionary containing the processed output of the ``condor_status``
+        command, possibly merged with cached data depending on collector uptime.
     :rtype: dict
     """
+
+    collector_start_dates = await htcondor_get_collector_start_dates(options, executor)
 
     attributes_string = f'-af:t {" ".join(attributes.values())}'  # noqa: E231
 
@@ -71,11 +146,18 @@ async def htcondor_status_updater(
     if options_string:
         cmd = f"{cmd} {options_string}"
 
-    htcondor_status = {}
+    if (datetime.now() - max(collector_start_dates)) < timedelta(seconds=3600):
+        # If any collector has been running for less than 3600 seconds,
+        # use cached status for machines that were already available before the
+        # restart and update it with fresh data if available.
+        htcondor_status = {**ro_cached_data}
+    else:
+        htcondor_status = {}
 
     try:
         logger.debug(f"HTCondor status update is running. Command: {cmd}")
         condor_status = await executor.run_command(cmd)
+
         for row in csv_parser(
             input_csv=condor_status.stdout,
             fieldnames=tuple(attributes.keys()),
@@ -84,7 +166,6 @@ async def htcondor_status_updater(
         ):
             status_key = row["TardisDroneUuid"] or row["Machine"].split(".")[0]
             htcondor_status[status_key] = row
-
     except CommandExecutionFailure as cef:
         logger.warning(f"condor_status could not be executed due to {cef}!")
         raise
