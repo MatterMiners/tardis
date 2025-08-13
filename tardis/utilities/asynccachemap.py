@@ -84,4 +84,6 @@ class AsyncCacheMap(Mapping):
             and self._last_update == other._last_update
             and self._data == other._data
             and self._lock == other._lock
+            and self._update_coroutine_receives_cache
+            == other._update_coroutine_receives_cache
         )
