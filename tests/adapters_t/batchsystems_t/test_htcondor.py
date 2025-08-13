@@ -2,11 +2,16 @@ from tests.utilities.utilities import run_async
 from tests.utilities.utilities import mock_executor_run_command_new
 
 from tardis.adapters.batchsystems.htcondor import HTCondorAdapter
-from tardis.adapters.batchsystems.htcondor import htcondor_status_updater
+from tardis.adapters.batchsystems.htcondor import (
+    htcondor_status_updater,
+    htcondor_get_collectors,
+    htcondor_get_collector_start_dates,
+)
 from tardis.interfaces.batchsystemadapter import MachineStatus
 from tardis.exceptions.executorexceptions import CommandExecutionFailure
 from tardis.utilities.attributedict import AttributeDict
 
+from datetime import datetime
 from functools import partial
 from shlex import quote
 from types import MappingProxyType
@@ -29,6 +34,7 @@ CONDOR_STATUS_RETURN = "\n".join(
         "exoscale-26d361290f\tslot1@exoscale-26d361290f\tUnclaimed\tIdle\tundefined\t0.125\t0.125",  # noqa: B950
     ]
 )
+
 CONDOR_COLLECTOR_STATUS_RETURN = """
 cloud-htcondor-rhel8.gridka.de
 cloud-htcondor.gridka.de
@@ -374,12 +380,133 @@ class TestHTCondorAdapter(TestCase):
             AttributeDict(
                 stdout=CONDOR_MASTER_STATUS_RETURN, stderr="", exit_code=0
             ),  # call in htcondor_get_collector_start_dates
+            AttributeDict(
+                stdout=CONDOR_STATUS_RETURN, stderr="", exit_code=0
+            ),  # call in htcondor_status_updater
+        ]
+    )
+    def test_htcondor_status_updater(self):  # ToDo
+        attributes = {
+            "Machine": "Machine",
+            "Name": "Name",
+            "State": "State",
+            "Activity": "Activity",
+            "TardisDroneUuid": "TardisDroneUuid",
+        }
+        # Escape htcondor expressions and add them to attributes
+        attributes.update(
+            {key: quote(value) for key, value in self.config.BatchSystem.ratios.items()}
+        )
+
+        ro_cached_data = MappingProxyType({})
+
+        expected_result = {
+            "test": {
+                "Machine": "test",
+                "Name": "slot1@test",
+                "State": "Unclaimed",
+                "Activity": "Idle",
+                "TardisDroneUuid": None,
+                "cpu_ratio": "0.9",
+                "memory_ratio": "0.8",
+            },
+            "test_drain": {
+                "Machine": "test_drain",
+                "Name": "slot1@test",
+                "State": "Drained",
+                "Activity": "Retiring",
+                "TardisDroneUuid": None,
+                "cpu_ratio": "0.9",
+                "memory_ratio": "0.8",
+            },
+            "test_drained": {
+                "Machine": "test_drained",
+                "Name": "slot1@test",
+                "State": "Drained",
+                "Activity": "Idle",
+                "TardisDroneUuid": None,
+                "cpu_ratio": "0.9",
+                "memory_ratio": "0.8",
+            },
+            "test_owner": {
+                "Machine": "test_owner",
+                "Name": "slot1@test",
+                "State": "Owner",
+                "Activity": "Idle",
+                "TardisDroneUuid": None,
+                "cpu_ratio": "0.9",
+                "memory_ratio": "0.8",
+            },
+            "test_uuid": {
+                "Machine": "test_uuid_plus",
+                "Name": "slot1@test_uuid@test",
+                "State": "Unclaimed",
+                "Activity": "Idle",
+                "TardisDroneUuid": "test_uuid",
+                "cpu_ratio": "0.9",
+                "memory_ratio": "0.8",
+            },
+            "test_undefined": {
+                "Machine": "test_undefined",
+                "Name": "slot1@test",
+                "State": "Unclaimed",
+                "Activity": "Idle",
+                "TardisDroneUuid": None,
+                "cpu_ratio": None,
+                "memory_ratio": "0.8",
+            },
+            "test_error": {
+                "Machine": "test_error",
+                "Name": "slot1@test",
+                "State": "Unclaimed",
+                "Activity": "Idle",
+                "TardisDroneUuid": None,
+                "cpu_ratio": "error",
+                "memory_ratio": "0.8",
+            },
+            "exoscale-26d361290f": {
+                "Machine": "exoscale-26d361290f",
+                "Name": "slot1@exoscale-26d361290f",
+                "State": "Unclaimed",
+                "Activity": "Idle",
+                "TardisDroneUuid": None,
+                "cpu_ratio": "0.125",
+                "memory_ratio": "0.125",
+            },
+        }
+
+        self.assertDictEqual(
+            expected_result,
+            run_async(
+                partial(
+                    htcondor_status_updater,
+                    self.config.BatchSystem.options,
+                    attributes,
+                    self.mock_executor.return_value,
+                    ro_cached_data,
+                )
+            ),
+        )
+
+        # cache should be empty on first access
+        self.assertDictEqual(dict(ro_cached_data), {})
+
+        self.mock_executor.return_value.run_command.assert_called_with(self.command)
+
+    @mock_executor_run_command_new(
+        [
+            AttributeDict(
+                stdout=CONDOR_COLLECTOR_STATUS_RETURN, stderr="", exit_code=0
+            ),  # call in htcondor_get_collectors
+            AttributeDict(
+                stdout=CONDOR_MASTER_STATUS_RETURN, stderr="", exit_code=0
+            ),  # call in htcondor_get_collector_start_dates
             CommandExecutionFailure(
                 message="Test", exit_code=123, stderr="Test", stdout="Test"
             ),  # test handling and logging when CommandExecutionFailure is raised
         ]
     )
-    def test_htcondor_status_updater_cef(self):  # ToDo
+    def test_htcondor_status_updater_cef(self):
         # test handling and logging when CommandExecutionFailure is raised
         attributes = {
             "Machine": "Machine",
@@ -433,3 +560,156 @@ class TestHTCondorAdapter(TestCase):
             AttributeDict(Cores=1, Memory=1024, Disk=1024 * 1024),
             self.htcondor_adapter.machine_meta_data_translation_mapping,
         )
+
+    @mock_executor_run_command_new(
+        [
+            AttributeDict(  # for call in htcondor_get_collectors
+                stdout=CONDOR_COLLECTOR_STATUS_RETURN, stderr="", exit_code=0
+            ),
+        ]
+    )
+    def test_htcondor_get_collectors(self):
+        options = self.config.BatchSystem.options
+        executor = self.mock_executor.return_value
+
+        result = run_async(htcondor_get_collectors, options, executor)
+
+        # Expected: split collector names by newline and strip empty lines
+        expected = [
+            "cloud-htcondor-rhel8.gridka.de",
+            "cloud-htcondor.gridka.de",
+        ]
+        self.assertEqual(result, expected)
+
+        # Command string should match expected with options
+        self.mock_executor.return_value.run_command.assert_called_with(
+            "condor_status -collector -af:t Machine -pool my-htcondor.local -test"
+        )
+
+    @mock_executor_run_command_new(
+        [
+            AttributeDict(  # for htcondor_get_collectors
+                stdout=CONDOR_COLLECTOR_STATUS_RETURN, stderr="", exit_code=0
+            ),
+        ]
+    )
+    def test_htcondor_get_collectors_without_options(self):
+        # Remove options entirely to simulate default behavior
+        self.setup_config_mock()
+
+        options = self.config.BatchSystem.options
+        executor = self.mock_executor.return_value
+
+        result = run_async(htcondor_get_collectors, options, executor)
+
+        expected = [
+            "cloud-htcondor-rhel8.gridka.de",
+            "cloud-htcondor.gridka.de",
+        ]
+        self.assertEqual(result, expected)
+
+        self.mock_executor.return_value.run_command.assert_called_with(
+            "condor_status -collector -af:t Machine"
+        )
+
+    @mock_executor_run_command_new(
+        [
+            CommandExecutionFailure(  # simulate failure in htcondor_get_collectors
+                message="Collector not reachable",
+                exit_code=1,
+                stderr="Collector not reachable",
+                stdout="",
+            ),
+        ]
+    )
+    def test_htcondor_get_collectors_failure(self):
+        options = self.config.BatchSystem.options
+        executor = self.mock_executor.return_value
+
+        with self.assertLogs(level=logging.WARNING):
+            with self.assertRaises(CommandExecutionFailure):
+                run_async(htcondor_get_collectors, options, executor)
+
+    @mock_executor_run_command_new(
+        [
+            AttributeDict(  # call in htcondor_get_collectors
+                stdout=CONDOR_COLLECTOR_STATUS_RETURN, stderr="", exit_code=0
+            ),
+            AttributeDict(  # call in htcondor_get_collector_start_dates
+                stdout=CONDOR_MASTER_STATUS_RETURN, stderr="", exit_code=0
+            ),
+        ]
+    )
+    def test_htcondor_get_collector_start_dates(self):
+        options = self.config.BatchSystem.options
+        executor = self.mock_executor.return_value
+
+        result = run_async(htcondor_get_collector_start_dates, options, executor)
+
+        # We expect only machines from CONDOR_COLLECTOR_STATUS_RETURN to be included
+        expected_times = [
+            datetime.fromtimestamp(1753949919),
+            datetime.fromtimestamp(1753947411),
+        ]
+        self.assertEqual(result, expected_times)
+
+        # Ensure both commands were called with proper formatting
+        self.mock_executor.return_value.run_command.assert_any_call(
+            "condor_status -collector -af:t Machine -pool my-htcondor.local -test"
+        )
+        self.mock_executor.return_value.run_command.assert_any_call(
+            "condor_status -master -af:t Machine DaemonStartTime -pool my-htcondor.local -test"  # noqa B950
+        )
+
+    @mock_executor_run_command_new(
+        [
+            AttributeDict(  # call in htcondor_get_collectors
+                stdout=CONDOR_COLLECTOR_STATUS_RETURN, stderr="", exit_code=0
+            ),
+            AttributeDict(  # call in htcondor_get_collector_start_dates
+                stdout=CONDOR_MASTER_STATUS_RETURN, stderr="", exit_code=0
+            ),
+        ]
+    )
+    def test_htcondor_get_collector_start_dates_without_options(self):
+        self.setup_config_mock()
+
+        options = self.config.BatchSystem.options
+        executor = self.mock_executor.return_value
+
+        result = run_async(htcondor_get_collector_start_dates, options, executor)
+
+        expected_times = [
+            datetime.fromtimestamp(1753949919),
+            datetime.fromtimestamp(1753947411),
+        ]
+        self.assertEqual(result, expected_times)
+
+        self.mock_executor.return_value.run_command.assert_any_call(
+            "condor_status -collector -af:t Machine"
+        )
+        self.mock_executor.return_value.run_command.assert_any_call(
+            "condor_status -master -af:t Machine DaemonStartTime"
+        )
+
+    @mock_executor_run_command_new(
+        [
+            AttributeDict(  # call in htcondor_get_collectors
+                stdout=CONDOR_COLLECTOR_STATUS_RETURN, stderr="", exit_code=0
+            ),
+            CommandExecutionFailure(
+                # failure in htcondor_get_collector_start_dates after collectors found
+                message="Master not reachable",
+                exit_code=1,
+                stderr="Master not reachable",
+                stdout="",
+            ),
+        ]
+    )
+    def test_htcondor_get_collector_start_dates_failure_after_collectors(self):
+        options = self.config.BatchSystem.options
+        executor = self.mock_executor.return_value
+
+        with self.assertLogs(level=logging.WARNING):
+            with self.assertRaises(CommandExecutionFailure):
+                run_async(htcondor_get_collector_start_dates, options, executor)

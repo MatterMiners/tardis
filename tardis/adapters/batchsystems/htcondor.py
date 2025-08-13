@@ -46,7 +46,11 @@ async def htcondor_get_collectors(
     if options_string:
         cmd = f"{cmd} {options_string}"
 
-    condor_status = await executor.run_command(cmd)
+    try:
+        condor_status = await executor.run_command(cmd)
+    except CommandExecutionFailure as cef:
+        logger.warning(f"condor_status could not be executed due to {cef}!")
+        raise
 
     return [
         row["Machine"]
@@ -91,8 +95,11 @@ async def htcondor_get_collector_start_dates(
 
     if options_string:
         cmd = f"{cmd} {options_string}"
-
-    condor_status = await executor.run_command(cmd)
+    try:
+        condor_status = await executor.run_command(cmd)
+    except CommandExecutionFailure as cef:
+        logger.warning(f"condor_status could not be executed due to {cef}!")
+        raise
 
     return [
         datetime.fromtimestamp(int(row["DaemonStartTime"]))
