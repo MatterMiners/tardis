@@ -8,6 +8,7 @@ from tardis.utilities.utils import (
     disable_logging,
     drone_environment_to_str,
     htcondor_cmd_option_formatter,
+    htcondor_status_cmd_composer,
     load_states,
     submit_cmd_option_formatter,
 )
@@ -85,6 +86,35 @@ class TestHTCondorCMDOptionFormatter(TestCase):
         option_string = htcondor_cmd_option_formatter(options)
 
         self.assertEqual(option_string, "")
+
+
+class TestHTCondorStatusCmdComposer(TestCase):
+    def test_with_all_arguments(self):
+        attributes = AttributeDict(Machine="Machine", State="State")
+        options = AttributeDict(pool="my_pool", test=None)
+        constraint = "PartitionableSlot==True"
+
+        result = htcondor_status_cmd_composer(attributes, options, constraint)
+
+        self.assertEqual(
+            result,
+            "condor_status -af:t Machine State -constraint PartitionableSlot==True -pool my_pool -test",  # noqa B950
+        )
+
+    def test_without_constraint_and_options(self):
+        attributes = AttributeDict(Machine="Machine", State="State")
+
+        result = htcondor_status_cmd_composer(attributes)
+
+        self.assertEqual(result, "condor_status -af:t Machine State")
+
+    def test_with_only_options(self):
+        attributes = AttributeDict(Machine="Machine", State="State")
+        options = AttributeDict(pool="my_pool")
+
+        result = htcondor_status_cmd_composer(attributes, options)
+
+        self.assertEqual(result, "condor_status -af:t Machine State -pool my_pool")
 
 
 class TestCSVParser(TestCase):

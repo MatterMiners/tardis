@@ -4,7 +4,10 @@ from ...interfaces.batchsystemadapter import BatchSystemAdapter
 from ...interfaces.batchsystemadapter import MachineStatus
 from ...interfaces.executor import Executor
 from ...utilities.executors.shellexecutor import ShellExecutor
-from ...utilities.utils import htcondor_cmd_option_formatter
+from ...utilities.utils import (
+    htcondor_cmd_option_formatter,
+    htcondor_status_cmd_composer,
+)
 from ...utilities.utils import csv_parser
 from ...utilities.asynccachemap import AsyncCacheMap
 from ...utilities.attributedict import AttributeDict
@@ -39,12 +42,12 @@ async def htcondor_get_collectors(
     :return: List of collector machine names.
     :rtype: list[str]
     """
-    options_string = htcondor_cmd_option_formatter(options)
-    class_ads = ("Machine",)
-    cmd = f'condor_status -collector -af:t {" ".join(class_ads)}'  # noqa: E231
-
-    if options_string:
-        cmd = f"{cmd} {options_string}"
+    class_ads = AttributeDict(Machine="Machine")
+    options = AttributeDict(collector=None, **options)
+    cmd = htcondor_status_cmd_composer(
+        attributes=class_ads,
+        options=options,
+    )
 
     try:
         condor_status = await executor.run_command(cmd)
@@ -56,7 +59,7 @@ async def htcondor_get_collectors(
         row["Machine"]
         for row in csv_parser(
             input_csv=condor_status.stdout,
-            fieldnames=class_ads,
+            fieldnames=tuple(class_ads.keys()),
             delimiter="\t",
         )
     ]
@@ -87,14 +90,17 @@ async def htcondor_get_collector_start_dates(
         (in datetime format).
     :rtype: list[datetime]
     """
-    options_string = htcondor_cmd_option_formatter(options)
-    class_ads = ("Machine", "DaemonStartTime")
+    class_ads = AttributeDict(Machine="Machine", DaemonStartTime="DaemonStartTime")
     htcondor_collectors = await htcondor_get_collectors(options, executor)
 
-    cmd = f'condor_status -master -af:t {" ".join(class_ads)}'  # noqa: E231
+    # Add master query option, copy options since it is mutable
+    options = AttributeDict(master=None, **options)
 
-    if options_string:
-        cmd = f"{cmd} {options_string}"
+    cmd = htcondor_status_cmd_composer(
+        attributes=class_ads,
+        options=options,
+    )
+
     try:
         condor_status = await executor.run_command(cmd)
     except CommandExecutionFailure as cef:
@@ -105,7 +111,7 @@ async def htcondor_get_collector_start_dates(
         datetime.fromtimestamp(int(row["DaemonStartTime"]))
         for row in csv_parser(
             input_csv=condor_status.stdout,
-            fieldnames=class_ads,
+            fieldnames=tuple(class_ads.keys()),
             delimiter="\t",
         )
         if row["Machine"] in htcondor_collectors
@@ -144,14 +150,11 @@ async def htcondor_status_updater(
 
     collector_start_dates = await htcondor_get_collector_start_dates(options, executor)
 
-    attributes_string = f'-af:t {" ".join(attributes.values())}'  # noqa: E231
-
-    options_string = htcondor_cmd_option_formatter(options)
-
-    cmd = f"condor_status {attributes_string} -constraint PartitionableSlot=?=True"
-
-    if options_string:
-        cmd = f"{cmd} {options_string}"
+    cmd = htcondor_status_cmd_composer(
+        attributes=attributes,
+        options=options,
+        constraint="PartitionableSlot=?=True",
+    )
 
     if (datetime.now() - max(collector_start_dates)) < timedelta(seconds=3600):
         # If any collector has been running for less than 3600 seconds,
@@ -196,7 +199,7 @@ class HTCondorAdapter(BatchSystemAdapter):
         try:
             self.htcondor_options = config.BatchSystem.options
         except AttributeError:
-            self.htcondor_options = {}
+            self.htcondor_options = AttributeDict()
 
         attributes = dict(
             Machine="Machine",
@@ -361,11 +364,11 @@ class HTCondorAdapter(BatchSystemAdapter):
     @property
     def machine_meta_data_translation_mapping(self) -> AttributeDict:
         """
-        The machine meta data translation mapping is used to translate units of
-        the machine meta data in ``TARDIS`` to values expected by the
+        The machine metadata translation mapping is used to translate units of
+        the machine metadata in ``TARDIS`` to values expected by the
         HTCondor batch system adapter.
 
-        :return: Machine meta data translation mapping
+        :return: Machine metadata translation mapping
         :rtype: AttributeDict
         """
         return AttributeDict(Cores=1, Memory=1024, Disk=1024 * 1024)

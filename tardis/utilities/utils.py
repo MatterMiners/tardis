@@ -24,6 +24,42 @@ def htcondor_cmd_option_formatter(options: AttributeDict) -> str:
     return cmd_option_formatter(options, prefix="-", separator=" ")
 
 
+def htcondor_status_cmd_composer(
+    attributes: AttributeDict,
+    options: Optional[AttributeDict] = None,
+    constraint: Optional[str] = None,
+) -> str:
+    """
+    Composes an `condor_status` command string from attributes (classads), options,
+    and an optional constraint. This function does not execute the command,
+    it only returns the assembled command string.
+
+    :param attributes: Mapping of attribute names to values, used to construct
+           the `-af:t` argument.
+    :type attributes: AttributeDict
+    :param options: Additional HTCondor command-line options, formatted by
+           `htcondor_cmd_option_formatter`.
+    :type options: Optional[AttributeDict]
+    :param constraint: Constraint expression to filter results
+           (e.g., "PartitionableSlot==True").
+    :type constraint: Optional[str]
+    :return: Fully assembled `condor_status` command string.
+    :rtype: str
+    """
+    attributes_string = f'-af:t {" ".join(attributes.values())}'  # noqa: E231
+
+    cmd = f"condor_status {attributes_string}"
+
+    if constraint:
+        cmd = f"{cmd} -constraint {constraint}"
+
+    if options:
+        options_string = htcondor_cmd_option_formatter(options)
+        cmd = f"{cmd} {options_string}"
+
+    return cmd
+
+
 def csv_parser(
     input_csv: str,
     fieldnames: Union[list[str], tuple[str, ...]],

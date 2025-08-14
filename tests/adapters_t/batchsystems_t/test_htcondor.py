@@ -643,7 +643,7 @@ class TestHTCondorAdapter(TestCase):
 
         # Command string should match expected with options
         self.mock_executor.return_value.run_command.assert_called_with(
-            "condor_status -collector -af:t Machine -pool my-htcondor.local -test"
+            "condor_status -af:t Machine -collector -pool my-htcondor.local -test"
         )
 
     @mock_executor_run_command_new(
@@ -669,7 +669,7 @@ class TestHTCondorAdapter(TestCase):
         self.assertEqual(result, expected)
 
         self.mock_executor.return_value.run_command.assert_called_with(
-            "condor_status -collector -af:t Machine"
+            "condor_status -af:t Machine -collector"
         )
 
     @mock_executor_run_command_new(
@@ -715,10 +715,10 @@ class TestHTCondorAdapter(TestCase):
 
         # Ensure both commands were called with proper formatting
         self.mock_executor.return_value.run_command.assert_any_call(
-            "condor_status -collector -af:t Machine -pool my-htcondor.local -test"
+            "condor_status -af:t Machine -collector -pool my-htcondor.local -test"
         )
         self.mock_executor.return_value.run_command.assert_any_call(
-            "condor_status -master -af:t Machine DaemonStartTime -pool my-htcondor.local -test"  # noqa B950
+            "condor_status -af:t Machine DaemonStartTime -master -pool my-htcondor.local -test"  # noqa B950
         )
 
     @mock_executor_run_command_new(
@@ -746,10 +746,10 @@ class TestHTCondorAdapter(TestCase):
         self.assertEqual(result, expected_times)
 
         self.mock_executor.return_value.run_command.assert_any_call(
-            "condor_status -collector -af:t Machine"
+            "condor_status -af:t Machine -collector"
         )
         self.mock_executor.return_value.run_command.assert_any_call(
-            "condor_status -master -af:t Machine DaemonStartTime"
+            "condor_status -af:t Machine DaemonStartTime -master"
         )
 
     @mock_executor_run_command_new(
@@ -777,10 +777,10 @@ class TestHTCondorAdapter(TestCase):
 
         # Ensure both commands were called with proper formatting
         self.mock_executor.return_value.run_command.assert_any_call(
-            "condor_status -collector -af:t Machine -pool my-htcondor.local -test"
+            "condor_status -af:t Machine -collector -pool my-htcondor.local -test"
         )
         self.mock_executor.return_value.run_command.assert_any_call(
-            "condor_status -master -af:t Machine DaemonStartTime -pool my-htcondor.local -test"  # noqa B950
+            "condor_status -af:t Machine DaemonStartTime -master -pool my-htcondor.local -test"  # noqa B950
         )
 
     @mock_executor_run_command_new(
