@@ -5,10 +5,10 @@ from ...interfaces.batchsystemadapter import MachineStatus
 from ...interfaces.executor import Executor
 from ...utilities.executors.shellexecutor import ShellExecutor
 from ...utilities.utils import (
+    csv_parser,
     htcondor_cmd_option_formatter,
     htcondor_status_cmd_composer,
 )
-from ...utilities.utils import csv_parser
 from ...utilities.asynccachemap import AsyncCacheMap
 from ...utilities.attributedict import AttributeDict
 
@@ -43,6 +43,7 @@ async def htcondor_get_collectors(
     :rtype: list[str]
     """
     class_ads = AttributeDict(Machine="Machine")
+    # Add collector query option, copy options since it is mutable
     options = AttributeDict(collector=None, **options)
     cmd = htcondor_status_cmd_composer(
         attributes=class_ads,
