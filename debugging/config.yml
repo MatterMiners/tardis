@@ -1,0 +1,20 @@
+Plugins:
+  SqliteRegistry:
+    db_file: aws_drone_registry.db
+Sites:
+  - name: cloud-monit.gridka.de
+    adapter: satellite
+TestSite:
+  aws_region_name: eu-central-1
+  aws_secret_access_key_id: Blubb
+  aws_secret_access_key: BlaBlubb
+  MachineTypes:
+    - t2.2xlarge
+  MachineTypeConfiguration:
+    t2.2xlarge:
+        InstanceType: t2.2xlarge
+  MachineMetaData:
+    t2.2xlarge:
+      Cores: 8
+      Memory: 32
+      Disk: 80
