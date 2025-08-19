@@ -15,6 +15,7 @@ import yaml
 import aiohttp
 import ssl
 
+
 logger = logging.getLogger("cobald.runtime.tardis.interfaces.site")
 
 
@@ -41,14 +42,25 @@ class SatelliteClient:
         self.ssl_context = ssl.create_default_context(
             cafile="/home/jr4238/satellite/katello-ca.crt"
         )
+        self.auth = aiohttp.BasicAuth(self.username, self.token)
 
     async def get_status(self):
-        async with aiohttp.ClientSession(
-            auth=aiohttp.BasicAuth(self.username, self.token)
-        ) as session:
-            print(self.url + "/power")
+        async with aiohttp.ClientSession(auth=self.auth) as session:
             async with session.get(
                 self.url + "/power", ssl=self.ssl_context, headers=self.headers
+            ) as response:
+                return await response.json()
+
+    async def set_power(self, state: str):
+        action_map = {"on": "on", "off": "off", "start": "on", "stop": "off"}
+        if state not in action_map:
+            raise ValueError("Use 'on'/'off' (or 'start'/'stop').")
+        async with aiohttp.ClientSession(auth=self.auth) as session:
+            async with session.put(
+                self.url + "/power",
+                json={"power_action": state},
+                ssl=self.ssl_context,
+                headers=self.headers,
             ) as response:
                 return await response.json()
 
@@ -63,20 +75,21 @@ class SatelliteAdapter(SiteAdapter):
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
-        print("Deploying resource...")
+        await self.client.set_power("on")
+        return AttributeDict()
 
     async def resource_status(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
         response = await self.client.get_status()
         status = response["state"]
-        print(response)
         print(f"{self._host_fqdn} power state:", status)
 
         return AttributeDict()  # dummy for first
 
     async def stop_resource(self, resource_attributes: AttributeDict) -> None:
-        print("Stopping resource...")
+        await self.client.set_power("off")
+        return AttributeDict()
 
     async def terminate_resource(self, resource_attributes: AttributeDict) -> None:
         print("Terminating resource...")
