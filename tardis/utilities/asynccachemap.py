@@ -17,12 +17,12 @@ class AsyncCacheMap(Mapping):
         self,
         update_coroutine,
         max_age: int = 60 * 15,
-        update_coroutine_receives_ro_cache: bool = False,
+        provide_cache: bool = False,
     ):
         self._update_coroutine = update_coroutine
         self._max_age = max_age
         self._last_update = datetime.fromtimestamp(0)
-        self._update_coroutine_receives_cache = update_coroutine_receives_ro_cache
+        self._provide_cache = provide_cache
         self._data = {}
         self._lock = None
 
@@ -44,7 +44,7 @@ class AsyncCacheMap(Mapping):
 
     @property
     def update_coroutine(self):
-        if self._update_coroutine_receives_cache:
+        if self._provide_cache:
             return partial(self._update_coroutine, self.read_only_cache)
         return self._update_coroutine
 
@@ -84,6 +84,5 @@ class AsyncCacheMap(Mapping):
             and self._last_update == other._last_update
             and self._data == other._data
             and self._lock == other._lock
-            and self._update_coroutine_receives_cache
-            == other._update_coroutine_receives_cache
+            and self._provide_cache == other._provide_cache
         )

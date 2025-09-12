@@ -123,13 +123,13 @@ class TestAsyncCacheMap(TestCase):
 
     def test_update_coroutine_returns_original_when_flag_false(self):
         # Ensure the flag is False
-        self.assertFalse(self.async_cache_map._update_coroutine_receives_cache)
+        self.assertFalse(self.async_cache_map._provide_cache)
         coro = self.async_cache_map.update_coroutine
         self.assertEqual(coro, self.async_cache_map._update_coroutine)
 
     def test_update_coroutine_returns_partial_when_flag_true(self):
         # Set the flag to True
-        self.async_cache_map._update_coroutine_receives_cache = True
+        self.async_cache_map._provide_cache = True
         coro = self.async_cache_map.update_coroutine
         self.assertIsInstance(coro, partial)
 
