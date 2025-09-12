@@ -100,6 +100,7 @@ async def htcondor_get_collector_start_dates(
     cmd = htcondor_status_cmd_composer(
         attributes=class_ads,
         options=options,
+        constraint=' || '.join(f'Machine == "{fqdn}"' for fqdn in htcondor_collectors),
     )
 
     try:
@@ -123,7 +124,7 @@ async def htcondor_status_updater(
     options: AttributeDict,
     attributes: AttributeDict,
     executor: Executor,
-    ro_cached_data: MappingProxyType,
+    cached_data: MappingProxyType,
 ) -> dict:
     """
     Helper function to call ``condor_status -af`` asynchronously and to translate
