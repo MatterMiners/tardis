@@ -98,7 +98,7 @@ class TestHTCondorStatusCmdComposer(TestCase):
 
         self.assertEqual(
             result,
-            "condor_status -af:t Machine State -constraint PartitionableSlot==True -pool my_pool -test",  # noqa B950
+            "condor_status -af:t Machine State -constraint 'PartitionableSlot==True' -pool my_pool -test",  # noqa B950
         )
 
     def test_without_constraint_and_options(self):

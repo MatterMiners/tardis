@@ -51,7 +51,7 @@ def htcondor_status_cmd_composer(
     cmd = f"condor_status {attributes_string}"
 
     if constraint:
-        cmd = f"{cmd} -constraint {constraint}"
+        cmd = f"{cmd} -constraint '{constraint}'"
 
     if options:
         options_string = htcondor_cmd_option_formatter(options)

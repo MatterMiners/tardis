@@ -100,7 +100,7 @@ async def htcondor_get_collector_start_dates(
     cmd = htcondor_status_cmd_composer(
         attributes=class_ads,
         options=options,
-        constraint=' || '.join(f'Machine == "{fqdn}"' for fqdn in htcondor_collectors),
+        constraint=" || ".join(f'Machine == "{fqdn}"' for fqdn in htcondor_collectors),
     )
 
     try:
@@ -162,7 +162,7 @@ async def htcondor_status_updater(
         # If any collector has been running for less than 3600 seconds,
         # use cached status for machines that were already available before the
         # restart and update it with fresh data if available.
-        htcondor_status = {**ro_cached_data}
+        htcondor_status = {**cached_data}
     else:
         htcondor_status = {}
 
