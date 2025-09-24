@@ -130,11 +130,20 @@ cloud-htcondor.gridka.de\t1753947411
 cloud-tardis.gridka.de\t1753949555
 """
 
-CONDOR_MASTER_STATUS_GRACEFUL_RETURN = f"""
+CONDOR_MASTER_STATUS_OLDEST_RETURN = f"""
 cloud-htcondor-ce-1-kit.gridka.de\t1744879933
 cloud-htcondor-ce-2-kit.gridka.de\t1745338074
 cloud-htcondor-ce-3-kit.gridka.de\t1750838558
 cloud-htcondor-rhel8.gridka.de\t1753949919
+cloud-htcondor.gridka.de\t{NOW}
+cloud-tardis.gridka.de\t1753949555
+"""
+
+CONDOR_MASTER_STATUS_GRACEFUL_RETURN = f"""
+cloud-htcondor-ce-1-kit.gridka.de\t1744879933
+cloud-htcondor-ce-2-kit.gridka.de\t1745338074
+cloud-htcondor-ce-3-kit.gridka.de\t1750838558
+cloud-htcondor-rhel8.gridka.de\t{NOW}
 cloud-htcondor.gridka.de\t{NOW}
 cloud-tardis.gridka.de\t1753949555
 """
@@ -559,6 +568,54 @@ class TestHTCondorAdapter(TestCase):
                 stdout=CONDOR_COLLECTOR_STATUS_RETURN, stderr="", exit_code=0
             ),  # call in htcondor_get_collectors
             AttributeDict(
+                stdout=CONDOR_MASTER_STATUS_OLDEST_RETURN, stderr="", exit_code=0
+            ),  # call in htcondor_get_collector_start_dates
+            AttributeDict(
+                stdout=CONDOR_STATUS_RETURN, stderr="", exit_code=0
+            ),  # call in htcondor_status_updater
+        ]
+    )
+    def test_htcondor_status_updater_oldest(self):
+        attributes = {
+            "Machine": "Machine",
+            "Name": "Name",
+            "State": "State",
+            "Activity": "Activity",
+            "TardisDroneUuid": "TardisDroneUuid",
+        }
+        # Escape htcondor expressions and add them to attributes
+        attributes.update(
+            {key: quote(value) for key, value in self.config.BatchSystem.ratios.items()}
+        )
+
+        ro_cached_data = MappingProxyType({})
+
+        # check that no resources have been deleted and cached data is used
+        self.assertDictEqual(
+            CONDOR_STATUS_RETURN_DICT,
+            run_async(
+                partial(
+                    htcondor_status_updater,
+                    self.config.BatchSystem.options,
+                    attributes,
+                    self.mock_executor.return_value,
+                    ro_cached_data,
+                )
+            ),
+        )
+
+        self.mock_executor.return_value.run_command.assert_called_with(
+            self.command.replace(
+                "my-htcondor.local", "cloud-htcondor-rhel8.gridka.de"
+            )  # should query the oldest collector using -pool
+        )
+
+    @mock_executor_run_command_new(
+        [
+            AttributeDict(
+                stdout=CONDOR_COLLECTOR_STATUS_RETURN, stderr="", exit_code=0
+            ),  # call in htcondor_get_collectors
+            AttributeDict(
                 stdout=CONDOR_MASTER_STATUS_RETURN, stderr="", exit_code=0
             ),  # call in htcondor_get_collector_start_dates
             CommandExecutionFailure(
@@ -707,10 +764,10 @@ class TestHTCondorAdapter(TestCase):
         result = run_async(htcondor_get_collector_start_dates, options, executor)
 
         # We expect only machines from CONDOR_COLLECTOR_STATUS_RETURN to be included
-        expected_times = [
-            datetime.fromtimestamp(1753949919),
-            datetime.fromtimestamp(1753947411),
-        ]
+        expected_times = {
+            "cloud-htcondor-rhel8.gridka.de": datetime.fromtimestamp(1753949919),
+            "cloud-htcondor.gridka.de": datetime.fromtimestamp(1753947411),
+        }
         self.assertEqual(result, expected_times)
 
         # Ensure both commands were called with proper formatting
@@ -739,10 +796,10 @@ class TestHTCondorAdapter(TestCase):
 
         result = run_async(htcondor_get_collector_start_dates, options, executor)
 
-        expected_times = [
-            datetime.fromtimestamp(1753949919),
-            datetime.fromtimestamp(1753947411),
-        ]
+        expected_times = {
+            "cloud-htcondor-rhel8.gridka.de": datetime.fromtimestamp(1753949919),
+            "cloud-htcondor.gridka.de": datetime.fromtimestamp(1753947411),
+        }
         self.assertEqual(result, expected_times)
 
         self.mock_executor.return_value.run_command.assert_any_call(
@@ -769,10 +826,11 @@ class TestHTCondorAdapter(TestCase):
         result = run_async(htcondor_get_collector_start_dates, options, executor)
 
         # We expect only machines from CONDOR_COLLECTOR_STATUS_RETURN to be included
-        expected_times = [
-            datetime.fromtimestamp(1753949919),
-            datetime.fromtimestamp(NOW),
-        ]
+        datetime_now = datetime.fromtimestamp(NOW)
+        expected_times = {
+            "cloud-htcondor-rhel8.gridka.de": datetime_now,
+            "cloud-htcondor.gridka.de": datetime_now,
+        }
         self.assertEqual(result, expected_times)
 
         # Ensure both commands were called with proper formatting
@@ -781,6 +839,38 @@ class TestHTCondorAdapter(TestCase):
         )
         self.mock_executor.return_value.run_command.assert_any_call(
             'condor_status -af:t Machine DaemonStartTime -constraint \'Machine == "cloud-htcondor-rhel8.gridka.de" || Machine == "cloud-htcondor.gridka.de"\' -master -pool my-htcondor.local -test'  # noqa B950
+        )
+
+    @mock_executor_run_command_new(
+        [
+            AttributeDict(  # call in htcondor_get_collectors
+                stdout=CONDOR_COLLECTOR_STATUS_RETURN, stderr="", exit_code=0
+            ),
+            AttributeDict(  # call in htcondor_get_collector_start_dates
+                stdout=CONDOR_MASTER_STATUS_OLDEST_RETURN, stderr="", exit_code=0
+            ),
+        ]
+    )
+    def test_htcondor_get_collector_start_dates_oldest(self):
+        options = self.config.BatchSystem.options
+        executor = self.mock_executor.return_value
+
+        result = run_async(htcondor_get_collector_start_dates, options, executor)
+
+        # We expect only machines from CONDOR_COLLECTOR_STATUS_RETURN to be included
+        expected_times = {
+            "cloud-htcondor-rhel8.gridka.de": datetime.fromtimestamp(1753949919),
+            "cloud-htcondor.gridka.de": datetime.fromtimestamp(NOW),
+        }
+        self.assertEqual(result, expected_times)
+
+        # Ensure both commands were called with proper formatting
+        self.mock_executor.return_value.run_command.assert_any_call(
+            "condor_status -af:t Machine -collector -pool my-htcondor.local -test"
+        )
+        self.mock_executor.return_value.run_command.assert_any_call(
+            'condor_status -af:t Machine DaemonStartTime -constraint \'Machine == "cloud-htcondor-rhel8.gridka.de" || Machine == "cloud-htcondor.gridka.de"\' -master -pool my-htcondor.local -test'
+            # noqa B950
         )
 
     @mock_executor_run_command_new(

@@ -68,7 +68,7 @@ async def htcondor_get_collectors(
 
 async def htcondor_get_collector_start_dates(
     options: AttributeDict, executor: Executor
-) -> list[datetime]:
+) -> dict[str, datetime]:
     """
     Asynchronously retrieve the master daemon start times from HTCondor for machines
     running a collector daemon as well. Assuming both daemons have a similar start date.
@@ -109,15 +109,15 @@ async def htcondor_get_collector_start_dates(
         logger.warning(f"condor_status could not be executed due to {cef}!")
         raise
 
-    return [
-        datetime.fromtimestamp(int(row["DaemonStartTime"]))
+    return {
+        row["Machine"]: datetime.fromtimestamp(int(row["DaemonStartTime"]))
         for row in csv_parser(
             input_csv=condor_status.stdout,
             fieldnames=tuple(class_ads.keys()),
             delimiter="\t",
         )
         if row["Machine"] in htcondor_collectors
-    ]
+    }
 
 
 async def htcondor_status_updater(
@@ -149,22 +149,36 @@ async def htcondor_status_updater(
         command, possibly merged with cached data depending on collector uptime.
     :rtype: dict
     """
+    # copy options, since they are mutable
+    options = AttributeDict(**options)
 
     collector_start_dates = await htcondor_get_collector_start_dates(options, executor)
+
+    threshold = timedelta(seconds=3600)
+    now = datetime.now()
+
+    earliest_start_date = min(collector_start_dates.values())
+    latest_start_date = max(collector_start_dates.values())
+
+    htcondor_status = {}
+
+    if (now - earliest_start_date) < threshold:
+        # If all collectors have been running for less than 3600 seconds,
+        # use cached status for machines that were already available before the
+        # restart and update it with fresh data if available.
+        htcondor_status = {**cached_data}
+
+    elif (now - latest_start_date) < threshold:
+        # If any collector has been running for more than 3600 seconds, use the oldest
+        # available one.
+        oldest_collector = min(collector_start_dates, key=collector_start_dates.get)
+        options.pool = oldest_collector
 
     cmd = htcondor_status_cmd_composer(
         attributes=attributes,
         options=options,
         constraint="PartitionableSlot=?=True",
     )
-
-    if (datetime.now() - max(collector_start_dates)) < timedelta(seconds=3600):
-        # If any collector has been running for less than 3600 seconds,
-        # use cached status for machines that were already available before the
-        # restart and update it with fresh data if available.
-        htcondor_status = {**cached_data}
-    else:
-        htcondor_status = {}
 
     try:
         logger.debug(f"HTCondor status update is running. Command: {cmd}")
