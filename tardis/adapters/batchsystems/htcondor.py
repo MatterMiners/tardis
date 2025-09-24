@@ -35,12 +35,9 @@ async def htcondor_get_collectors(
     :param options: Additional options for the ``condor_status`` call, such as
         ``{'pool': 'htcondor.example'}``, which will be formatted and appended
         to the command.
-    :type options: AttributeDict
     :param executor: Executor used to run the ``condor_status`` command
         asynchronously.
-    :type executor: Executor
     :return: List of collector machine names.
-    :rtype: list[str]
     """
     class_ads = AttributeDict(Machine="Machine")
     # Add collector query option, copy options since it is mutable
@@ -83,13 +80,10 @@ async def htcondor_get_collector_start_dates(
     :param options: Additional options for the ``condor_status`` call, such as
         ``{'pool': 'htcondor.example'}``, which will be formatted and appended
         to the command.
-    :type options: AttributeDict
     :param executor: Executor used to run the ``condor_status`` command
         asynchronously.
-    :type executor: Executor
     :return: List of master daemon start time for host running a collector as well.
         (in datetime format).
-    :rtype: list[datetime]
     """
     class_ads = AttributeDict(Machine="Machine", DaemonStartTime="DaemonStartTime")
     htcondor_collectors = await htcondor_get_collectors(options, executor)
@@ -137,17 +131,12 @@ async def htcondor_status_updater(
     :param options: Additional options for the condor_status call. For example
         ``{'pool': 'htcondor.example'}`` will be translated into
         ``condor_status -af ... -pool htcondor.example``
-    :type options: AttributeDict
     :param attributes: Additional fields to add to output of the
         ``condor_status -af`` response.
-    :type attributes: AttributeDict
     :param executor: Executor to run the ``condor_status`` command asynchronously.
-    :type executor: Executor
     :param ro_cached_data: Cached output from previous ``condor_status -af`` call
-    :type ro_cached_data: MappingProxyType
     :return: Dictionary containing the processed output of the ``condor_status``
         command, possibly merged with cached data depending on collector uptime.
-    :rtype: dict
     """
     # copy options, since they are mutable
     options = AttributeDict(**options)
@@ -244,7 +233,6 @@ class HTCondorAdapter(BatchSystemAdapter):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :type drone_uuid: str
         :return: None
         """
         return
@@ -256,7 +244,6 @@ class HTCondorAdapter(BatchSystemAdapter):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :type drone_uuid: str
         :return: None
         """
         await self._htcondor_status.update_status()
@@ -292,7 +279,6 @@ class HTCondorAdapter(BatchSystemAdapter):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :type drone_uuid: str
         :return: None
         """
         return None
@@ -305,9 +291,7 @@ class HTCondorAdapter(BatchSystemAdapter):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :type drone_uuid: str
         :return: Iterable of float containing the ratios
-        :rtype: Iterable[float]
         """
         await self._htcondor_status.update_status()
         try:
@@ -327,9 +311,7 @@ class HTCondorAdapter(BatchSystemAdapter):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :type drone_uuid: str
         :return: The allocation of a worker node as described above.
-        :rtype: float
         """
         return max(await self.get_resource_ratios(drone_uuid), default=0.0)
 
@@ -340,10 +322,8 @@ class HTCondorAdapter(BatchSystemAdapter):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :type drone_uuid: str
         :return: The machine status in HTCondor (Available, Draining, Drained,
             NotAvailable)
-        :rtype: MachineStatus
         """
         status_mapping = {
             ("Unclaimed", "Idle"): MachineStatus.Available,
@@ -371,9 +351,7 @@ class HTCondorAdapter(BatchSystemAdapter):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :type drone_uuid: str
         :return: The utilisation of a worker node as described above.
-        :rtype: float
         """
         return min(await self.get_resource_ratios(drone_uuid), default=0.0)
 
@@ -385,6 +363,5 @@ class HTCondorAdapter(BatchSystemAdapter):
         HTCondor batch system adapter.
 
         :return: Machine metadata translation mapping
-        :rtype: AttributeDict
         """
         return AttributeDict(Cores=1, Memory=1024, Disk=1024 * 1024)

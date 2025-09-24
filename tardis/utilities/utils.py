@@ -36,15 +36,11 @@ def htcondor_status_cmd_composer(
 
     :param attributes: Mapping of attribute names to values, used to construct
            the `-af:t` argument.
-    :type attributes: AttributeDict
     :param options: Additional HTCondor command-line options, formatted by
            `htcondor_cmd_option_formatter`.
-    :type options: Optional[AttributeDict]
     :param constraint: Constraint expression to filter results
            (e.g., "PartitionableSlot==True").
-    :type constraint: Optional[str]
     :return: Fully assembled `condor_status` command string.
-    :rtype: str
     """
     attributes_string = f'-af:t {" ".join(attributes.values())}'  # noqa: E231
 
@@ -72,17 +68,11 @@ def csv_parser(
     Parses CSV formatted input
 
     :param input_csv: CSV formatted input
-    :type input_csv: str
     :param fieldnames: corresponding field names
-    :type fieldnames: Union[List[str], Tuple[str, ...]]
     :param delimiter: delimiter between entries
-    :type delimiter: str
     :param replacements: fields to be replaced
-    :type replacements: Optional[Dict[str, str]]
     :param skipinitialspace: ignore whitespace immediately following the delimiter
-    :type skipinitialspace: bool
     :param skiptrailingspace: ignore whitespace at the end of each csv row
-    :type skiptrailingspace: bool
     """
     if skiptrailingspace:
         input_csv = "\n".join((line.strip() for line in input_csv.splitlines()))
@@ -125,7 +115,6 @@ def machine_meta_data_translation(
     :param meta_data_translation_mapping: Map used for the translation of meta
            data, contains conversion factors
     :return: Converted meta data with units expected by the OBS
-    :rtype: dict
     """
     try:
         return {
