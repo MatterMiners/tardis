@@ -75,14 +75,4 @@ class AsyncCacheMap(Mapping):
         return len(self._data)
 
     def __eq__(self, other):
-        if not isinstance(other, AsyncCacheMap):
-            return False
-
-        return (
-            self._update_coroutine == other._update_coroutine
-            and self._max_age == other._max_age
-            and self._last_update == other._last_update
-            and self._data == other._data
-            and self._lock == other._lock
-            and self._provide_cache == other._provide_cache
-        )
+        return self is other

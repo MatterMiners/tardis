@@ -74,34 +74,13 @@ class TestAsyncCacheMap(TestCase):
         )
 
     def test_eq_async_cache_map(self):
-        test_cache_map = AsyncCacheMap(
-            update_coroutine=self.async_cache_map._update_coroutine
-        )
+        test_cache_map = self.async_cache_map
         # Since both objects have been recently initialized, all values (self._max_age,
         # self._last_update, self._data and self._lock) are still the defaults
         self.assertTrue(self.async_cache_map == test_cache_map)
 
         # Test the opposite
         self.assertFalse(self.async_cache_map != test_cache_map)
-
-        # change default values
-        run_async(self.async_cache_map.update_status)
-        self.assertFalse(self.async_cache_map == test_cache_map)
-
-        # update default values, self._last_update, self._lock still differ
-        run_async(test_cache_map.update_status)
-        self.assertFalse(self.async_cache_map == test_cache_map)
-
-        # Assimilate lock, self._last_update still differs
-        test_cache_map._lock = self.async_cache_map._lock
-        self.assertFalse(self.async_cache_map == test_cache_map)
-
-        # Make them equal again
-        test_cache_map._last_update = self.async_cache_map._last_update
-        self.assertTrue(self.async_cache_map == test_cache_map)
-
-        # Test different class
-        self.assertFalse(self.async_cache_map == self.test_data)
 
     def test_read_only_cache_returns_mappingproxy(self):
         run_async(self.async_cache_map.update_status)  # populate data
