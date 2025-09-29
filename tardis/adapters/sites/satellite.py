@@ -1,71 +1,50 @@
-from tardis.interfaces.siteadapter import SiteAdapter
-from tardis.utilities.attributedict import AttributeDict
-
-from contextlib import contextmanager
-
-from simple_rest_client.exceptions import AuthError
-from simple_rest_client.exceptions import ClientError
-from tardis.exceptions.tardisexceptions import TardisAuthError
-from tardis.exceptions.tardisexceptions import TardisDroneCrashed
-from tardis.exceptions.tardisexceptions import TardisError
-from tardis.exceptions.tardisexceptions import TardisTimeout
-from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
-from aiohttp import ClientConnectionError
-from aiohttp import ContentTypeError
-from tardis.utilities.staticmapping import StaticMapping
-from tardis.interfaces.siteadapter import ResourceStatus
-from tardis.interfaces.siteadapter import SiteAdapter
-from tardis.utilities.attributedict import AttributeDict
-from tardis.utilities.staticmapping import StaticMapping
-
-from functools import partial
-
-import requests
 import logging
-import yaml
 import aiohttp
 import ssl
 
+from functools import partial
+from contextlib import contextmanager
+
+from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
+from tardis.utilities.staticmapping import StaticMapping
+from tardis.interfaces.siteadapter import ResourceStatus
+from tardis.interfaces.siteadapter import SiteAdapter
+from tardis.interfaces.siteadapter import SiteAdapter
+from tardis.utilities.attributedict import AttributeDict
+from tardis.utilities.staticmapping import StaticMapping
+from tardis.utilities.attributedict import AttributeDict
 
 logger = logging.getLogger("cobald.runtime.tardis.interfaces.site")
-
-
-def check_for_parameter(response, parameter):
-    return next((p for p in response["parameters"] if p["name"] == parameter), None)
 
 
 class SatelliteClient:
     # todo:
     # 2 min caching (see other adapters)
-    def __init__(self, machine_type: str, site_name: str = "satellite.scc.kit.edu"):
+    def __init__(
+        self,
+        site_name: str,
+        username: str,
+        token: str,
+        ssl_cert: str,
+    ):
 
-        self._machine_type = machine_type
         self._site_name = site_name
 
-        with open("/home/jr4238/satellite/secrets.yml") as f:
-            secrets = yaml.safe_load(f)
-        self.username = secrets["satellite"]["username"]
-        self.token = secrets["satellite"]["token"]
-        self.ssl_verify = False  # "/home/jr4238/satellite/katello-ca.crt"
         self.headers = {
             "Accept": "application/json",
             "Foreman-Api-Version": "2",
         }
-        self.ssl_context = ssl.create_default_context(
-            cafile="/home/jr4238/satellite/katello-ca.crt"
-        )
-        self.auth = aiohttp.BasicAuth(self.username, self.token)
+        self.ssl_context = ssl.create_default_context(cafile=ssl_cert)
+
+        self.auth = aiohttp.BasicAuth(username, token)
 
     def url(self, remote_resource_uuid: str):
         return f"https://{self._site_name}/api/v2/hosts/{remote_resource_uuid}"
 
     async def get_status(self, remote_resource_uuid: str = None):
-
-        url = self.url(remote_resource_uuid)
-
         async with aiohttp.ClientSession(auth=self.auth) as session:
             async with session.get(
-                url,
+                self.url(remote_resource_uuid),
                 ssl=self.ssl_context,
                 headers=self.headers,
             ) as response:
@@ -94,25 +73,10 @@ class SatelliteClient:
         return main_response
 
     async def set_power(self, state: str, remote_resource_uuid: str = None):
-        action_map = {"on": "on", "off": "off", "start": "on", "stop": "off"}
-        if state not in action_map:
-            raise ValueError("Use 'on'/'off' (or 'start'/'stop').")
         async with aiohttp.ClientSession(auth=self.auth) as session:
             async with session.put(
                 self.url(remote_resource_uuid) + "/power",
                 json={"power_action": state},
-                ssl=self.ssl_context,
-                headers=self.headers,
-            ) as response:
-                return await response.json()
-
-    async def change_resource_reservation(
-        self, remote_resource_uuid: str, reserved: bool
-    ):
-        async with aiohttp.ClientSession(auth=self.auth) as session:
-            async with session.post(
-                self.url(remote_resource_uuid) + "/parameters",
-                json={"host": {"reserved": reserved}},
                 ssl=self.ssl_context,
                 headers=self.headers,
             ) as response:
@@ -188,14 +152,18 @@ class SatelliteClient:
 
 class SatelliteAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
-        self._machine_type = machine_type
         self._site_name = site_name
-        self.client = SatelliteClient(machine_type=self._machine_type)
+        self.client = SatelliteClient(
+            site_name=self.configuration.site_name,
+            username=self.configuration.username,
+            token=self.configuration.token,
+            ssl_cert=self.configuration.ssl_cert,
+        )
 
         key_translator = StaticMapping(
             remote_resource_uuid="remote_resource_uuid",
             resource_status="resource_status",
-        )  # , drone_uuid="name")
+        )
 
         translator_functions = StaticMapping(
             status=lambda x, translator=StaticMapping(): translator[x],
@@ -210,15 +178,11 @@ class SatelliteAdapter(SiteAdapter):
     async def deploy_resource(
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
-        # specs = dict(name=resource_attributes.drone_uuid)
-        # specs.update(self.machine_type_configuration)
 
         remote_resource_uuid = await self.client.get_next_uuid()
         await self.client.set_power("on", remote_resource_uuid)
 
         response = {}
-
-        # response["resource_status"] = ResourceStatus.Booting
         response["remote_resource_uuid"] = remote_resource_uuid
 
         return self.handle_response(response)
@@ -249,7 +213,6 @@ class SatelliteAdapter(SiteAdapter):
         return self.handle_response(response)
 
     async def stop_resource(self, resource_attributes: AttributeDict) -> None:
-        print("--------------------           stopping placeholder :)")
         response = await self.client.set_power(
             "off", resource_attributes.remote_resource_uuid
         )
@@ -261,7 +224,6 @@ class SatelliteAdapter(SiteAdapter):
         return self.handle_response(response)
 
     async def terminate_resource(self, resource_attributes: AttributeDict) -> None:
-        print("--------------------           terminating placeholder :)")
         await self.client.set_satellite_parameter(
             resource_attributes.remote_resource_uuid, "tardis_reserved", "terminating"
         )
