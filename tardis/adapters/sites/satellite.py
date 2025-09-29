@@ -1,18 +1,15 @@
+import asyncio
 import logging
-import aiohttp
 import ssl
-
-from functools import partial
 from contextlib import contextmanager
+from functools import partial
+
+import aiohttp
 
 from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
-from tardis.utilities.staticmapping import StaticMapping
-from tardis.interfaces.siteadapter import ResourceStatus
-from tardis.interfaces.siteadapter import SiteAdapter
-from tardis.interfaces.siteadapter import SiteAdapter
+from tardis.interfaces.siteadapter import ResourceStatus, SiteAdapter
 from tardis.utilities.attributedict import AttributeDict
 from tardis.utilities.staticmapping import StaticMapping
-from tardis.utilities.attributedict import AttributeDict
 
 logger = logging.getLogger("cobald.runtime.tardis.interfaces.site")
 
@@ -20,138 +17,149 @@ logger = logging.getLogger("cobald.runtime.tardis.interfaces.site")
 class SatelliteClient:
     # todo:
     # 2 min caching (see other adapters)
+
+    _API_PATH = "/api/v2/hosts"
+
     def __init__(
         self,
         site_name: str,
         username: str,
         token: str,
         ssl_cert: str,
-    ):
+    ) -> None:
 
-        self._site_name = site_name
-
+        self._base_url = f"https://{site_name}{self._API_PATH}"
         self.headers = {
             "Accept": "application/json",
             "Foreman-Api-Version": "2",
         }
         self.ssl_context = ssl.create_default_context(cafile=ssl_cert)
-
         self.auth = aiohttp.BasicAuth(username, token)
 
-    def url(self, remote_resource_uuid: str):
-        return f"https://{self._site_name}/api/v2/hosts/{remote_resource_uuid}"
+    def _host_url(self, remote_resource_uuid: str = "") -> str:
+        if remote_resource_uuid == "":
+            return f"{self._base_url}/"
+        resource = remote_resource_uuid.strip("/")
+        return f"{self._base_url}/{resource}"
 
-    async def get_status(self, remote_resource_uuid: str = None):
+    async def _request(
+        self,
+        session: aiohttp.ClientSession,
+        method: str,
+        url: str,
+        *,
+        expect_json: bool = True,
+        **kwargs,
+    ):
+        async with session.request(
+            method,
+            url,
+            ssl=self.ssl_context,
+            headers=self.headers,
+            **kwargs,
+        ) as response:
+            response.raise_for_status()
+            if expect_json:
+                return await response.json()
+            return None
+
+    async def get_status(self, remote_resource_uuid: str) -> dict:
         async with aiohttp.ClientSession(auth=self.auth) as session:
-            async with session.get(
-                self.url(remote_resource_uuid),
-                ssl=self.ssl_context,
-                headers=self.headers,
-            ) as response:
-                main_response = await response.json()
+            host_url = self._host_url(remote_resource_uuid)
+            main_task = self._request(session, "GET", host_url)
+            params_task = self._request(session, "GET", f"{host_url}/parameters")
+            power_task = self._request(session, "GET", f"{host_url}/power")
+            main_response, param_response, power_response = await asyncio.gather(
+                main_task, params_task, power_task
+            )
 
-            async with session.get(
-                self.url(remote_resource_uuid) + "/parameters",
-                ssl=self.ssl_context,
-                headers=self.headers,
-            ) as response:
-                param_response = await response.json()
+        # collect custom parameters
+        parameters = {}
+        for param in param_response.get("results", []):
+            name = param.get("name")
+            if not name:
+                continue
+            if "value" in param:
+                parameters[name] = param["value"]
+            if "id" in param:
+                parameters[f"{name}_id"] = param["id"]
 
-            async with session.get(
-                self.url(remote_resource_uuid) + "/power",
-                ssl=self.ssl_context,
-                headers=self.headers,
-            ) as response:
-                power_response = await response.json()
-
-        param_dict = {}
-        for param in param_response["results"]:
-            param_dict[param["name"]] = param["value"]
-            param_dict[param["name"] + "_id"] = param["id"]
-        main_response["parameters"] = param_dict
+        main_response["parameters"] = parameters
         main_response["power"] = power_response
         return main_response
 
-    async def set_power(self, state: str, remote_resource_uuid: str = None):
+    async def set_power(self, state: str, remote_resource_uuid: str) -> dict:
         async with aiohttp.ClientSession(auth=self.auth) as session:
-            async with session.put(
-                self.url(remote_resource_uuid) + "/power",
+            return await self._request(
+                session,
+                "PUT",
+                f"{self._host_url(remote_resource_uuid)}/power",
                 json={"power_action": state},
-                ssl=self.ssl_context,
-                headers=self.headers,
-            ) as response:
-                return await response.json()
+            )
+        logger.info(f"Set power {state} for {remote_resource_uuid}")
 
-    async def get_next_uuid(self):
-        # get all data from satellite instance
+    async def get_next_uuid(self) -> str:
         async with aiohttp.ClientSession(auth=self.auth) as session:
-            async with session.get(
-                self.url(""),
-                ssl=self.ssl_context,
-                headers=self.headers,
-            ) as response:
-                data = await response.json()
+            data = await self._request(session, "GET", self._host_url())
 
-        # filter only the host names and set their  status to None
-
-        # Zum scharf schalten fuer alle hosts :-)
-        # resources = [hostinfo["name"] for hostinfo in data["results"]]
+        # Zum scharf schalten :)
+        # resources = [
+        #    host.get("name") for host in data.get("results", []) if host.get("name")
+        # ]
         resources = ["cloud-monit.gridka.de"]
 
-        # grep the power status for each host
         for host in resources:
             resource_status = await self.get_status(host)
-
-            reserved_status = resource_status["parameters"].get(
-                "tardis_reserved", "false"
-            )
+            parameters = resource_status.get("parameters", {})
+            reserved_status = parameters.get("tardis_reserved", "false")
             is_unreserved = reserved_status == "false"
 
-            is_powered_off = resource_status["power"]["state"] == "off"
+            power_state = resource_status.get("power", {}).get("state")
+            is_powered_off = power_state == "off"
 
             if is_unreserved and is_powered_off:
                 await self.set_satellite_parameter(host, "tardis_reserved", "true")
-
-                print("==================== returning free host ====================")
-                print("returning free host: ", host)
-                print("=============================================================")
+                logger.info(f"Allocated satellite host {host}")
                 return host
 
+        logger.info("No free host found, skipping deployment")
         raise TardisResourceStatusUpdateFailed("no free host found")
 
     async def set_satellite_parameter(
         self, remote_resource_uuid: str, parameter: str, value: str
-    ):
+    ) -> None:
         value = str(value).lower()
-
-        # get params
         status_response = await self.get_status(remote_resource_uuid)
+        parameter_id = status_response.get("parameters", {}).get(f"{parameter}_id")
 
         async with aiohttp.ClientSession(auth=self.auth) as session:
-            if parameter in status_response["parameters"]:
-                async with session.put(
-                    self.url(remote_resource_uuid)
-                    + "/parameters/"
-                    + str(status_response["parameters"][parameter + "_id"]),
+            if parameter_id is not None:
+                await self._request(
+                    session,
+                    "PUT",
+                    f"{self._host_url(remote_resource_uuid)}/parameters/{parameter_id}",
                     json={"value": value},
-                    ssl=self.ssl_context,
-                    headers=self.headers,
-                ) as response:
-                    data = await response.json()
+                    expect_json=False,
+                )
+                logger.info(
+                    f"Updated satellite parameter {parameter} to {value} for {remote_resource_uuid}"
+                )
             else:
-                # create new param
-                async with session.post(
-                    self.url(remote_resource_uuid) + "/parameters",
+                await self._request(
+                    session,
+                    "POST",
+                    f"{self._host_url(remote_resource_uuid)}/parameters",
                     json={"name": parameter, "value": value},
-                    ssl=self.ssl_context,
-                    headers=self.headers,
-                ) as response:
-                    data = await response.json()
-                status_response = await self.get_status(remote_resource_uuid)
+                    expect_json=False,
+                )
+                logger.info(
+                    f"Created satellite parameter {parameter} with value {value} for {remote_resource_uuid}"
+                )
 
 
 class SatelliteAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
+        self._machine_type = machine_type
         self._site_name = site_name
         self.client = SatelliteClient(
             site_name=self.configuration.site_name,
@@ -234,13 +242,3 @@ class SatelliteAdapter(SiteAdapter):
             yield
         except TardisResourceStatusUpdateFailed:
             raise
-
-
-if __name__ == "__main__":
-    # Example usage
-    adapter = SatelliteAdapter(machine_type="example_machine", site_name="example_site")
-    print(
-        f"Adapter created for machine type: {adapter.machine_type} on site: {adapter.site_name}"
-    )
-
-    adapter.resource_status(AttributeDict({"id": "12345"}))
