@@ -161,6 +161,7 @@ class SatelliteAdapter(SiteAdapter):
     def __init__(self, machine_type: str, site_name: str):
         self._machine_type = machine_type
         self._site_name = site_name
+
         self.client = SatelliteClient(
             site_name=self.configuration.site_name,
             username=self.configuration.username,
@@ -190,10 +191,7 @@ class SatelliteAdapter(SiteAdapter):
         remote_resource_uuid = await self.client.get_next_uuid()
         await self.client.set_power("on", remote_resource_uuid)
 
-        response = {}
-        response["remote_resource_uuid"] = remote_resource_uuid
-
-        return self.handle_response(response)
+        return self.handle_response({"remote_resource_uuid": remote_resource_uuid})
 
     async def resource_status(
         self, resource_attributes: AttributeDict
@@ -202,34 +200,40 @@ class SatelliteAdapter(SiteAdapter):
             resource_attributes.remote_resource_uuid
         )
 
-        power_status = response["power"]["state"]
-        reserved_status = response["parameters"]["tardis_reserved"]
+        power_state = response.get("power", {}).get("state")
+        reserved_state = response.get("parameters", {}).get("tardis_reserved")
 
-        if power_status == "on":
-            response["resource_status"] = ResourceStatus.Running
-        elif power_status == "off" and reserved_status == "terminating":
-            response["resource_status"] = ResourceStatus.Deleted
+        status = self._resolve_status(power_state, reserved_state)
+        if status is ResourceStatus.Deleted:
             await self.client.set_satellite_parameter(
                 resource_attributes.remote_resource_uuid,
                 "tardis_reserved",
                 "false",
             )
-        elif power_status == "off" and reserved_status == "true":
-            response["resource_status"] = ResourceStatus.Stopped
-        else:
-            response["resource_status"] = ResourceStatus.Error
-        return self.handle_response(response)
+        return self.handle_response(
+            response,
+            resource_status=status,
+            remote_resource_uuid=resource_attributes.remote_resource_uuid,
+        )
 
     async def stop_resource(self, resource_attributes: AttributeDict) -> None:
         response = await self.client.set_power(
             "off", resource_attributes.remote_resource_uuid
         )
-        if "error" in response.keys():
-            print("error in stopping resource: ", response)
-            response["resource_status"] = ResourceStatus.Error
-        else:
-            response["resource_status"] = ResourceStatus.Stopped
-        return self.handle_response(response)
+        has_error = "error" in response
+        if has_error:
+            logger.error(
+                "Failed to stop satellite resource %s: %s",
+                resource_attributes.remote_resource_uuid,
+                response,
+            )
+
+        status = ResourceStatus.Error if has_error else ResourceStatus.Stopped
+        return self.handle_response(
+            response,
+            resource_status=status,
+            remote_resource_uuid=resource_attributes.remote_resource_uuid,
+        )
 
     async def terminate_resource(self, resource_attributes: AttributeDict) -> None:
         await self.client.set_satellite_parameter(
@@ -242,3 +246,15 @@ class SatelliteAdapter(SiteAdapter):
             yield
         except TardisResourceStatusUpdateFailed:
             raise
+
+    def _resolve_status(self, power_state: str, reserved_state: str) -> ResourceStatus:
+        if power_state == "on":
+            return ResourceStatus.Running
+
+        if power_state == "off":
+            if reserved_state == "terminating":
+                return ResourceStatus.Deleted
+            if reserved_state == "true":
+                return ResourceStatus.Stopped
+
+        return ResourceStatus.Error
