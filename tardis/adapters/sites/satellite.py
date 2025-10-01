@@ -31,6 +31,7 @@ class SatelliteClient:
         username: str,
         token: str,
         ssl_cert: str,
+        machine_pool: list[str],
     ) -> None:
 
         self._base_url = f"https://{site_name}{self._API_PATH}"
@@ -40,6 +41,8 @@ class SatelliteClient:
         }
         self.ssl_context = ssl.create_default_context(cafile=ssl_cert)
         self.auth = aiohttp.BasicAuth(username, token)
+
+        self.machine_pool = machine_pool
 
     def _host_url(self, remote_resource_uuid: str = "") -> str:
         if remote_resource_uuid == "":
@@ -117,13 +120,13 @@ class SatelliteClient:
             raise ValueError(f"Invalid power state {state}")
 
         async with aiohttp.ClientSession(auth=self.auth) as session:
+            logger.info(f"Set power {state} for {remote_resource_uuid}")
             return await self._request(
                 session,
                 "PUT",
                 f"{self._host_url(remote_resource_uuid)}/power",
                 json={"power_action": state},
             )
-        logger.info(f"Set power {state} for {remote_resource_uuid}")
 
     async def get_next_uuid(self) -> str:
         """
@@ -136,13 +139,7 @@ class SatelliteClient:
         async with aiohttp.ClientSession(auth=self.auth) as session:
             data = await self._request(session, "GET", self._host_url())
 
-        # Zum scharf schalten :)
-        # resources = [
-        #    host.get("name") for host in data.get("results", []) if host.get("name")
-        # ]
-        resources = ["cloud-monit.gridka.de"]
-
-        for host in resources:
+        for host in self.machine_pool:
             resource_status = await self.get_status(host)
             parameters = resource_status.get("parameters", {})
             reserved_status = parameters.get("tardis_reserved", "false")
@@ -215,6 +212,7 @@ class SatelliteAdapter(SiteAdapter):
             username=self.configuration.username,
             token=self.configuration.token,
             ssl_cert=self.configuration.ssl_cert,
+            machine_pool=self.configuration.machine_pool,
         )
 
         key_translator = StaticMapping(
