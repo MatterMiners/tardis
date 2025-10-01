@@ -149,8 +149,6 @@ async def htcondor_status_updater(
     earliest_start_date = min(collector_start_dates.values())
     latest_start_date = max(collector_start_dates.values())
 
-    htcondor_status = {}
-
     if (now - earliest_start_date) < threshold:
         # If all collectors have been running for less than 3600 seconds,
         # use cached status for machines that were already available before the
@@ -160,8 +158,13 @@ async def htcondor_status_updater(
     elif (now - latest_start_date) < threshold:
         # If any collector has been running for more than 3600 seconds, use the oldest
         # available one.
+        htcondor_status = {}
         oldest_collector = min(collector_start_dates, key=collector_start_dates.get)
         options.pool = oldest_collector
+
+    else:
+        # Repopulate HTCondor status
+        htcondor_status = {}
 
     cmd = htcondor_status_cmd_composer(
         attributes=attributes,
