@@ -155,7 +155,7 @@ async def htcondor_status_updater(
         # If all collectors have been running for less than 3600 seconds,
         # use cached status for machines that were already available before the
         # restart and update it with fresh data if available.
-        htcondor_status = {**cached_data}
+        htcondor_status = cached_data.copy()
 
     elif (now - latest_start_date) < threshold:
         # If any collector has been running for more than 3600 seconds, use the oldest
