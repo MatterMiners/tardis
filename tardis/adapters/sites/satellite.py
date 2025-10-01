@@ -86,7 +86,7 @@ class SatelliteClient:
                 main_task, params_task, power_task
             )
 
-        # Flatten custom parameters for lookups in later calls.
+        # Flatten custom parameters for simpler lookups in later calls.
         parameters = {}
         for param in param_response.get("results", []):
             name = param.get("name")
