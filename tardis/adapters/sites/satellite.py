@@ -136,8 +136,6 @@ class SatelliteClient:
         :rtype: str
         :raises TardisResourceStatusUpdateFailed: If no free host is available.
         """
-        async with aiohttp.ClientSession(auth=self.auth) as session:
-            data = await self._request(session, "GET", self._host_url())
 
         for host in self.machine_pool:
             resource_status = await self.get_status(host)
@@ -278,7 +276,7 @@ class SatelliteAdapter(SiteAdapter):
             remote_resource_uuid=resource_attributes.remote_resource_uuid,
         )
 
-    async def stop_resource(self, resource_attributes: AttributeDict) -> None:
+    async def stop_resource(self, resource_attributes: AttributeDict) -> AttributeDict:
         """
         Request a power-off for the resource.
 
