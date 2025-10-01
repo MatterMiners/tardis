@@ -41,3 +41,25 @@ class TestAttributeDict(TestCase):
 
         with self.assertRaises(AttributeError):
             del self.test_dictionary.another_test
+
+    def test_or_with_dict(self):
+        other = {"new": 42}
+        merged = self.test_dictionary | other
+        self.assertIsInstance(merged, AttributeDict)
+        self.assertEqual(merged["test"], 1)
+        self.assertEqual(merged["another_test"], 2)
+        self.assertEqual(merged["new"], 42)
+
+    def test_or_with_dict_overwrites(self):
+        other = {"test": 99}
+        merged = self.test_dictionary | other
+        self.assertEqual(merged["test"], 99)  # overwritten
+        self.assertEqual(merged["another_test"], 2)
+
+    def test_or_with_attributedict(self):
+        other = AttributeDict(extra=123)
+        merged = self.test_dictionary | other
+        self.assertIsInstance(merged, AttributeDict)
+        self.assertEqual(merged["test"], 1)
+        self.assertEqual(merged["another_test"], 2)
+        self.assertEqual(merged["extra"], 123)

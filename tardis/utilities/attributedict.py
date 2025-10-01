@@ -28,3 +28,6 @@ class AttributeDict(dict):
             raise AttributeError(
                 f"{item} is not a valid attribute. Dict contains {str(self)}."
             ) from None
+
+    def __or__(self, other):
+        return AttributeDict({**self, **other})

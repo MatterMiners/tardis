@@ -41,7 +41,7 @@ async def htcondor_get_collectors(
     """
     class_ads = AttributeDict(Machine="Machine")
     # Add collector query option, copy options since it is mutable
-    options = AttributeDict(collector=None, **options)
+    options = options | {"collector": None}
     cmd = htcondor_status_cmd_composer(
         attributes=class_ads,
         options=options,
@@ -89,7 +89,7 @@ async def htcondor_get_collector_start_dates(
     htcondor_collectors = await htcondor_get_collectors(options, executor)
 
     # Add master query option, copy options since it is mutable
-    options = AttributeDict(master=None, **options)
+    options = options | {"master": None}
 
     cmd = htcondor_status_cmd_composer(
         attributes=class_ads,

@@ -700,7 +700,7 @@ class TestHTCondorAdapter(TestCase):
 
         # Command string should match expected with options
         self.mock_executor.return_value.run_command.assert_called_with(
-            "condor_status -af:t Machine -collector -pool my-htcondor.local -test"
+            "condor_status -af:t Machine -pool my-htcondor.local -test -collector"
         )
 
     @mock_executor_run_command_new(
@@ -769,13 +769,13 @@ class TestHTCondorAdapter(TestCase):
             "cloud-htcondor.gridka.de": datetime.fromtimestamp(1753947411),
         }
         self.assertEqual(result, expected_times)
-
+        print(self.mock_executor.return_value.run_command.mock_calls)
         # Ensure both commands were called with proper formatting
         self.mock_executor.return_value.run_command.assert_any_call(
-            "condor_status -af:t Machine -collector -pool my-htcondor.local -test"
+            "condor_status -af:t Machine -pool my-htcondor.local -test -collector"
         )
         self.mock_executor.return_value.run_command.assert_any_call(
-            'condor_status -af:t Machine DaemonStartTime -constraint \'Machine == "cloud-htcondor-rhel8.gridka.de" || Machine == "cloud-htcondor.gridka.de"\' -master -pool my-htcondor.local -test'  # noqa B950
+            'condor_status -af:t Machine DaemonStartTime -constraint \'Machine == "cloud-htcondor-rhel8.gridka.de" || Machine == "cloud-htcondor.gridka.de"\' -pool my-htcondor.local -test -master'  # noqa B950
         )
 
     @mock_executor_run_command_new(
@@ -835,10 +835,10 @@ class TestHTCondorAdapter(TestCase):
 
         # Ensure both commands were called with proper formatting
         self.mock_executor.return_value.run_command.assert_any_call(
-            "condor_status -af:t Machine -collector -pool my-htcondor.local -test"
+            "condor_status -af:t Machine -pool my-htcondor.local -test -collector"
         )
         self.mock_executor.return_value.run_command.assert_any_call(
-            'condor_status -af:t Machine DaemonStartTime -constraint \'Machine == "cloud-htcondor-rhel8.gridka.de" || Machine == "cloud-htcondor.gridka.de"\' -master -pool my-htcondor.local -test'  # noqa B950
+            'condor_status -af:t Machine DaemonStartTime -constraint \'Machine == "cloud-htcondor-rhel8.gridka.de" || Machine == "cloud-htcondor.gridka.de"\' -pool my-htcondor.local -test -master'  # noqa B950
         )
 
     @mock_executor_run_command_new(
@@ -866,10 +866,10 @@ class TestHTCondorAdapter(TestCase):
 
         # Ensure both commands were called with proper formatting
         self.mock_executor.return_value.run_command.assert_any_call(
-            "condor_status -af:t Machine -collector -pool my-htcondor.local -test"
+            "condor_status -af:t Machine -pool my-htcondor.local -test -collector"
         )
         self.mock_executor.return_value.run_command.assert_any_call(
-            'condor_status -af:t Machine DaemonStartTime -constraint \'Machine == "cloud-htcondor-rhel8.gridka.de" || Machine == "cloud-htcondor.gridka.de"\' -master -pool my-htcondor.local -test'  # noqa B950
+            'condor_status -af:t Machine DaemonStartTime -constraint \'Machine == "cloud-htcondor-rhel8.gridka.de" || Machine == "cloud-htcondor.gridka.de"\' -pool my-htcondor.local -test -master'  # noqa B950
         )
 
     @mock_executor_run_command_new(
