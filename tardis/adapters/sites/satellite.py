@@ -240,7 +240,9 @@ class SatelliteAdapter(SiteAdapter):
         :rtype: AttributeDict
         """
         remote_resource_uuid = await self.client.get_next_uuid()
-        await self.client.set_power("on", remote_resource_uuid)
+        await self.client.set_power(
+            state="on", remote_resource_uuid=remote_resource_uuid
+        )
 
         return self.handle_response({"remote_resource_uuid": remote_resource_uuid})
 
