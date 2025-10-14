@@ -1,6 +1,7 @@
 from tardis.adapters.sites.satellite import SatelliteAdapter
 from tardis.utilities.attributedict import AttributeDict
 from tardis.interfaces.siteadapter import ResourceStatus
+from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from tests.utilities.utilities import run_async
 
 from unittest import TestCase
@@ -159,3 +160,20 @@ class TestSatelliteAdapter(TestCase):
         )
         self.client.set_power.assert_awaited_once_with("off", self.remote_resource_uuid)
         self.client.set_satellite_parameter.assert_not_awaited()
+
+    def test_exception_handling(self):
+        def test_exception_handling(to_raise, to_catch):
+            with self.assertRaises(to_catch):
+                with self.satellite_adapter.handle_exceptions():
+                    raise to_raise
+
+        matrix = [
+            (
+                TardisResourceStatusUpdateFailed("no free host available"),
+                TardisResourceStatusUpdateFailed,
+            ),
+            (RuntimeError("unexpected satellite error"), RuntimeError),
+        ]
+
+        for to_raise, to_catch in matrix:
+            test_exception_handling(to_raise, to_catch)
