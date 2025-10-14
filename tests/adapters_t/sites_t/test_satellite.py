@@ -1,23 +1,10 @@
 from tardis.adapters.sites.satellite import SatelliteAdapter
-from tardis.exceptions.tardisexceptions import TardisAuthError
-from tardis.exceptions.tardisexceptions import TardisDroneCrashed
-from tardis.exceptions.tardisexceptions import TardisError
-from tardis.exceptions.tardisexceptions import TardisTimeout
-from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from tardis.utilities.attributedict import AttributeDict
 from tardis.interfaces.siteadapter import ResourceStatus
-from tests.utilities.utilities import async_return, run_async
-
-from aiohttp import ClientConnectionError
-from aiohttp import ContentTypeError
-from simple_rest_client.exceptions import AuthError
-from simple_rest_client.exceptions import ClientError
+from tests.utilities.utilities import run_async
 
 from unittest import TestCase
-from unittest.mock import patch, AsyncMock
-
-import asyncio
-import logging
+from unittest.mock import AsyncMock, patch
 
 
 class TestSatelliteAdapter(TestCase):
@@ -39,6 +26,9 @@ class TestSatelliteAdapter(TestCase):
         cls.mock_satelliteclient_patcher.stop()
 
     def setUp(self):
+
+        self.remote_resource_uuid = "uuid-test"
+
         self.config = self.mock_config.return_value
         self.config.TestSite = AttributeDict(
             site_name="https://test.satelliteclient.local",
@@ -57,15 +47,14 @@ class TestSatelliteAdapter(TestCase):
             ),
         )
 
-        client = self.mock_satelliteclient.return_value
-        client.get_status.return_value = async_return(
-            {"status": "running", "id": "srv-12345"}
+        self.client = self.mock_satelliteclient.return_value
+        self.client.get_status = AsyncMock(
+            return_value={"status": "running", "id": self.remote_resource_uuid}
         )
-        # client.init_api.return_value = async_return(return_value=None)
 
-        client.get_next_uuid = AsyncMock(return_value="uuid-123")
-        client.set_power = AsyncMock(return_value=None)
-        client.set_satellite_parameter = AsyncMock(return_value=None)
+        self.client.get_next_uuid = AsyncMock(return_value="uuid-new")
+        self.client.set_power = AsyncMock(return_value=None)
+        self.client.set_satellite_parameter = AsyncMock(return_value=None)
 
         self.satellite_adapter = SatelliteAdapter(
             machine_type="testmachine_type", site_name="TestSite"
@@ -73,6 +62,7 @@ class TestSatelliteAdapter(TestCase):
 
     def tearDown(self):
         self.mock_satelliteclient.reset_mock()
+        self.client.reset_mock()
 
     def test_deploy_resource(self):
         self.assertEqual(
@@ -80,22 +70,22 @@ class TestSatelliteAdapter(TestCase):
                 self.satellite_adapter.deploy_resource,
                 resource_attributes=AttributeDict(drone_uuid="testsite-089123"),
             ),
-            AttributeDict(remote_resource_uuid="uuid-123"),
+            AttributeDict(remote_resource_uuid="uuid-new"),
         )
 
-        self.mock_satelliteclient.return_value.get_next_uuid.assert_called()
+        self.client.get_next_uuid.assert_awaited_once()
 
-        self.mock_satelliteclient.return_value.set_power.assert_called_with(
-            state="on", remote_resource_uuid="uuid-123"
+        self.client.set_power.assert_awaited_once_with(
+            state="on", remote_resource_uuid="uuid-new"
         )
 
-    def _assert_resource_status(self, response, expected_status: ResourceStatus):
-        client = self.mock_satelliteclient.return_value
-        client.get_status.reset_mock()
-        client.set_satellite_parameter.reset_mock()
-        client.get_status.return_value = async_return(return_value=response)
+    def _assert_resource_status(self, response: dict, expected_status: ResourceStatus):
+        """Exercise resource_status and assert the expected ResourceStatus mapping."""
+        self.client.get_status.return_value = response
 
-        resource_attributes = AttributeDict(remote_resource_uuid="srv-12345")
+        resource_attributes = AttributeDict(
+            remote_resource_uuid=self.remote_resource_uuid
+        )
 
         result = run_async(
             self.satellite_adapter.resource_status,
@@ -105,17 +95,15 @@ class TestSatelliteAdapter(TestCase):
         self.assertEqual(
             result,
             AttributeDict(
-                remote_resource_uuid="srv-12345",
+                remote_resource_uuid=self.remote_resource_uuid,
                 resource_status=expected_status,
             ),
         )
 
-        client.get_status.assert_called_once_with("srv-12345")
-        return client
+        self.client.get_status.assert_awaited_once_with(self.remote_resource_uuid)
+        return self.client
 
-    def test_resource_status_cases(self):
-
-        # Running host and reserved=false.
+    def test_resource_status_running(self):
         response = {
             "power": {"state": "on"},
             "parameters": {"tardis_reserved": "false"},
@@ -123,17 +111,19 @@ class TestSatelliteAdapter(TestCase):
         client = self._assert_resource_status(response, ResourceStatus.Running)
         client.set_satellite_parameter.assert_not_awaited()
 
-        # Terminating host -> reset reserved flag and as mark deleted.
+    def test_resource_status_deleted(self):
         response = {
             "power": {"state": "off"},
             "parameters": {"tardis_reserved": "terminating"},
         }
         client = self._assert_resource_status(response, ResourceStatus.Deleted)
+
+        # Deleted resources should have their reservation flag cleared.
         client.set_satellite_parameter.assert_awaited_once_with(
-            "srv-12345", "tardis_reserved", "false"
+            self.remote_resource_uuid, "tardis_reserved", "false"
         )
 
-        # Reserved but host is offline
+    def test_resource_status_stopped(self):
         response = {
             "power": {"state": "off"},
             "parameters": {"tardis_reserved": "true"},
@@ -141,10 +131,31 @@ class TestSatelliteAdapter(TestCase):
         client = self._assert_resource_status(response, ResourceStatus.Stopped)
         client.set_satellite_parameter.assert_not_awaited()
 
-        # unexpected power state
+    def test_resource_status_error(self):
         response = {
             "power": {"state": "suspended"},
             "parameters": {"tardis_reserved": "false"},
         }
         client = self._assert_resource_status(response, ResourceStatus.Error)
         client.set_satellite_parameter.assert_not_awaited()
+
+    def test_stop_resource(self):
+        self.client.set_power.return_value = {}
+
+        resource_attributes = AttributeDict(
+            remote_resource_uuid=self.remote_resource_uuid
+        )
+        result = run_async(
+            self.satellite_adapter.stop_resource,
+            resource_attributes=resource_attributes,
+        )
+
+        self.assertEqual(
+            result,
+            AttributeDict(
+                remote_resource_uuid=self.remote_resource_uuid,
+                resource_status=ResourceStatus.Stopped,
+            ),
+        )
+        self.client.set_power.assert_awaited_once_with("off", self.remote_resource_uuid)
+        self.client.set_satellite_parameter.assert_not_awaited()
