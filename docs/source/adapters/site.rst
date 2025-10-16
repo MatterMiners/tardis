@@ -707,12 +707,12 @@ Available adapter configuration options
     +----------------+------------------------------------------------------------------------------------------+-----------------+
     | ssl_cert       | Path to a CA certificate used to validate the Satellite HTTPS endpoint.                  |  **Required**   |
     +----------------+------------------------------------------------------------------------------------------+-----------------+
-    | username       | Satellite account used for API access and the corresponding rights.                     |  **Required**   |
+    | username       | Satellite account used for API access and the corresponding rights.                      |  **Required**   |
     +----------------+------------------------------------------------------------------------------------------+-----------------+
     | secret         | Personal access token or password of the Satellite account.                              |  **Required**   |
     +----------------+------------------------------------------------------------------------------------------+-----------------+
-    | machine_pool   | Sequence of Satellite host identifiers that form the pool of machines to allocate from. |  **Required**   |
-    |                | Entries must match ``https://<site_name>/api/v2/hosts/<identifier>``.                   |                 |
+    | machine_pool   | Sequence of Satellite host identifiers that form the pool of machines to allocate from.  |  **Required**   |
+    |                | Entries must match ``https://<site_name>/api/v2/hosts/<identifier>``.                    |                 |
     +----------------+------------------------------------------------------------------------------------------+-----------------+
 
     The Satellite adapter does not introduce additional machine type specific options.
