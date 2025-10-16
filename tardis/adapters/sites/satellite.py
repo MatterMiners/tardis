@@ -20,27 +20,22 @@ class SatelliteClient:
     Async helper for interacting with Satellite instance.
     """
 
-    # todo:
-    # 2 min caching (see other adapters)
-
-    _API_PATH = "/api/v2/hosts"
-
     def __init__(
         self,
-        site_name: str,
+        host: str,
         username: str,
-        token: str,
+        secret: str,
         ssl_cert: str,
         machine_pool: list[str],
     ) -> None:
 
-        self._base_url = f"https://{site_name}{self._API_PATH}"
+        self._base_url = f"https://{host}/api/v2/hosts"
         self.headers = {
             "Accept": "application/json",
             "Foreman-Api-Version": "2",
         }
         self.ssl_context = ssl.create_default_context(cafile=ssl_cert)
-        self.auth = aiohttp.BasicAuth(username, token)
+        self.auth = aiohttp.BasicAuth(username, secret)
 
         self.machine_pool = machine_pool
 
@@ -206,9 +201,9 @@ class SatelliteAdapter(SiteAdapter):
         self._site_name = site_name
 
         self.client = SatelliteClient(
-            site_name=self.configuration.site_name,
+            host=self.configuration.host,
             username=self.configuration.username,
-            token=self.configuration.token,
+            secret=self.configuration.secret,
             ssl_cert=self.configuration.ssl_cert,
             machine_pool=self.configuration.machine_pool,
         )

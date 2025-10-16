@@ -703,13 +703,13 @@ Available adapter configuration options
     +----------------+------------------------------------------------------------------------------------------+-----------------+
     | Option         | Short Description                                                                        | Requirement     |
     +================+==========================================================================================+=================+
-    | site_name      | Hostname of the Satellite server. HTTPS and ``/api/v2/hosts`` are added automatically.   |  **Required**   |
+    | host           | Hostname of the Satellite server. HTTPS and ``/api/v2/hosts`` are added automatically.   |  **Required**   |
     +----------------+------------------------------------------------------------------------------------------+-----------------+
     | ssl_cert       | Path to a CA certificate used to validate the Satellite HTTPS endpoint.                  |  **Required**   |
     +----------------+------------------------------------------------------------------------------------------+-----------------+
     | username       | Satellite account used for API access and the corresponding rights.                     |  **Required**   |
     +----------------+------------------------------------------------------------------------------------------+-----------------+
-    | token          | Personal access token or password of the Satellite account.                              |  **Required**   |
+    | secret         | Personal access token or password of the Satellite account.                              |  **Required**   |
     +----------------+------------------------------------------------------------------------------------------+-----------------+
     | machine_pool   | Sequence of Satellite host identifiers that form the pool of machines to allocate from. |  **Required**   |
     |                | Entries must match ``https://<site_name>/api/v2/hosts/<identifier>``.                   |                 |

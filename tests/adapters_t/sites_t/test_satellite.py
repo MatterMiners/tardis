@@ -32,9 +32,9 @@ class TestSatelliteAdapter(TestCase):
 
         self.config = self.mock_config.return_value
         self.config.TestSite = AttributeDict(
-            site_name="https://test.satelliteclient.local",
+            host="https://test.satelliteclient.local",
             username="TestUser",
-            token="test123",
+            secret="test123",
             ssl_cert="/path/to/cert",
             machine_pool=["testmachine"],
             MachineTypes=["testmachine_type"],
