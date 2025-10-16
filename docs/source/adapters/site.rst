@@ -730,9 +730,9 @@ Available adapter configuration options
             quota: 20
 
         SatelliteSite:
-          site_name: satellite.example.com
+          host: satellite.example.com
           username: MaxMustermann
-          token: super-secret-token
+          secret: super-secret-token
           ssl_cert: /path/to/CA/cert.pem
           machine_pool:
             - compute-node-01
