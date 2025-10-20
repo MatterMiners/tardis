@@ -2,6 +2,8 @@ from ..exceptions.executorexceptions import CommandExecutionFailure
 from collections.abc import Mapping
 from datetime import datetime
 from datetime import timedelta
+from functools import partial
+from types import MappingProxyType
 
 import asyncio
 import logging
@@ -11,10 +13,16 @@ logger = logging.getLogger("cobald.runtime.tardis.utilities.asynccachemap")
 
 
 class AsyncCacheMap(Mapping):
-    def __init__(self, update_coroutine, max_age: int = 60 * 15):
+    def __init__(
+        self,
+        update_coroutine,
+        max_age: int = 60 * 15,
+        provide_cache: bool = False,
+    ):
         self._update_coroutine = update_coroutine
         self._max_age = max_age
         self._last_update = datetime.fromtimestamp(0)
+        self._provide_cache = provide_cache
         self._data = {}
         self._lock = None
 
@@ -27,8 +35,18 @@ class AsyncCacheMap(Mapping):
         return self._lock
 
     @property
+    def read_only_cache(self):
+        return MappingProxyType(self._data)
+
+    @property
     def last_update(self) -> datetime:
         return self._last_update
+
+    @property
+    def update_coroutine(self):
+        if self._provide_cache:
+            return partial(self._update_coroutine, self.read_only_cache)
+        return self._update_coroutine
 
     async def update_status(self) -> None:
         current_time = datetime.now()
@@ -36,7 +54,7 @@ class AsyncCacheMap(Mapping):
         async with self._async_lock:
             if (current_time - self._last_update) > timedelta(seconds=self._max_age):
                 try:
-                    data = await self._update_coroutine()
+                    data = await self.update_coroutine()
                 except json.decoder.JSONDecodeError as je:
                     logger.warning(
                         f"AsyncMap update_status failed: Could not decode json {je}"
@@ -57,13 +75,4 @@ class AsyncCacheMap(Mapping):
         return len(self._data)
 
     def __eq__(self, other):
-        if not isinstance(other, AsyncCacheMap):
-            return False
-
-        return (
-            self._update_coroutine == other._update_coroutine
-            and self._max_age == other._max_age
-            and self._last_update == other._last_update
-            and self._data == other._data
-            and self._lock == other._lock
-        )
+        return self is other

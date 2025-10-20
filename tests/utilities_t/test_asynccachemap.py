@@ -6,6 +6,8 @@ from tests.utilities.utilities import run_async
 from json.decoder import JSONDecodeError
 from datetime import datetime
 from datetime import timedelta
+from functools import partial
+from types import MappingProxyType
 from unittest import TestCase
 
 import logging
@@ -72,9 +74,7 @@ class TestAsyncCacheMap(TestCase):
         )
 
     def test_eq_async_cache_map(self):
-        test_cache_map = AsyncCacheMap(
-            update_coroutine=self.async_cache_map._update_coroutine
-        )
+        test_cache_map = self.async_cache_map
         # Since both objects have been recently initialized, all values (self._max_age,
         # self._last_update, self._data and self._lock) are still the defaults
         self.assertTrue(self.async_cache_map == test_cache_map)
@@ -82,21 +82,39 @@ class TestAsyncCacheMap(TestCase):
         # Test the opposite
         self.assertFalse(self.async_cache_map != test_cache_map)
 
-        # change default values
-        run_async(self.async_cache_map.update_status)
-        self.assertFalse(self.async_cache_map == test_cache_map)
+    def test_read_only_cache_returns_mappingproxy(self):
+        run_async(self.async_cache_map.update_status)  # populate data
+        ro_cache = self.async_cache_map.read_only_cache
+        self.assertIsInstance(ro_cache, MappingProxyType)
+        self.assertEqual(dict(ro_cache), self.async_cache_map._data)
 
-        # update default values, self._last_update, self._lock still differ
-        run_async(test_cache_map.update_status)
-        self.assertFalse(self.async_cache_map == test_cache_map)
+        # Update _data manually and check if read_only_cache reflects changes
+        self.async_cache_map._data["new_key"] = "new_value"
+        self.assertEqual(ro_cache["new_key"], "new_value")
 
-        # Assimilate lock, self._last_update still differs
-        test_cache_map._lock = self.async_cache_map._lock
-        self.assertFalse(self.async_cache_map == test_cache_map)
+    def test_read_only_cache_is_immutable(self):
+        ro_cache = self.async_cache_map.read_only_cache
+        with self.assertRaises(TypeError):
+            ro_cache["key"] = "value"  # Attempt to modify should raise TypeError
 
-        # Make them equal again
-        test_cache_map._last_update = self.async_cache_map._last_update
-        self.assertTrue(self.async_cache_map == test_cache_map)
+        with self.assertRaises(TypeError):
+            del ro_cache["key"]  # Attempt to delete should raise TypeError
 
-        # Test different class
-        self.assertFalse(self.async_cache_map == self.test_data)
+    def test_update_coroutine_returns_original_when_flag_false(self):
+        # Ensure the flag is False
+        self.assertFalse(self.async_cache_map._provide_cache)
+        coro = self.async_cache_map.update_coroutine
+        self.assertEqual(coro, self.async_cache_map._update_coroutine)
+
+    def test_update_coroutine_returns_partial_when_flag_true(self):
+        # Set the flag to True
+        self.async_cache_map._provide_cache = True
+        coro = self.async_cache_map.update_coroutine
+        self.assertIsInstance(coro, partial)
+
+        # The partial should wrap the original coroutine
+        self.assertEqual(coro.func, self.async_cache_map._update_coroutine)
+
+        # The first argument passed should be the read-only cache
+        self.assertIsInstance(coro.args[0], MappingProxyType)
+        self.assertEqual(coro.args[0], self.async_cache_map.read_only_cache)
