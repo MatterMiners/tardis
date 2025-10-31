@@ -11,6 +11,7 @@ from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from tardis.interfaces.siteadapter import ResourceStatus, SiteAdapter
 from tardis.utilities.attributedict import AttributeDict
 from tardis.utilities.staticmapping import StaticMapping
+from tardis.utilities.asynccachemap import AsyncCacheMap
 
 logger = logging.getLogger("cobald.runtime.tardis.interfaces.site")
 
@@ -27,17 +28,17 @@ class SatelliteClient:
         secret: str,
         ssl_cert: str,
         machine_pool: list[str],
+        max_age: int,
     ) -> None:
 
         self._base_url = f"https://{host}/api/v2/hosts"
-        self.headers = {
-            "Accept": "application/json",
-            "Foreman-Api-Version": "2",
-        }
         self.ssl_context = ssl.create_default_context(cafile=ssl_cert)
         self.auth = aiohttp.BasicAuth(username, secret)
 
         self.machine_pool = machine_pool
+
+        self.max_age = max_age * 60
+        self.get_status_coroutines = {}
 
     def _host_url(self, remote_resource_uuid: str = "") -> str:
         if remote_resource_uuid == "":
@@ -52,13 +53,17 @@ class SatelliteClient:
         url: str,
         *,
         expect_json: bool = True,
+        headers={
+            "Accept": "application/json",
+            "Foreman-Api-Version": "2",
+        },
         **kwargs,
     ):
         async with session.request(
             method,
             url,
             ssl=self.ssl_context,
-            headers=self.headers,
+            headers=headers,
             **kwargs,
         ) as response:
             response.raise_for_status()
@@ -66,9 +71,26 @@ class SatelliteClient:
                 return await response.json()
             return None
 
-    async def get_status(self, remote_resource_uuid: str) -> dict:
+    async def get_status(self, remote_resource_uuid: str):
         """
-        Return host metadata together with custom parameters and power details.
+        Return cached version of self._get_status().
+
+        :param remote_resource_uuid: Satellite identifier of the host.
+        :type remote_resource_uuid: str
+        :return: Satellite host data enriched with parameters and power state.
+        :rtype: dict
+        """
+        if remote_resource_uuid not in self.get_status_coroutines:
+            self.get_status_coroutines[remote_resource_uuid] = AsyncCacheMap(
+                partial(self._get_status, remote_resource_uuid),
+                max_age=self.max_age,
+            )
+        await self.get_status_coroutines[remote_resource_uuid].update_status()
+        return self.get_status_coroutines[remote_resource_uuid]
+
+    async def _get_status(self, remote_resource_uuid: str) -> dict:
+        """
+        Return host data together with custom parameters and power details.
 
         :param remote_resource_uuid: Satellite identifier of the host.
         :type remote_resource_uuid: str
@@ -101,7 +123,7 @@ class SatelliteClient:
 
     async def set_power(self, state: str, remote_resource_uuid: str) -> dict:
         """
-        Set the power state of a host.
+        Set the power state of a host and update its cached status.
 
         :param state: Desired power state as understood by the Satellite API ["on"|"off"].
         :type state: str
@@ -116,12 +138,17 @@ class SatelliteClient:
 
         async with aiohttp.ClientSession(auth=self.auth) as session:
             logger.info(f"Set power {state} for {remote_resource_uuid}")
-            return await self._request(
+            power_action_result = await self._request(
                 session,
                 "PUT",
                 f"{self._host_url(remote_resource_uuid)}/power",
                 json={"power_action": state},
             )
+            if remote_resource_uuid in self.get_status_coroutines:
+                await self.get_status_coroutines[remote_resource_uuid].update_status(
+                    force=True
+                )
+            return power_action_result
 
     async def get_next_uuid(self) -> str:
         """
@@ -153,7 +180,8 @@ class SatelliteClient:
         self, remote_resource_uuid: str, parameter: str, value: str
     ) -> None:
         """
-        Create or update a Satellite host parameter using lower-case string values only.
+        Create or update a Satellite host parameter using lower-case string values only and
+        updates its cached status.
 
         :param remote_resource_uuid: Satellite identifier of the host.
         :type remote_resource_uuid: str
@@ -189,6 +217,7 @@ class SatelliteClient:
                 logger.info(
                     f"Created satellite parameter {parameter} with value {value} for {remote_resource_uuid}"
                 )
+        await self.get_status_coroutines[remote_resource_uuid].update_status(force=True)
 
 
 class SatelliteAdapter(SiteAdapter):
@@ -206,6 +235,7 @@ class SatelliteAdapter(SiteAdapter):
             secret=self.configuration.secret,
             ssl_cert=self.configuration.ssl_cert,
             machine_pool=self.configuration.machine_pool,
+            max_age=self.configuration.max_age,
         )
 
         key_translator = StaticMapping(

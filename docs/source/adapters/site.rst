@@ -711,6 +711,8 @@ Available adapter configuration options
     +----------------+------------------------------------------------------------------------------------------+-----------------+
     | secret         | Personal access token or password of the Satellite account.                              |  **Required**   |
     +----------------+------------------------------------------------------------------------------------------+-----------------+
+    | max_age        | The result of Satellite API calls are cached for `max_age` in minutes.                   |  **Required**   |
+    +----------------+------------------------------------------------------------------------------------------+-----------------+
     | machine_pool   | Sequence of Satellite host identifiers that form the pool of machines to allocate from.  |  **Required**   |
     |                | Entries must match ``https://<site_name>/api/v2/hosts/<identifier>``.                    |                 |
     +----------------+------------------------------------------------------------------------------------------+-----------------+
@@ -734,6 +736,7 @@ Available adapter configuration options
           username: MaxMustermann
           secret: super-secret-token
           ssl_cert: /path/to/CA/cert.pem
+          max_age: 2
           machine_pool:
             - compute-node-01
             - compute-node-02

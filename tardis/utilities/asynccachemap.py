@@ -30,11 +30,13 @@ class AsyncCacheMap(Mapping):
     def last_update(self) -> datetime:
         return self._last_update
 
-    async def update_status(self) -> None:
+    async def update_status(self, force: bool = False) -> None:
         current_time = datetime.now()
 
         async with self._async_lock:
-            if (current_time - self._last_update) > timedelta(seconds=self._max_age):
+            if (current_time - self._last_update) > timedelta(
+                seconds=self._max_age
+            ) or force:
                 try:
                     data = await self._update_coroutine()
                 except json.decoder.JSONDecodeError as je:
