@@ -38,7 +38,7 @@ class SatelliteClient:
         self.machine_pool = machine_pool
 
         self.max_age = max_age * 60
-        self.get_status_coroutines = {}
+        self.cached_status_coroutines = {}
 
     def _host_url(self, remote_resource_uuid: str = "") -> str:
         if remote_resource_uuid == "":
@@ -71,22 +71,26 @@ class SatelliteClient:
                 return await response.json()
             return None
 
-    async def get_status(self, remote_resource_uuid: str):
+    async def get_status(self, remote_resource_uuid: str, *, force: bool = False):
         """
         Return cached version of self._get_status().
 
         :param remote_resource_uuid: Satellite identifier of the host.
         :type remote_resource_uuid: str
+        :param force: If True, force refresh of cached status.
+        :type force: bool
         :return: Satellite host data enriched with parameters and power state.
         :rtype: dict
         """
-        if remote_resource_uuid not in self.get_status_coroutines:
-            self.get_status_coroutines[remote_resource_uuid] = AsyncCacheMap(
+        if remote_resource_uuid not in self.cached_status_coroutines:
+            self.cached_status_coroutines[remote_resource_uuid] = AsyncCacheMap(
                 partial(self._get_status, remote_resource_uuid),
                 max_age=self.max_age,
             )
-        await self.get_status_coroutines[remote_resource_uuid].update_status()
-        return self.get_status_coroutines[remote_resource_uuid]
+        await self.cached_status_coroutines[remote_resource_uuid].update_status(
+            force=force
+        )
+        return self.cached_status_coroutines[remote_resource_uuid]
 
     async def _get_status(self, remote_resource_uuid: str) -> dict:
         """
@@ -144,11 +148,8 @@ class SatelliteClient:
                 f"{self._host_url(remote_resource_uuid)}/power",
                 json={"power_action": state},
             )
-            if remote_resource_uuid in self.get_status_coroutines:
-                await self.get_status_coroutines[remote_resource_uuid].update_status(
-                    force=True
-                )
-            return power_action_result
+            await self.get_status(remote_resource_uuid, force=True)
+        return power_action_result
 
     async def get_next_uuid(self) -> str:
         """
@@ -191,7 +192,7 @@ class SatelliteClient:
         :type value: str
         """
         value = str(value).lower()
-        status_response = await self.get_status(remote_resource_uuid)
+        status_response = await self.get_status(remote_resource_uuid, force=True)
         parameter_id = status_response.get("parameters", {}).get(f"{parameter}_id")
 
         async with aiohttp.ClientSession(auth=self.auth) as session:
@@ -217,7 +218,7 @@ class SatelliteClient:
                 logger.info(
                     f"Created satellite parameter {parameter} with value {value} for {remote_resource_uuid}"
                 )
-        await self.get_status_coroutines[remote_resource_uuid].update_status(force=True)
+        await self.get_status(remote_resource_uuid, force=True)
 
 
 class SatelliteAdapter(SiteAdapter):
