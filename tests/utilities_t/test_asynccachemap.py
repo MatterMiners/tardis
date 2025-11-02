@@ -21,6 +21,11 @@ class TestAsyncCacheMap(TestCase):
         self.command_failing_async_cache_map = AsyncCacheMap(
             update_coroutine=self.command_failing_update_function
         )
+        self.force_counter = 0
+        self.force_update_async_cache_map = AsyncCacheMap(
+            update_coroutine=self.force_update_function,
+            max_age=999 * 60,
+        )
 
     async def json_failing_update_function(self):
         raise JSONDecodeError(msg="Bla", doc="Blubb", pos=99)
@@ -32,6 +37,10 @@ class TestAsyncCacheMap(TestCase):
 
     async def update_function(self):
         return self.test_data
+
+    async def force_update_function(self):
+        self.force_counter += 1
+        return {"counter": self.force_counter}
 
     def update_status(self):
         run_async(self.async_cache_map.update_status)
@@ -70,6 +79,19 @@ class TestAsyncCacheMap(TestCase):
         self.assertTrue(
             datetime.now() - self.async_cache_map.last_update < timedelta(seconds=1)
         )
+
+    def test_force_update(self):
+        # get initial value (count)
+        run_async(self.force_update_async_cache_map.update_status)
+        self.assertEqual(self.force_update_async_cache_map["counter"], 1)
+
+        # access cached value (no count)
+        run_async(self.force_update_async_cache_map.update_status)
+        self.assertEqual(self.force_update_async_cache_map["counter"], 1)
+
+        # check forced update (count)
+        run_async(self.force_update_async_cache_map.update_status, force=True)
+        self.assertEqual(self.force_update_async_cache_map["counter"], 2)
 
     def test_eq_async_cache_map(self):
         test_cache_map = AsyncCacheMap(
