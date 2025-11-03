@@ -38,6 +38,7 @@ class TestSatelliteAdapter(TestCase):
             ssl_cert="/path/to/cert",
             machine_pool=["testmachine"],
             MachineTypes=["testmachine_type"],
+            max_age=5,
             MachineMetaData=AttributeDict(
                 testmachine_type=AttributeDict(Cores=4, Memory=8, Disk=100)
             ),
@@ -64,15 +65,12 @@ class TestSatelliteAdapter(TestCase):
     def tearDown(self):
         self.mock_satelliteclient.reset_mock()
         self.client.reset_mock()
-    
+
     def test_machine_type(self):
-        self.assertEqual(
-            self.satellite_adapter.machine_type, "testmachine_type"
-        )
+        self.assertEqual(self.satellite_adapter.machine_type, "testmachine_type")
 
     def test_site_name(self):
         self.assertEqual(self.satellite_adapter.site_name, "TestSite")
-    
 
     def test_deploy_resource(self):
         self.assertEqual(
