@@ -21,6 +21,7 @@ class SatelliteClient:
     Async helper for interacting with Satellite instance.
     """
 
+    
     def __init__(
         self,
         host: str,
@@ -39,6 +40,8 @@ class SatelliteClient:
 
         self.max_age = max_age * 60
         self.cached_status_coroutines = {}
+
+        self._nxt_uuid_lock = asyncio.Lock()
 
     def _host_url(self, remote_resource_uuid: str = "") -> str:
         if remote_resource_uuid == "":
@@ -160,19 +163,21 @@ class SatelliteClient:
         :raises TardisResourceStatusUpdateFailed: If no free host is available.
         """
 
-        for host in self.machine_pool:
-            resource_status = await self.get_status(host)
-            parameters = resource_status.get("parameters", {})
-            reserved_status = parameters.get("tardis_reserved", "false")
-            is_not_reserved = reserved_status == "false"
+        
+        async with self._nxt_uuid_lock:
+            for host in self.machine_pool:
+                resource_status = await self.get_status(host)
+                parameters = resource_status.get("parameters", {})
+                reserved_status = parameters.get("tardis_reserved", "false")
+                is_not_reserved = reserved_status == "false"
 
-            power_state = resource_status.get("power", {}).get("state")
-            is_powered_off = power_state == "off"
+                power_state = resource_status.get("power", {}).get("state")
+                is_powered_off = power_state == "off"
 
-            if is_not_reserved and is_powered_off:
-                await self.set_satellite_parameter(host, "tardis_reserved", "true")
-                logger.info(f"Allocated satellite host {host}")
-                return host
+                if is_not_reserved and is_powered_off:
+                    await self.set_satellite_parameter(host, "tardis_reserved", "true")
+                    logger.info(f"Allocated satellite host {host}")
+                    return host
 
         logger.info("No free host found, skipping deployment")
         raise TardisResourceStatusUpdateFailed("no free host found")
