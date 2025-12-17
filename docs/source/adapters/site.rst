@@ -314,9 +314,8 @@ Available machine type configuration options
         accounting_group=tardis
         x509userproxy = /home/tardis/proxy
 
-        request_cpus=${Cores}
-        request_memory=${Memory}
-        request_disk=${Disk}
+        +xcount==${Cores}
+        +maxMemory=${Memory}
 
     The ``Arguments`` contains the following command line arguments, ``--cores``. ``--memory``. ``--disk`` and
     ``--uuid``.
