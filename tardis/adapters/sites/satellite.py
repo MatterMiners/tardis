@@ -175,7 +175,7 @@ class SatelliteClient:
                 is_powered_off = power_state == "off"
 
                 if is_not_reserved and is_powered_off:
-                    await self.set_satellite_parameter(host, "tardis_reserved", "true")
+                    await self.set_satellite_parameter(host, "tardis_reserved", "booting")
                     logger.info(f"Allocated satellite host {host}")
                     return host
 
@@ -303,6 +303,12 @@ class SatelliteAdapter(SiteAdapter):
                 "tardis_reserved",
                 "false",
             )
+        elif status is ResourceStatus.Running and reserved_state == "booting":
+            await self.client.set_satellite_parameter(
+                resource_attributes.remote_resource_uuid,
+                "tardis_reserved",
+                "true",
+            )
         return self.handle_response(
             response,
             resource_status=status,
@@ -374,13 +380,21 @@ class SatelliteAdapter(SiteAdapter):
         :return: Resource status understood by TARDIS.
         :rtype: ResourceStatus
         """
+        if reserved_state == "booting":
+            # booting hosts report as running once their power state flips to on
+            if power_state == "on":
+                return ResourceStatus.Running
+            return ResourceStatus.Booting
+
         if power_state == "on":
             return ResourceStatus.Running
 
         if power_state == "off":
+            # if resource is offline its either in stopping/terminating phase or (still) booting
             if reserved_state == "terminating":
                 return ResourceStatus.Deleted
             if reserved_state == "true":
                 return ResourceStatus.Stopped
 
+        # each other state should be treated as error
         return ResourceStatus.Error

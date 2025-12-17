@@ -691,9 +691,9 @@ Satellite Site Adapter
     available, the adapter is able to boot and shut down the remote resource through the Satellite API.
 
     When a resource is allocated for the first time, it is marked with a ``tardis_reserved`` parameter
-    (values ``true``, ``false`` and ``terminating``) in Satellite. This flag prevents double allocation of
-    offline resources that are still linked to a terminating drone. If TARDIS crashes and its drone database
-    is lost, the parameter has to be reset manually.
+    (values ``booting``, ``true``, ``false`` and ``terminating``) in Satellite. ``booting`` and ``terminating`` are used to
+    identify reserved machines that are currently being booted or terminated. This flag prevents double allocation of not-online resources that are still linked to a
+    booting/terminating drone. If TARDIS crashes and its drone database is lost, the parameter has to be reset manually.
 
 Available adapter configuration options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

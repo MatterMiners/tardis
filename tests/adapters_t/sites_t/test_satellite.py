@@ -119,6 +119,24 @@ class TestSatelliteAdapter(TestCase):
         client = self._assert_resource_status(response, ResourceStatus.Running)
         client.set_satellite_parameter.assert_not_awaited()
 
+    def test_resource_status_running_clears_booting(self):
+        response = {
+            "power": {"state": "on"},
+            "parameters": {"tardis_reserved": "booting"},
+        }
+        client = self._assert_resource_status(response, ResourceStatus.Running)
+        client.set_satellite_parameter.assert_awaited_once_with(
+            self.remote_resource_uuid, "tardis_reserved", "true"
+        )
+
+    def test_resource_status_booting(self):
+        response = {
+            "power": {"state": "off"},
+            "parameters": {"tardis_reserved": "booting"},
+        }
+        client = self._assert_resource_status(response, ResourceStatus.Booting)
+        client.set_satellite_parameter.assert_not_awaited()
+
     def test_resource_status_deleted(self):
         response = {
             "power": {"state": "off"},
