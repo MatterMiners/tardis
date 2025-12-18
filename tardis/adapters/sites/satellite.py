@@ -168,14 +168,16 @@ class SatelliteClient:
             for host in self.machine_pool:
                 resource_status = await self.get_status(host)
                 parameters = resource_status.get("parameters", {})
-                reserved_status = parameters.get("tardis_reserved", "false")
-                is_not_reserved = reserved_status == "false"
+                reservation_state = parameters.get("tardis_reservation_state", "free")
+                is_free = reservation_state == "free"
 
                 power_state = resource_status.get("power", {}).get("state")
                 is_powered_off = power_state == "off"
 
-                if is_not_reserved and is_powered_off:
-                    await self.set_satellite_parameter(host, "tardis_reserved", "booting")
+                if is_free and is_powered_off:
+                    await self.set_satellite_parameter(
+                        host, "tardis_reservation_state", "booting"
+                    )
                     logger.info(f"Allocated satellite host {host}")
                     return host
 
@@ -294,20 +296,22 @@ class SatelliteAdapter(SiteAdapter):
         )
 
         power_state = response.get("power", {}).get("state")
-        reserved_state = response.get("parameters", {}).get("tardis_reserved")
+        reservation_state = response.get("parameters", {}).get(
+            "tardis_reservation_state"
+        )
 
-        status = self._resolve_status(power_state, reserved_state)
+        status = self._resolve_status(power_state, reservation_state)
         if status is ResourceStatus.Deleted:
             await self.client.set_satellite_parameter(
                 resource_attributes.remote_resource_uuid,
-                "tardis_reserved",
-                "false",
+                "tardis_reservation_state",
+                "free",
             )
-        elif status is ResourceStatus.Running and reserved_state == "booting":
+        elif status is ResourceStatus.Running and reservation_state == "booting":
             await self.client.set_satellite_parameter(
                 resource_attributes.remote_resource_uuid,
-                "tardis_reserved",
-                "true",
+                "tardis_reservation_state",
+                "active",
             )
         return self.handle_response(
             response,
@@ -350,7 +354,9 @@ class SatelliteAdapter(SiteAdapter):
         :type resource_attributes: AttributeDict
         """
         await self.client.set_satellite_parameter(
-            resource_attributes.remote_resource_uuid, "tardis_reserved", "terminating"
+            resource_attributes.remote_resource_uuid,
+            "tardis_reservation_state",
+            "terminating",
         )
 
     @contextmanager
@@ -368,19 +374,19 @@ class SatelliteAdapter(SiteAdapter):
             raise
 
     def _resolve_status(
-        self, power_state: Optional[str], reserved_state: Optional[str]
+        self, power_state: Optional[str], reservation_state: Optional[str]
     ) -> ResourceStatus:
         """
         Translate raw Satellite flags into the canonical ``ResourceStatus``.
 
         :param power_state: Reported power state of the host.
         :type power_state: str or None
-        :param reserved_state: Reservation flag managed via host parameters.
-        :type reserved_state: str or None
+        :param reservation_state: Reservation flag managed via host parameters.
+        :type reservation_state: str or None
         :return: Resource status understood by TARDIS.
         :rtype: ResourceStatus
         """
-        if reserved_state == "booting":
+        if reservation_state == "booting":
             # booting hosts report as running once their power state flips to on
             if power_state == "on":
                 return ResourceStatus.Running
@@ -391,9 +397,9 @@ class SatelliteAdapter(SiteAdapter):
 
         if power_state == "off":
             # if resource is offline its either in stopping/terminating phase or (still) booting
-            if reserved_state == "terminating":
+            if reservation_state == "terminating":
                 return ResourceStatus.Deleted
-            if reserved_state == "true":
+            if reservation_state == "active":
                 return ResourceStatus.Stopped
 
         # each other state should be treated as error

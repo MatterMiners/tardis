@@ -114,7 +114,7 @@ class TestSatelliteAdapter(TestCase):
     def test_resource_status_running(self):
         response = {
             "power": {"state": "on"},
-            "parameters": {"tardis_reserved": "false"},
+            "parameters": {"tardis_reservation_state": "free"},
         }
         client = self._assert_resource_status(response, ResourceStatus.Running)
         client.set_satellite_parameter.assert_not_awaited()
@@ -122,17 +122,17 @@ class TestSatelliteAdapter(TestCase):
     def test_resource_status_running_clears_booting(self):
         response = {
             "power": {"state": "on"},
-            "parameters": {"tardis_reserved": "booting"},
+            "parameters": {"tardis_reservation_state": "booting"},
         }
         client = self._assert_resource_status(response, ResourceStatus.Running)
         client.set_satellite_parameter.assert_awaited_once_with(
-            self.remote_resource_uuid, "tardis_reserved", "true"
+            self.remote_resource_uuid, "tardis_reservation_state", "active"
         )
 
     def test_resource_status_booting(self):
         response = {
             "power": {"state": "off"},
-            "parameters": {"tardis_reserved": "booting"},
+            "parameters": {"tardis_reservation_state": "booting"},
         }
         client = self._assert_resource_status(response, ResourceStatus.Booting)
         client.set_satellite_parameter.assert_not_awaited()
@@ -140,19 +140,19 @@ class TestSatelliteAdapter(TestCase):
     def test_resource_status_deleted(self):
         response = {
             "power": {"state": "off"},
-            "parameters": {"tardis_reserved": "terminating"},
+            "parameters": {"tardis_reservation_state": "terminating"},
         }
         client = self._assert_resource_status(response, ResourceStatus.Deleted)
 
         # Deleted resources should have their reservation flag cleared.
         client.set_satellite_parameter.assert_awaited_once_with(
-            self.remote_resource_uuid, "tardis_reserved", "false"
+            self.remote_resource_uuid, "tardis_reservation_state", "free"
         )
 
     def test_resource_status_stopped(self):
         response = {
             "power": {"state": "off"},
-            "parameters": {"tardis_reserved": "true"},
+            "parameters": {"tardis_reservation_state": "active"},
         }
         client = self._assert_resource_status(response, ResourceStatus.Stopped)
         client.set_satellite_parameter.assert_not_awaited()
@@ -160,7 +160,7 @@ class TestSatelliteAdapter(TestCase):
     def test_resource_status_error(self):
         response = {
             "power": {"state": "suspended"},
-            "parameters": {"tardis_reserved": "false"},
+            "parameters": {"tardis_reservation_state": "free"},
         }
         client = self._assert_resource_status(response, ResourceStatus.Error)
         client.set_satellite_parameter.assert_not_awaited()
