@@ -30,6 +30,7 @@ class SatelliteClient:
         ssl_cert: str,
         machine_pool: list[str],
         max_age: int,
+        proxy: Optional[str] = None,
     ) -> None:
 
         self._base_url = f"https://{host}/api/v2/hosts"
@@ -40,6 +41,7 @@ class SatelliteClient:
 
         self.max_age = max_age * 60
         self.cached_status_coroutines = {}
+        self.proxy = proxy if proxy else None
 
         self._nxt_uuid_lock = asyncio.Lock()
 
@@ -67,6 +69,7 @@ class SatelliteClient:
             url,
             ssl=self.ssl_context,
             headers=headers,
+            proxy=self.proxy,
             **kwargs,
         ) as response:
             response.raise_for_status()
@@ -244,6 +247,7 @@ class SatelliteAdapter(SiteAdapter):
             ssl_cert=self.configuration.ssl_cert,
             machine_pool=self.configuration.machine_pool,
             max_age=self.configuration.max_age,
+            proxy=self.configuration.proxy,
         )
 
         key_translator = StaticMapping(

@@ -716,6 +716,8 @@ Available adapter configuration options
     | machine_pool   | Sequence of Satellite host identifiers that form the pool of machines to allocate from.  |  **Required**   |
     |                | Entries must match ``https://<site_name>/api/v2/hosts/<identifier>``.                    |                 |
     +----------------+------------------------------------------------------------------------------------------+-----------------+
+    | proxy          | Optional HTTP/HTTPS proxy URL used for Satellite API calls.                              |  Optional       |
+    +----------------+------------------------------------------------------------------------------------------+-----------------+
 
     The Satellite adapter does not introduce additional machine type specific options.
     Provide ``MachineMetaData`` entries for each machine type to describe cores, memory and disk.
@@ -737,6 +739,7 @@ Available adapter configuration options
           secret: super-secret-token
           ssl_cert: /path/to/CA/cert.pem
           max_age: 2
+          proxy: http://proxy.example.com:3128
           machine_pool:
             - compute-node-01
             - compute-node-02
