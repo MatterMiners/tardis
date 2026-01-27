@@ -2,7 +2,7 @@ from .attributedict import AttributeDict
 
 from contextlib import contextmanager
 from io import StringIO
-from typing import Any, Callable, Dict, List, TypeVar, Tuple
+from typing import Any, Callable, Dict, Optional, TypeVar, Union
 
 
 import csv
@@ -24,11 +24,43 @@ def htcondor_cmd_option_formatter(options: AttributeDict) -> str:
     return cmd_option_formatter(options, prefix="-", separator=" ")
 
 
+def htcondor_status_cmd_composer(
+    attributes: AttributeDict,
+    options: Optional[AttributeDict] = None,
+    constraint: Optional[str] = None,
+) -> str:
+    """
+    Composes an `condor_status` command string from attributes (classads), options,
+    and an optional constraint. This function does not execute the command,
+    it only returns the assembled command string.
+
+    :param attributes: Mapping of attribute names to values, used to construct
+           the `-af:t` argument.
+    :param options: Additional HTCondor command-line options, formatted by
+           `htcondor_cmd_option_formatter`.
+    :param constraint: Constraint expression to filter results
+           (e.g., "PartitionableSlot==True").
+    :return: Fully assembled `condor_status` command string.
+    """
+    attributes_string = f'-af:t {" ".join(attributes.values())}'  # noqa: E231
+
+    cmd = f"condor_status {attributes_string}"
+
+    if constraint:
+        cmd = f"{cmd} -constraint '{constraint}'"
+
+    if options:
+        options_string = htcondor_cmd_option_formatter(options)
+        cmd = f"{cmd} {options_string}"
+
+    return cmd
+
+
 def csv_parser(
     input_csv: str,
-    fieldnames: [List, Tuple],
+    fieldnames: Union[list[str], tuple[str, ...]],
     delimiter: str = "\t",
-    replacements: dict = None,
+    replacements: Optional[dict[str, Any]] = None,
     skipinitialspace: bool = False,
     skiptrailingspace: bool = False,
 ):
@@ -36,17 +68,11 @@ def csv_parser(
     Parses CSV formatted input
 
     :param input_csv: CSV formatted input
-    :type input_csv: str
     :param fieldnames: corresponding field names
-    :type fieldnames: [List, Tuple]
     :param delimiter: delimiter between entries
-    :type delimiter: str
     :param replacements: fields to be replaced
-    :type replacements: dict
     :param skipinitialspace: ignore whitespace immediately following the delimiter
-    :type skipinitialspace: bool
     :param skiptrailingspace: ignore whitespace at the end of each csv row
-    :type skiptrailingspace: bool
     """
     if skiptrailingspace:
         input_csv = "\n".join((line.strip() for line in input_csv.splitlines()))
@@ -89,7 +115,6 @@ def machine_meta_data_translation(
     :param meta_data_translation_mapping: Map used for the translation of meta
            data, contains conversion factors
     :return: Converted meta data with units expected by the OBS
-    :rtype: dict
     """
     try:
         return {
