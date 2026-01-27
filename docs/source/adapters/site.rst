@@ -299,7 +299,7 @@ Available machine type configuration options
     The ``Environment`` contains the following variables, ``TardisDroneCores``. ``TardisDroneMemory``. ``TardisDroneDisk``
     and ``TardisDroneUuid``.
 
-    .. rubric:: Example HTCondor JDL (Grid Universe)
+    .. rubric:: Example HTCondor JDL (Grid Universe for HTCondor-CE)
 
     .. code-block::
 
@@ -316,9 +316,14 @@ Available machine type configuration options
 
         +xcount==${Cores}
         +maxMemory=${Memory}
+        +maxWalltime=1440
 
     The ``Arguments`` contains the following command line arguments, ``--cores``. ``--memory``. ``--disk`` and
     ``--uuid``.
+
+    Specific information on available options for using the HTCondor grid universe to submit jobs to HTCondor-CE can
+    be found in the
+    `HTCondor-CE documentation <https://htcondor.com/htcondor-ce/v24/remote-job-submission/#submit-file-commands>`_.
 
 
 Moab Site Adapter
