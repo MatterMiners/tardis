@@ -9,6 +9,11 @@ CHANGELOG
 [Unreleased] - 2026-01-28
 =========================
 
+Fixed
+-----
+
+* Improved the handling of SSH connection losses
+
 Deprecated
 ----------
 
