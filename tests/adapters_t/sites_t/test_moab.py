@@ -114,8 +114,7 @@ STATE_TRANSLATIONS = [
     ("Vacated", ResourceStatus.Deleted),
 ]
 
-TEST_RESOURCE_STATE_TRANSLATION_RESPONSE = "\n\n".join(
-    f"""
+TEST_RESOURCE_STATE_TRANSLATION_RESPONSE = "\n\n".join(f"""
 <Data>
  <Object>queue</Object>
  <cluster LocalActiveNodes="0" LocalAllocProcs="0" LocalConfigNodes="918" LocalIdleNodes="9" LocalIdleProcs="1336" LocalUpNodes="916" LocalUpProcs="18776" RemoteActiveNodes="0" RemoteAllocProcs="0" RemoteConfigNodes="0" RemoteIdleNodes="0" RemoteIdleProcs="0" RemoteUpNodes="0" RemoteUpProcs="0" time="1583334681"/>
@@ -131,9 +130,7 @@ TEST_RESOURCE_STATE_TRANSLATION_RESPONSE = "\n\n".join(
   <job Account="bw16g013" CompletionCode="CNCLD" EEDuration="2729" GJID="76242{num:02}" Group="ka_etp" JobID="76242{num:02}" JobName="startVM.py" ReqAWDuration="360" ReqProcs="20" StartTime="0" StatPSDed="0.000000" StatPSUtl="0.000000" State="{resource_status}" SubmissionTime="1583331813" SuspendDuration="0" User="ka_qb1555"/>
  </queue>
 </Data>
-"""  # noqa: B950
-    for num, (resource_status, _) in enumerate(STATE_TRANSLATIONS)
-)
+""" for num, (resource_status, _) in enumerate(STATE_TRANSLATIONS))  # noqa: B950
 
 
 class TestMoabAdapter(TestCase):

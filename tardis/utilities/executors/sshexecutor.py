@@ -21,7 +21,6 @@ from asyncstdlib import (
 
 from functools import partial
 
-
 logger = logging.getLogger("cobald.runtime.tardis.utilities.executors.sshexecutor")
 
 
