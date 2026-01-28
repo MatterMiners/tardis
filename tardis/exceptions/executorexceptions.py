@@ -9,6 +9,7 @@ class CommandExecutionFailure(Exception):
         stderr: str,
         stdin: "str | None" = None,
     ):
+        super().__init__(message, exit_code, stdout, stderr, stdin)
         self.message = message
         self.exit_code = exit_code
         self.stdout = stdout
@@ -30,6 +31,6 @@ class ExecutorFailure(Exception):
         description: str,
         executor: object,
     ) -> None:
-        super().__init__(description)
+        super().__init__(description, executor)
         self.description = description
         self.executor = executor

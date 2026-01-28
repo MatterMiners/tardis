@@ -81,7 +81,7 @@ class TestDrone(TestCase):
         self.assertIsNone(run_async(self.drone.database_state))
 
         # testing AttributeError
-        delattr(self.drone.resource_attributes, "drone_uuid")
+        del self.drone.resource_attributes.drone_uuid
         self.assertIsNone(run_async(self.drone.database_state))
 
     def test_demand(self):
