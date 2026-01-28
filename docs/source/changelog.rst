@@ -12,6 +12,7 @@ CHANGELOG
 Fixed
 -----
 
+* Gracefully handle HTCondor Collector restarts in HA setups
 * Improved the handling of SSH connection losses
 
 Deprecated
