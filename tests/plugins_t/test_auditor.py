@@ -90,15 +90,12 @@ class TestAuditor(TestCase):
             drone_uuid=self.drone_uuid,
         )
 
-        builder = self.mock_auditorclientbuilder.return_value
-        builder = builder.address.return_value
-        builder = builder.timeout.return_value
-        self.client = builder.build.return_value
+        self.mock_builder = self.mock_auditorclientbuilder.return_value
+        self.mock_address = self.mock_builder.address.return_value
+        self.mock_timeout = self.mock_address.timeout.return_value
+        self.client = self.mock_timeout.build.return_value
         self.client.add.return_value = async_return()
         self.client.update.return_value = async_return()
-
-        self.client = AsyncMock()
-        self.mock_auditorclientbuilder.return_value.build.return_value = self.client
 
         self.config = config
         self.plugin = Auditor()
@@ -123,43 +120,63 @@ class TestAuditor(TestCase):
 
         self.assertIsNotNone(tls_config, "Client should be created")
 
-    def test_tls_disabled(self):
+    def test_missing_tls_config_raises_error(self):
+        required_tls_paths = ("client_cert_path", "client_key_path", "ca_cert_path")
+
+        self.config.Plugins.Auditor.tls_config.use_tls = True
+
+        for path_key in required_tls_paths:
+            original_value = getattr(self.config.Plugins.Auditor.tls_config, path_key)
+            delattr(self.config.Plugins.Auditor.tls_config, path_key)
+
+            with self.assertRaises(ValueError) as cm:
+                Auditor()
+            self.assertEqual(
+                str(cm.exception), f"Missing TLS configuration: {path_key}"
+            )
+
+            setattr(self.config.Plugins.Auditor.tls_config, path_key, original_value)
+
+    def test_client_build_without_tls(self):
         self.config.Plugins.Auditor.tls_config.use_tls = False
 
-        builder_mock = self.mock_auditorclientbuilder.return_value
-        timeout_mock = builder_mock.address.return_value.timeout.return_value
+        self.mock_auditorclientbuilder.reset_mock()
 
-        with patch.object(timeout_mock, "with_tls") as mock_with_tls:
-            mock_with_tls.return_value = timeout_mock
+        # Re-instantiate to set-up Auditor without TLS
+        Auditor()
 
-            mock_with_tls.assert_not_called()
+        # Check that with_tls was NEVER called
+        self.mock_timeout.with_tls.assert_not_called()
+
+        # Check that build was called directly w/o TLS
+        self.mock_timeout.build.assert_called_once()
 
     @patch(
         "tardis.plugins.auditor.pyauditor.AuditorClientBuilder.build",
         new_callable=AsyncMock,
     )
     def test_notify(self, mock_build):
-        self.mock_auditorclientbuilder.return_value.address.assert_called_with(
+        self.mock_builder.address.assert_called_with(
             self.address,
             self.port,
         )
-        self.mock_auditorclientbuilder.return_value.address.return_value.timeout.assert_called_with(
+        self.mock_address.timeout.assert_called_with(
             self.timeout,
         )
-        self.mock_auditorclientbuilder.return_value.address.return_value.timeout.return_value.with_tls.assert_called_with(
-            self.client_cert_path, self.client_key_path, self.ca_cert_path
+        (
+            self.mock_timeout.with_tls.assert_called_with(
+                self.client_cert_path, self.client_key_path, self.ca_cert_path
+            )
         )
-        mock_client = AsyncMock()
-        mock_build.return_value = mock_client
-        self.plugin._client = mock_client
 
         run_async(
             self.plugin.notify,
             state=AvailableState(),
             resource_attributes=self.test_param,
         )
-        mock_client.add.assert_called_once()
-        mock_client.update.assert_not_called()
+
+        self.client.add.assert_called_once()
+        self.client.update.assert_not_called()
 
         run_async(
             self.plugin.notify,
@@ -167,8 +184,8 @@ class TestAuditor(TestCase):
             resource_attributes=self.test_param,
         )
 
-        self.assertEqual(mock_client.add.call_count, 1)
-        self.assertEqual(mock_client.update.call_count, 1)
+        self.assertEqual(self.client.add.call_count, 1)
+        self.assertEqual(self.client.update.call_count, 1)
 
         # test for no-op
         for state in [
@@ -186,11 +203,11 @@ class TestAuditor(TestCase):
                 state=state,
                 resource_attributes=self.test_param,
             )
-            self.assertEqual(mock_client.add.call_count, 1)
-            self.assertEqual(mock_client.update.call_count, 1)
+            self.assertEqual(self.client.add.call_count, 1)
+            self.assertEqual(self.client.update.call_count, 1)
 
         # test exception handling
-        mock_client.update.side_effect = RuntimeError(
+        self.client.update.side_effect = RuntimeError(
             "Reqwest Error: HTTP status client error (404 Not Found) "
             "for url (http://127.0.0.1:8000/update)"
         )
@@ -200,7 +217,7 @@ class TestAuditor(TestCase):
             resource_attributes=self.test_param,
         )
 
-        mock_client.update.side_effect = RuntimeError(
+        self.client.update.side_effect = RuntimeError(
             "Reqwest Error: HTTP status client error (403 Forbidden) "
             "for url (http://127.0.0.1:8000/update)"
         )
@@ -211,7 +228,7 @@ class TestAuditor(TestCase):
                 resource_attributes=self.test_param,
             )
 
-        mock_client.update.side_effect = RuntimeError("Does not match RegEx")
+        self.client.update.side_effect = RuntimeError("Does not match RegEx")
         with self.assertRaises(RuntimeError):
             run_async(
                 self.plugin.notify,
@@ -219,7 +236,7 @@ class TestAuditor(TestCase):
                 resource_attributes=self.test_param,
             )
 
-        mock_client.update.side_effect = ValueError("Other exception")
+        self.client.update.side_effect = ValueError("Other exception")
         with self.assertRaises(ValueError):
             run_async(
                 self.plugin.notify,
