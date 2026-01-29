@@ -1,20 +1,20 @@
 FROM rockylinux:8
 LABEL maintainer="Manuel Giffels <giffels@gmail.com>"
 
-RUN yum -y install epel-release && yum -y install curl && yum clean all
+RUN dnf -y install epel-release && dnf -y install curl && dnf clean all
 
 RUN curl -sL https://rpm.nodesource.com/setup_18.x | bash -
 
-RUN yum -y update \
-    && yum -y install git \
-                      python39 \
+RUN dnf -y update \
+    && dnf -y install git \
+                      python3.12 \
                       gcc \
-                      python39-devel \
+                      python3.12-devel \
                       nodejs \
                       glibc-langpack-en \
-    && yum clean all
+    && dnf clean all
 
-# Make Python3.9 default
-RUN alternatives --set python3 /usr/bin/python3.9
+# Make Python3.12 default
+RUN alternatives --set python3 /usr/bin/python3.12
 
 SHELL [ "/bin/bash", "--noprofile", "--norc", "-e", "-o", "pipefail", "-c" ]
