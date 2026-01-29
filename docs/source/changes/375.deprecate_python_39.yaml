@@ -1,0 +1,8 @@
+category: deprecated
+summary: "Minimal Python version is 3.10"
+description: |
+  Support for Python versions 3.9 has been depracted. This has no further
+  functional changes for users but reflects the end of life of these versions
+  and allows TARDIS and plugins to drop outdated dependencies and compatibility layers.
+pull requests:
+- 386

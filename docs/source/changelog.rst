@@ -18,6 +18,7 @@ Fixed
 Deprecated
 ----------
 
+* Minimal Python version is 3.10
 * Minimal Python version is 3.9
 
 [0.8.5] - 2025-04-28
