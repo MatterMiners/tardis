@@ -94,7 +94,7 @@ setup(
         "asyncstdlib",
         "async-timeout",
         "typing_extensions",
-        "python-auditor==0.5.0",
+        "python-auditor==0.10.1",
         "tzlocal",
         "pyotp",
         *REST_REQUIRES,
