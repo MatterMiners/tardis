@@ -63,17 +63,16 @@ class Auditor(Plugin):
         )
 
         if use_tls:
-            required_tls_paths = ["client_cert_path", "client_key_path", "ca_cert_path"]
-
-            for path_key in required_tls_paths:
-                if not hasattr(tls_config, path_key):
-                    raise ValueError(f"Missing TLS configuration: {path_key}")
-
-            self._client = client_builder.with_tls(
-                tls_config.client_cert_path,
-                tls_config.client_key_path,
-                tls_config.ca_cert_path,
-            ).build()
+            try:
+                client_builder = client_builder.with_tls(
+                    tls_config.client_cert_path,
+                    tls_config.client_key_path,
+                    tls_config.ca_cert_path,
+                )
+            except AttributeError as ae:
+                raise ValueError(f"Missing TLS configuration: {ae.name}") from None
+            else:
+                self._client = client_builder.build()
             self.logger.debug("TLS configuration completed successfully")
 
         else:
