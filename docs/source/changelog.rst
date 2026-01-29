@@ -9,6 +9,11 @@ CHANGELOG
 [Unreleased] - 2026-01-29
 =========================
 
+Changed
+-------
+
+* Bump python-auditor version to 0.10.1 and add TLS support
+
 Fixed
 -----
 
