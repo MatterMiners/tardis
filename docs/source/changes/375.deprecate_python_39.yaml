@@ -6,3 +6,4 @@ description: |
   and allows TARDIS and plugins to drop outdated dependencies and compatibility layers.
 pull requests:
 - 386
+version: 0.9.0

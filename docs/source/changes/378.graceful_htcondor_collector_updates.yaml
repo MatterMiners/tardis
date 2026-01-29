@@ -1,8 +1,9 @@
 category: fixed
 summary: "Gracefully handle HTCondor Collector restarts in HA setups"
-description: |
-  Gracefully handling HTCondor Collector restarts in HA setups with multiple collectors by utilizing the oldest available 
-  HTCondor for machine status updates to avoid losing resources, since it usually takes some time until they appear 
-  correctly in the HTCondor collector after restarts.
+description: "Gracefully handling HTCondor Collector restarts in HA setups with multiple\
+  \ collectors by utilizing the oldest available \nHTCondor for machine status updates\
+  \ to avoid losing resources, since it usually takes some time until they appear\
+  \ \ncorrectly in the HTCondor collector after restarts.\n"
 pull requests:
 - 378
+version: 0.9.0
