@@ -1,10 +1,30 @@
-.. Created by changelog.py at 2026-01-28, command
+.. Created by changelog.py at 2026-01-29, command
    '/Users/giffler/.cache/pre-commit/repoojtbdlhs/py_env-python3.14/bin/changelog docs/source/changes compile --categories Added Changed Fixed Security Deprecated --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
 #########
 CHANGELOG
 #########
+
+[0.9.0] - 2026-01-29
+====================
+
+Changed
+-------
+
+* Bump python-auditor version to 0.10.1 and add TLS support
+
+Fixed
+-----
+
+* Gracefully handle HTCondor Collector restarts in HA setups
+* Improved the handling of SSH connection losses
+
+Deprecated
+----------
+
+* Minimal Python version is 3.10
+* Minimal Python version is 3.9
 
 [0.8.5] - 2025-04-28
 ====================

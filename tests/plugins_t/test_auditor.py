@@ -163,10 +163,9 @@ class TestAuditor(TestCase):
         self.mock_address.timeout.assert_called_with(
             self.timeout,
         )
-        (
-            self.mock_timeout.with_tls.assert_called_with(
-                self.client_cert_path, self.client_key_path, self.ca_cert_path
-            )
+
+        self.mock_timeout.with_tls.assert_called_with(
+            self.client_cert_path, self.client_key_path, self.ca_cert_path
         )
 
         run_async(

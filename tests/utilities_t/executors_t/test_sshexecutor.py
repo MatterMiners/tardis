@@ -23,7 +23,6 @@ import contextlib
 import logging
 from asyncstdlib import contextmanager as asynccontextmanager
 
-
 DEFAULT_MAX_SESSIONS = 10
 
 
@@ -372,15 +371,13 @@ class TestSSHExecutor(TestCase):
 
             self.mock_asyncssh.reset_mock()
 
-        executor = yaml.safe_load(
-            """
+        executor = yaml.safe_load("""
                    !SSHExecutor
                    host: test_host
                    username: test
                    client_keys:
                     - TestKey
-                   """
-        )
+                   """)
 
         test_yaml_construction(
             executor,
@@ -389,8 +386,7 @@ class TestSSHExecutor(TestCase):
             client_keys=["TestKey"],
         )
 
-        mfa_executor = yaml.safe_load(
-            """
+        mfa_executor = yaml.safe_load("""
                    !SSHExecutor
                    host: test_host
                    username: test
@@ -399,8 +395,7 @@ class TestSSHExecutor(TestCase):
                    mfa_config:
                      - prompt: 'Token: '
                        totp: 123TopSecret
-                   """
-        )
+                   """)
 
         test_yaml_construction(
             mfa_executor,
@@ -479,15 +474,13 @@ class TestDupingSSHExecutor(TestCase):
 
             self.mock_asyncssh.reset_mock()
 
-        executor_to_test = yaml.safe_load(
-            """
+        executor_to_test = yaml.safe_load("""
         !DupingSSHExecutor
         host: test_host
         username: test
         client_keys:
           - TestKey
-        """
-        )
+        """)
 
         test_yaml_construction(
             executor_to_test,
@@ -497,16 +490,14 @@ class TestDupingSSHExecutor(TestCase):
             client_keys=["TestKey"],
         )
 
-        test_executor_w_wrapper = yaml.safe_load(
-            """
+        test_executor_w_wrapper = yaml.safe_load("""
         !DupingSSHExecutor
         host: test_host
         username: test
         client_keys:
           - TestKey
         wrapper: test_wrapper
-        """
-        )
+        """)
 
         test_yaml_construction(
             test_executor_w_wrapper,

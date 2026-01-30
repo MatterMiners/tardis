@@ -1,0 +1,7 @@
+category: changed
+summary: "Bump python-auditor version to 0.10.1 and add TLS support"
+description: |
+  Bump `python-auditor` to version 0.10.1 and add TLS support
+pull requests:
+- 373
+version: 0.9.0
