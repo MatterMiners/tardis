@@ -21,7 +21,6 @@ class SatelliteClient:
     Async helper for interacting with Satellite instance.
     """
 
-    
     def __init__(
         self,
         host: str,
@@ -36,6 +35,10 @@ class SatelliteClient:
         self._base_url = f"https://{host}/api/v2/hosts"
         self.ssl_context = ssl.create_default_context(cafile=ssl_cert)
         self.auth = aiohttp.BasicAuth(username, secret)
+        self.headers = {
+            "Accept": "application/json",
+            "Foreman-Api-Version": "2",
+        }
 
         self.machine_pool = machine_pool
 
@@ -58,17 +61,13 @@ class SatelliteClient:
         url: str,
         *,
         expect_json: bool = True,
-        headers={
-            "Accept": "application/json",
-            "Foreman-Api-Version": "2",
-        },
         **kwargs,
     ):
         async with session.request(
             method,
             url,
             ssl=self.ssl_context,
-            headers=headers,
+            headers=self.headers,
             proxy=self.proxy,
             **kwargs,
         ) as response:
@@ -166,7 +165,6 @@ class SatelliteClient:
         :raises TardisResourceStatusUpdateFailed: If no free host is available.
         """
 
-        
         async with self._nxt_uuid_lock:
             for host in self.machine_pool:
                 resource_status = await self.get_status(host)
@@ -400,7 +398,8 @@ class SatelliteAdapter(SiteAdapter):
             return ResourceStatus.Running
 
         if power_state == "off":
-            # if resource is offline its either in stopping/terminating phase or (still) booting
+            # if resource is offline its either in stopping/terminating
+            # phase or (still) booting
             if reservation_state == "terminating":
                 return ResourceStatus.Deleted
             if reservation_state == "active":
