@@ -2,16 +2,17 @@
 # Metadata for citation of this software according to the CFF format (https://citation-file-format.github.io/)
 cff-version: 1.1.0
 message: If you use this software, please cite it using these metadata.
-title: "MatterMiners/tardis: 0.8.4"
-doi: 10.5281/zenodo.8426261
+title: "MatterMiners/tardis: 0.9.0"
+doi: 10.5281/zenodo.18428389
 authors:
   - given-names: Manuel
     family-names: Giffels
     affiliation: Karlsruhe Institute of Technology
     orcid: https://orcid.org/0000-0003-0193-3032
   - given-names: Max
-    family-names: Fischer
+    family-names: Kuehn
     affiliation: Karlsruhe Institute of Technology
+    orcid: https://orcid.org/0000-0002-3326-1368
   - given-names: Alexander
     family-names: Haas
   - given-names: Stefan
@@ -43,10 +44,13 @@ authors:
   - given-names: Raphael
     family-names: Kleinemühl
     affiliation: University of Wuppertal
+  - given-names: Raghuvar
+    family-names: Vijayakumar
+    affiliation: University of Freiburg
   - given-names: Sebastian
     family-names: Wozniewski
     affiliation: University of Göttingen
-version: 0.8.5
-date-released: 2025-04-28
+version: 0.9.0
+date-released: 2026-01-30
 repository-code: https://github.com/MatterMiners/tardis
 license: MIT
