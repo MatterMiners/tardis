@@ -39,6 +39,7 @@ class TestSatelliteAdapter(TestCase):
             machine_pool=["testmachine"],
             MachineTypes=["testmachine_type"],
             max_age=5,
+            proxy="http://proxy.local:3128",
             MachineMetaData=AttributeDict(
                 testmachine_type=AttributeDict(Cores=4, Memory=8, Disk=100)
             ),
@@ -85,6 +86,17 @@ class TestSatelliteAdapter(TestCase):
 
         self.client.set_power.assert_awaited_once_with(
             state="on", remote_resource_uuid="uuid-new"
+        )
+
+    def test_client_initialization(self):
+        self.mock_satelliteclient.assert_called_once_with(
+            host="https://test.satelliteclient.local",
+            username="TestUser",
+            secret="test123",
+            ssl_cert="/path/to/cert",
+            machine_pool=["testmachine"],
+            max_age=5,
+            proxy="http://proxy.local:3128",
         )
 
     def _assert_resource_status(self, response: dict, expected_status: ResourceStatus):
