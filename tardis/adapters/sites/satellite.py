@@ -127,7 +127,6 @@ class SatelliteClient:
                 f"{self._host_url(remote_resource_uuid)}/power",
                 json={"power_action": state},
             )
-            await self.get_status(remote_resource_uuid, force=True)
         return power_action_result
 
     async def get_next_uuid(self) -> str:
@@ -174,7 +173,7 @@ class SatelliteClient:
         :type value: str
         """
         value = str(value).lower()
-        status_response = await self.get_status(remote_resource_uuid, force=True)
+        status_response = await self.get_status(remote_resource_uuid)
         parameter_id = status_response.get("parameters", {}).get(f"{parameter}_id")
 
         async with aiohttp.ClientSession(auth=self.auth) as session:
@@ -198,7 +197,7 @@ class SatelliteClient:
                 logger.info(
                     f"Created satellite parameter {parameter} with value {value} for {remote_resource_uuid}"
                 )
-        await self.get_status(remote_resource_uuid, force=True)
+        await self.get_status(remote_resource_uuid)
 
 
 class SatelliteAdapter(SiteAdapter):
