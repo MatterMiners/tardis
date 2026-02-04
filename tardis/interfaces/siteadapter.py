@@ -135,7 +135,10 @@ class SiteAdapter(metaclass=ABCMeta):
 
     @staticmethod
     def handle_response(
-        response: dict, key_translator: dict, translator_functions: dict, **additional_content
+        response: dict,
+        key_translator: dict,
+        translator_functions: dict,
+        **additional_content
     ) -> dict:
         """
         Method to handle the responses of the resource provider and translating
