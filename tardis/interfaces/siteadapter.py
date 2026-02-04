@@ -125,7 +125,7 @@ class SiteAdapter(metaclass=ABCMeta):
         return f"{self.site_name.lower()}-{uuid}"
 
     @abstractmethod
-    def handle_exceptions(self):
+    def handle_exceptions(self) -> None:
         """
         Abstract method defining the interface to handle exception occurring
         during interacting with the resource provider.
@@ -135,8 +135,8 @@ class SiteAdapter(metaclass=ABCMeta):
 
     @staticmethod
     def handle_response(
-        response, key_translator: dict, translator_functions: dict, **additional_content
-    ):
+        response: dict, key_translator: dict, translator_functions: dict, **additional_content
+    ) -> dict:
         """
         Method to handle the responses of the resource provider and translating
         it to a uniform format.

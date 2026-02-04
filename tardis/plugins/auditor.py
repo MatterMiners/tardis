@@ -115,7 +115,7 @@ class Auditor(Plugin):
                 else:
                     raise
 
-    def construct_record(self, resource_attributes: AttributeDict):
+    def construct_record(self, resource_attributes: AttributeDict) -> pyauditor.Record:
         """
         Constructs a record from ``resource_attributes``.
 

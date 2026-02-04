@@ -52,7 +52,7 @@ class Configuration(Borg):
         with open(config_file, "r") as config_file:
             self.update_config(yaml.safe_load(config_file))
 
-    def update_config(self, configuration: dict):
+    def update_config(self, configuration: dict) -> None:
         """
         Updates the shared state of the configuration borg
         :param configuration: Dictionary containing the configuration
