@@ -34,10 +34,8 @@ class TelegrafMonitoring(Plugin):
         Push changed state and updated meta-data of the drone into the telegraf server
 
         :param state: New state of the Drone
-        :type state: State
         :param resource_attributes: Contains all meta-data of the Drone (created and
             updated timestamps, dns name, unique id, site_name, machine_type, etc.)
-        :type resource_attributes: AttributeDict
         :return: None
         """
         logger.debug(f"Drone: {str(resource_attributes)} has changed state to {state}")

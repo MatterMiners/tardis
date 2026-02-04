@@ -18,13 +18,9 @@ class PeriodicValue(Simulator):
     ):
         """
         :param period: period of the sine wave in seconds
-        :type period: float
         :param amplitude: amplitude of the sine wave
-        :type amplitude: float
         :param offset: offset of the sine wave
-        :type offset: float
         :param phase: phase of the sine wave in seconds
-        :type phase: float
         """
         self._period = period
         self._amplitude = amplitude
@@ -37,7 +33,6 @@ class PeriodicValue(Simulator):
         Returns the current value relative to the time of initialization.
 
         :return: current value of sine wave
-        :rtype: float
         """
         t = (datetime.now() - self._start_time).total_seconds()
         return self._offset + self._amplitude * sin(

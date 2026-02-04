@@ -25,7 +25,6 @@ class BatchSystemAdapter(metaclass=ABCMeta):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
                 to the host name of the drone.
-        :type drone_uuid: str
         :return: None
         """
         raise NotImplementedError
@@ -38,7 +37,6 @@ class BatchSystemAdapter(metaclass=ABCMeta):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :type drone_uuid: str
         :return: None
         """
         raise NotImplementedError
@@ -50,7 +48,6 @@ class BatchSystemAdapter(metaclass=ABCMeta):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :type drone_uuid: str
         :return: None
         """
         raise NotImplementedError
@@ -64,9 +61,7 @@ class BatchSystemAdapter(metaclass=ABCMeta):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :type drone_uuid: str
         :return: The allocation of a worker node as described above.
-        :rtype: float
         """
         raise NotImplementedError
 
@@ -78,10 +73,8 @@ class BatchSystemAdapter(metaclass=ABCMeta):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :type drone_uuid: str
         :return: The machine status in HTCondor (Available, Draining, Drained,
             NotAvailable)
-        :rtype: MachineStatus
         """
         raise NotImplementedError
 
@@ -94,9 +87,7 @@ class BatchSystemAdapter(metaclass=ABCMeta):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :type drone_uuid: str
         :return: The utilisation of a worker node as described above.
-        :rtype: float
         """
         raise NotImplementedError
 
@@ -109,6 +100,5 @@ class BatchSystemAdapter(metaclass=ABCMeta):
         system.
 
         :return: machine meta data translation mapping
-        :rtype: AttributeDict
         """
         raise NotImplementedError

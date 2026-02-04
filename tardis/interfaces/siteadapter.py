@@ -58,7 +58,6 @@ class SiteAdapter(metaclass=ABCMeta):
         """
         Property to provide access to SiteAdapter specific configuration.
         :return: returns the Site Adapter specific configuration
-        :rtype: AttributeDict
         """
         return getattr(Configuration(), self.site_name)
 
@@ -71,9 +70,7 @@ class SiteAdapter(metaclass=ABCMeta):
         resource provider.
         :param resource_attributes: Contains describing attributes of the resource,
         defined in the :py:class:`~tardis.resources.drone.Drone` implementation!
-        :type resource_attributes: AttributeDict
         :return: Contains updated describing attributes of the resource.
-        :rtype: AttributeDict
         """
         raise NotImplementedError
 
@@ -87,11 +84,8 @@ class SiteAdapter(metaclass=ABCMeta):
         batch system is expecting. Also, the drone_uuid is added  for matching
         drones to actual resources provided in the overlay batch system.
         :param drone_uuid: The unique id which is assigned to every drone on creation
-        :type drone_uuid: str
         :param meta_data_translation_mapping: Mapping used for the meta data translation
-        :type meta_data_translation_mapping: dict
         :return: Translated
-        :rtype: dict
         """
         drone_environment = machine_meta_data_translation(
             self.machine_meta_data, meta_data_translation_mapping
@@ -106,7 +100,6 @@ class SiteAdapter(metaclass=ABCMeta):
         Property that returns the configuration parameter drone_heartbeat_interval.
         It describes the time between two consecutive updates of the drone status.
         :return: The heartbeat interval of the drone
-        :rtype: int
         """
         return self.site_configuration.drone_heartbeat_interval
 
@@ -117,7 +110,6 @@ class SiteAdapter(metaclass=ABCMeta):
         It describes the minimum lifetime before a drone is automatically going
         into draining mode.
         :return: The minimum lifetime of the drone
-        :rtype: int, None
         """
         return self.site_configuration.drone_minimum_lifetime
 
@@ -127,10 +119,8 @@ class SiteAdapter(metaclass=ABCMeta):
         first 10 bytes of uuid4 due to constraints on length of a full DNS name
         (253 bytes).
         :param uuid: The first 10 bytes of a uuid4
-        :type uuid: str
         :return: The drone uuid consisting of the lower case site name and the
         first 10 bytes of uuid4.
-        :rtype: str
         """
         return f"{self.site_name.lower()}-{uuid}"
 
@@ -152,18 +142,14 @@ class SiteAdapter(metaclass=ABCMeta):
         it to a uniform format.
         :param response: A dictionary containing the response of the
         resource provider.
-        :type response: dict
         :param key_translator: A dictionary containing the translation of keys
         of the original response of the provider in keys of the common format.
-        :type key_translator: dict
         :param translator_functions: A dictionary containing functions to
         transform value of the original response of the provider into values of
         the common format.
-        :type translator_functions: dict
         :param additional_content: Additional content to be put into response,
         which is not part of the original response of the resource provider.
         :return: Translated response of the resource provider in a common format.
-        :rtype: dict
         """
         translated_response = AttributeDict()
 
@@ -186,7 +172,6 @@ class SiteAdapter(metaclass=ABCMeta):
         Property to access the machine_meta_data (like cores, memory and disk)
         of a resource.
         :return: The machine_meta_data of a resource.
-        :rtype: AttributeDict
         """
         return self.configuration.MachineMetaData[self.machine_type]
 
@@ -197,7 +182,6 @@ class SiteAdapter(metaclass=ABCMeta):
         that all sub-classes of the SiteAdapter have a _machine_type
         class variable .
         :return: The machine_type of a resource.
-        :rtype: str
         """
         try:
             # noinspection PyUnresolvedReferences
@@ -213,7 +197,6 @@ class SiteAdapter(metaclass=ABCMeta):
         Property to access the machine_type_configuration (arguments of the API
         calls to the provider) of a resource.
         :return: The machine_type_configuration of a resource.
-        :rtype: AttributeDict
         """
         return self.configuration.MachineTypeConfiguration[self.machine_type]
 
@@ -226,9 +209,7 @@ class SiteAdapter(metaclass=ABCMeta):
         at a resource provider.
         :param resource_attributes: Contains describing attributes of the resource,
         defined in the :py:class:`~tardis.resources.drone.Drone` implementation!
-        :type resource_attributes: AttributeDict
         :return: Contains updated describing attributes of the resource.
-        :rtype: AttributeDict
         """
         raise NotImplementedError
 
@@ -247,7 +228,6 @@ class SiteAdapter(metaclass=ABCMeta):
                 drone_minimum_lifetime: 3600
 
         :return: The generic site configuration
-        :rtype: AttributeDict
         """
         for site_configuration in Configuration().Sites:
             if site_configuration.name == self.site_name:
@@ -262,7 +242,6 @@ class SiteAdapter(metaclass=ABCMeta):
         that all sub-classes of the SiteAdapter have a _site_name
         class variable.
         :return: The site_name of a resource.
-        :rtype: str
         """
         try:
             # noinspection PyUnresolvedReferences
@@ -279,7 +258,6 @@ class SiteAdapter(metaclass=ABCMeta):
         provider.
         :param resource_attributes: Contains describing attributes of the resource,
         defined in the :py:class:`~tardis.resources.drone.Drone` implementation!
-        :type resource_attributes: AttributeDict
         :return: None
         """
         raise NotImplementedError
@@ -291,7 +269,6 @@ class SiteAdapter(metaclass=ABCMeta):
         resource provider.
         :param resource_attributes: Contains describing attributes of the resource,
         defined in the :py:class:`~tardis.resources.drone.Drone` implementation!
-        :type resource_attributes: AttributeDict
         :return: None
         """
         raise NotImplementedError

@@ -84,10 +84,8 @@ class Auditor(Plugin):
         `AvailableState` or `DownState`.
 
         :param state: New state of the Drone
-        :type state: State
         :param resource_attributes: Contains all meta-data of the Drone (created and
             updated timestamps, dns name, unique id, site_name, machine_type, etc.)
-        :type resource_attributes: AttributeDict
         :return: None
         """
         self.logger.debug(
@@ -123,7 +121,6 @@ class Auditor(Plugin):
 
         :param resource_attributes: Contains all meta-data of the Drone (created and
             updated timestamps, dns name, unique id, site_name, machine_type, etc.)
-        :type resource_attributes: AttributeDict
         :return: Record
         """
         meta = (
