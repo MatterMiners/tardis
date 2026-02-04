@@ -138,7 +138,7 @@ class SiteAdapter(metaclass=ABCMeta):
         response: dict,
         key_translator: dict,
         translator_functions: dict,
-        **additional_content
+        **additional_content,
     ) -> dict:
         """
         Method to handle the responses of the resource provider and translating
