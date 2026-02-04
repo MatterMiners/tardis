@@ -183,7 +183,7 @@ class SiteAdapter(metaclass=ABCMeta):
         """
         Property to access the machine_type (flavour) of a resource and ensuring
         that all sub-classes of the SiteAdapter have a _machine_type
-        class variable .
+        class variable.
         :return: The machine_type of a resource.
         """
         try:
