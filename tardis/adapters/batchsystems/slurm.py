@@ -25,11 +25,8 @@ async def slurm_status_updater(
     Slurm status update.
 
     :param options: Additional parameters for the ``sinfo`` command
-    :type options: AttributeDict
     :param attributes: Formatting options for ``sinfo``
-    :type attributes: AttributeDict
     :return: Dictionary containing the output of the ``sinfo`` command
-    :rtype: dict
     """
 
     options_string = submit_cmd_option_formatter(options)
@@ -110,7 +107,6 @@ class SlurmAdapter(BatchSystemAdapter):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :type drone_uuid: str
         :return: None
         """
         return
@@ -122,7 +118,6 @@ class SlurmAdapter(BatchSystemAdapter):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :type drone_uuid: str
         :return: None
         """
         await self._slurm_status.update_status()
@@ -142,7 +137,6 @@ class SlurmAdapter(BatchSystemAdapter):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :type drone_uuid: str
         :return: None
         """
         return None
@@ -155,9 +149,7 @@ class SlurmAdapter(BatchSystemAdapter):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :type drone_uuid: str
         :return: Iterable of float containing the ratios
-        :rtype: Iterable[float]
         """
 
         await self._slurm_status.update_status()
@@ -181,9 +173,7 @@ class SlurmAdapter(BatchSystemAdapter):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :type drone_uuid: str
         :return: The allocation of a worker node as described above.
-        :rtype: float
         """
         return max(await self.get_resource_ratios(drone_uuid), default=0.0)
 
@@ -194,10 +184,8 @@ class SlurmAdapter(BatchSystemAdapter):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :type drone_uuid: str
         :return: The machine status in SLURM (Available, Draining, Drained,
             NotAvailable)
-        :rtype: MachineStatus
         """
 
         # '*' means the machine didn't respond for a while
@@ -244,9 +232,7 @@ class SlurmAdapter(BatchSystemAdapter):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :type drone_uuid: str
         :return: The utilization of a worker node as described above.
-        :rtype: float
         """
         return min(await self.get_resource_ratios(drone_uuid), default=0.0)
 
@@ -258,6 +244,5 @@ class SlurmAdapter(BatchSystemAdapter):
         Slurm batch system adapter.
 
         :return: Machine meta data translation mapping
-        :rtype: AttributeDict
         """
         return AttributeDict(Cores=1, Memory=1000, Disk=1000)

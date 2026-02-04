@@ -84,10 +84,8 @@ class Auditor(Plugin):
         `AvailableState` or `DownState`.
 
         :param state: New state of the Drone
-        :type state: State
         :param resource_attributes: Contains all meta-data of the Drone (created and
             updated timestamps, dns name, unique id, site_name, machine_type, etc.)
-        :type resource_attributes: AttributeDict
         :return: None
         """
         self.logger.debug(
@@ -117,13 +115,12 @@ class Auditor(Plugin):
                 else:
                     raise
 
-    def construct_record(self, resource_attributes: AttributeDict):
+    def construct_record(self, resource_attributes: AttributeDict) -> pyauditor.Record:
         """
         Constructs a record from ``resource_attributes``.
 
         :param resource_attributes: Contains all meta-data of the Drone (created and
             updated timestamps, dns name, unique id, site_name, machine_type, etc.)
-        :type resource_attributes: AttributeDict
         :return: Record
         """
         meta = (

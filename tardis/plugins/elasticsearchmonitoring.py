@@ -34,10 +34,8 @@ class ElasticsearchMonitoring(Plugin):
         Pushes drone info at every state change to an ElasticSearch instance.
 
         :param state: New state of the Drone
-        :type state: State
         :param resource_attributes: Contains all meta-data of the Drone (created and
             updated timestamps, dns name, unique id, site_name, machine_type, etc.)
-        :type resource_attributes: AttributeDict
         :return: None
         """
         self.logger.debug(
@@ -64,7 +62,6 @@ class ElasticsearchMonitoring(Plugin):
 
         :param document: Contains all meta-data of the Drone (created and
             updated timestamps, dns name, unique id, site_name, machine_type, etc.)
-        :type document: AttributeDict
         :return: None
         """
         revision = int(
