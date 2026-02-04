@@ -129,7 +129,7 @@ class SatelliteClient:
             )
         return power_action_result
 
-    async def get_next_uuid(self) -> str:
+    async def get_next_host(self) -> str:
         """
         Select the next free host by checking reservation and power state.
 
@@ -245,7 +245,7 @@ class SatelliteAdapter(SiteAdapter):
         :return: Normalised response containing at least the remote UUID.
         :rtype: AttributeDict
         """
-        remote_resource_uuid = await self.client.get_next_uuid()
+        remote_resource_uuid = await self.client.get_next_host()
         await self.client.set_power(
             state="on", remote_resource_uuid=remote_resource_uuid
         )
