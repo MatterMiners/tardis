@@ -48,8 +48,8 @@ class SatelliteClient:
 
         self._nxt_uuid_lock = asyncio.Lock()
 
-    def _host_url(self, remote_resource_uuid: str = "") -> str:
-        if remote_resource_uuid == "":
+    def _host_url(self, remote_resource_uuid: Optional[str] = None) -> str:
+        if not remote_resource_uuid:
             return f"{self._base_url}/"
         resource = remote_resource_uuid.strip("/")
         return f"{self._base_url}/{resource}"
