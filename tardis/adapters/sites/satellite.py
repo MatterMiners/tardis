@@ -59,8 +59,6 @@ class SatelliteClient:
         session: aiohttp.ClientSession,
         method: str,
         url: str,
-        *,
-        expect_json: bool = True,
         **kwargs,
     ):
         async with session.request(
@@ -72,9 +70,7 @@ class SatelliteClient:
             **kwargs,
         ) as response:
             response.raise_for_status()
-            if expect_json:
-                return await response.json()
-            return None
+            return await response.json()
 
     async def get_status(self, remote_resource_uuid: str, *, force: bool = False):
         """
@@ -205,23 +201,21 @@ class SatelliteClient:
 
         async with aiohttp.ClientSession(auth=self.auth) as session:
             if parameter_id is not None:
-                await self._request(
+                _ = await self._request(
                     session,
                     "PUT",
                     f"{self._host_url(remote_resource_uuid)}/parameters/{parameter_id}",
                     json={"value": value},
-                    expect_json=False,
                 )
                 logger.info(
                     f"Updated satellite parameter {parameter} to {value} for {remote_resource_uuid}"
                 )
             else:
-                await self._request(
+                _ = await self._request(
                     session,
                     "POST",
                     f"{self._host_url(remote_resource_uuid)}/parameters",
                     json={"name": parameter, "value": value},
-                    expect_json=False,
                 )
                 logger.info(
                     f"Created satellite parameter {parameter} with value {value} for {remote_resource_uuid}"
