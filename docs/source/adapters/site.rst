@@ -705,7 +705,7 @@ Available adapter configuration options
     +================+==========================================================================================+=================+
     | host           | Hostname of the Satellite server. HTTPS and ``/api/v2/hosts`` are added automatically.   |  **Required**   |
     +----------------+------------------------------------------------------------------------------------------+-----------------+
-    | ssl_cert       | Path to a CA certificate used to validate the Satellite HTTPS endpoint.                  |  **Required**   |
+    | ca_file       | Path to a CA certificate used to validate the Satellite HTTPS endpoint.                  |  **Required**   |
     +----------------+------------------------------------------------------------------------------------------+-----------------+
     | username       | Satellite account used for API access and the corresponding rights.                      |  **Required**   |
     +----------------+------------------------------------------------------------------------------------------+-----------------+
@@ -737,7 +737,7 @@ Available adapter configuration options
           host: satellite.example.com
           username: MaxMustermann
           secret: super-secret-token
-          ssl_cert: /path/to/CA/cert.pem
+          ca_file: /path/to/CA/cert.pem
           max_age: 2
           proxy: http://proxy.example.com:3128
           machine_pool:

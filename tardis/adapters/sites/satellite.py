@@ -26,14 +26,14 @@ class SatelliteClient:
         host: str,
         username: str,
         secret: str,
-        ssl_cert: str,
+        ca_file: str,
         machine_pool: list[str],
         max_age: int,
         proxy: Optional[str] = None,
     ) -> None:
 
         self._base_url = f"https://{host}/api/v2/hosts"
-        self.ssl_context = ssl.create_default_context(cafile=ssl_cert)
+        self.ssl_context = ssl.create_default_context(cafile=ca_file)
         self.auth = aiohttp.BasicAuth(username, secret)
         self.headers = {
             "Accept": "application/json",
@@ -242,7 +242,7 @@ class SatelliteAdapter(SiteAdapter):
             host=self.configuration.host,
             username=self.configuration.username,
             secret=self.configuration.secret,
-            ssl_cert=self.configuration.ssl_cert,
+            ca_file=self.configuration.ca_file,
             machine_pool=self.configuration.machine_pool,
             max_age=self.configuration.max_age,
             proxy=self.configuration.proxy,
