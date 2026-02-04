@@ -11,7 +11,6 @@ from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from tardis.interfaces.siteadapter import ResourceStatus, SiteAdapter
 from tardis.utilities.attributedict import AttributeDict
 from tardis.utilities.staticmapping import StaticMapping
-from tardis.utilities.asynccachemap import AsyncCacheMap
 
 logger = logging.getLogger("cobald.runtime.tardis.interfaces.site")
 
@@ -72,28 +71,7 @@ class SatelliteClient:
             response.raise_for_status()
             return await response.json()
 
-    async def get_status(self, remote_resource_uuid: str, *, force: bool = False):
-        """
-        Return cached version of self._get_status().
-
-        :param remote_resource_uuid: Satellite identifier of the host.
-        :type remote_resource_uuid: str
-        :param force: If True, force refresh of cached status.
-        :type force: bool
-        :return: Satellite host data enriched with parameters and power state.
-        :rtype: dict
-        """
-        if remote_resource_uuid not in self.cached_status_coroutines:
-            self.cached_status_coroutines[remote_resource_uuid] = AsyncCacheMap(
-                partial(self._get_status, remote_resource_uuid),
-                max_age=self.max_age,
-            )
-        await self.cached_status_coroutines[remote_resource_uuid].update_status(
-            force=force
-        )
-        return self.cached_status_coroutines[remote_resource_uuid]
-
-    async def _get_status(self, remote_resource_uuid: str) -> dict:
+    async def get_status(self, remote_resource_uuid: str) -> dict:
         """
         Return host data together with custom parameters and power details.
 
