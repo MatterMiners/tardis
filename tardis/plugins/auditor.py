@@ -120,7 +120,6 @@ class Auditor(Plugin):
 
         :param resource_attributes: Contains all meta-data of the Drone (created and
             updated timestamps, dns name, unique id, site_name, machine_type, etc.)
-        :return: Record
         """
         meta = (
             pyauditor.Meta()
