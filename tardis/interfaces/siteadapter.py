@@ -129,7 +129,6 @@ class SiteAdapter(metaclass=ABCMeta):
         """
         Abstract method defining the interface to handle exception occurring
         during interacting with the resource provider.
-        :return: None
         """
         raise NotImplementedError
 
@@ -261,7 +260,6 @@ class SiteAdapter(metaclass=ABCMeta):
         provider.
         :param resource_attributes: Contains describing attributes of the resource,
         defined in the :py:class:`~tardis.resources.drone.Drone` implementation!
-        :return: None
         """
         raise NotImplementedError
 
@@ -272,6 +270,5 @@ class SiteAdapter(metaclass=ABCMeta):
         resource provider.
         :param resource_attributes: Contains describing attributes of the resource,
         defined in the :py:class:`~tardis.resources.drone.Drone` implementation!
-        :return: None
         """
         raise NotImplementedError

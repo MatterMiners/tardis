@@ -51,7 +51,6 @@ class PrometheusMonitoring(Plugin):
         :param state: New state of the Drone
         :param resource_attributes: Contains all meta-data of the Drone (created and
             updated timestamps, dns name, unique id, site_name, machine_type, etc.)
-        :return: None
         """
         if not self._svr_started:
             await self.start()

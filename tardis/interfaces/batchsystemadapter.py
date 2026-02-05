@@ -25,7 +25,6 @@ class BatchSystemAdapter(metaclass=ABCMeta):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
                 to the host name of the drone.
-        :return: None
         """
         raise NotImplementedError
 
@@ -37,7 +36,6 @@ class BatchSystemAdapter(metaclass=ABCMeta):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :return: None
         """
         raise NotImplementedError
 
@@ -48,7 +46,6 @@ class BatchSystemAdapter(metaclass=ABCMeta):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :return: None
         """
         raise NotImplementedError
 

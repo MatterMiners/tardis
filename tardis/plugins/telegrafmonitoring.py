@@ -36,7 +36,6 @@ class TelegrafMonitoring(Plugin):
         :param state: New state of the Drone
         :param resource_attributes: Contains all meta-data of the Drone (created and
             updated timestamps, dns name, unique id, site_name, machine_type, etc.)
-        :return: None
         """
         logger.debug(f"Drone: {str(resource_attributes)} has changed state to {state}")
         await self.client.connect()

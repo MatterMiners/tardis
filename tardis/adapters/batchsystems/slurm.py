@@ -107,7 +107,6 @@ class SlurmAdapter(BatchSystemAdapter):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :return: None
         """
         return
 
@@ -118,7 +117,6 @@ class SlurmAdapter(BatchSystemAdapter):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :return: None
         """
         await self._slurm_status.update_status()
         try:
@@ -137,7 +135,6 @@ class SlurmAdapter(BatchSystemAdapter):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :return: None
         """
         return None
 

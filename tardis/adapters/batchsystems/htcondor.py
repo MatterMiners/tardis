@@ -236,7 +236,6 @@ class HTCondorAdapter(BatchSystemAdapter):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :return: None
         """
         return
 
@@ -247,7 +246,6 @@ class HTCondorAdapter(BatchSystemAdapter):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :return: None
         """
         await self._htcondor_status.update_status()
         try:
@@ -282,7 +280,6 @@ class HTCondorAdapter(BatchSystemAdapter):
 
         :param drone_uuid: Uuid of the worker node, for some sites corresponding
             to the host name of the drone.
-        :return: None
         """
         return None
 
