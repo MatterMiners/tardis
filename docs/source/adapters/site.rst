@@ -675,20 +675,15 @@ Available machine type configuration options
               Cores: 2
               Memory: 4
 
-.. content-tabs:: left-col
-
-    Your favorite site is currently not supported?
-    Please, have a look at how to contribute.
-
 
 Satellite Site Adapter
 ---------------------
 
 .. content-tabs:: left-col
 
-    The :py:class:`~tardis.adapters.sites.satellite.SatelliteAdapter` integrates with a Satellite instance.
-    Drones run as local processes and claim a free remote host from the configured pool. Once a host is
-    available, the adapter is able to boot and shut down the remote resource through the Satellite API.
+    The :py:class:`~tardis.adapters.sites.satellite.SatelliteAdapter` integrates with a Red Hat Satellite instance.
+    Drones run as local processes and claim a free remote host from the configured pool. Once a remote host is
+    claimed by a drone, the adapter is able to boot and shut down the resource through the Satellite API.
 
     When a resource is allocated for the first time, it is marked with a ``tardis_reservation_state`` parameter
     (values ``free``, ``booting``, ``active`` and ``terminating``) in Satellite. ``booting`` and ``terminating`` are used to
@@ -752,3 +747,11 @@ Available adapter configuration options
               Cores: 16
               Memory: 64
               Disk: 400
+
+
+.. content-tabs:: left-col
+
+    Your favorite site is currently not supported?
+    Please, have a look at how to contribute.
+
+
