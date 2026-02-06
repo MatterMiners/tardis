@@ -221,6 +221,7 @@ class SatelliteAdapter(SiteAdapter):
             state="on", remote_resource_uuid=remote_resource_uuid
         )
 
+        # codeql[py/incorrect-call-arguments]
         return self.handle_response({"remote_resource_uuid": remote_resource_uuid})
 
     async def get_next_host(self) -> str:
