@@ -82,8 +82,8 @@ async def htcondor_get_collector_start_dates(
         to the command.
     :param executor: Executor used to run the ``condor_status`` command
         asynchronously.
-    :return: List of master daemon start time for host running a collector as well.
-        (in datetime format).
+    :return: Returns a dictionary mapping hostnames to master daemon start times
+        (as datetime objects) for hosts that are also running a collector.
     """
     class_ads = AttributeDict(Machine="Machine", DaemonStartTime="DaemonStartTime")
     htcondor_collectors = await htcondor_get_collectors(options, executor)
