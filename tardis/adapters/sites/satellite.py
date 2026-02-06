@@ -45,8 +45,6 @@ class SatelliteClient:
         self.cached_status_coroutines = {}
         self.proxy = proxy if proxy else None
 
-        self._nxt_uuid_lock = asyncio.Lock()
-
     def _host_url(self, remote_resource_uuid: Optional[str] = None) -> str:
         if not remote_resource_uuid:
             return f"{self._base_url}/"
@@ -129,35 +127,6 @@ class SatelliteClient:
             )
         return power_action_result
 
-    async def get_next_host(self) -> str:
-        """
-        Select the next free host by checking reservation and power state.
-
-        :return: Identifier of a reserved and powered-off host ready for use.
-        :rtype: str
-        :raises TardisResourceStatusUpdateFailed: If no free host is available.
-        """
-
-        async with self._nxt_uuid_lock:
-            for host in self.machine_pool:
-                resource_status = await self.get_status(host)
-                parameters = resource_status.get("parameters", {})
-                reservation_state = parameters.get("tardis_reservation_state", "free")
-                is_free = reservation_state == "free"
-
-                power_state = resource_status.get("power", {}).get("state")
-                is_powered_off = power_state == "off"
-
-                if is_free and is_powered_off:
-                    await self.set_satellite_parameter(
-                        host, "tardis_reservation_state", "booting"
-                    )
-                    logger.info(f"Allocated satellite host {host}")
-                    return host
-
-        logger.info("No free host found, skipping deployment")
-        raise TardisResourceStatusUpdateFailed("no free host found")
-
     async def set_satellite_parameter(
         self, remote_resource_uuid: str, parameter: str, value: str
     ) -> None:
@@ -205,6 +174,8 @@ class SatelliteAdapter(SiteAdapter):
     Translate Satellite host lifecycle operations to the SiteAdapter API.
     """
 
+    _next_host_lock = asyncio.Lock()
+
     def __init__(self, machine_type: str, site_name: str):
         self._machine_type = machine_type
         self._site_name = site_name
@@ -245,12 +216,40 @@ class SatelliteAdapter(SiteAdapter):
         :return: Normalised response containing at least the remote UUID.
         :rtype: AttributeDict
         """
-        remote_resource_uuid = await self.client.get_next_host()
+        remote_resource_uuid = await self.get_next_host()
         await self.client.set_power(
             state="on", remote_resource_uuid=remote_resource_uuid
         )
 
         return self.handle_response({"remote_resource_uuid": remote_resource_uuid})
+
+    async def get_next_host(self) -> str:
+        """
+        Select the next free host by checking reservation and power state.
+
+        :return: Identifier of a reserved and powered-off host ready for use.
+        :raises TardisResourceStatusUpdateFailed: If no free host is available.
+        """
+
+        async with SatelliteAdapter._next_host_lock:
+            for host in self.configuration.machine_pool:
+                resource_status = await self.client.get_status(host)
+                parameters = resource_status.get("parameters", {})
+                reservation_state = parameters.get("tardis_reservation_state", "free")
+                is_free = reservation_state == "free"
+
+                power_state = resource_status.get("power", {}).get("state")
+                is_powered_off = power_state == "off"
+
+                if is_free and is_powered_off:
+                    await self.client.set_satellite_parameter(
+                        host, "tardis_reservation_state", "booting"
+                    )
+                    logger.info(f"Allocated satellite host {host}")
+                    return host
+
+        logger.info("No free host found, skipping deployment")
+        raise TardisResourceStatusUpdateFailed("no free host found")
 
     async def resource_status(
         self, resource_attributes: AttributeDict

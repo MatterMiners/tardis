@@ -55,13 +55,13 @@ class TestSatelliteAdapter(TestCase):
             return_value={"status": "running", "id": self.remote_resource_uuid}
         )
 
-        self.client.get_next_host = AsyncMock(return_value="uuid-new")
         self.client.set_power = AsyncMock(return_value=None)
         self.client.set_satellite_parameter = AsyncMock(return_value=None)
 
         self.satellite_adapter = SatelliteAdapter(
             machine_type="testmachine_type", site_name="TestSite"
         )
+        self.satellite_adapter.get_next_host = AsyncMock(return_value="uuid-new")
 
     def tearDown(self):
         self.mock_satelliteclient.reset_mock()
@@ -82,7 +82,7 @@ class TestSatelliteAdapter(TestCase):
             AttributeDict(remote_resource_uuid="uuid-new"),
         )
 
-        self.client.get_next_host.assert_awaited_once()
+        self.satellite_adapter.get_next_host.assert_awaited_once()
 
         self.client.set_power.assert_awaited_once_with(
             state="on", remote_resource_uuid="uuid-new"
