@@ -3,6 +3,7 @@ import asyncio
 
 class StopProcessing(BaseException):
     def __init__(self, last_result):
+        super().__init__(last_result)
         self._last_result = last_result
 
     @property

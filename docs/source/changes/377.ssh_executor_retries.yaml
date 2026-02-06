@@ -1,0 +1,9 @@
+category: fixed
+summary: "Improved the handling of SSH connection losses"
+description: "Improved SSH resilience via configurable retries for connection-related\
+  \ command failures and the implementation of an \nexponential backoff strategy.\
+  \ This transition from linear to exponential delays ensures more responsive initial\
+  \ \nrecovery attempts while maintaining a comparable overall maximum timeout.\n"
+pull requests:
+- 377
+version: 0.9.0

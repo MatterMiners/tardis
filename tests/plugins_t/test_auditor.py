@@ -21,6 +21,8 @@ from unittest.mock import patch
 from tests.utilities.utilities import async_return
 from tests.utilities.utilities import run_async
 
+from unittest.mock import AsyncMock
+
 
 class TestAuditor(TestCase):
     @classmethod
@@ -49,6 +51,10 @@ class TestAuditor(TestCase):
         self.memory = 100
         self.drone_uuid = "test-drone"
         self.machine_type = "test_machine_type"
+        self.use_tls = True
+        self.ca_cert_path = "/path/to/ca.crt"
+        self.client_cert_path = "/path/to/client.crt"
+        self.client_key_path = "/path/to/client.key"
         config = self.mock_config.return_value
         config.Plugins.Auditor = AttributeDict(
             host=self.address,
@@ -61,6 +67,12 @@ class TestAuditor(TestCase):
                     Cores=AttributeDict(HEPSPEC=1.2, BENCHMARK=3.0),
                     Memory=AttributeDict(BLUBB=1.4),
                 )
+            ),
+            tls_config=AttributeDict(
+                use_tls=self.use_tls,
+                ca_cert_path=self.ca_cert_path,
+                client_cert_path=self.client_cert_path,
+                client_key_path=self.client_key_path,
             ),
         )
         config.Sites = [AttributeDict(name=self.site)]
@@ -78,15 +90,16 @@ class TestAuditor(TestCase):
             drone_uuid=self.drone_uuid,
         )
 
-        builder = self.mock_auditorclientbuilder.return_value
-        builder = builder.address.return_value
-        builder = builder.timeout.return_value
-        self.client = builder.build.return_value
+        self.mock_builder = self.mock_auditorclientbuilder.return_value
+        self.mock_address = self.mock_builder.address.return_value
+        self.mock_timeout = self.mock_address.timeout.return_value
+        self.client = self.mock_timeout.build.return_value
         self.client.add.return_value = async_return()
         self.client.update.return_value = async_return()
 
         self.config = config
         self.plugin = Auditor()
+        self.plugin._client = self.client
 
     def test_default_fields(self):
         # Potential future race condition ahead.
@@ -100,27 +113,76 @@ class TestAuditor(TestCase):
         self.assertEqual(plugin._user, "tardis")
         self.assertEqual(plugin._group, "tardis")
 
-    def test_notify(self):
-        self.mock_auditorclientbuilder.return_value.address.assert_called_with(
+    def test_tls_configuration(self):
+        tls_config = self.config.Plugins.Auditor.tls_config
+
+        self.assertTrue(tls_config.use_tls, "TLS should be enabled")
+
+        self.assertIsNotNone(tls_config, "Client should be created")
+
+    def test_missing_tls_config_raises_error(self):
+        required_tls_paths = ("client_cert_path", "client_key_path", "ca_cert_path")
+
+        self.config.Plugins.Auditor.tls_config.use_tls = True
+
+        for path_key in required_tls_paths:
+            original_value = getattr(self.config.Plugins.Auditor.tls_config, path_key)
+            delattr(self.config.Plugins.Auditor.tls_config, path_key)
+
+            with self.assertRaises(ValueError) as cm:
+                Auditor()
+            self.assertEqual(
+                str(cm.exception), f"Missing TLS configuration: {path_key}"
+            )
+
+            setattr(self.config.Plugins.Auditor.tls_config, path_key, original_value)
+
+    def test_client_build_without_tls(self):
+        self.config.Plugins.Auditor.tls_config.use_tls = False
+
+        self.mock_auditorclientbuilder.reset_mock()
+
+        # Re-instantiate to set-up Auditor without TLS
+        Auditor()
+
+        # Check that with_tls was NEVER called
+        self.mock_timeout.with_tls.assert_not_called()
+
+        # Check that build was called directly w/o TLS
+        self.mock_timeout.build.assert_called_once()
+
+    @patch(
+        "tardis.plugins.auditor.pyauditor.AuditorClientBuilder.build",
+        new_callable=AsyncMock,
+    )
+    def test_notify(self, mock_build):
+        self.mock_builder.address.assert_called_with(
             self.address,
             self.port,
         )
-        self.mock_auditorclientbuilder.return_value.address.return_value.timeout.assert_called_with(
+        self.mock_address.timeout.assert_called_with(
             self.timeout,
         )
+
+        self.mock_timeout.with_tls.assert_called_with(
+            self.client_cert_path, self.client_key_path, self.ca_cert_path
+        )
+
         run_async(
             self.plugin.notify,
             state=AvailableState(),
             resource_attributes=self.test_param,
         )
-        self.assertEqual(self.client.add.call_count, 1)
-        self.assertEqual(self.client.update.call_count, 0)
+
+        self.client.add.assert_called_once()
+        self.client.update.assert_not_called()
 
         run_async(
             self.plugin.notify,
             state=DownState(),
             resource_attributes=self.test_param,
         )
+
         self.assertEqual(self.client.add.call_count, 1)
         self.assertEqual(self.client.update.call_count, 1)
 

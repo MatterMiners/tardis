@@ -52,10 +52,10 @@ setup(
         "Topic :: Utilities",
         "Framework :: AsyncIO",
         "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
     ],
     entry_points={
         "console_scripts": [
@@ -77,7 +77,7 @@ setup(
     },
     keywords=package_about["__keywords__"],
     packages=find_packages(exclude=["tests"]),
-    python_requires=">=3.8",
+    python_requires=">=3.10",
     install_requires=[
         "aiohttp",
         get_cryptography_version(),
@@ -94,7 +94,7 @@ setup(
         "asyncstdlib",
         "async-timeout",
         "typing_extensions",
-        "python-auditor==0.5.0",
+        "python-auditor==0.10.1",
         "tzlocal",
         "pyotp",
         *REST_REQUIRES,
