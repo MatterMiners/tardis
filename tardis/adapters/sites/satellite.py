@@ -106,7 +106,8 @@ class SatelliteClient:
         """
         Set the power state of a host and update its cached status.
 
-        :param state: Desired power state as understood by the Satellite API ["on"|"off"].
+        :param state: Desired power state as understood by the
+        Satellite API ["on"|"off"].
         :type state: str
         :param remote_resource_uuid: Satellite identifier of the host.
         :type remote_resource_uuid: str
@@ -131,8 +132,8 @@ class SatelliteClient:
         self, remote_resource_uuid: str, parameter: str, value: str
     ) -> None:
         """
-        Create or update a Satellite host parameter using lower-case string values only and
-        updates its cached status.
+        Create or update a Satellite host parameter using lower-case
+        string values only and updates its cached status.
 
         :param remote_resource_uuid: Satellite identifier of the host.
         :type remote_resource_uuid: str
@@ -154,7 +155,8 @@ class SatelliteClient:
                     json={"value": value},
                 )
                 logger.info(
-                    f"Updated satellite parameter {parameter} to {value} for {remote_resource_uuid}"
+                    f"Updated satellite parameter {parameter}"
+                    f"to {value} for {remote_resource_uuid}"
                 )
             else:
                 _ = await self._request(
@@ -164,7 +166,8 @@ class SatelliteClient:
                     json={"name": parameter, "value": value},
                 )
                 logger.info(
-                    f"Created satellite parameter {parameter} with value {value} for {remote_resource_uuid}"
+                    f"Created satellite parameter {parameter} with"
+                    f"value {value} for {remote_resource_uuid}"
                 )
         await self.get_status(remote_resource_uuid)
 
@@ -256,9 +259,9 @@ class SatelliteAdapter(SiteAdapter):
         self, resource_attributes: AttributeDict
     ) -> AttributeDict:
         """
-        Query Satellite information and translate to ResourceStatus. If the drone
-        is marked as terminating, free the host to be used in the next heartbeat interval.
-
+        Query Satellite information and translate to ResourceStatus. If the
+        drone is marked as terminating, free the host to be used in the next
+        heartbeat interval.
         :param resource_attributes: Attributes describing the tracked drone.
         :type resource_attributes: AttributeDict
         :return: Normalised response containing the translated resource status.
