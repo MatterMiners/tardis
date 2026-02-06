@@ -74,9 +74,7 @@ class SatelliteClient:
         Return host data together with custom parameters and power details.
 
         :param remote_resource_uuid: Satellite identifier of the host.
-        :type remote_resource_uuid: str
         :return: Satellite host data enriched with parameters and power state.
-        :rtype: dict
         """
         async with aiohttp.ClientSession(auth=self.auth) as session:
             host_url = self._host_url(remote_resource_uuid)
@@ -108,11 +106,8 @@ class SatelliteClient:
 
         :param state: Desired power state as understood by the
         Satellite API ["on"|"off"].
-        :type state: str
         :param remote_resource_uuid: Satellite identifier of the host.
-        :type remote_resource_uuid: str
         :return: Raw response from the Satellite power endpoint.
-        :rtype: dict
         """
 
         if state not in ("on", "off"):
@@ -136,11 +131,8 @@ class SatelliteClient:
         string values only and updates its cached status.
 
         :param remote_resource_uuid: Satellite identifier of the host.
-        :type remote_resource_uuid: str
         :param parameter: Name of the parameter to update.
-        :type parameter: str
         :param value: New parameter value.
-        :type value: str
         """
         value = str(value).lower()
         status_response = await self.get_status(remote_resource_uuid)
@@ -215,9 +207,7 @@ class SatelliteAdapter(SiteAdapter):
         Allocate an available host and ensure it is powered on.
 
         :param resource_attributes: Attributes describing the drone to deploy.
-        :type resource_attributes: AttributeDict
         :return: Normalised response containing at least the remote UUID.
-        :rtype: AttributeDict
         """
         remote_resource_uuid = await self.get_next_host()
         await self.client.set_power(
@@ -263,9 +253,7 @@ class SatelliteAdapter(SiteAdapter):
         drone is marked as terminating, free the host to be used in the next
         heartbeat interval.
         :param resource_attributes: Attributes describing the tracked drone.
-        :type resource_attributes: AttributeDict
         :return: Normalised response containing the translated resource status.
-        :rtype: AttributeDict
         """
         response = await self.client.get_status(
             resource_attributes.remote_resource_uuid
@@ -300,9 +288,7 @@ class SatelliteAdapter(SiteAdapter):
         Request a power-off for the resource.
 
         :param resource_attributes: Attributes describing the drone to stop.
-        :type resource_attributes: AttributeDict
         :return: Normalised response including the resulting resource status.
-        :rtype: AttributeDict
         """
         response = await self.client.set_power(
             "off", resource_attributes.remote_resource_uuid
@@ -327,7 +313,6 @@ class SatelliteAdapter(SiteAdapter):
         Flag a host as terminating so a later status check frees it.
 
         :param resource_attributes: Attributes describing the drone to retire.
-        :type resource_attributes: AttributeDict
         """
         await self.client.set_satellite_parameter(
             resource_attributes.remote_resource_uuid,
@@ -342,7 +327,6 @@ class SatelliteAdapter(SiteAdapter):
         no free host is available during deployment.
 
         :return: Context manager yielding control to the caller.
-        :rtype: contextmanager
         """
         try:
             yield
@@ -356,11 +340,8 @@ class SatelliteAdapter(SiteAdapter):
         Translate raw Satellite flags into the canonical ``ResourceStatus``.
 
         :param power_state: Reported power state of the host.
-        :type power_state: str or None
         :param reservation_state: Reservation flag managed via host parameters.
-        :type reservation_state: str or None
         :return: Resource status understood by TARDIS.
-        :rtype: ResourceStatus
         """
         if reservation_state == "booting":
             # booting hosts report as running once their power state flips to on
