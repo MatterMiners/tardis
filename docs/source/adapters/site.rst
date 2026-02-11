@@ -712,8 +712,10 @@ Available adapter configuration options
     +----------------+------------------------------------------------------------------------------------------+-----------------+
     | max_age        | The result of Satellite API calls are cached for `max_age` in minutes.                   |  **Required**   |
     +----------------+------------------------------------------------------------------------------------------+-----------------+
-    | machine_pool   | Sequence of Satellite host identifiers that form the pool of machines to allocate from.  |  **Required**   |
-    |                | Entries must match ``https://<site_name>/api/v2/hosts/<identifier>``.                    |                 |
+    | machine_pool   | Sequence of Satellite host name prefixes that form the allocation pool.                   |  **Required**   |
+    |                | For API calls, each entry is combined with ``domain`` (``<prefix><domain>``).            |                 |
+    +----------------+------------------------------------------------------------------------------------------+-----------------+
+    | domain         | DNS suffix appended to each ``machine_pool`` identifier for Satellite host API lookups. |  **Required**   |
     +----------------+------------------------------------------------------------------------------------------+-----------------+
     | proxy          | Optional HTTP/HTTPS proxy URL used for Satellite API calls.                              |  Optional       |
     +----------------+------------------------------------------------------------------------------------------+-----------------+
@@ -738,6 +740,7 @@ Available adapter configuration options
           secret: super-secret-token
           ca_file: /path/to/CA/cert.pem
           max_age: 2
+          domain: .example.com
           proxy: http://proxy.example.com:3128
           machine_pool:
             - compute-node-01
@@ -757,5 +760,3 @@ Available adapter configuration options
 
     Your favorite site is currently not supported?
     Please, have a look at how to contribute.
-
-

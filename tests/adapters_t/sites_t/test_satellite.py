@@ -37,6 +37,7 @@ class TestSatelliteAdapter(TestCase):
             secret="test123",
             ca_file="/path/to/cert",
             machine_pool=["testmachine"],
+            domain=".test.satelliteclient.local",
             MachineTypes=["testmachine_type"],
             max_age=5,
             proxy="http://proxy.local:3128",
@@ -96,6 +97,7 @@ class TestSatelliteAdapter(TestCase):
             ca_file="/path/to/cert",
             machine_pool=["testmachine"],
             max_age=5,
+            domain=".test.satelliteclient.local",
             proxy="http://proxy.local:3128",
         )
 

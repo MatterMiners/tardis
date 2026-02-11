@@ -28,9 +28,11 @@ class SatelliteClient:
         ca_file: str,
         machine_pool: list[str],
         max_age: int,
+        domain: str,
         proxy: Optional[str] = None,
     ) -> None:
 
+        self.domain = domain
         self._base_url = f"https://{host}/api/v2/hosts"
         self.ssl_context = ssl.create_default_context(cafile=ca_file)
         self.auth = aiohttp.BasicAuth(username, secret)
@@ -48,8 +50,8 @@ class SatelliteClient:
     def _host_url(self, remote_resource_uuid: Optional[str] = None) -> str:
         if not remote_resource_uuid:
             return f"{self._base_url}/"
-        resource = remote_resource_uuid.strip("/")
-        return f"{self._base_url}/{resource}"
+        fqdn = remote_resource_uuid + self.domain
+        return f"{self._base_url}/{fqdn}"
 
     async def _request(
         self,
@@ -182,6 +184,7 @@ class SatelliteAdapter(SiteAdapter):
             ca_file=self.configuration.ca_file,
             machine_pool=self.configuration.machine_pool,
             max_age=self.configuration.max_age,
+            domain=self.configuration.domain,
             proxy=self.configuration.proxy,
         )
 
