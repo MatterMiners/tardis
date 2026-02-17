@@ -5,7 +5,7 @@ from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 from tests.utilities.utilities import run_async
 
 from unittest import TestCase
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, call, patch
 
 
 class TestSatelliteAdapter(TestCase):
@@ -158,10 +158,14 @@ class TestSatelliteAdapter(TestCase):
         }
         client = self._assert_resource_status(response, ResourceStatus.Deleted)
 
-        # Deleted resources should have their reservation flag cleared.
-        client.set_satellite_parameter.assert_awaited_once_with(
-            self.remote_resource_uuid, "tardis_reservation_state", "free"
+        # Deleted resources should clear drone UUID and free reservation.
+        client.set_satellite_parameter.assert_has_awaits(
+            [
+                call(self.remote_resource_uuid, "TardisDroneUuid", ""),
+                call(self.remote_resource_uuid, "tardis_reservation_state", "free"),
+            ]
         )
+        self.assertEqual(client.set_satellite_parameter.await_count, 2)
 
     def test_resource_status_stopped(self):
         response = {
