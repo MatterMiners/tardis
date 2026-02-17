@@ -213,6 +213,9 @@ class SatelliteAdapter(SiteAdapter):
         :return: Normalised response containing at least the remote UUID.
         """
         remote_resource_uuid = await self.get_next_host()
+        await self.client.set_satellite_parameter(
+            remote_resource_uuid, "TardisDroneUuid", resource_attributes.drone_uuid
+        )
         await self.client.set_power(
             state="on", remote_resource_uuid=remote_resource_uuid
         )
@@ -269,6 +272,11 @@ class SatelliteAdapter(SiteAdapter):
 
         status = self._resolve_status(power_state, reservation_state)
         if status is ResourceStatus.Deleted:
+            await self.client.set_satellite_parameter(
+                resource_attributes.remote_resource_uuid,
+                "TardisDroneUuid",
+                "",
+            )
             await self.client.set_satellite_parameter(
                 resource_attributes.remote_resource_uuid,
                 "tardis_reservation_state",
