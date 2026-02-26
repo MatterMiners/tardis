@@ -25,7 +25,6 @@ class FakeBatchSystemAdapter(BatchSystemAdapter):
         FakeBatchSystemAdapter's do nothing disintegrate_machine implementation
 
         :param drone_uuid: Unique identifier of the drone
-        :type drone_uuid: str
         """
         return
 
@@ -34,7 +33,6 @@ class FakeBatchSystemAdapter(BatchSystemAdapter):
         FakeBatchSystemAdapter's do nothing drain_machine implementation
 
         :param drone_uuid: Unique identifier of the drone
-        :type drone_uuid: str
         """
         self._drained_machines[drone_uuid] = MachineStatus.Drained
         return
@@ -44,7 +42,6 @@ class FakeBatchSystemAdapter(BatchSystemAdapter):
         FakeBatchSystemAdapter's do nothing integrate_machine implementation
 
         :param drone_uuid: Unique identifier of the drone
-        :type drone_uuid: str
         """
         return
 
@@ -54,9 +51,7 @@ class FakeBatchSystemAdapter(BatchSystemAdapter):
         FakeBatchSystem
 
         :param drone_uuid: Unique identifier of the drone
-        :type drone_uuid: str
         :return: Allocation value specified in the FakeBatchSystem configuration
-        :rtype: float
         """
         try:
             allocation = self.fake_config.allocation.get_value()
@@ -71,9 +66,7 @@ class FakeBatchSystemAdapter(BatchSystemAdapter):
         configuration of the FakeBatchSystem
 
         :param drone_uuid: Unique identifier of the drone
-        :type drone_uuid: str
         :return: Machine status specified in the FakeBatchSystem configuration
-        :rtype: MachineStatus
         """
         try:
             machine_status = self._drained_machines[drone_uuid]
@@ -88,9 +81,7 @@ class FakeBatchSystemAdapter(BatchSystemAdapter):
         FakeBatchSystem
 
         :param drone_uuid: Unique identifier of the drone
-        :type drone_uuid: str
         :return: utilisation value specified in the FakeBatchSystem configuration
-        :rtype: float
         """
         try:
             utilisation = self.fake_config.utilisation.get_value()
@@ -107,6 +98,5 @@ class FakeBatchSystemAdapter(BatchSystemAdapter):
         FakeBatchSystem adapter.
 
         :return: Machine meta data translation mapping
-        :rtype: AttributeDict
         """
         return AttributeDict(Cores=1, Memory=1, Disk=1)

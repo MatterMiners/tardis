@@ -48,16 +48,14 @@ class Configuration(Borg):
         """
         Loads YAML configuration file into shared state of the configuration borg
         :param config_file: The name of the configuration file to be loaded
-        :type config_file: str
         """
         with open(config_file, "r") as config_file:
             self.update_config(yaml.safe_load(config_file))
 
-    def update_config(self, configuration: dict):
+    def update_config(self, configuration: dict) -> None:
         """
         Updates the shared state of the configuration borg
         :param configuration: Dictionary containing the configuration
-        :type configuration: dict
         """
         self._shared_state.update(
             translate_config(convert_to_attribute_dict(configuration))
