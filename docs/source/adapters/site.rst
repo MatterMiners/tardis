@@ -679,6 +679,83 @@ Available machine type configuration options
               Cores: 2
               Memory: 4
 
+
+Satellite Site Adapter
+---------------------
+
+.. content-tabs:: left-col
+
+    The :py:class:`~tardis.adapters.sites.satellite.SatelliteAdapter` integrates with a Red Hat Satellite instance.
+    Drones run as local processes and claim a free remote host from the configured pool. Once a remote host is
+    claimed by a drone, the adapter is able to boot and shut down the resource through the Satellite API.
+
+    When a resource is allocated for the first time, it is marked with a ``tardis_reservation_state`` parameter
+    (values ``free``, ``booting``, ``active`` and ``terminating``) in Satellite. ``booting`` and ``terminating`` are used to
+    identify reserved machines that are currently being booted or terminated. This flag prevents double allocation of not-online resources that are still linked to a
+    booting/terminating drone. If TARDIS crashes and its drone database is lost, the parameter has to be reset manually.
+
+Available adapter configuration options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. content-tabs:: left-col
+
+    +----------------+------------------------------------------------------------------------------------------+-----------------+
+    | Option         | Short Description                                                                        | Requirement     |
+    +================+==========================================================================================+=================+
+    | host           | Hostname of the Satellite server. HTTPS and ``/api/v2/hosts`` are added automatically.   |  **Required**   |
+    +----------------+------------------------------------------------------------------------------------------+-----------------+
+    | ca_file       | Path to a CA certificate used to validate the Satellite HTTPS endpoint.                  |  **Required**   |
+    +----------------+------------------------------------------------------------------------------------------+-----------------+
+    | username       | Satellite account used for API access and the corresponding rights.                      |  **Required**   |
+    +----------------+------------------------------------------------------------------------------------------+-----------------+
+    | secret         | Personal access token or password of the Satellite account.                              |  **Required**   |
+    +----------------+------------------------------------------------------------------------------------------+-----------------+
+    | max_age        | The result of Satellite API calls are cached for `max_age` in minutes.                   |  **Required**   |
+    +----------------+------------------------------------------------------------------------------------------+-----------------+
+    | machine_pool   | Sequence of Satellite host name prefixes that form the allocation pool.                   |  **Required**   |
+    |                | For API calls, each entry is combined with ``domain`` (``<prefix><domain>``).            |                 |
+    +----------------+------------------------------------------------------------------------------------------+-----------------+
+    | domain         | DNS suffix appended to each ``machine_pool`` identifier for Satellite host API lookups. |  **Required**   |
+    +----------------+------------------------------------------------------------------------------------------+-----------------+
+    | proxy          | Optional HTTP/HTTPS proxy URL used for Satellite API calls.                              |  Optional       |
+    +----------------+------------------------------------------------------------------------------------------+-----------------+
+
+    The Satellite adapter does not introduce additional machine type specific options.
+    Provide ``MachineMetaData`` entries for each machine type to describe cores, memory and disk.
+
+.. content-tabs:: right-col
+
+    .. rubric:: Example configuration
+
+    .. code-block:: yaml
+
+        Sites:
+          - name: SatelliteSite
+            adapter: Satellite
+            quota: 20
+
+        SatelliteSite:
+          host: satellite.example.com
+          username: MaxMustermann
+          secret: super-secret-token
+          ca_file: /path/to/CA/cert.pem
+          max_age: 2
+          domain: .example.com
+          proxy: http://proxy.example.com:3128
+          machine_pool:
+            - compute-node-01
+            - compute-node-02
+          MachineTypes:
+            - machine-type-a
+          MachineTypeConfiguration:
+            machine-type-a: {}
+          MachineMetaData:
+            machine-type-a:
+              Cores: 16
+              Memory: 64
+              Disk: 400
+
+
 .. content-tabs:: left-col
 
     Your favorite site is currently not supported?
