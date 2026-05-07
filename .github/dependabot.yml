@@ -7,3 +7,5 @@ updates:
     reviewers:
       - "giffels"
       - "MatterMiners/review"
+    cooldown:
+      default-days: 7
