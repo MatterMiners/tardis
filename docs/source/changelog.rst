@@ -7,6 +7,14 @@
 CHANGELOG
 #########
 
+[Unreleased] - 2026-05-13
+=========================
+
+Fixed
+-----
+
+* Resolved `sqlite3` datetime deprecation and maintained legacy string formatting
+
 [0.9.0] - 2026-01-29
 ====================
 
