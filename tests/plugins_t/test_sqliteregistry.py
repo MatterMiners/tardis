@@ -3,7 +3,11 @@ import logging
 from tardis.resources.dronestates import BootingState
 from tardis.resources.dronestates import RequestState, DownState
 from tardis.interfaces.state import State
-from tardis.plugins.sqliteregistry import SqliteRegistry
+from tardis.plugins.sqliteregistry import (
+    SqliteRegistry,
+    adapt_datetime_iso,
+    convert_datetime,
+)
 from tardis.utilities.attributedict import AttributeDict
 from tests.utilities.utilities import run_async
 
@@ -100,6 +104,23 @@ class TestSqliteRegistry(TestCase):
             cursor.execute(sql_query)
 
             return cursor.fetchall()
+
+    def test_datetime_adapter_and_converter(self):
+        """
+        Tests that datetime objects are correctly adapted to strings (with space)
+        and converted back to datetime objects
+        """
+        test_dt = datetime.datetime(2023, 5, 13, 12, 30, 45)
+
+        # Test Adapter (Writing)
+        adapted_value = adapt_datetime_iso(test_dt)
+        self.assertEqual(adapted_value, "2023-05-13 12:30:45")
+
+        # 2. Test Converter (Reading)
+        encoded_value = b"2023-05-13 12:30:45"
+        converted_value = convert_datetime(encoded_value)
+        self.assertEqual(converted_value, test_dt)
+        self.assertIsInstance(converted_value, datetime.datetime)
 
     def test_add_machine_types(self):
         test_site_names = (self.test_site_name, self.other_test_site_name)

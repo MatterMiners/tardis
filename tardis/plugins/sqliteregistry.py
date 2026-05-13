@@ -31,8 +31,8 @@ def convert_datetime(value):
     return datetime.fromisoformat(value.decode())
 
 
-sqlite3.register_adapter(datetime, adapt_datetime_iso)
-sqlite3.register_converter("timestamp", convert_datetime)
+sqlite3.register_adapter(datetime, adapt_datetime_iso)  # pragma: no cover
+sqlite3.register_converter("timestamp", convert_datetime)  # pragma: no cover
 
 
 class SqliteRegistry(Plugin):
