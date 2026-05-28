@@ -19,15 +19,15 @@ logger = logging.getLogger("cobald.runtime.tardis.plugins.sqliteregistry")
 # datetime objects to and from SQLite format.
 
 
-# Convert datetime -> SQLite format
-def adapt_datetime_iso(value):
+def adapt_datetime(value: datetime):
+    """Convert datetime -> SQLite format"""
     return value.isoformat(
         sep=" "
     )  # space separator to mimic the sqlite legacy behavior
 
 
-# How to convert SQLite format -> datetime
-def convert_datetime(value):
+def convert_datetime(value: str):
+    """How to convert SQLite format -> datetime"""
     return datetime.fromisoformat(value.decode())
 
 
