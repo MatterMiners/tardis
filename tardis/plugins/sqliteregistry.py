@@ -26,12 +26,12 @@ def adapt_datetime(value: datetime):
     )  # space separator to mimic the sqlite legacy behavior
 
 
-def convert_datetime(value: str):
+def convert_datetime(value: bytes):
     """How to convert SQLite format -> datetime"""
     return datetime.fromisoformat(value.decode())
 
 
-sqlite3.register_adapter(datetime, adapt_datetime_iso)  # pragma: no cover
+sqlite3.register_adapter(datetime, adapt_datetime)  # pragma: no cover
 sqlite3.register_converter("timestamp", convert_datetime)  # pragma: no cover
 
 

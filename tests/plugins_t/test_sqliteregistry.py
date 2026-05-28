@@ -5,7 +5,7 @@ from tardis.resources.dronestates import RequestState, DownState
 from tardis.interfaces.state import State
 from tardis.plugins.sqliteregistry import (
     SqliteRegistry,
-    adapt_datetime_iso,
+    adapt_datetime,
     convert_datetime,
 )
 from tardis.utilities.attributedict import AttributeDict
@@ -113,7 +113,7 @@ class TestSqliteRegistry(TestCase):
         test_dt = datetime.datetime(2023, 5, 13, 12, 30, 45)
 
         # Test Adapter (Writing)
-        adapted_value = adapt_datetime_iso(test_dt)
+        adapted_value = adapt_datetime(test_dt)
         self.assertEqual(adapted_value, "2023-05-13 12:30:45")
 
         # 2. Test Converter (Reading)
