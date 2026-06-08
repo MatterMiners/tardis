@@ -5,12 +5,34 @@ from ..interfaces.state import State
 
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
+from datetime import datetime
 from typing import List, Dict, Generator
 import asyncio
 import logging
 import sqlite3
 
 logger = logging.getLogger("cobald.runtime.tardis.plugins.sqliteregistry")
+
+
+# The sqlite3 module is moving away from automatically converting datetime objects
+# in versions 3.12 and beyond. So we need to explicitly register how to convert
+# datetime objects to and from SQLite format.
+
+
+def adapt_datetime(value: datetime):
+    """Convert datetime -> SQLite format"""
+    return value.isoformat(
+        sep=" "
+    )  # space separator to mimic the sqlite legacy behavior
+
+
+def convert_datetime(value: bytes):
+    """How to convert SQLite format -> datetime"""
+    return datetime.fromisoformat(value.decode())
+
+
+sqlite3.register_adapter(datetime, adapt_datetime)  # pragma: no cover
+sqlite3.register_converter("timestamp", convert_datetime)  # pragma: no cover
 
 
 class SqliteRegistry(Plugin):

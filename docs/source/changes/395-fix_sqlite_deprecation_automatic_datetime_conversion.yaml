@@ -1,0 +1,9 @@
+category: fixed
+summary: "Resolved `sqlite3` datetime deprecation and maintained legacy string formatting"
+description: |
+  Replaced the deprecated default `sqlite3` datetime adapters with explicit registration functions
+  compatible with Python 3.12+. The implementation uses a space separator in ISO strings to
+  ensure backward compatibility with existing database records and consistency with legacy
+  unit test assertions.
+pull requests:
+  - 395
