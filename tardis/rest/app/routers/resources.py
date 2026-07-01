@@ -31,6 +31,19 @@ async def get_resources(
     query_result = await crud.get_resources(sql_registry)
     return query_result
 
+@router.get(
+    "/uuid/{remote_resource_uuid}",
+    description="Get drone UUID for a given remote resource UUID",
+)
+async def get_drone_uuid(
+    remote_resource_uuid: str = Path(...),
+    sql_registry: SqliteRegistry = Depends(database.get_sql_registry()),
+    _: AuthJWT = Security(security.check_authorization, scopes=[Resources.get]),
+):
+    query_result = await crud.get_drone_uuid(sql_registry, remote_resource_uuid)
+    print(query_result)
+    return query_result
+
 
 @router.patch("/{drone_uuid}/drain", description="Gently shut shown drone")
 async def drain_drone(
