@@ -14,13 +14,15 @@ with open(os.path.join(repo_base_dir, "README.md"), "r") as read_me:
 
 TESTS_REQUIRE = ["flake8", "httpx"]
 REST_REQUIRES = [
-    "fastapi-jwt-auth",
     "fastapi>=0.100.0",
-    "python-jose",
+    "fastapi-users[sqlalchemy]>=0.8",
+    "sqlalchemy[asyncio]>=2.0",
+    "aiosqlite>=0.20.0",
     "uvicorn[standard]",
     "typer",
     "bcrypt",
     "python-multipart",
+    "python-jose",
 ]
 
 
