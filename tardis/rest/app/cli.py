@@ -1,6 +1,9 @@
 import typer
 
-from tardis.rest.app.database import get_user_db_engine, get_user_session_factory, init_user_db
+from tardis.rest.app.database import (
+    get_user_session_factory,
+    init_user_db,
+)
 from tardis.rest.app.user_manager import CustomUserManager
 
 app = typer.Typer(help="TARDIS REST API user management")
@@ -9,10 +12,15 @@ app = typer.Typer(help="TARDIS REST API user management")
 @app.command()
 def add(
     username: str = typer.Option(..., prompt=True, help="Username for the new user"),
-    password: str = typer.Option(..., prompt=True, hide_input=True, help="Password for the new user"),
-    scopes: str = typer.Option(None, help="Comma-separated list of scopes (e.g., resources:get,user:get)"),
+    password: str = typer.Option(
+        ..., prompt=True, hide_input=True, help="Password for the new user"
+    ),
+    scopes: str = typer.Option(
+        None, help="Comma-separated list of scopes (e.g., resources:get,user:get)"
+    ),
 ) -> None:
     scope_list = [s.strip() for s in scopes.split(",")] if scopes else []
+
     async def _add():
         await init_user_db()
         session_factory = get_user_session_factory()
@@ -20,11 +28,15 @@ def add(
             user_manager = CustomUserManager(session)
             try:
                 user = await user_manager.create(username, password, scope_list)
-                typer.echo(f"User '{user.user_name}' created successfully with scopes: {scope_list}")
-            except Exception as e:
-                typer.echo(f"Error creating user: {e}", err=True)
-                raise typer.Exit(1)
+                typer.echo(
+                    f"User '{user.user_name}' created successfully with scopes: {scope_list}"
+                )
+            except Exception as err:
+                typer.echo(f"Error creating user: {err}", err=True)
+                raise typer.Exit(1) from None
+
     import asyncio
+
     asyncio.run(_add())
 
 
@@ -41,14 +53,20 @@ def list_users() -> None:
                 return
             typer.echo("Users:")
             for user in users:
-                typer.echo(f"  - {user.user_name} (scopes: {', '.join(user.scopes) if user.scopes else 'none'})")
+                typer.echo(
+                    f"  - {user.user_name} (scopes: {', '.join(user.scopes) if user.scopes else 'none'})"
+                )
+
     import asyncio
+
     asyncio.run(_list())
 
 
 @app.command()
 def delete(
-    username: str = typer.Option(..., prompt=True, help="Username of the user to delete"),
+    username: str = typer.Option(
+        ..., prompt=True, help="Username of the user to delete"
+    ),
 ) -> None:
     async def _delete():
         await init_user_db()
@@ -61,7 +79,9 @@ def delete(
                 raise typer.Exit(1)
             await user_manager.delete(user)
             typer.echo(f"User '{username}' deleted successfully.")
+
     import asyncio
+
     asyncio.run(_delete())
 
 

@@ -1,4 +1,4 @@
-from typing import Annotated, Dict, List
+from typing import Dict, List
 from tardis.exceptions.tardisexceptions import TardisError
 from .. import crud, database, security
 from ....plugins.sqliteregistry import SqliteRegistry

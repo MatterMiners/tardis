@@ -1,5 +1,3 @@
-from typing import Annotated
-
 from .. import crud, database, security
 from ....plugins.sqliteregistry import SqliteRegistry
 from fastapi import APIRouter, Depends, HTTPException, Path, Security, status

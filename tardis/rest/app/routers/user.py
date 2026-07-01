@@ -6,7 +6,10 @@ from pydantic import BaseModel
 from tardis.rest.app.database import get_user_db
 from tardis.rest.app.models import User
 from tardis.rest.app.scopes import User as UserScopes
-from tardis.rest.app.user_manager import CustomUserManager, decode_token, get_user_manager
+from tardis.rest.app.user_manager import (
+    CustomUserManager,
+    decode_token,
+)
 
 router = APIRouter(prefix="/user", tags=["user"])
 
@@ -66,7 +69,9 @@ async def login(
 ):
     async for db in get_user_db():
         user_manager = CustomUserManager(db)
-        user = await user_manager.authenticate(login_user.user_name, login_user.password)
+        user = await user_manager.authenticate(
+            login_user.user_name, login_user.password
+        )
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -149,7 +154,7 @@ async def refresh(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid refresh token",
-        )
+        ) from None
 
 
 class UserResponse(BaseModel):

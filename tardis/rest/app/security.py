@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Security, status
+from fastapi import Depends, HTTPException, status
 from fastapi.security import SecurityScopes
 from fastapi import Request
 from fastapi import Header
