@@ -32,8 +32,8 @@ async def get_resources(
     return query_result
 
 @router.get(
-    "/uuid/{remote_resource_uuid}",
-    description="Get drone UUID for a given remote resource UUID",
+    "/drone_uuid/{remote_resource_uuid}",
+    description="Get drone_uuid for a given remote_resource_uuid",
 )
 async def get_drone_uuid(
     remote_resource_uuid: str = Path(...),
@@ -41,7 +41,10 @@ async def get_drone_uuid(
     _: AuthJWT = Security(security.check_authorization, scopes=[Resources.get]),
 ):
     query_result = await crud.get_drone_uuid(sql_registry, remote_resource_uuid)
-    print(query_result)
+    if not query_result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Remote resource not found"
+        ) from None
     return query_result
 
 
