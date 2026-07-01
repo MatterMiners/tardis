@@ -32,6 +32,25 @@ async def get_resources(
     return query_result
 
 
+@router.get(
+    "/{remote_resource_uuid}/drone_uuid",
+    description="Get drone_uuid for a given remote_resource_uuid",
+)
+async def get_drone_uuid(
+    remote_resource_uuid: str = Path(...),
+    sql_registry: SqliteRegistry = Depends(database.get_sql_registry()),
+    _: AuthJWT = Security(security.check_authorization, scopes=[Resources.get]),
+):
+    query_result = await crud.get_drone_uuid(sql_registry, remote_resource_uuid)
+    try:
+        query_result = query_result[0]
+    except IndexError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Drone not found"
+        ) from None
+    return query_result
+
+
 @router.patch("/{drone_uuid}/drain", description="Gently shut shown drone")
 async def drain_drone(
     drone_uuid: str = Path(..., pattern=r"^\S+-[A-Fa-f0-9]{10}$"),
