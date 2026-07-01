@@ -1,4 +1,3 @@
-from .app.security import DatabaseUser
 from cobald.daemon import service
 from cobald.daemon.plugins import yaml_tag
 import threading
@@ -6,8 +5,6 @@ import threading
 from uvicorn.config import Config
 from uvicorn.server import Server
 
-from functools import lru_cache
-from typing import List, Optional
 import asyncio
 
 
@@ -16,23 +13,16 @@ import asyncio
 class RestService(object):
     def __init__(
         self,
-        users: List = None,
+        user_db_url: str = "sqlite+aiosqlite:///./users.db",
         **fast_api_args,
     ):
-        self._users = users or []
-
-        # necessary to avoid that the TARDIS' logger configuration is overwritten!
         if "log_config" not in fast_api_args:
             fast_api_args["log_config"] = None
 
         self._config = Config("tardis.rest.app.main:app", **fast_api_args)
 
-    @lru_cache(maxsize=16)
-    def get_user(self, user_name: str) -> Optional[DatabaseUser]:
-        for user in self._users:
-            if user["user_name"] == user_name:
-                return DatabaseUser(**user)
-        return None
+        from tardis.rest.app import database
+        database.user_db_url = user_db_url
 
     async def run(self) -> None:
         server = Server(config=self._config)
