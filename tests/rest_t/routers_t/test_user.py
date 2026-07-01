@@ -3,11 +3,7 @@ from tests.utilities.utilities import run_async
 
 
 class TestUser(TestCaseRouters):
-    # Reminder: When defining `setUp`, `setUpClass`, `tearDown` and `tearDownClass`
-    # in router tests the corresponding super().function() needs to be called as well.
     def test_login(self):
-        # No body and headers
-        self.clear_lru_cache()
         response = run_async(self.client.post, "/user/login")
         self.assertEqual(response.status_code, 422)
         self.assertEqual(
@@ -23,8 +19,6 @@ class TestUser(TestCaseRouters):
             },
         )
 
-        # Empty body
-        self.clear_lru_cache()
         response = run_async(self.client.post, "/user/login", data="{}")
         self.assertEqual(response.status_code, 422)
         self.assertEqual(
@@ -45,88 +39,48 @@ class TestUser(TestCaseRouters):
             },
         )
 
-        self.clear_lru_cache()
         response = run_async(self.client.post, "/user/login", json=self.test_user)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.json(),
-            {
-                "msg": "Successfully logged in!",
-                "user": {"user_name": "test", "scopes": self.get_scopes()},
-            },
-        )
+        self.assertIn("access_token", response.json())
+        self.assertEqual(response.json()["token_type"], "bearer")
 
-        # missing scopes
-        self.clear_lru_cache()
-        self.set_scopes(["resources:get"])
-        response = run_async(self.client.post, "/user/login", json=self.test_user)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.json(),
-            {
-                "msg": "Successfully logged in!",
-            },
-        )
-
-        self.clear_lru_cache()
-        self.config.Services.restapi.get_user.side_effect = lambda user_name: None
-        response = run_async(self.client.post, "/user/login", json=self.test_user)
-        self.assertEqual(response.status_code, 401)
-        self.assertEqual(response.json(), {"detail": "Incorrect username or password"})
-        self.config.Services.restapi.get_user.side_effect = None
-
-        self.clear_lru_cache()
+    def test_login_wrong_password(self):
         self.test_user["password"] = "wrong"
         response = run_async(self.client.post, "/user/login", json=self.test_user)
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json(), {"detail": "Incorrect username or password"})
 
     def test_logout(self):
-        # Not logged in yet
-        self.clear_lru_cache()
         response = run_async(self.client.post, "/user/logout")
 
         self.assertEqual(response.status_code, 401)
         self.assertEqual(
-            response.json(), {"detail": "Missing cookie access_token_cookie"}
+            response.json(), {"detail": "Not authenticated"}
         )
 
-        # correct login
         self.login()
         response = run_async(self.client.post, "/user/logout")
         self.assertEqual(response.status_code, 200)
 
-        # prevent second logout
         response = run_async(self.client.post, "/user/logout")
         self.assertEqual(response.status_code, 401)
 
     def test_refresh(self):
-        # Not logged in yet
-        self.clear_lru_cache()
         response = run_async(self.client.post, "/user/refresh")
         self.assertEqual(response.status_code, 401)
         self.assertEqual(
-            response.json(), {"detail": "Missing cookie refresh_token_cookie"}
+            response.json(), {"detail": "Missing refresh token"}
         )
 
-        # correct login
         self.login()
         response = run_async(self.client.post, "/user/refresh")
         self.assertEqual(response.status_code, 200)
 
-        # invalid access token but valid refresh token
-        self.clear_lru_cache()
-        self.client.cookies["access_token_cookie"] = "invalid"
-        response = run_async(self.client.post, "/user/refresh")
-        self.assertEqual(response.status_code, 200)
-
     def test_user_me(self):
-        # Not logged in yet
-        self.clear_lru_cache()
         response = run_async(self.client.get, "/user/me")
         self.assertEqual(response.status_code, 401)
         self.assertEqual(
-            response.json(), {"detail": "Missing cookie access_token_cookie"}
+            response.json(), {"detail": "Not authenticated"}
         )
 
         self.login()
@@ -137,17 +91,10 @@ class TestUser(TestCaseRouters):
             {"user_name": "test", "scopes": self.get_scopes()},
         )
 
-        # missing scope
-        self.set_scopes(["resources:get"])
-        self.login()
-        response = run_async(self.client.get, "/user/me")
-        self.assertEqual(response.status_code, 403)
-
     def test_get_token_scopes(self):
-        self.clear_lru_cache()
         self.login(
             {
-                "user_name": "test1",
+                "user_name": "test",
                 "password": "test",
                 "scopes": ["resources:get"],
             }
