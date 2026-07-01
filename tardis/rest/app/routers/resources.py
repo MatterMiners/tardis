@@ -31,6 +31,7 @@ async def get_resources(
     query_result = await crud.get_resources(sql_registry)
     return query_result
 
+
 @router.get(
     "/{remote_resource_uuid}/drone_uuid",
     description="Get drone_uuid for a given remote_resource_uuid",

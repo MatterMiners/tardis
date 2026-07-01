@@ -49,4 +49,3 @@ async def set_state_to_draining(sql_registry, drone_uuid: str):
     SET state_id = (SELECT state_id FROM ResourceStates WHERE state = 'DrainState')
     WHERE drone_uuid = :drone_uuid"""
     return await sql_registry.async_execute(sql_query, dict(drone_uuid=drone_uuid))
-
