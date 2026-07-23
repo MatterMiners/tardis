@@ -8,7 +8,9 @@ import asyncio
 
 class TestRestService(TestCase):
     def setUp(self) -> None:
-        self.rest_service = RestService()
+        self.rest_service = RestService(
+            user_db_url="sqlite+aiosqlite:///file::memory:?mode=memory&cache=shared&uri=true"
+        )
 
     @patch("tardis.rest.service.Server")
     def test_run(self, mocked_server):
@@ -22,19 +24,8 @@ class TestRestService(TestCase):
             asyncio.run(self.rest_service.run())
         mocked_server.assert_called_with(config=self.rest_service._config)
 
-    def test_get_user(self):
-        self.assertIsNone(self.rest_service.get_user(user_name="test"))
-
-        user = {
-            "user_name": "test",
-            "hashed_password": "1234abcd",
-            "scopes": ["resources:get"],
-        }
-
-        rest_service = RestService(
-            users=[user],
+    def test_user_db_property(self):
+        self.assertEqual(
+            self.rest_service.user_db_url,
+            "sqlite+aiosqlite:///file::memory:?mode=memory&cache=shared&uri=true",
         )
-
-        self.assertEqual(rest_service.get_user(user_name="test"), user)
-
-        self.assertIsNone(rest_service.get_user(user_name="NotExists"))
