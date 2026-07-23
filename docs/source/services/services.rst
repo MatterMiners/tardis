@@ -47,22 +47,23 @@ Services
 REST Service
 ------------
 
-.. content-tabs:: left-col
+.. container:: content-tabs left-col
 
     The :py:class:`~tardis.rest.service.RestService` provides a REST API to access the information stored about managed
-    ``Drones`` inside the :py:class:`~tardis.plugins.sqliteregistry.SqliteRegistry` plugin. Currently access is read
-    only and limited to either list all managed resources or to get the state of a particular resource. All supported
-    REST API calls and their parameters are described in REST API documentation available on
+    ``Drones`` inside the :py:class:`~tardis.plugins.sqliteregistry.SqliteRegistry` plugin. The REST API supports
+    listing resources, getting resource states, and draining resources. All supported REST API calls and their
+    parameters are described in REST API documentation available on
     ``http://<hostname>:<port>/docs`` after starting the service. The REST service is using JSON Web Token (JWT) and
     OAuth2 scopes for authentication and authorization.
 
     .. note::
 
-        The REST service currently supports only read access to the
-        :py:class:`~tardis.plugins.sqliteregistry.SqliteRegistry` using the ``resources:get`` OAuth2 scope. However,
-        this could be extended in the future to support also DB updates and deletions using ``resources:put`` and
-        ``resources:delete`` OAuth2 scopes. In addition, plans exist to store the ``TARDIS`` configuration in a
-        database as well and allow to use the REST service to perform configuration updates at run time.
+        The REST API supports two authentication methods:
+
+        1. **Cookie-based** (default for browser clients) — ``POST /user/login``
+           returns tokens as httponly cookies
+        2. **Bearer token** (for programmatic access) — obtain token via
+           ``POST /user/token`` and use in ``Authorization: Bearer <token>`` header
 
 
     .. warning::
@@ -70,37 +71,35 @@ REST Service
         In order to enable the :py:class:`~tardis.rest.service.RestService`, the
         :py:class:`~tardis.plugins.sqliteregistry.SqliteRegistry` plugin has to be enabled as well.
 
+.. Ugly fix for the left column to be aligned with the right column. The left
+   column is a bit higher than the right column, so we add some padding to the
+   left column to make it look better. This is a temporary fix and should be
+   removed when the left column is aligned with the right column.
 
-Available configuration options
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. raw:: html
 
-.. content-tabs:: left-col
+   <h3 style="grid-column: 1 / -1; width: 100%; text-align: left; display: block; clear: both; margin-top: 2rem;">Available configuration options</h3>
+
+.. container:: content-tabs left-col
 
     .. table:: General options available to configure the REST service
 
         +----------------+-------------------------------------------------------------------+-----------------+
-        | Option         | Short Description                                                 | Requirement     |
+        | Option         | Short Description                                                 |   Requirement   |
         +================+===================================================================+=================+
         | host           | Hostname or IP the REST Service is listening on                   |  **Required**   |
         +----------------+-------------------------------------------------------------------+-----------------+
         | port           | Port the REST Service is listening on                             |  **Required**   |
         +----------------+-------------------------------------------------------------------+-----------------+
-        | users          | List of user entries allowed to use the REST service. (see below) | **Required**    |
+        | user_db_url    | SQLAlchemy database URL for user storage                          |  **Required**   |
         +----------------+-------------------------------------------------------------------+-----------------+
 
-    .. table:: Options available to the user entries
+    .. note::
 
-        +-----------------+-------------------------------------------------+-----------------+
-        | Option          | Short Description                               | Requirement     |
-        +=================+=================================================+=================+
-        | user_name       | The name of the user                            | **Required**    |
-        +-----------------+-------------------------------------------------+-----------------+
-        | hashed_password | The ``bcrypt`` hashed password of that user     | **Required**    |
-        +-----------------+-------------------------------------------------+-----------------+
-        | scopes          | List of scopes the user is allowed to request.  | **Required**    |
-        +-----------------+-------------------------------------------------+-----------------+
+        The ``user_db_url`` uses SQLAlchemy async database URL syntax.
+        For SQLite: ``sqlite+aiosqlite:///path/to/users.db``
 
-.. content-tabs:: right-col
+.. container:: content-tabs right-col
 
     .. rubric:: Example configuration
 
@@ -111,26 +110,116 @@ Available configuration options
             !TardisRestApi
             host: 127.0.0.1
             port: 1234
-            users:
-              - user_name: tardis
-                hashed_password: $2b$12$c9SSllh1U6tOhIo37sDWF.kdRIU5RQAAOHL9bVYMs2.HluyFE43Uq
-                scopes:
-                 - resources:get
+            user_db_url: sqlite+aiosqlite:///users.db
         Plugins:
           SqliteRegistry:
             db_file: drone_registry.db
 
+REST API Endpoints
+~~~~~~~~~~~~~~~~~~
+
+.. container:: content-tabs left-col
+
+    .. table:: User endpoints
+
+        +--------+------------------+----------------------------------------------+-----------------+
+        | Method | Endpoint         | Description                                  | Required Scope  |
+        +========+==================+==============================================+=================+
+        | POST   | /user/login      | Authenticate (browser clients using cookies) | —               |
+        +--------+------------------+----------------------------------------------+-----------------+
+        | POST   | /user/token      | Get bearer token (non-browser clients)       | —               |
+        +--------+------------------+----------------------------------------------+-----------------+
+        | POST   | /user/logout     | Clear authentication cookies                 | Requires auth   |
+        +--------+------------------+----------------------------------------------+-----------------+
+        | POST   | /user/refresh    | Refresh access token (cookies)               | Requires auth   |
+        +--------+------------------+----------------------------------------------+-----------------+
+        | GET    | /user/me         | Get current user info                        | user:get        |
+        +--------+------------------+----------------------------------------------+-----------------+
+        | GET    | /user/scopes     | Get current user's scopes                    | Requires auth   |
+        +--------+------------------+----------------------------------------------+-----------------+
+
+    .. table:: Resource endpoints
+
+        +--------+-------------------------------+------------------+-----------------+
+        | Method | Endpoint                      | Description      | Required Scope  |
+        +========+===============================+==================+=================+
+        | GET    | /resources/                   | List resources   | resources:get   |
+        +--------+-------------------------------+------------------+-----------------+
+        | GET    | /resources/{uuid}/state       | Get state        | resources:get   |
+        +--------+-------------------------------+------------------+-----------------+
+        | PATCH  | /resources/{uuid}/drain       | Drain resource   | resources:patch |
+        +--------+-------------------------------+------------------+-----------------+
+
+    .. table:: Types endpoints
+
+        +--------+---------------------------+------------------------------+-----------------+
+        | Method | Endpoint                  | Description                  | Required Scope  |
+        +========+===========================+==============================+=================+
+        | GET    | /types/states             | List available states        | resources:get   |
+        +--------+---------------------------+------------------------------+-----------------+
+        | GET    | /types/sites              | List available sites         | resources:get   |
+        +--------+---------------------------+------------------------------+-----------------+
+        | GET    | /types/machine_types      | List available machine types | resources:get   |
+        +--------+---------------------------+------------------------------+-----------------+
+
+    **Quick start:**
+
+    1. Configure the REST service with ``user_db_url`` pointing to your user database
+    2. Create a user: ``tardis-rest-admin add --user-db-url <url> --username <user> --password <pass> --scopes resources:get,resources:patch,user:get``
+    3. Authenticate: ``POST /user/login`` with credentials to obtain cookies
+    4. Make API requests using the session cookies
+
+.. container:: content-tabs right-col
+
+    .. rubric:: Example API calls
+
+    **Login (receives tokens as httponly cookies):**
+
+    .. code-block:: bash
+
+        curl -X POST http://127.0.0.1:1234/user/login \
+          -H "Content-Type: application/json" \
+          -d '{"user_name": "tardis", "password": "secret"}' \
+          -c cookies.txt
+
+    **Get access token as JSON (alternative to login):**
+
+    .. code-block:: bash
+
+        curl -X POST http://127.0.0.1:1234/user/token \
+          -H "Content-Type: application/json" \
+          -d '{"user_name": "tardis", "password": "secret"}'
+
+    **Use token from JSON response:**
+
+    .. code-block:: bash
+
+        curl http://127.0.0.1:1234/resources/ \
+          -H "Authorization: Bearer <access_token>"
+
+    **Access with cookies:**
+
+    .. code-block:: bash
+
+        curl http://127.0.0.1:1234/resources/ -b cookies.txt
+
+    **Logout:**
+
+    .. code-block:: bash
+
+        curl -X POST http://127.0.0.1:1234/user/logout -b cookies.txt
+
 Available logging configuration options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. content-tabs:: left-col
+.. container:: content-tabs left-col
 
     The REST service uses ``uvicorn`` as ASGI server, which provides some additional logging functionality. By default
     the access and errors logs are written into the regular ``TARDIS`` logfile. However, it can be configured to write
     both access and error logs into a separate file. Therefore, an ``uvicorn`` logger needs to be configured. See the
     example logging configuration.
 
-.. content-tabs:: right-col
+.. container:: content-tabs right-col
 
     .. rubric:: Example logging configuration
 
@@ -171,28 +260,48 @@ Available logging configuration options
 Convenience Tools
 ~~~~~~~~~~~~~~~~~
 
-Hash Credentials
-""""""""""""""""
+User Management
+"""""""""""""""
 
-.. content-tabs:: left-col
+.. container:: content-tabs left-col
 
-    The ``hash_credentials`` command provides an easy way to create password hashes using `bcrypt` to be used in the
-    REST service configuration (:ref:`see above<REST Service>`).
+    The ``tardis-rest-admin`` command provides user management functionality for the REST API.
 
-    .. table:: Arguments available to `hash_credentials`
+    .. table:: Available commands
 
-        +-----------------+--------------------------------------------------------------+-----------------+
-        | Argument        | Short Description                                            | Requirement     |
-        +=================+==============================================================+=================+
-        | password        | The password to be hashed using bcrypt                       | **Required**    |
-        +-----------------+--------------------------------------------------------------+-----------------+
+        +------------+------------------------------------------------+-----------------------------------------+
+        | Command    | Short Description                              | Available Options                       |
+        +============+================================================+=========================================+
+        | add        | Create a new user                              | --username, --password, --scopes <list> |
+        +------------+------------------------------------------------+-----------------------------------------+
+        | list-users | List all users                                 |                                         |
+        +------------+------------------------------------------------+-----------------------------------------+
+        | delete     | Delete a user                                  | --username                              |
+        +------------+------------------------------------------------+-----------------------------------------+
 
-.. content-tabs:: right-col
+    All commands require ``--user-db-url`` to specify the user database.
 
-    .. rubric:: Examples
+.. container:: content-tabs right-col
 
-    .. code-block:: shell
+    .. rubric:: Example usage
 
-        hash_credentials TopSecretPassword
-        #alternatively
-        python -m tardis.rest.hash_credentials TopSecretPassword
+    .. code-block:: bash
+
+        # Add user
+        tardis-rest-admin --user-db-url sqlite+aiosqlite:///users.db \
+          add \
+          --username admin --password secret \
+          --scopes resources:get,resources:patch,user:get
+
+    .. code-block:: bash
+
+        # List users
+        tardis-rest-admin --user-db-url sqlite+aiosqlite:///users.db \
+          list-users
+
+    .. code-block:: bash
+
+        # Delete user
+        tardis-rest-admin --user-db-url sqlite+aiosqlite:///users.db \
+          delete \
+          --username admin
