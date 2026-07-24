@@ -1,7 +1,9 @@
 import secrets
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from bcrypt import checkpw, gensalt, hashpw
+from jose import jwt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -81,9 +83,6 @@ class CustomUserManager:
         return self._create_token(data, expires_delta)
 
     def _create_token(self, data: dict, expires_delta: int) -> str:
-        from jose import jwt
-        from datetime import datetime, timedelta, timezone
-
         expire = datetime.now(timezone.utc) + timedelta(seconds=expires_delta)
         data["exp"] = expire
         return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
@@ -94,6 +93,4 @@ def get_user_manager(user_db: AsyncSession) -> CustomUserManager:
 
 
 def decode_token(token: str) -> dict:
-    from jose import jwt
-
     return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
