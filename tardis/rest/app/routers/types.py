@@ -2,7 +2,7 @@ from typing import Dict, List
 from tardis.exceptions.tardisexceptions import TardisError
 from .. import crud, database, security
 from ....plugins.sqliteregistry import SqliteRegistry
-from fastapi import APIRouter, Depends, Security
+from fastapi import APIRouter, Depends, Security, HTTPException, status
 from fastapi.security import SecurityScopes
 
 from ..models import User
@@ -25,8 +25,6 @@ async def get_current_user_with_scope(
     security_scopes: SecurityScopes = None,
 ) -> User:
     if user is None:
-        from fastapi import HTTPException, status
-
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",

@@ -44,7 +44,7 @@ class CustomUserManager:
         return user
 
     async def create(
-        self, user_name: str, password: str, scopes: Optional[list] = None
+        self, user_name: str, password: str, scopes: Optional[list[str]] = None
     ) -> User:
         user = User(
             user_name=user_name,
@@ -65,7 +65,7 @@ class CustomUserManager:
         return list(result.scalars().all())
 
     def create_access_token(
-        self, user: User, expires_delta: int = 900, scopes: list = None
+        self, user: User, expires_delta: int = 900, scopes: Optional[list[str]] = None
     ) -> str:
         data = {
             "sub": str(user.id),
