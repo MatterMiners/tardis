@@ -1,6 +1,14 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Request,
+    Response,
+    Security,
+    status,
+)
 from jose.exceptions import ExpiredSignatureError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,7 +16,10 @@ from tardis.rest.app.database import get_user_db
 from tardis.rest.app.models import User
 from tardis.rest.app.schemas import LoginUser, TokenResponse, UserResponse
 from tardis.rest.app.scopes import UserScopes
-from tardis.rest.app.security import get_current_active_user
+from tardis.rest.app.security import (
+    get_current_active_user,
+    get_current_user_with_scopes,
+)
 from tardis.rest.app.user_manager import CustomUserManager, decode_token
 
 router = APIRouter(prefix="/user", tags=["user"])
@@ -138,13 +149,8 @@ async def refresh(
 
 @router.get("/me", response_model=UserResponse)
 async def get_me(
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    current_user: User = Security(get_current_user_with_scopes, scopes=[UserScopes.get])
 ):
-    if UserScopes.get not in current_user.scopes:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions",
-        )
     return UserResponse(user_name=current_user.user_name, scopes=current_user.scopes)
 
 

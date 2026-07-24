@@ -39,7 +39,9 @@ async def get_current_user_with_scope(
 @router.get("/states", description="Get all available states")
 async def get_resource_state(
     sql_registry: SqliteRegistry = Depends(database.get_sql_registry()),
-    user: User = Security(get_current_user_with_scope, scopes=[ResourceScopes.get]),
+    _: User = Security(
+        security.get_current_user_with_scopes, scopes=[ResourceScopes.get]
+    ),
 ):
     query_result = await crud.get_available_states(sql_registry)
     return sql_to_list(query_result)
@@ -48,7 +50,9 @@ async def get_resource_state(
 @router.get("/sites", description="Get all available sites")
 async def get_resource_sites(
     sql_registry: SqliteRegistry = Depends(database.get_sql_registry()),
-    user: User = Security(get_current_user_with_scope, scopes=[ResourceScopes.get]),
+    _: User = Security(
+        security.get_current_user_with_scopes, scopes=[ResourceScopes.get]
+    ),
 ):
     query_result = await crud.get_available_sites(sql_registry)
     return sql_to_list(query_result)
@@ -57,7 +61,9 @@ async def get_resource_sites(
 @router.get("/machine_types", description="Get all available machine types")
 async def get_resource_types(
     sql_registry: SqliteRegistry = Depends(database.get_sql_registry()),
-    user: User = Security(get_current_user_with_scope, scopes=[ResourceScopes.get]),
+    _: User = Security(
+        security.get_current_user_with_scopes, scopes=[ResourceScopes.get]
+    ),
 ):
     query_result = await crud.get_available_machine_types(sql_registry)
     return sql_to_list(query_result)

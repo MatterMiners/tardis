@@ -99,14 +99,19 @@ async def get_current_active_user(
 
 
 async def get_current_user_with_scopes(
+    security_scopes: SecurityScopes,
     user: Annotated[User | None, Depends(get_user_from_request)],
-    security_scopes: SecurityScopes | None = None,
 ) -> User:
+    """
+    Retrieve current authenticated user and enforce scope requirements.
+    """
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
         )
-    if security_scopes:
-        check_scope_permissions(security_scopes.scopes, user.scopes)
+
+    if security_scopes.scopes:
+        check_scope_permissions(security_scopes.scopes, getattr(user, "scopes", []))
+
     return user
