@@ -2,7 +2,7 @@ from .. import crud, database, security
 from ....plugins.sqliteregistry import SqliteRegistry
 from fastapi import APIRouter, Depends, HTTPException, Path, Security, status
 from fastapi.security import SecurityScopes
-from ..scopes import Resources
+from ..scopes import ResourceScopes
 
 from ..models import User
 
@@ -27,7 +27,7 @@ async def get_current_user_with_scope(
 async def get_resource_state(
     drone_uuid: str = Path(..., pattern=r"^\S+-[A-Fa-f0-9]{10}$"),
     sql_registry: SqliteRegistry = Depends(database.get_sql_registry()),
-    user: User = Security(get_current_user_with_scope, scopes=[Resources.get]),
+    user: User = Security(get_current_user_with_scope, scopes=[ResourceScopes.get]),
 ):
     query_result = await crud.get_resource_state(sql_registry, drone_uuid)
     try:
@@ -42,7 +42,7 @@ async def get_resource_state(
 @router.get("/", description="Get list of managed resources")
 async def get_resources(
     sql_registry: SqliteRegistry = Depends(database.get_sql_registry()),
-    user: User = Security(get_current_user_with_scope, scopes=[Resources.get]),
+    user: User = Security(get_current_user_with_scope, scopes=[ResourceScopes.get]),
 ):
     query_result = await crud.get_resources(sql_registry)
     return query_result
@@ -52,7 +52,7 @@ async def get_resources(
 async def drain_drone(
     drone_uuid: str = Path(..., pattern=r"^\S+-[A-Fa-f0-9]{10}$"),
     sql_registry: SqliteRegistry = Depends(database.get_sql_registry()),
-    user: User = Security(get_current_user_with_scope, scopes=[Resources.patch]),
+    user: User = Security(get_current_user_with_scope, scopes=[ResourceScopes.patch]),
 ):
     await crud.set_state_to_draining(sql_registry, drone_uuid)
     return {"msg": "Drone set to DrainState"}

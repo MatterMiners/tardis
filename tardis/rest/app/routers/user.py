@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tardis.rest.app.database import get_user_db
 from tardis.rest.app.models import User
 from tardis.rest.app.schemas import LoginUser, TokenResponse, UserResponse
-from tardis.rest.app.scopes import User as UserScopes
+from tardis.rest.app.scopes import UserScopes
 from tardis.rest.app.security import get_current_active_user
 from tardis.rest.app.user_manager import CustomUserManager, decode_token
 
@@ -78,7 +78,9 @@ async def token(
                 detail=f"Scope '{scope}' not assigned to user",
             )
 
-    access_token = user_manager.create_access_token(user, expires_delta=86400)
+    access_token = user_manager.create_access_token(
+        user, expires_delta=86400, scopes=requested_scopes
+    )
     return TokenResponse(access_token=access_token)
 
 
