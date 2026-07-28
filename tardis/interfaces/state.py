@@ -15,10 +15,10 @@ logger = logging.getLogger("cobald.runtime.tardis.interfaces.state")
 
 
 class State:
-    task_pipeline: List[Callable] = []
+    task_pipeline: list[Callable[..., Any]] = []
 
     # to get a list of all available states and to avoid circular imports
-    _state_registry: Dict[str, Type["State"]] = {}
+    _state_registry: "dict[str, type[State]]" = {}
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -40,7 +40,7 @@ class State:
         logger.info(f"Drone {drone.resource_attributes} in {cls.__name__}")
         try:
             target_state = await cls.transition_logic(
-                *await asyncio.gather(*(task(drone) for task in cls.task_pipeline))
+                *await asyncio.gather(*map(task, cls.task_pipeline))
             )
             next_state = await cls.on_leave(drone, target_state)
             await drone.set_state(next_state())
@@ -64,16 +64,16 @@ class State:
                 await drone.set_state(cleanup_cls())
 
     @classmethod
-    async def transition_logic(cls, *pipeline_results) -> Type["State"]:
+    async def transition_logic(cls, *pipeline_results) -> "type[State]":
         """
-        Override this to define the state transitions.
+        Override this to define which state to transition to.
         """
         return cls  # Default: stay in current state
 
     @classmethod
     async def on_leave(
-        cls, drone: "Drone", target_state: Type["State"]
-    ) -> Type["State"]:
+        cls, drone: "Drone", target_state: "type[State]"
+    ) -> "type[State]":
         """
         Called when leaving this state for target_state. Override to perform
         side effects. Defaults to target_state
