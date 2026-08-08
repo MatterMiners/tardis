@@ -1,6 +1,3 @@
-from tardis.rest.app.security import get_user
-from tardis.utilities.attributedict import AttributeDict
-
 from httpx import AsyncClient, ASGITransport
 
 from unittest import TestCase
@@ -10,68 +7,80 @@ import asyncio
 
 
 class TestCaseRouters(TestCase):
-    mock_sqlite_registry_patcher = None
-    mock_crud_patcher = None
-    mock_config_patcher = None
-
     @classmethod
     def setUpClass(cls) -> None:
+        cls.mock_config_patcher = patch("tardis.rest.app.database.Configuration")
+        cls.mock_config = cls.mock_config_patcher.start()
+
         cls.mock_sqlite_registry_patcher = patch(
             "tardis.rest.app.database.SqliteRegistry"
         )
         cls.mock_types_patcher = patch("tardis.rest.app.routers.types.crud")
         cls.mock_crud_patcher = patch("tardis.rest.app.routers.resources.crud")
-        cls.mock_config_patcher = patch("tardis.rest.app.security.Configuration")
         cls.mock_sqlite_registry = cls.mock_sqlite_registry_patcher.start()
         cls.mock_types = cls.mock_types_patcher.start()
         cls.mock_crud = cls.mock_crud_patcher.start()
-        cls.mock_config = cls.mock_config_patcher.start()
 
     @classmethod
     def tearDownClass(cls) -> None:
+        cls.mock_config_patcher.stop()
         cls.mock_sqlite_registry_patcher.stop()
         cls.mock_crud_patcher.stop()
-        cls.mock_config_patcher.stop()
+        cls.mock_types_patcher.stop()
 
     def setUp(self) -> None:
-        self.config = self.mock_config.return_value
-        self.config.Services.restapi.get_user.return_value = AttributeDict(
-            user_name="test",
-            hashed_password="$2b$12$Gkl8KYNGRMhx4kB0bKJnyuRuzOrx3LZlWf1CReIsDk9HyWoUGBihG",  # noqa B509
-            scopes=["resources:get", "user:get", "resources:patch"],
-        )
-
-        from tardis.rest.app.main import (
-            app,
-        )  # has to be imported after SqliteRegistry patch
+        from tardis.rest.app.main import app
 
         self.client = AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         )
+        config = self.mock_config.return_value
+        config.Services.restapi.user_db_url = (
+            "sqlite+aiosqlite:///file::memory:?mode=memory&cache=shared&uri=true"
+        )
+
+        self._setup_user_db()
+
+    def _setup_user_db(self):
+        """Set up in-memory user DB and create test user."""
+        from tardis.rest.app.database import (
+            get_user_db_engine,
+            get_user_session_factory,
+        )
+        from tardis.rest.app.user_manager import CustomUserManager
+
         self.test_user = {
-            "user_name": "test1",
+            "user_name": "test",
             "password": "test",
+            "scopes": ["resources:get", "user:get", "resources:patch"],
         }
 
-    def set_scopes(self, scopes: list):
-        self.config.Services.restapi.get_user.return_value.scopes = scopes
+        async def _create_test_user():
+            from tardis.rest.app.models import Base
 
-    def reset_scopes(self):
-        self.set_scopes(["resources:get", "user:get", "resources:patch"])
+            engine = get_user_db_engine()
+            async with engine.begin() as conn:
+                # Drop and recreate tables to ensure clean state between tests
+                # (in-memory DB persists across test runs without this)
+                await conn.run_sync(Base.metadata.drop_all)
+                await conn.run_sync(Base.metadata.create_all)
+
+            session_factory = get_user_session_factory()
+            async with session_factory() as session:
+                manager = CustomUserManager(session)
+                await manager.create(**self.test_user)
+
+        asyncio.run(_create_test_user())
+
+    def update_scopes(self, scopes: list):
+        self.test_user["scopes"] = scopes
+        self.login()
 
     def get_scopes(self):
-        return self.config.Services.restapi.get_user.return_value.scopes
+        return ["resources:get", "user:get", "resources:patch"]
 
-    def tearDown(self) -> None:
-        asyncio.run(self.client.aclose())
-
-    def login(self, user: dict = None):
-        self.clear_lru_cache()
+    def login(self, user: dict | None = None):
         response = asyncio.run(
             self.client.post("/user/login", json=user or self.test_user)
         )
         self.assertEqual(response.status_code, 200)
-
-    @staticmethod
-    def clear_lru_cache():
-        get_user.cache_clear()

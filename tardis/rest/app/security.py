@@ -1,121 +1,117 @@
-import secrets
-from ...configuration.configuration import Configuration
-from ...exceptions.tardisexceptions import TardisError
+from typing import Annotated
 
-from bcrypt import checkpw, gensalt, hashpw
-from fastapi import HTTPException, status, Depends
-
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import SecurityScopes
+from fastapi_users.authentication import (
+    AuthenticationBackend,
+    BearerTransport,
+    CookieTransport,
+)
+from fastapi_users.authentication.strategy.jwt import JWTStrategy
 
-from pydantic import BaseModel
-from fastapi_jwt_auth import AuthJWT
-
-from functools import lru_cache
-from typing import List, Optional
-
-
-class Settings(BaseModel):
-    authjwt_secret_key: str = secrets.token_hex(128)
-    authjwt_token_location: set = {"cookies"}
-    authjwt_cookie_samesite: str = "strict"
-    # TODO: change this to true in production so only https traffic is allowed
-    # Service meant to be used with https proxy
-    authjwt_cookie_secure: bool = False
-    # As 'same_site' is strict this is probably enough.
-    authjwt_cookie_csrf_protect: bool = False
+from tardis.rest.app.database import get_user_db
+from tardis.rest.app.models import User
+from tardis.rest.app.user_manager import ALGORITHM, CustomUserManager, SECRET_KEY
+from jose import JWTError, jwt
+from fastapi_users.jwt import generate_jwt
 
 
-@AuthJWT.load_config
-def get_config():
-    # TODO: Solve - AttributeError: Configuration().Services
-    return Settings()
+class ScopedJWTStrategy(JWTStrategy):
+    async def write_token(self, user: User) -> str:
+        data = {
+            "sub": str(user.id),
+            "aud": self.token_audience,
+            "scopes": user.scopes,
+        }
+        return generate_jwt(
+            data, self.encode_key, self.lifetime_seconds, algorithm=self.algorithm
+        )
 
 
-class BaseUser(BaseModel):
-    user_name: str
-    scopes: Optional[List[str]] = None
+cookie_backend = AuthenticationBackend(
+    name="cookie",
+    transport=CookieTransport(),
+    get_strategy=lambda: ScopedJWTStrategy(
+        secret=SECRET_KEY,
+        algorithm=ALGORITHM,
+        lifetime_seconds=900,
+    ),
+)
+
+bearer_backend = AuthenticationBackend(
+    name="bearer",
+    transport=BearerTransport(tokenUrl="/user/login"),
+    get_strategy=lambda: ScopedJWTStrategy(
+        secret=SECRET_KEY,
+        algorithm=ALGORITHM,
+        lifetime_seconds=86400,
+    ),
+)
 
 
-# TODO: Document the scopes manually
-# "resources:get": "Allows to read resource database",
-# "resources:put": "Allows to update resource database.",
-
-
-class LoginUser(BaseUser):
-    password: str
-
-
-class DatabaseUser(BaseUser):
-    hashed_password: str
-
-
-def check_scope_permissions(requested_scopes: List[str], allowed_scopes: List[str]):
-    # All requested scopes must be contained in allowed_scopes
-    for scope in requested_scopes:
-        if scope not in allowed_scopes:
+def check_scope_permissions(requested_scopes: list, allowed_scopes: list):
+    for requested_scope in requested_scopes:
+        if requested_scope not in allowed_scopes:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail={
                     "msg": "Not enough permissions",
-                    "failedAt": scope,
+                    "failedAt": requested_scope,
                     "allowedScopes": allowed_scopes,
                 },
-            ) from None
+            )
 
 
-def check_authorization(
-    security_scopes: SecurityScopes, Authorize: AuthJWT = Depends()
-) -> AuthJWT:
-    # No authorization without authentication
-    Authorize.jwt_required()
+async def get_user_from_request(request: Request) -> User | None:
+    token = None
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header[7:]
+    elif "tardis_access_token" in request.cookies:
+        token = request.cookies.get("tardis_access_token")
 
-    token_scopes = get_token_scopes(Authorize)
-    check_scope_permissions(security_scopes.scopes, token_scopes)
+    if not token:
+        return None
 
-    return Authorize
-
-
-def check_authentication(user_name: str, password: str) -> DatabaseUser:
-    user = get_user(user_name)
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-        )
-
-    if checkpw(password.encode(), user.hashed_password.encode()):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = int(payload["sub"])
+    except (JWTError, ValueError, TypeError, KeyError):
+        return None
+    scopes = payload.get("scopes", [])
+    async for db in get_user_db():
+        user_manager = CustomUserManager(db)
+        user = await user_manager.get_by_id(user_id)
+        if user:
+            user.scopes = scopes
         return user
-    else:
+
+
+async def get_current_active_user(
+    user: Annotated[User | None, Depends(get_user_from_request)],
+) -> User:
+    if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
+            detail="Not authenticated",
+        )
+    return user
+
+
+async def get_current_user_with_scopes(
+    security_scopes: SecurityScopes,
+    user: Annotated[User | None, Depends(get_user_from_request)],
+) -> User:
+    """
+    Retrieve current authenticated user and enforce scope requirements.
+    """
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
         )
 
+    if security_scopes.scopes:
+        check_scope_permissions(security_scopes.scopes, getattr(user, "scopes", []))
 
-def get_token_scopes(Authorize: AuthJWT) -> List[str]:
-    try:
-        token_scopes: List[str] = Authorize.get_raw_jwt()["scopes"]
-    except KeyError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid token/no scopes in token",
-        ) from None
-    return token_scopes
-
-
-@lru_cache(maxsize=16)
-def get_user(user_name: str) -> Optional[DatabaseUser]:
-    try:
-        rest_service = Configuration().Services.restapi
-    except AttributeError:
-        raise TardisError(
-            "TARDIS RestService not configured while accessing user credentials"
-        ) from None
-    else:
-        return rest_service.get_user(user_name)
-
-
-def hash_password(password: str) -> bytes:
-    salt = gensalt()
-    return hashpw(password.encode(), salt)
+    return user
