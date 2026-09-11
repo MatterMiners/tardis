@@ -39,9 +39,7 @@ async def get_resources(
 async def get_drone_uuid(
     remote_resource_uuid: str = Path(...),
     sql_registry: SqliteRegistry = Depends(database.get_sql_registry()),
-    _: AuthJWT = Security(
-        security.check_basic_or_jwt_authorization, scopes=[Resources.get]
-    ),
+    _: AuthJWT = Security(security.check_authorization, scopes=[Resources.get]),
 ):
     query_result = await crud.get_drone_uuid(sql_registry, remote_resource_uuid)
     try:
