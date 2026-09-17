@@ -46,7 +46,7 @@ jobs:
           with:
             persist-credentials: false
         - name: Set up Docker Buildx
-          uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+          uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
         - name: Docker meta
           id: meta
           uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
@@ -57,7 +57,7 @@ jobs:
             images: matterminers/${{ matrix.containers }}
         - name: Login to DockerHub
           if: github.repository == 'MatterMiners/tardis' && github.event_name != 'pull_request'
-          uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
+          uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
           with:
             username: ${{ secrets.DOCKERHUB_USERNAME }}
             password: ${{ secrets.DOCKERHUB_TOKEN }}
