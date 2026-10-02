@@ -3,7 +3,7 @@ from ..exceptions.tardisexceptions import TardisDroneCrashed
 from ..exceptions.tardisexceptions import TardisTimeout
 from ..exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
 
-from typing import Callable, Dict, Iterable, List, TYPE_CHECKING, Type
+from typing import Any, Callable, Iterable, TYPE_CHECKING
 
 import asyncio
 import logging
@@ -40,7 +40,7 @@ class State:
         logger.info(f"Drone {drone.resource_attributes} in {cls.__name__}")
         try:
             target_state = await cls.transition_logic(
-                *await asyncio.gather(*map(task, cls.task_pipeline))
+                *await asyncio.gather(*(task(drone) for task in cls.task_pipeline))
             )
             next_state = await cls.on_leave(drone, target_state)
             await drone.set_state(next_state())
