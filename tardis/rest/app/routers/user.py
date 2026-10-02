@@ -1,3 +1,4 @@
+import asyncio
 from typing import Optional
 from ..scopes import User
 from .. import security
@@ -16,7 +17,9 @@ async def login(
     expires_delta: Optional[int] = None,
     Authorize: AuthJWT = Depends(),
 ):
-    user = security.check_authentication(login_user.user_name, login_user.password)
+    user = await asyncio.to_thread(
+        security.check_authentication, login_user.user_name, login_user.password
+    )
 
     # set and check the scopes that are applied to the returned token
     if login_user.scopes is None:
