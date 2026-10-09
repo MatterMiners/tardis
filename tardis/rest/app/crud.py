@@ -33,6 +33,16 @@ async def get_available_machine_types(sql_registry):
     return await sql_registry.async_execute(sql_query, {})
 
 
+async def get_drone_uuid(sql_registry, remote_resource_uuid: str):
+    sql_query = """
+    SELECT R.drone_uuid
+    FROM Resources R
+    WHERE R.remote_resource_uuid = :remote_resource_uuid"""
+    return await sql_registry.async_execute(
+        sql_query, dict(remote_resource_uuid=remote_resource_uuid)
+    )
+
+
 async def set_state_to_draining(sql_registry, drone_uuid: str):
     sql_query = """
     UPDATE Resources
