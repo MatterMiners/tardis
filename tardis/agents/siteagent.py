@@ -36,7 +36,7 @@ class SiteAgent(SiteAdapter):
         return self._site_adapter.drone_heartbeat_interval
 
     @property
-    def drone_minimum_lifetime(self) -> int:
+    def drone_minimum_lifetime(self) -> int | None:
         return self._site_adapter.drone_minimum_lifetime
 
     @property
