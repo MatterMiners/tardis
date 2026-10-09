@@ -198,6 +198,39 @@ class SqliteRegistry(Plugin):
             sql_query, {"site_name": site_name, "machine_type": machine_type}
         )
 
+    async def async_get_resources(
+        self, site_name: str, machine_type: str
+    ) -> List[Dict]:
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            self.thread_pool_executor, self.get_resources, site_name, machine_type
+        )
+
+    async def set_remote_resource_uuid(
+        self, drone_uuid: str, remote_resource_uuid: str, site_name: str
+    ) -> bool:
+        """
+        Tries to assign remote_resource_uuid to the resource identified by
+        drone_uuid. Returns False if remote_resource_uuid is already assigned
+        to a different resource at the same site, True if assigning was successful.
+        """
+        sql_query = """
+        UPDATE Resources SET remote_resource_uuid = :remote_resource_uuid
+        WHERE drone_uuid = :drone_uuid
+        AND site_id = (SELECT site_id FROM Sites WHERE site_name = :site_name)"""
+        try:
+            await self.async_execute(
+                sql_query,
+                {
+                    "remote_resource_uuid": remote_resource_uuid,
+                    "drone_uuid": drone_uuid,
+                    "site_name": site_name,
+                },
+            )
+        except sqlite3.IntegrityError:
+            return False
+        return True
+
     async def insert_resource(self, bind_parameters: Dict) -> None:
         sql_query = """
         INSERT OR ROLLBACK INTO

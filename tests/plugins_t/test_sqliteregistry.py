@@ -236,6 +236,88 @@ class TestSqliteRegistry(TestCase):
         )
 
     @patch("tardis.plugins.sqliteregistry.logging", Mock())
+    def test_async_get_resources(self):
+        self.registry.add_site(self.test_site_name)
+        self.registry.add_machine_types(self.test_site_name, self.test_machine_type)
+        asyncio.run(
+            self.registry.notify(
+                RequestState(),
+                self.test_resource_attributes,
+            )
+        )
+
+        self.assertListEqual(
+            asyncio.run(
+                self.registry.async_get_resources(
+                    site_name=self.test_site_name,
+                    machine_type=self.test_machine_type,
+                )
+            ),
+            [self.test_get_resources_result],
+        )
+
+    @patch("tardis.plugins.sqliteregistry.logging", Mock())
+    def test_set_remote_resource_uuid(self):
+        self.registry.add_site(self.test_site_name)
+        self.registry.add_machine_types(self.test_site_name, self.test_machine_type)
+        asyncio.run(
+            self.registry.notify(
+                RequestState(),
+                self.test_resource_attributes,
+            )
+        )
+
+        other_drone_uuid = f"{self.test_site_name}-other-drone"
+        other_resource_attributes = dict(self.test_resource_attributes)
+        other_resource_attributes["drone_uuid"] = other_drone_uuid
+        asyncio.run(
+            self.registry.notify(
+                RequestState(),
+                other_resource_attributes,
+            )
+        )
+
+        self.assertTrue(
+            asyncio.run(
+                self.registry.set_remote_resource_uuid(
+                    drone_uuid=self.test_resource_attributes["drone_uuid"],
+                    remote_resource_uuid="claimed-host",
+                    site_name=self.test_site_name,
+                )
+            )
+        )
+
+        resources_helper = {
+            row["drone_uuid"]: row["remote_resource_uuid"]
+            for row in self.registry.get_resources(
+                site_name=self.test_site_name, machine_type=self.test_machine_type
+            )
+        }
+        self.assertEqual(
+            resources_helper[self.test_resource_attributes["drone_uuid"]],
+            "claimed-host",
+        )
+
+        # claiming the same remote_resource_uuid for a different drone fails
+        self.assertFalse(
+            asyncio.run(
+                self.registry.set_remote_resource_uuid(
+                    drone_uuid=other_drone_uuid,
+                    remote_resource_uuid="claimed-host",
+                    site_name=self.test_site_name,
+                )
+            )
+        )
+
+        resources_helper = {
+            row["drone_uuid"]: row["remote_resource_uuid"]
+            for row in self.registry.get_resources(
+                site_name=self.test_site_name, machine_type=self.test_machine_type
+            )
+        }
+        self.assertIsNone(resources_helper[other_drone_uuid])
+
+    @patch("tardis.plugins.sqliteregistry.logging", Mock())
     def test_notify(self):
         # Database has to be queried multiple times
         # Define inline function to re-use code
