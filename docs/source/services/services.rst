@@ -58,6 +58,12 @@ REST Service
 
     .. note::
 
+        ``GET /resources/{remote_resource_uuid}/drone_uuid`` additionally accepts HTTP Basic Auth using the same
+        ``users`` credentials, so it can be called directly (e.g. ``curl -u user:pass ...``) without first
+        performing the ``/user/login`` step to obtain a JWT cookie.
+
+    .. note::
+
         The REST service currently supports only read access to the
         :py:class:`~tardis.plugins.sqliteregistry.SqliteRegistry` using the ``resources:get`` OAuth2 scope. However,
         this could be extended in the future to support also DB updates and deletions using ``resources:put`` and
