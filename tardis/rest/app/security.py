@@ -5,13 +5,13 @@ from ...exceptions.tardisexceptions import TardisError
 from bcrypt import checkpw, gensalt, hashpw
 from fastapi import HTTPException, status, Depends
 
-from fastapi.security import SecurityScopes
+from fastapi.security import SecurityScopes, HTTPBasic, HTTPBasicCredentials
 
 from pydantic import BaseModel
 from fastapi_jwt_auth import AuthJWT
 
 from functools import lru_cache
-from typing import List, Optional
+from typing import List, Optional, Union
 
 
 class Settings(BaseModel):
@@ -72,6 +72,26 @@ def check_authorization(
     token_scopes = get_token_scopes(Authorize)
     check_scope_permissions(security_scopes.scopes, token_scopes)
 
+    return Authorize
+
+
+basic_security = HTTPBasic(auto_error=False)
+
+
+def check_basic_or_jwt_authorization(
+    security_scopes: SecurityScopes,
+    Authorize: AuthJWT = Depends(),
+    credentials: Optional[HTTPBasicCredentials] = Depends(basic_security),
+) -> Union[DatabaseUser, AuthJWT]:
+    if credentials is not None:
+        user = check_authentication(credentials.username, credentials.password)
+        check_scope_permissions(security_scopes.scopes, user.scopes)
+        return user
+
+    # No Basic Auth header supplied -> fall back to the JWT/cookie flow
+    Authorize.jwt_required()
+    token_scopes = get_token_scopes(Authorize)
+    check_scope_permissions(security_scopes.scopes, token_scopes)
     return Authorize
 
 

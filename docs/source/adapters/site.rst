@@ -679,6 +679,104 @@ Available machine type configuration options
               Cores: 2
               Memory: 4
 
+
+Satellite Site Adapter
+---------------------
+
+.. content-tabs:: left-col
+
+    The :py:class:`~tardis.adapters.sites.satellite.SatelliteAdapter` integrates with a Red Hat Satellite instance.
+    Drones run as local processes and claim a free remote host from the configured pool. Once a remote host is
+    claimed by a drone, the adapter is able to boot and shut down the resource through the Satellite API.
+
+    Host allocation is tracked in TARDIS's own drone database (the
+    :py:class:`~tardis.plugins.sqliteregistry.SqliteRegistry` plugin).
+    A host is claimed by atomically writing its identifier into the requesting drone's database entry, which
+    also prevents double allocation of a host that is still linked to a booting or terminating drone. A host is
+    freed automatically as soon as the corresponding drone's database entry is deleted, which already happens
+    when the drone reaches its final state. Because of this, the ``SqliteRegistry`` plugin has to be enabled
+    for the Satellite adapter to work.
+
+    Satellite can report an ambiguous ``power`` state for a host (e.g. ``na``, when Satellite itself
+    fails to determine the host's power state via IPMI/BMC in time) instead of the expected ``on``/``off``. A
+    single such reading is not treated as a failure: the adapter keeps reporting the drone's last known status
+    until Satellite recovers. If the ambiguous state persists for more than ``max_ambiguous_polls`` consecutive
+    checks, the adapter gives up waiting and actively powers the host off instead.
+
+Available adapter configuration options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. content-tabs:: left-col
+
+    +----------------------+------------------------------------------------------------------------------------------+-----------------+
+    | Option               | Short Description                                                                        | Requirement     |
+    +======================+==========================================================================================+=================+
+    | host                 | Hostname of the Satellite server. HTTPS and ``/api/v2/hosts`` are added automatically.   | **Required**    |
+    +----------------------+------------------------------------------------------------------------------------------+-----------------+
+    | ca_file              | Path to a CA certificate used to validate the Satellite HTTPS endpoint.                  | **Required**    |
+    +----------------------+------------------------------------------------------------------------------------------+-----------------+
+    | username             | Satellite account used for API access and the corresponding rights.                      | **Required**    |
+    +----------------------+------------------------------------------------------------------------------------------+-----------------+
+    | secret               | Personal access token or password of the Satellite account.                              | **Required**    |
+    +----------------------+------------------------------------------------------------------------------------------+-----------------+
+    | max_age              | The result of Satellite API calls are cached for `max_age` in minutes.                   | **Required**    |
+    +----------------------+------------------------------------------------------------------------------------------+-----------------+
+    | machine_pool         | Sequence of Satellite host name prefixes that form the allocation pool.                  | **Required**    |
+    +                      +                                                                                          +                 +
+    |                      | For API calls, each entry is combined with ``domain`` (``<prefix><domain>``).            |                 |
+    +----------------------+------------------------------------------------------------------------------------------+-----------------+
+    | domain               | DNS suffix appended to each ``machine_pool`` identifier for Satellite host API lookups.  | **Required**    |
+    +----------------------+------------------------------------------------------------------------------------------+-----------------+
+    | proxy                | Optional HTTP/HTTPS proxy URL used for Satellite API calls.                              | Optional        |
+    +----------------------+------------------------------------------------------------------------------------------+-----------------+
+    | max_ambiguous_polls  | Number of consecutive status checks for which an ambiguous ``power`` state from          | Optional        |
+    +                      +                                                                                          +                 +
+    |                      | Satellite (e.g. ``na``, meaning Satellite itself failed to determine the host's power    |                 |
+    +                      +                                                                                          +                 +
+    |                      | state in time) is tolerated by keeping the drone's last known status. Once exceeded,     |                 |
+    +                      +                                                                                          +                 +
+    |                      | the adapter forces a power-off for that host instead of continuing to guess.             |                 |
+    +                      +                                                                                          +                 +
+    |                      | Default: ``3``                                                                           |                 |
+    +----------------------+------------------------------------------------------------------------------------------+-----------------+
+
+    The Satellite adapter does not introduce additional machine type specific options.
+    Provide ``MachineMetaData`` entries for each machine type to describe cores, memory and disk.
+
+.. content-tabs:: right-col
+
+    .. rubric:: Example configuration
+
+    .. code-block:: yaml
+
+        Sites:
+          - name: SatelliteSite
+            adapter: Satellite
+            quota: 20
+
+        SatelliteSite:
+          host: satellite.example.com
+          username: MaxMustermann
+          secret: super-secret-token
+          ca_file: /path/to/CA/cert.pem
+          max_age: 2
+          domain: .example.com
+          proxy: http://proxy.example.com:3128
+          max_ambiguous_polls: 3
+          machine_pool:
+            - compute-node-01
+            - compute-node-02
+          MachineTypes:
+            - machine-type-a
+          MachineTypeConfiguration:
+            machine-type-a: {}
+          MachineMetaData:
+            machine-type-a:
+              Cores: 16
+              Memory: 64
+              Disk: 400
+
+
 .. content-tabs:: left-col
 
     Your favorite site is currently not supported?

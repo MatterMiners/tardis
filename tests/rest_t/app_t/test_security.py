@@ -1,6 +1,7 @@
 from tardis.exceptions.tardisexceptions import TardisError
 from tardis.rest.app.security import (
     check_authentication,
+    check_basic_or_jwt_authorization,
     check_scope_permissions,
     get_user,
     hash_password,
@@ -8,10 +9,11 @@ from tardis.rest.app.security import (
 from tardis.utilities.attributedict import AttributeDict
 
 from fastapi import HTTPException, status
+from fastapi.security import HTTPBasicCredentials, SecurityScopes
 
 
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 
 class TestSecurity(TestCase):
@@ -89,6 +91,54 @@ class TestSecurity(TestCase):
                 "user_name": "test",
             },
         )
+
+    def test_check_basic_or_jwt_authorization(self):
+        self.clear_lru_cache()
+        security_scopes = SecurityScopes(scopes=["resources:get"])
+
+        # Basic Auth path: valid credentials and sufficient scope
+        result = check_basic_or_jwt_authorization(
+            security_scopes,
+            Authorize=MagicMock(),
+            credentials=HTTPBasicCredentials(username="test", password="test"),
+        )
+        self.assertEqual(
+            result,
+            {
+                "hashed_password": "$2b$12$Gkl8KYNGRMhx4kB0bKJnyuRuzOrx3LZlWf1CReIsDk9HyWoUGBihG",  # noqa B509
+                "scopes": ["resources:get"],
+                "user_name": "test",
+            },
+        )
+
+        # Basic Auth path: wrong password
+        self.clear_lru_cache()
+        with self.assertRaises(HTTPException) as he:
+            check_basic_or_jwt_authorization(
+                security_scopes,
+                Authorize=MagicMock(),
+                credentials=HTTPBasicCredentials(username="test", password="wrong"),
+            )
+        self.assertEqual(he.exception.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # Basic Auth path: insufficient scope
+        self.clear_lru_cache()
+        with self.assertRaises(HTTPException) as he:
+            check_basic_or_jwt_authorization(
+                SecurityScopes(scopes=["resources:patch"]),
+                Authorize=MagicMock(),
+                credentials=HTTPBasicCredentials(username="test", password="test"),
+            )
+        self.assertEqual(he.exception.status_code, status.HTTP_403_FORBIDDEN)
+
+        # No Basic Auth header supplied -> falls back to the JWT/cookie flow
+        mock_authorize = MagicMock()
+        mock_authorize.get_raw_jwt.return_value = {"scopes": ["resources:get"]}
+        result = check_basic_or_jwt_authorization(
+            security_scopes, Authorize=mock_authorize, credentials=None
+        )
+        self.assertEqual(result, mock_authorize)
+        mock_authorize.jwt_required.assert_called_once()
 
     def test_get_user(self):
         self.clear_lru_cache()
