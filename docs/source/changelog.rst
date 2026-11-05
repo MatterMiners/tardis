@@ -1,17 +1,18 @@
-.. Created by changelog.py at 2026-07-22, command
-   '/Users/giffler/.cache/pre-commit/repoojtbdlhs/py_env-python3.14/bin/changelog docs/source/changes compile --categories Added Changed Fixed Security Deprecated --output=docs/source/changelog.rst'
+.. Created by changelog.py at 2026-11-05, command
+   '/Users/giffler/.cache/pre-commit/repoojtbdlhs/py_env-python3.15/bin/changelog docs/source/changes compile --categories Added Changed Fixed Security Deprecated --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
 #########
 CHANGELOG
 #########
 
-[Unreleased] - 2026-07-22
+[Unreleased] - 2026-11-05
 =========================
 
 Fixed
 -----
 
+* Terminate drones whose jobs keep running after being suspended
 * Resolved `sqlite3` datetime deprecation and maintained legacy string formatting
 
 [0.9.0] - 2026-01-29

@@ -287,7 +287,7 @@ class TestDroneStates(TestCase):
     def test_shutting_down_state(self):
         matrix = [
             (ResourceStatus.Booting, None, CleanupState),
-            (ResourceStatus.Running, None, ShuttingDownState),
+            (ResourceStatus.Running, None, CleanupState),
             (ResourceStatus.Stopped, None, CleanupState),
             (ResourceStatus.Deleted, None, DownState),
             (ResourceStatus.Error, None, CleanupState),
@@ -298,7 +298,7 @@ class TestDroneStates(TestCase):
     def test_cleanup_state(self):
         matrix = [
             (ResourceStatus.Booting, None, CleanupState),
-            (ResourceStatus.Running, None, DrainState),
+            (ResourceStatus.Running, None, CleanupState),
             (ResourceStatus.Stopped, None, CleanupState),
             (ResourceStatus.Deleted, None, DownState),
             (ResourceStatus.Error, None, CleanupState),
@@ -339,6 +339,18 @@ class TestDroneStates(TestCase):
             )
 
         self.drone.site_agent.terminate_resource.side_effect = None
+
+    def test_running_job_is_terminated_in_cleanup_state(self):
+        self.drone.state.return_value = CleanupState()
+        self.drone.site_agent.resource_status = AsyncMock(
+            return_value=AttributeDict(resource_status=ResourceStatus.Running)
+        )
+
+        with self.assertLogs(None, level="DEBUG"):
+            asyncio.run(self.drone.state.return_value.run(self.drone))
+
+        self.assertIsInstance(self.drone.state, CleanupState)
+        self.drone.site_agent.terminate_resource.assert_called_once()
 
     def test_down_state(self):
         self.drone.state.return_value = DownState()
