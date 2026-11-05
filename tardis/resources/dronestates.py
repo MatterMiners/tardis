@@ -296,10 +296,18 @@ class ShuttingDownState(State):
     async def transition_logic(cls, *pipeline_results) -> Type[State]:
         (resource_status,) = pipeline_results
         match (resource_status):
-            case ResourceStatus.Booting | ResourceStatus.Stopped | ResourceStatus.Error:
+            # Suspended resources may never report Stopped, e.g. HTCondor grid
+            # universe jobs submitted via HTCondor-CE: condor_suspend succeeds
+            # at the schedd, but the job keeps reporting Running forever.
+            # Transition such drones to CleanupState instead of looping in
+            # ShuttingDownState indefinitely.
+            case (
+                ResourceStatus.Booting
+                | ResourceStatus.Running
+                | ResourceStatus.Stopped
+                | ResourceStatus.Error
+            ):
                 return CleanupState
-            case ResourceStatus.Running:
-                return ShuttingDownState
             case ResourceStatus.Deleted:
                 return DownState
             case _:
@@ -315,16 +323,15 @@ class CleanupState(State):
     async def transition_logic(cls, *pipeline_results) -> Type["State"]:
         (resource_status,) = pipeline_results
         match (resource_status):
-            case ResourceStatus.Booting:
-                return CleanupState
-            case ResourceStatus.Running:
-                return DrainState
-            case ResourceStatus.Stopped:
+            case (
+                ResourceStatus.Booting
+                | ResourceStatus.Running
+                | ResourceStatus.Stopped
+                | ResourceStatus.Error
+            ):
                 return CleanupState
             case ResourceStatus.Deleted:
                 return DownState
-            case ResourceStatus.Error:
-                return CleanupState
             case _:
                 raise TardisInvalidStateTransition(
                     cls, dict(resource_status=resource_status)
