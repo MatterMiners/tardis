@@ -1,0 +1,11 @@
+category: fixed
+summary: "Terminate drones whose jobs keep running after being suspended"
+description: |
+  Drones in ``ShuttingDownState`` whose jobs remain ``Running``, e.g. HTCondor
+  grid universe jobs submitted via HTCondor-CE where ``condor_suspend`` never
+  takes effect, are now transitioned to ``CleanupState`` and terminated via
+  ``condor_rm`` instead of looping in ``ShuttingDownState`` forever. Also, the
+  ``CleanupState`` now terminates still running resources instead of draining
+  them first.
+pull requests:
+- 441
