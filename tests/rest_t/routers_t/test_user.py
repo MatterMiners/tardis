@@ -21,6 +21,21 @@ def _replace_user(old_user_name: str, new_user: dict) -> int:
     return asyncio.run(_replace())
 
 
+def _set_user_scopes(user_name: str, scopes: list[str]) -> None:
+    """Change the scopes assigned to a user in the database"""
+
+    async def _set():
+        from tardis.rest.app.database import get_user_session_factory
+        from tardis.rest.app.user_manager import CustomUserManager
+
+        async with get_user_session_factory()() as session:
+            user = await CustomUserManager(session).get_by_username(user_name)
+            user.scopes = scopes
+            await session.commit()
+
+    asyncio.run(_set())
+
+
 def _token(**claims) -> str:
     from tardis.rest.app.user_manager import ALGORITHM, SECRET_KEY
 
@@ -244,6 +259,20 @@ class TestUser(TestCaseRouters):
         # user:get was not requested at login and must not be granted by refresh
         response = asyncio.run(self.client.get("/user/me"))
         self.assertEqual(response.status_code, 403)
+
+    def test_revoked_scope_not_granted_by_existing_token(self):
+        response = asyncio.run(self.client.post("/user/token", json=self.test_user))
+        self.assertEqual(response.status_code, 200)
+        headers = {"Authorization": f"Bearer {response.json()['access_token']}"}
+
+        _set_user_scopes("test", ["resources:get", "resources:patch"])
+
+        response = asyncio.run(self.client.get("/user/me", headers=headers))
+        self.assertEqual(response.status_code, 403)
+
+        response = asyncio.run(self.client.get("/user/scopes", headers=headers))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), ["resources:get", "resources:patch"])
 
     def test_token_of_deleted_user_not_valid_for_new_user(self):
         response = asyncio.run(self.client.post("/user/token", json=self.test_user))

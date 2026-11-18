@@ -48,7 +48,8 @@ async def get_user_from_request(request: Request) -> User | None:
         if user:
             # Detach the user so the token scopes are never written back
             db.expunge(user)
-            user.scopes = scopes
+            # Scopes revoked since the token was issued are no longer granted
+            user.scopes = [scope for scope in scopes if scope in user.scopes]
         return user
 
 
