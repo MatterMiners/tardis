@@ -41,6 +41,7 @@ async def get_user_from_request(request: Request) -> User | None:
         user_manager = CustomUserManager(db)
         user = await user_manager.get_by_id(user_id)
         if user:
+            db.expunge(user)
             user.scopes = scopes
         return user
     finally:
