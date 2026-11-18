@@ -15,7 +15,6 @@ with open(os.path.join(repo_base_dir, "README.md"), "r") as read_me:
 TESTS_REQUIRE = ["flake8", "httpx"]
 REST_REQUIRES = [
     "fastapi>=0.100.0",
-    "fastapi-users[sqlalchemy]>=0.8",
     "sqlalchemy[asyncio]>=2.0",
     "aiosqlite>=0.20.0",
     "uvicorn[standard]",

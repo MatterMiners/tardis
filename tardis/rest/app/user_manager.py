@@ -88,9 +88,5 @@ class CustomUserManager:
         return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
 
 
-def get_user_manager(user_db: AsyncSession) -> CustomUserManager:
-    return CustomUserManager(user_db)
-
-
 def decode_token(token: str) -> dict:
     return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])

@@ -5,9 +5,6 @@ class UserResponse(BaseModel):
     user_name: str
     scopes: list[str]
 
-    class Config:
-        from_attributes = True
-
 
 class LoginUser(BaseModel):
     user_name: str

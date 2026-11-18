@@ -1,26 +1,11 @@
 from .. import crud, database, security
 from ....plugins.sqliteregistry import SqliteRegistry
 from fastapi import APIRouter, Depends, HTTPException, Path, Security, status
-from fastapi.security import SecurityScopes
 from ..scopes import ResourceScopes
 
 from ..models import User
 
 router = APIRouter(prefix="/resources", tags=["resources"])
-
-
-async def get_current_user_with_scope(
-    user: User = Depends(security.get_user_from_request),
-    security_scopes: SecurityScopes = None,
-) -> User:
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-        )
-    if security_scopes:
-        security.check_scope_permissions(security_scopes.scopes, user.scopes)
-    return user
 
 
 @router.get("/{drone_uuid}/state", description="Get current state of a resource")

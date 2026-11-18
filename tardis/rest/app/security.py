@@ -2,51 +2,11 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import SecurityScopes
-from fastapi_users.authentication import (
-    AuthenticationBackend,
-    BearerTransport,
-    CookieTransport,
-)
-from fastapi_users.authentication.strategy.jwt import JWTStrategy
+from jose import JWTError, jwt
 
 from tardis.rest.app.database import get_user_db
 from tardis.rest.app.models import User
 from tardis.rest.app.user_manager import ALGORITHM, CustomUserManager, SECRET_KEY
-from jose import JWTError, jwt
-from fastapi_users.jwt import generate_jwt
-
-
-class ScopedJWTStrategy(JWTStrategy):
-    async def write_token(self, user: User) -> str:
-        data = {
-            "sub": str(user.id),
-            "aud": self.token_audience,
-            "scopes": user.scopes,
-        }
-        return generate_jwt(
-            data, self.encode_key, self.lifetime_seconds, algorithm=self.algorithm
-        )
-
-
-cookie_backend = AuthenticationBackend(
-    name="cookie",
-    transport=CookieTransport(),
-    get_strategy=lambda: ScopedJWTStrategy(
-        secret=SECRET_KEY,
-        algorithm=ALGORITHM,
-        lifetime_seconds=900,
-    ),
-)
-
-bearer_backend = AuthenticationBackend(
-    name="bearer",
-    transport=BearerTransport(tokenUrl="/user/login"),
-    get_strategy=lambda: ScopedJWTStrategy(
-        secret=SECRET_KEY,
-        algorithm=ALGORITHM,
-        lifetime_seconds=86400,
-    ),
-)
 
 
 def check_scope_permissions(requested_scopes: list, allowed_scopes: list):
