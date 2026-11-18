@@ -14,6 +14,12 @@ SECRET_KEY = secrets.token_hex(128)
 ALGORITHM = "HS256"
 ACCESS_TOKEN_TYPE = "access"
 REFRESH_TOKEN_TYPE = "refresh"
+# bcrypt only supports passwords of up to 72 bytes
+MAX_PASSWORD_BYTES = 72
+
+
+def password_too_long(password: str) -> bool:
+    return len(password.encode()) > MAX_PASSWORD_BYTES
 
 
 class CustomUserManager:
@@ -22,10 +28,17 @@ class CustomUserManager:
 
     @staticmethod
     def verify_password(plain_password: str, hashed_password: str) -> bool:
+        # No stored password can be that long, and bcrypt would raise
+        if password_too_long(plain_password):
+            return False
         return checkpw(plain_password.encode(), hashed_password.encode())
 
     @staticmethod
     def get_password_hash(password: str) -> str:
+        if password_too_long(password):
+            raise ValueError(
+                f"Password must be at most {MAX_PASSWORD_BYTES} bytes (UTF-8)"
+            )
         return hashpw(password.encode(), gensalt()).decode()
 
     async def get_by_id(self, user_id: int) -> Optional[User]:

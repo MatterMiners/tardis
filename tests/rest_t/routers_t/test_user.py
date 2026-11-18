@@ -91,6 +91,20 @@ class TestUser(TestCaseRouters):
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json(), {"detail": "Incorrect username or password"})
 
+    def test_login_password_too_long(self):
+        # bcrypt rejects passwords longer than 72 bytes, this must not fail
+        for endpoint in ("/user/login", "/user/token"):
+            with self.subTest(endpoint=endpoint):
+                response = asyncio.run(
+                    self.client.post(
+                        endpoint, json={"user_name": "test", "password": "a" * 73}
+                    )
+                )
+                self.assertEqual(response.status_code, 401)
+                self.assertEqual(
+                    response.json(), {"detail": "Incorrect username or password"}
+                )
+
     def test_logout(self):
         response = asyncio.run(self.client.post("/user/logout"))
 

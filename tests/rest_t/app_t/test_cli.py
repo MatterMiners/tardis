@@ -129,6 +129,29 @@ class TestCLI(TestCase):
         self.assertIn("Invalid scope(s)", result.stderr)
         self.assertIn("admin:*", result.stderr)
 
+    def test_add_user_password_length(self):
+        # bcrypt only supports passwords of up to 72 bytes, not characters
+        for name, password, exit_code in (
+            ("longpass", "ä" * 37, 1),  # 37 characters, but 74 bytes
+            ("maxpass", "a" * 72, 0),
+        ):
+            with self.subTest(password=name):
+                result = self.runner.invoke(
+                    cli_app,
+                    [
+                        "--user-db-url",
+                        self.db_url,
+                        "add",
+                        "--username",
+                        name,
+                        "--password",
+                        password,
+                    ],
+                )
+                self.assertEqual(result.exit_code, exit_code)
+                if exit_code:
+                    self.assertIn("at most 72 bytes", result.stderr)
+
     def test_add_user_duplicate_returns_error(self):
         self.runner.invoke(
             cli_app,

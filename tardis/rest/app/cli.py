@@ -7,7 +7,11 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from tardis.rest.app.models import Base
 from tardis.rest.app.scopes import ResourceScopes, UserScopes
-from tardis.rest.app.user_manager import CustomUserManager
+from tardis.rest.app.user_manager import (
+    MAX_PASSWORD_BYTES,
+    CustomUserManager,
+    password_too_long,
+)
 
 app = typer.Typer(help="TARDIS REST API user management")
 
@@ -82,6 +86,12 @@ async def add(
     db_url = ctx.obj["user_db_url"]
     scope_list = [s.strip() for s in scopes.split(",")] if scopes else []
     scope_list = _validate_scopes(scope_list)
+    if password_too_long(password):
+        typer.echo(
+            f"Password must be at most {MAX_PASSWORD_BYTES} bytes (UTF-8 encoded).",
+            err=True,
+        )
+        raise typer.Exit(1)
 
     async with get_user_session(db_url) as session:
         user_manager = CustomUserManager(session)
