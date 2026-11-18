@@ -1,5 +1,7 @@
+import asyncio
 import secrets
 from datetime import datetime, timedelta, timezone
+from functools import cache
 from typing import Optional
 
 from bcrypt import checkpw, gensalt, hashpw
@@ -20,6 +22,12 @@ MAX_PASSWORD_BYTES = 72
 
 def password_too_long(password: str) -> bool:
     return len(password.encode()) > MAX_PASSWORD_BYTES
+
+
+@cache
+def _dummy_password_hash() -> str:
+    """Hash to check passwords of unknown users against, see authenticate()"""
+    return hashpw(secrets.token_bytes(16), gensalt()).decode()
 
 
 class CustomUserManager:
@@ -53,11 +61,20 @@ class CustomUserManager:
 
     async def authenticate(self, username: str, password: str) -> Optional[User]:
         user = await self.get_by_username(username)
-        if not user:
-            return None
-        if not self.verify_password(password, user.hashed_password):
-            return None
-        return user
+        # bcrypt is slow by design, run it in a thread to keep the event loop
+        # responsive, which TARDIS shares with all other asyncio services
+        valid = await asyncio.to_thread(
+            self._check_password, password, user.hashed_password if user else None
+        )
+        return user if user and valid else None
+
+    def _check_password(self, password: str, hashed_password: Optional[str]) -> bool:
+        if hashed_password is None:
+            # Check against a dummy hash, so that unknown users take as long as
+            # known ones and the response time does not reveal valid user names
+            self.verify_password(password, _dummy_password_hash())
+            return False
+        return self.verify_password(password, hashed_password)
 
     async def create(
         self, user_name: str, password: str, scopes: Optional[list[str]] = None
