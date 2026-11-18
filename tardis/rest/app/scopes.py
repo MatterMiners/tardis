@@ -3,10 +3,10 @@ from enum import Enum
 # All available OAuth2 scopes
 
 
-class Resources(str, Enum):
+class ResourceScopes(str, Enum):
     get = "resources:get"
     patch = "resources:patch"
 
 
-class User(str, Enum):
+class UserScopes(str, Enum):
     get = "user:get"

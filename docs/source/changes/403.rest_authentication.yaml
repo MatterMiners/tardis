@@ -1,0 +1,16 @@
+category: changed
+summary: "REST API users are stored in a database and managed with the new ``tardis-rest-admin`` CLI"
+description: |
+  The authentication of the REST API no longer uses ``fastapi-jwt-auth``. Users are
+  stored in a database configured by ``user_db_url`` (e.g.
+  ``sqlite+aiosqlite:///./users.db``), which replaces the ``users`` list in the
+  configuration of the REST service. Users are managed with the new
+  ``tardis-rest-admin`` command, which replaces ``hash_credentials`` and
+  ``generate_token``. Existing users have to be recreated, since password hashes are
+  not migrated. Clients authenticate either with cookies via ``POST /user/login``
+  (access token valid for 15 minutes, renewable via ``POST /user/refresh``) or with a
+  bearer token via ``POST /user/token`` (valid for 24 hours). All tokens become
+  invalid when TARDIS restarts. The new ``development`` option disables secure
+  cookies for local testing over HTTP.
+pull requests:
+- 403

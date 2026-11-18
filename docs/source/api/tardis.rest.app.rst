@@ -20,8 +20,12 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   tardis.rest.app.cli
    tardis.rest.app.crud
    tardis.rest.app.database
    tardis.rest.app.main
+   tardis.rest.app.models
+   tardis.rest.app.schemas
    tardis.rest.app.scopes
    tardis.rest.app.security
+   tardis.rest.app.user_manager
