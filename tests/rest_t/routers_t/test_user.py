@@ -80,6 +80,47 @@ class TestUser(TestCaseRouters):
         response = asyncio.run(self.client.post("/user/refresh"))
         self.assertEqual(response.status_code, 200)
 
+    def test_refresh_invalid_token(self):
+        from datetime import datetime, timedelta, timezone
+
+        from jose import jwt
+
+        from tardis.rest.app.user_manager import ALGORITHM, SECRET_KEY
+
+        expiry = datetime.now(timezone.utc) + timedelta(minutes=5)
+        invalid_tokens = {
+            "malformed": "garbage",
+            "wrong_signature": jwt.encode(
+                {"sub": "1", "scopes": [], "exp": expiry},
+                "wrong-key",
+                algorithm=ALGORITHM,
+            ),
+            "expired": jwt.encode(
+                {
+                    "sub": "1",
+                    "scopes": [],
+                    "exp": datetime.now(timezone.utc) - timedelta(minutes=5),
+                },
+                SECRET_KEY,
+                algorithm=ALGORITHM,
+            ),
+            "missing_sub": jwt.encode(
+                {"scopes": [], "exp": expiry}, SECRET_KEY, algorithm=ALGORITHM
+            ),
+            "non_integer_sub": jwt.encode(
+                {"sub": "abc", "scopes": [], "exp": expiry},
+                SECRET_KEY,
+                algorithm=ALGORITHM,
+            ),
+        }
+
+        for name, token in invalid_tokens.items():
+            with self.subTest(token=name):
+                self.client.cookies["tardis_refresh_token"] = token
+                response = asyncio.run(self.client.post("/user/refresh"))
+                self.assertEqual(response.status_code, 401)
+                self.assertEqual(response.json(), {"detail": "Invalid refresh token"})
+
     def test_refresh_revoked_scope(self):
         # Login with full scopes (refresh token gets all 3 scopes)
         self.login()

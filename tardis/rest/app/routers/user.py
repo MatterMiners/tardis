@@ -9,7 +9,7 @@ from fastapi import (
     Security,
     status,
 )
-from jose.exceptions import ExpiredSignatureError
+from jose import JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tardis.rest.app.database import get_user_db
@@ -125,7 +125,7 @@ async def refresh(
         payload = decode_token(refresh_token)
         user_id = int(payload["sub"])
         token_scopes = payload.get("scopes", [])
-    except (ValueError, TypeError, KeyError, ExpiredSignatureError):
+    except (JWTError, ValueError, TypeError, KeyError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid refresh token",
