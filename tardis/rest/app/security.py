@@ -4,7 +4,7 @@ from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import SecurityScopes
 from jose import JWTError
 
-from tardis.rest.app.database import get_user_db
+from tardis.rest.app.database import get_user_session_factory
 from tardis.rest.app.models import User
 from tardis.rest.app.user_manager import (
     ACCESS_TOKEN_TYPE,
@@ -39,22 +39,13 @@ async def get_user_from_request(request: Request) -> User | None:
     except (JWTError, ValueError, TypeError, KeyError):
         return None
     scopes = payload.get("scopes", [])
-    db_gen = get_user_db()
-    try:
-        db = await db_gen.__anext__()
-        user_manager = CustomUserManager(db)
-        user = await user_manager.get_by_id(user_id)
+    async with get_user_session_factory()() as db:
+        user = await CustomUserManager(db).get_by_id(user_id)
         if user:
+            # Detach the user so the token scopes are never written back
             db.expunge(user)
             user.scopes = scopes
         return user
-    finally:
-        # Ensure the async generator is closed immediately so the inner
-        # `async with session_factory()` block in get_user_db() runs its
-        # __aexit__ and releases the DB session. Without this, the early
-        # return above would leave the generator suspended and the session
-        # would leak until garbage collection.
-        await db_gen.aclose()
 
 
 async def get_current_active_user(
