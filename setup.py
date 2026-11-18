@@ -21,7 +21,7 @@ REST_REQUIRES = [
     "typer",
     "bcrypt",
     "python-multipart",
-    "python-jose",
+    "python-jose>=3.4.0",
 ]
 
 
