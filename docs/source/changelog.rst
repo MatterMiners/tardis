@@ -9,6 +9,11 @@ CHANGELOG
 [Unreleased] - 2026-11-18
 =========================
 
+Changed
+-------
+
+* REST API users are stored in a database and managed with the new ``tardis-rest-admin`` CLI
+
 Fixed
 -----
 
