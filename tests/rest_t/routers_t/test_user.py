@@ -152,6 +152,25 @@ class TestUser(TestCaseRouters):
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json(), {"detail": "Invalid refresh token"})
 
+    def test_refresh_keeps_requested_scopes(self):
+        self.login(
+            {
+                "user_name": "test",
+                "password": "test",
+                "scopes": ["resources:get"],
+            }
+        )
+        response = asyncio.run(self.client.post("/user/refresh"))
+        self.assertEqual(response.status_code, 200)
+
+        response = asyncio.run(self.client.get("/user/scopes"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), ["resources:get"])
+
+        # user:get was not requested at login and must not be granted by refresh
+        response = asyncio.run(self.client.get("/user/me"))
+        self.assertEqual(response.status_code, 403)
+
     def test_refresh_revoked_scope(self):
         # Login with full scopes (refresh token gets all 3 scopes)
         self.login()

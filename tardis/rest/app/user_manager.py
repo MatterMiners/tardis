@@ -78,11 +78,13 @@ class CustomUserManager:
         }
         return self._create_token(data, expires_delta)
 
-    def create_refresh_token(self, user: User, expires_delta: int = 3600) -> str:
+    def create_refresh_token(
+        self, user: User, expires_delta: int = 3600, scopes: Optional[list[str]] = None
+    ) -> str:
         data = {
             "sub": str(user.id),
             "username": user.user_name,
-            "scopes": user.scopes,
+            "scopes": scopes if scopes is not None else user.scopes,
             "type": REFRESH_TOKEN_TYPE,
         }
         return self._create_token(data, expires_delta)

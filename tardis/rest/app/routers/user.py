@@ -74,7 +74,9 @@ async def login(
     access_token = user_manager.create_access_token(
         user, expires_delta=900, scopes=requested_scopes
     )
-    refresh_token = user_manager.create_refresh_token(user, expires_delta=3600)
+    refresh_token = user_manager.create_refresh_token(
+        user, expires_delta=3600, scopes=requested_scopes
+    )
     _set_auth_cookie(response, ACCESS_COOKIE, access_token)
     _set_auth_cookie(response, REFRESH_COOKIE, refresh_token)
     return {"msg": "Login successful"}
