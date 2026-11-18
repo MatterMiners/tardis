@@ -8,6 +8,8 @@ class Base(DeclarativeBase):
 
 class User(Base):
     __tablename__ = "users"
+    # Never reuse ids of deleted users, tokens refer to users by id
+    __table_args__ = {"sqlite_autoincrement": True}
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_name: Mapped[str] = mapped_column(String(255), unique=True)

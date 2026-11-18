@@ -149,6 +149,7 @@ async def refresh(
     try:
         payload = decode_token(refresh_token, REFRESH_TOKEN_TYPE)
         user_id = int(payload["sub"])
+        user_name = payload["username"]
         token_scopes = payload.get("scopes", [])
     except (JWTError, ValueError, TypeError, KeyError):
         raise HTTPException(
@@ -161,6 +162,12 @@ async def refresh(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
+        )
+    if user.user_name != user_name:
+        # The token was issued for another user with the same id
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token",
         )
     check_scope_permissions(token_scopes, user.scopes)
     access_token = user_manager.create_access_token(

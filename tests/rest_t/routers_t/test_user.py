@@ -1,6 +1,31 @@
 from tests.rest_t.routers_t.base_test_case_routers import TestCaseRouters
 
+from datetime import datetime, timedelta, timezone
 import asyncio
+
+from jose import jwt
+
+
+def _replace_user(old_user_name: str, new_user: dict) -> int:
+    """Delete a user and create another one, returns the id of the new user"""
+
+    async def _replace():
+        from tardis.rest.app.database import get_user_session_factory
+        from tardis.rest.app.user_manager import CustomUserManager
+
+        async with get_user_session_factory()() as session:
+            manager = CustomUserManager(session)
+            await manager.delete(await manager.get_by_username(old_user_name))
+            return (await manager.create(**new_user)).id
+
+    return asyncio.run(_replace())
+
+
+def _token(**claims) -> str:
+    from tardis.rest.app.user_manager import ALGORITHM, SECRET_KEY
+
+    claims.setdefault("exp", datetime.now(timezone.utc) + timedelta(minutes=5))
+    return jwt.encode(claims, SECRET_KEY, algorithm=ALGORITHM)
 
 
 class TestUser(TestCaseRouters):
@@ -219,6 +244,45 @@ class TestUser(TestCaseRouters):
         # user:get was not requested at login and must not be granted by refresh
         response = asyncio.run(self.client.get("/user/me"))
         self.assertEqual(response.status_code, 403)
+
+    def test_token_of_deleted_user_not_valid_for_new_user(self):
+        response = asyncio.run(self.client.post("/user/token", json=self.test_user))
+        self.assertEqual(response.status_code, 200)
+        old_token = response.json()["access_token"]
+
+        new_user_id = _replace_user(
+            "test",
+            {"user_name": "other", "password": "other", "scopes": self.get_scopes()},
+        )
+        # ids of deleted users must not be reused
+        self.assertNotEqual(new_user_id, 1)
+
+        response = asyncio.run(
+            self.client.get(
+                "/user/scopes", headers={"Authorization": f"Bearer {old_token}"}
+            )
+        )
+        self.assertEqual(response.status_code, 401)
+
+    def test_access_token_with_other_user_name_rejected(self):
+        token = _token(
+            sub="1", username="other", scopes=self.get_scopes(), type="access"
+        )
+        response = asyncio.run(
+            self.client.get(
+                "/user/scopes", headers={"Authorization": f"Bearer {token}"}
+            )
+        )
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.json(), {"detail": "Not authenticated"})
+
+    def test_refresh_token_with_other_user_name_rejected(self):
+        self.client.cookies["tardis_refresh_token"] = _token(
+            sub="1", username="other", scopes=self.get_scopes(), type="refresh"
+        )
+        response = asyncio.run(self.client.post("/user/refresh"))
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.json(), {"detail": "Invalid refresh token"})
 
     def test_refresh_revoked_scope(self):
         # Login with full scopes (refresh token gets all 3 scopes)

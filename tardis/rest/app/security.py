@@ -36,11 +36,15 @@ async def get_user_from_request(request: Request) -> User | None:
     try:
         payload = decode_token(token, ACCESS_TOKEN_TYPE)
         user_id = int(payload["sub"])
+        user_name = payload["username"]
     except (JWTError, ValueError, TypeError, KeyError):
         return None
     scopes = payload.get("scopes", [])
     async with get_user_session_factory()() as db:
         user = await CustomUserManager(db).get_by_id(user_id)
+        if user and user.user_name != user_name:
+            # The token was issued for another user with the same id
+            return None
         if user:
             # Detach the user so the token scopes are never written back
             db.expunge(user)
