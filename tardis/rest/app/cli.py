@@ -77,7 +77,11 @@ async def add(
     ctx: typer.Context,
     username: str = typer.Option(..., prompt=True, help="Username for the new user"),
     password: str = typer.Option(
-        ..., prompt=True, hide_input=True, help="Password for the new user"
+        ...,
+        prompt=True,
+        hide_input=True,
+        confirmation_prompt=True,
+        help="Password for the new user",
     ),
     scopes: str = typer.Option(
         None, help="Comma-separated list of scopes (e.g., resources:get,user:get)"

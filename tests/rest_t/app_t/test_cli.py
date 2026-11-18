@@ -129,6 +129,25 @@ class TestCLI(TestCase):
         self.assertIn("Invalid scope(s)", result.stderr)
         self.assertIn("admin:*", result.stderr)
 
+    def test_add_user_password_prompt_requires_confirmation(self):
+        def add_with_input(username: str, prompt_input: str):
+            return self.runner.invoke(
+                cli_app,
+                ["--user-db-url", self.db_url, "add", "--username", username],
+                input=prompt_input,
+            )
+
+        # mismatching confirmation is rejected, input ends before a match
+        result = add_with_input("mismatch", "secret\nsecrte\n")
+        self.assertNotEqual(result.exit_code, 0)
+        self.assertIn("Repeat for confirmation", result.output)
+        self.assertNotIn("created successfully", result.output)
+
+        result = add_with_input("match", "secret\nsecret\n")
+        self.assertEqual(result.exit_code, 0)
+        self.assertIn("Repeat for confirmation", result.output)
+        self.assertIn("User 'match' created successfully", result.output)
+
     def test_add_user_password_length(self):
         # bcrypt only supports passwords of up to 72 bytes, not characters
         for name, password, exit_code in (
