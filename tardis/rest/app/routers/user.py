@@ -54,6 +54,17 @@ def _set_auth_cookie(response: Response, key: str, value: str):
     )
 
 
+def _requested_scopes(login_user: LoginUser, user: User) -> list[str]:
+    """
+    Scopes for a new token: all scopes of the user if none are requested,
+    otherwise the requested ones, which must all be assigned to the user.
+    An explicitly empty list results in a token without scopes.
+    """
+    requested = user.scopes if login_user.scopes is None else login_user.scopes
+    check_scope_permissions(requested, user.scopes)
+    return requested
+
+
 @router.post("/login")
 async def login(
     response: Response,
@@ -68,8 +79,7 @@ async def login(
             detail="Incorrect username or password",
         )
 
-    requested_scopes = login_user.scopes or user.scopes
-    check_scope_permissions(requested_scopes, user.scopes)
+    requested_scopes = _requested_scopes(login_user, user)
 
     access_token = user_manager.create_access_token(
         user, expires_delta=900, scopes=requested_scopes
@@ -95,8 +105,7 @@ async def token(
             detail="Incorrect username or password",
         )
 
-    requested_scopes = login_user.scopes or user.scopes
-    check_scope_permissions(requested_scopes, user.scopes)
+    requested_scopes = _requested_scopes(login_user, user)
 
     access_token = user_manager.create_access_token(
         user, expires_delta=86400, scopes=requested_scopes

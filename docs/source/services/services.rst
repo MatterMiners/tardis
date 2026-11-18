@@ -65,6 +65,11 @@ REST Service
         2. **Bearer token** (for programmatic access) — obtain token via
            ``POST /user/token`` and use in ``Authorization: Bearer <token>`` header
 
+        Both endpoints accept an optional ``scopes`` list in the request body.
+        If it is omitted, the token contains all scopes assigned to the user.
+        An empty list results in a token without any scopes. Requesting a scope
+        that is not assigned to the user is rejected with ``403``.
+
 
     .. warning::
 

@@ -152,6 +152,34 @@ class TestUser(TestCaseRouters):
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json(), {"detail": "Invalid refresh token"})
 
+    def test_login_empty_scopes(self):
+        self.login({"user_name": "test", "password": "test", "scopes": []})
+
+        response = asyncio.run(self.client.get("/user/scopes"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), [])
+
+        response = asyncio.run(self.client.get("/user/me"))
+        self.assertEqual(response.status_code, 403)
+
+    def test_token_empty_scopes(self):
+        response = asyncio.run(
+            self.client.post(
+                "/user/token",
+                json={"user_name": "test", "password": "test", "scopes": []},
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+        access_token = response.json()["access_token"]
+
+        response = asyncio.run(
+            self.client.get(
+                "/user/scopes", headers={"Authorization": f"Bearer {access_token}"}
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), [])
+
     def test_refresh_keeps_requested_scopes(self):
         self.login(
             {
