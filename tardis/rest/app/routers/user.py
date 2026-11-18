@@ -54,6 +54,16 @@ def _set_auth_cookie(response: Response, key: str, value: str):
     )
 
 
+def _delete_auth_cookie(response: Response, key: str):
+    # Use the same attributes as in _set_auth_cookie
+    response.delete_cookie(
+        key=key,
+        httponly=True,
+        samesite="lax",
+        secure=_get_secure_cookie(),
+    )
+
+
 def _requested_scopes(login_user: LoginUser, user: User) -> list[str]:
     """
     Scopes for a new token: all scopes of the user if none are requested,
@@ -118,8 +128,8 @@ async def logout(
     response: Response,
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
-    response.delete_cookie(key=ACCESS_COOKIE)
-    response.delete_cookie(key=REFRESH_COOKIE)
+    _delete_auth_cookie(response, ACCESS_COOKIE)
+    _delete_auth_cookie(response, REFRESH_COOKIE)
     return {"msg": "Successfully logged out!"}
 
 
@@ -129,7 +139,7 @@ async def refresh(
     response: Response,
     db: AsyncSession = Depends(get_user_db),
 ):
-    refresh_token = request.cookies.get("tardis_refresh_token")
+    refresh_token = request.cookies.get(REFRESH_COOKIE)
     if not refresh_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

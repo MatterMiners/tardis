@@ -65,6 +65,27 @@ class TestUser(TestCaseRouters):
         response = asyncio.run(self.client.post("/user/logout"))
         self.assertEqual(response.status_code, 401)
 
+    def test_logout_cookie_attributes(self):
+        from tardis.rest.app.routers import user as user_module
+
+        self.login()
+        # Emulate production mode, cookies were set before in development mode
+        user_module._SECURE_COOKIE = True
+
+        response = asyncio.run(self.client.post("/user/logout"))
+        self.assertEqual(response.status_code, 200)
+
+        set_cookies = response.headers.get_list("set-cookie")
+        self.assertEqual(len(set_cookies), 2)
+        for name, header in zip(
+            ("tardis_access_token", "tardis_refresh_token"), set_cookies, strict=True
+        ):
+            with self.subTest(cookie=name):
+                self.assertTrue(header.startswith(f"{name}="))
+                self.assertIn("HttpOnly", header)
+                self.assertIn("Secure", header)
+                self.assertIn("SameSite=lax", header)
+
     def test_refresh(self):
         # not logged in yet
         response = asyncio.run(self.client.post("/user/refresh"))
