@@ -12,6 +12,7 @@ CHANGELOG
 Fixed
 -----
 
+* Terminate drones whose jobs keep running after being suspended
 * Resolved `sqlite3` datetime deprecation and maintained legacy string formatting
 
 [0.9.0] - 2026-01-29
