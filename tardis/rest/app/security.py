@@ -2,11 +2,15 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import SecurityScopes
-from jose import JWTError, jwt
+from jose import JWTError
 
 from tardis.rest.app.database import get_user_db
 from tardis.rest.app.models import User
-from tardis.rest.app.user_manager import ALGORITHM, CustomUserManager, SECRET_KEY
+from tardis.rest.app.user_manager import (
+    ACCESS_TOKEN_TYPE,
+    CustomUserManager,
+    decode_token,
+)
 
 
 def check_scope_permissions(requested_scopes: list[str], allowed_scopes: list[str]):
@@ -30,7 +34,7 @@ async def get_user_from_request(request: Request) -> User | None:
         return None
 
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = decode_token(token, ACCESS_TOKEN_TYPE)
         user_id = int(payload["sub"])
     except (JWTError, ValueError, TypeError, KeyError):
         return None

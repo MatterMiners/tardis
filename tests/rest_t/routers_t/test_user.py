@@ -99,16 +99,24 @@ class TestUser(TestCaseRouters):
                 {
                     "sub": "1",
                     "scopes": [],
+                    "type": "refresh",
                     "exp": datetime.now(timezone.utc) - timedelta(minutes=5),
                 },
                 SECRET_KEY,
                 algorithm=ALGORITHM,
             ),
             "missing_sub": jwt.encode(
-                {"scopes": [], "exp": expiry}, SECRET_KEY, algorithm=ALGORITHM
+                {"scopes": [], "type": "refresh", "exp": expiry},
+                SECRET_KEY,
+                algorithm=ALGORITHM,
             ),
             "non_integer_sub": jwt.encode(
-                {"sub": "abc", "scopes": [], "exp": expiry},
+                {"sub": "abc", "scopes": [], "type": "refresh", "exp": expiry},
+                SECRET_KEY,
+                algorithm=ALGORITHM,
+            ),
+            "missing_type": jwt.encode(
+                {"sub": "1", "scopes": [], "exp": expiry},
                 SECRET_KEY,
                 algorithm=ALGORITHM,
             ),
@@ -120,6 +128,29 @@ class TestUser(TestCaseRouters):
                 response = asyncio.run(self.client.post("/user/refresh"))
                 self.assertEqual(response.status_code, 401)
                 self.assertEqual(response.json(), {"detail": "Invalid refresh token"})
+
+    def test_refresh_token_rejected_as_access_token(self):
+        response = asyncio.run(self.client.post("/user/login", json=self.test_user))
+        self.assertEqual(response.status_code, 200)
+        refresh_token = response.cookies["tardis_refresh_token"]
+
+        response = asyncio.run(
+            self.client.get(
+                "/user/me", headers={"Authorization": f"Bearer {refresh_token}"}
+            )
+        )
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.json(), {"detail": "Not authenticated"})
+
+    def test_access_token_rejected_as_refresh_token(self):
+        response = asyncio.run(self.client.post("/user/token", json=self.test_user))
+        self.assertEqual(response.status_code, 200)
+        access_token = response.json()["access_token"]
+
+        self.client.cookies["tardis_refresh_token"] = access_token
+        response = asyncio.run(self.client.post("/user/refresh"))
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.json(), {"detail": "Invalid refresh token"})
 
     def test_refresh_revoked_scope(self):
         # Login with full scopes (refresh token gets all 3 scopes)

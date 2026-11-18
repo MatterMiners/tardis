@@ -4,6 +4,7 @@ from typing import Optional
 
 from bcrypt import checkpw, gensalt, hashpw
 from jose import jwt
+from jose.exceptions import JWTClaimsError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,6 +12,8 @@ from tardis.rest.app.models import User
 
 SECRET_KEY = secrets.token_hex(128)
 ALGORITHM = "HS256"
+ACCESS_TOKEN_TYPE = "access"
+REFRESH_TOKEN_TYPE = "refresh"
 
 
 class CustomUserManager:
@@ -71,6 +74,7 @@ class CustomUserManager:
             "sub": str(user.id),
             "username": user.user_name,
             "scopes": scopes if scopes is not None else user.scopes,
+            "type": ACCESS_TOKEN_TYPE,
         }
         return self._create_token(data, expires_delta)
 
@@ -79,6 +83,7 @@ class CustomUserManager:
             "sub": str(user.id),
             "username": user.user_name,
             "scopes": user.scopes,
+            "type": REFRESH_TOKEN_TYPE,
         }
         return self._create_token(data, expires_delta)
 
@@ -88,5 +93,14 @@ class CustomUserManager:
         return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
 
 
-def decode_token(token: str) -> dict:
-    return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+def decode_token(token: str, expected_type: str) -> dict:
+    """
+    Decode and verify a token and check that it is of the expected type.
+
+    Raises a JWTError if the token is invalid, expired or of another type, so
+    that a refresh token cannot be used as an access token and vice versa.
+    """
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    if payload.get("type") != expected_type:
+        raise JWTClaimsError(f"Token is not of type '{expected_type}'")
+    return payload

@@ -21,7 +21,11 @@ from tardis.rest.app.security import (
     get_current_active_user,
     get_current_user_with_scopes,
 )
-from tardis.rest.app.user_manager import CustomUserManager, decode_token
+from tardis.rest.app.user_manager import (
+    REFRESH_TOKEN_TYPE,
+    CustomUserManager,
+    decode_token,
+)
 
 router = APIRouter(prefix="/user", tags=["user"])
 
@@ -122,7 +126,7 @@ async def refresh(
         )
 
     try:
-        payload = decode_token(refresh_token)
+        payload = decode_token(refresh_token, REFRESH_TOKEN_TYPE)
         user_id = int(payload["sub"])
         token_scopes = payload.get("scopes", [])
     except (JWTError, ValueError, TypeError, KeyError):
