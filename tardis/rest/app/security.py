@@ -1,7 +1,12 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Request, status
-from fastapi.security import SecurityScopes
+from fastapi import Depends, HTTPException, status
+from fastapi.security import (
+    APIKeyCookie,
+    HTTPAuthorizationCredentials,
+    HTTPBearer,
+    SecurityScopes,
+)
 from jose import JWTError
 
 from tardis.rest.app.database import get_user_session_factory
@@ -22,14 +27,27 @@ def check_scope_permissions(requested_scopes: list[str], allowed_scopes: list[st
             )
 
 
-async def get_user_from_request(request: Request) -> User | None:
-    token = None
-    # The authentication scheme is case-insensitive (RFC 9110, section 11.1)
-    scheme, _, credentials = request.headers.get("Authorization", "").partition(" ")
-    if scheme.lower() == "bearer":
-        token = credentials.strip()
-    elif "tardis_access_token" in request.cookies:
-        token = request.cookies.get("tardis_access_token")
+# Both schemes are optional, since an access token can be passed either way.
+# Declaring them makes them visible in the OpenAPI schema, which enables the
+# "Authorize" button of the interactive documentation at /docs.
+bearer_scheme = HTTPBearer(
+    bearerFormat="JWT",
+    description="Access token obtained via POST /user/token",
+    auto_error=False,
+)
+cookie_scheme = APIKeyCookie(
+    name="tardis_access_token",
+    description="Access token cookie set by POST /user/login",
+    auto_error=False,
+)
+
+
+async def get_user_from_request(
+    bearer: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
+    cookie_token: Annotated[str | None, Depends(cookie_scheme)],
+) -> User | None:
+    # HTTPBearer handles the scheme case-insensitively (RFC 9110, section 11.1)
+    token = bearer.credentials if bearer else cookie_token
 
     if not token:
         return None
