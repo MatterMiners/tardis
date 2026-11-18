@@ -93,6 +93,8 @@ REST Service
         +----------------+-------------------------------------------------------------------+-----------------+
         | user_db_url    | SQLAlchemy database URL for user storage                          |  **Required**   |
         +----------------+-------------------------------------------------------------------+-----------------+
+        | development    | Enable development mode (disables secure cookies)                 |  Optional       |
+        +----------------+-------------------------------------------------------------------+-----------------+
 
     .. note::
 
@@ -111,6 +113,7 @@ REST Service
             host: 127.0.0.1
             port: 1234
             user_db_url: sqlite+aiosqlite:///users.db
+            development: True
         Plugins:
           SqliteRegistry:
             db_file: drone_registry.db

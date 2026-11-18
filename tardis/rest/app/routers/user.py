@@ -25,6 +25,30 @@ from tardis.rest.app.user_manager import CustomUserManager, decode_token
 
 router = APIRouter(prefix="/user", tags=["user"])
 
+ACCESS_COOKIE = "tardis_access_token"
+REFRESH_COOKIE = "tardis_refresh_token"
+
+_SECURE_COOKIE = None
+
+
+def _get_secure_cookie() -> bool:
+    global _SECURE_COOKIE
+    if _SECURE_COOKIE is None:
+        from ..database import get_development_mode
+
+        _SECURE_COOKIE = not get_development_mode()
+    return _SECURE_COOKIE
+
+
+def _set_auth_cookie(response: Response, key: str, value: str):
+    response.set_cookie(
+        key=key,
+        value=value,
+        httponly=True,
+        samesite="lax",
+        secure=_get_secure_cookie(),
+    )
+
 
 @router.post("/login")
 async def login(
@@ -47,20 +71,8 @@ async def login(
         user, expires_delta=900, scopes=requested_scopes
     )
     refresh_token = user_manager.create_refresh_token(user, expires_delta=3600)
-    response.set_cookie(
-        key="tardis_access_token",
-        value=access_token,
-        httponly=True,
-        samesite="lax",
-        secure=False,
-    )
-    response.set_cookie(
-        key="tardis_refresh_token",
-        value=refresh_token,
-        httponly=True,
-        samesite="lax",
-        secure=False,
-    )
+    _set_auth_cookie(response, ACCESS_COOKIE, access_token)
+    _set_auth_cookie(response, REFRESH_COOKIE, refresh_token)
     return {"msg": "Login successful"}
 
 
@@ -91,8 +103,8 @@ async def logout(
     response: Response,
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
-    response.delete_cookie(key="tardis_access_token")
-    response.delete_cookie(key="tardis_refresh_token")
+    response.delete_cookie(key=ACCESS_COOKIE)
+    response.delete_cookie(key=REFRESH_COOKIE)
     return {"msg": "Successfully logged out!"}
 
 
@@ -129,13 +141,7 @@ async def refresh(
     access_token = user_manager.create_access_token(
         user, expires_delta=900, scopes=token_scopes
     )
-    response.set_cookie(
-        key="tardis_access_token",
-        value=access_token,
-        httponly=True,
-        samesite="lax",
-        secure=False,
-    )
+    _set_auth_cookie(response, ACCESS_COOKIE, access_token)
     return {"msg": "Token successfully refreshed"}
 
 

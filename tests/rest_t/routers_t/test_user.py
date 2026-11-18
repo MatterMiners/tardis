@@ -76,7 +76,7 @@ class TestUser(TestCaseRouters):
         self.assertEqual(response.status_code, 200)
 
         # invalid access token but valid refresh token
-        self.client.cookies["access_token_cookie"] = "invalid"
+        self.client.cookies["tardis_access_token"] = "invalid"
         response = asyncio.run(self.client.post("/user/refresh"))
         self.assertEqual(response.status_code, 200)
 

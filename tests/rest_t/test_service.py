@@ -29,3 +29,6 @@ class TestRestService(TestCase):
             self.rest_service.user_db_url,
             "sqlite+aiosqlite:///file::memory:?mode=memory&cache=shared&uri=true",
         )
+
+    def test_development_property(self):
+        self.assertFalse(self.rest_service.development)

@@ -38,6 +38,11 @@ class TestCaseRouters(TestCase):
         config.Services.restapi.user_db_url = (
             "sqlite+aiosqlite:///file::memory:?mode=memory&cache=shared&uri=true"
         )
+        config.Services.restapi.development = True
+
+        from tardis.rest.app.routers import user as user_module
+
+        user_module._SECURE_COOKIE = None
 
         self._setup_user_db()
 

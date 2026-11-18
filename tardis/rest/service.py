@@ -14,6 +14,7 @@ class RestService(object):
     def __init__(
         self,
         user_db_url: str,
+        development: bool = False,
         **fast_api_args,
     ):
         if "log_config" not in fast_api_args:
@@ -21,10 +22,15 @@ class RestService(object):
 
         self._config = Config("tardis.rest.app.main:app", **fast_api_args)
         self._user_db_url = user_db_url
+        self._development = development
 
     @property
     def user_db_url(self) -> str:
         return self._user_db_url
+
+    @property
+    def development(self) -> bool:
+        return self._development
 
     async def run(self) -> None:
         server = Server(config=self._config)

@@ -18,6 +18,13 @@ def get_user_db_engine():
     return _user_engine
 
 
+def get_development_mode() -> bool:
+    try:
+        return Configuration().Services.restapi.development
+    except AttributeError:
+        return False
+
+
 def get_user_session_factory():
     global _user_session_factory
     if _user_session_factory is None:
