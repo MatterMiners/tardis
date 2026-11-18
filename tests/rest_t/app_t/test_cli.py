@@ -94,19 +94,40 @@ class TestCLI(TestCase):
                 "--password",
                 "testpass3",
                 "--scopes",
-                "a, b, c",
+                "resources:get, user:get, resources:patch",
             ],
         )
         self.assertEqual(result.exit_code, 0)
         self.assertIn("created successfully", result.stdout)
-        self.assertIn("['a', 'b', 'c']", result.stdout)
+        self.assertIn("['resources:get', 'user:get', 'resources:patch']", result.stdout)
 
         list_result = self.runner.invoke(
             cli_app, ["--user-db-url", self.db_url, "list-users"]
         )
         self.assertEqual(list_result.exit_code, 0)
         self.assertIn("testuser3", list_result.stdout)
-        self.assertIn("a, b, c", list_result.stdout)
+        self.assertIn("resources:get", list_result.stdout)
+        self.assertIn("user:get", list_result.stdout)
+        self.assertIn("resources:patch", list_result.stdout)
+
+    def test_add_user_invalid_scope(self):
+        result = self.runner.invoke(
+            cli_app,
+            [
+                "--user-db-url",
+                self.db_url,
+                "add",
+                "--username",
+                "testuser4",
+                "--password",
+                "testpass4",
+                "--scopes",
+                "admin:*,resources:get",
+            ],
+        )
+        self.assertEqual(result.exit_code, 1)
+        self.assertIn("Invalid scope(s)", result.stderr)
+        self.assertIn("admin:*", result.stderr)
 
     def test_add_user_duplicate_returns_error(self):
         self.runner.invoke(

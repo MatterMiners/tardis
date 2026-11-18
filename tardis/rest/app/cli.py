@@ -6,9 +6,24 @@ import typer
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from tardis.rest.app.models import Base
+from tardis.rest.app.scopes import ResourceScopes, UserScopes
 from tardis.rest.app.user_manager import CustomUserManager
 
 app = typer.Typer(help="TARDIS REST API user management")
+
+VALID_SCOPES = {s.value for s in ResourceScopes} | {s.value for s in UserScopes}
+
+
+def _validate_scopes(scopes: list[str]) -> list[str]:
+    invalid = [s for s in scopes if s not in VALID_SCOPES]
+    if invalid:
+        typer.echo(
+            f"Invalid scope(s): {', '.join(invalid)}. "
+            f"Valid scopes: {', '.join(sorted(VALID_SCOPES))}",
+            err=True,
+        )
+        raise typer.Exit(1)
+    return scopes
 
 
 def coro(f):
@@ -66,6 +81,7 @@ async def add(
 ) -> None:
     db_url = ctx.obj["user_db_url"]
     scope_list = [s.strip() for s in scopes.split(",")] if scopes else []
+    scope_list = _validate_scopes(scope_list)
 
     async with get_user_session(db_url) as session:
         user_manager = CustomUserManager(session)
