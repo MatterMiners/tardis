@@ -70,6 +70,17 @@ REST Service
         An empty list results in a token without any scopes. Requesting a scope
         that is not assigned to the user is rejected with ``403``.
 
+        Access tokens set by ``POST /user/login`` are valid for 15 minutes and
+        can be renewed via ``POST /user/refresh`` as long as the refresh token,
+        which is valid for 1 hour, has not expired. After that, clients have to
+        log in again. Bearer tokens from ``POST /user/token`` are valid for
+        24 hours and cannot be refreshed.
+
+        The key used to sign the tokens is generated anew each time TARDIS
+        starts. A restart therefore invalidates all issued tokens: browser
+        clients have to log in again, and scripts using a bearer token have to
+        request a new one via ``POST /user/token``.
+
 
     .. warning::
 
@@ -139,7 +150,7 @@ REST API Endpoints
         +--------+------------------+----------------------------------------------+-----------------+
         | POST   | /user/logout     | Clear authentication cookies                 | Requires auth   |
         +--------+------------------+----------------------------------------------+-----------------+
-        | POST   | /user/refresh    | Refresh access token (cookies)               | Requires auth   |
+        | POST   | /user/refresh    | Refresh access token (cookies)               | Refresh cookie  |
         +--------+------------------+----------------------------------------------+-----------------+
         | GET    | /user/me         | Get current user info                        | user:get        |
         +--------+------------------+----------------------------------------------+-----------------+
@@ -173,7 +184,8 @@ REST API Endpoints
     **Quick start:**
 
     1. Configure the REST service with ``user_db_url`` pointing to your user database
-    2. Create a user: ``tardis-rest-admin add --user-db-url <url> --username <user> --password <pass> --scopes resources:get,resources:patch,user:get``
+    2. Create a user: ``tardis-rest-admin --user-db-url <url> add --username <user> --scopes resources:get,resources:patch,user:get``
+       (prompts for the password)
     3. Authenticate: ``POST /user/login`` with credentials to obtain cookies
     4. Make API requests using the session cookies
 
@@ -288,6 +300,9 @@ User Management
         +------------+------------------------------------------------+-----------------------------------------+
 
     All commands require ``--user-db-url`` to specify the user database.
+    If ``--username`` or ``--password`` is omitted, the command prompts for it;
+    the password is not echoed. Prefer the prompt over ``--password`` to keep
+    the password out of the shell history.
 
 .. container:: content-tabs right-col
 
@@ -295,10 +310,10 @@ User Management
 
     .. code-block:: bash
 
-        # Add user
+        # Add user (prompts for the password)
         tardis-rest-admin --user-db-url sqlite+aiosqlite:///users.db \
           add \
-          --username admin --password secret \
+          --username admin \
           --scopes resources:get,resources:patch,user:get
 
     .. code-block:: bash
