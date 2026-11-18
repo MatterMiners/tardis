@@ -24,9 +24,10 @@ def check_scope_permissions(requested_scopes: list[str], allowed_scopes: list[st
 
 async def get_user_from_request(request: Request) -> User | None:
     token = None
-    auth_header = request.headers.get("Authorization")
-    if auth_header and auth_header.startswith("Bearer "):
-        token = auth_header[7:]
+    # The authentication scheme is case-insensitive (RFC 9110, section 11.1)
+    scheme, _, credentials = request.headers.get("Authorization", "").partition(" ")
+    if scheme.lower() == "bearer":
+        token = credentials.strip()
     elif "tardis_access_token" in request.cookies:
         token = request.cookies.get("tardis_access_token")
 

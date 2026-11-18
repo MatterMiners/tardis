@@ -307,6 +307,29 @@ class TestUser(TestCaseRouters):
         )
         self.assertEqual(response.status_code, 401)
 
+    def test_bearer_scheme_case_insensitive(self):
+        response = asyncio.run(self.client.post("/user/token", json=self.test_user))
+        self.assertEqual(response.status_code, 200)
+        access_token = response.json()["access_token"]
+
+        # The authentication scheme is case-insensitive (RFC 9110, section 11.1)
+        for scheme in ("Bearer", "bearer", "BEARER"):
+            with self.subTest(scheme=scheme):
+                response = asyncio.run(
+                    self.client.get(
+                        "/user/scopes",
+                        headers={"Authorization": f"{scheme} {access_token}"},
+                    )
+                )
+                self.assertEqual(response.status_code, 200)
+
+        for header in ("Bearer", "Bearer ", "Basic dGVzdDp0ZXN0"):
+            with self.subTest(header=header):
+                response = asyncio.run(
+                    self.client.get("/user/scopes", headers={"Authorization": header})
+                )
+                self.assertEqual(response.status_code, 401)
+
     def test_access_token_with_other_user_name_rejected(self):
         token = _token(
             sub="1", username="other", scopes=self.get_scopes(), type="access"
