@@ -13,12 +13,8 @@ class TestSecurity(TestCase):
                 ["user:get", "resources:get"], ["user:get", "user:put"]
             )
         self.assertEqual(cm.exception.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertDictEqual(
+        self.assertEqual(
             cm.exception.detail,
-            {
-                "msg": "Not enough permissions",
-                "failedAt": "resources:get",
-                "allowedScopes": ["user:get", "user:put"],
-            },
+            "Scope 'resources:get' not assigned to user",
         )
         check_scope_permissions(["resources:get"], ["resources:get"])

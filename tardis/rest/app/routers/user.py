@@ -17,6 +17,7 @@ from tardis.rest.app.models import User
 from tardis.rest.app.schemas import LoginUser, TokenResponse, UserResponse
 from tardis.rest.app.scopes import UserScopes
 from tardis.rest.app.security import (
+    check_scope_permissions,
     get_current_active_user,
     get_current_user_with_scopes,
 )
@@ -40,12 +41,7 @@ async def login(
         )
 
     requested_scopes = login_user.scopes or user.scopes
-    for scope in requested_scopes:
-        if scope not in user.scopes:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Scope '{scope}' not assigned to user",
-            )
+    check_scope_permissions(requested_scopes, user.scopes)
 
     access_token = user_manager.create_access_token(
         user, expires_delta=900, scopes=requested_scopes
@@ -82,12 +78,7 @@ async def token(
         )
 
     requested_scopes = login_user.scopes or user.scopes
-    for scope in requested_scopes:
-        if scope not in user.scopes:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Scope '{scope}' not assigned to user",
-            )
+    check_scope_permissions(requested_scopes, user.scopes)
 
     access_token = user_manager.create_access_token(
         user, expires_delta=86400, scopes=requested_scopes
@@ -134,6 +125,7 @@ async def refresh(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
         )
+    check_scope_permissions(token_scopes, user.scopes)
     access_token = user_manager.create_access_token(
         user, expires_delta=900, scopes=token_scopes
     )

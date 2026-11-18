@@ -9,16 +9,12 @@ from tardis.rest.app.models import User
 from tardis.rest.app.user_manager import ALGORITHM, CustomUserManager, SECRET_KEY
 
 
-def check_scope_permissions(requested_scopes: list, allowed_scopes: list):
-    for requested_scope in requested_scopes:
-        if requested_scope not in allowed_scopes:
+def check_scope_permissions(requested_scopes: list[str], allowed_scopes: list[str]):
+    for scope in requested_scopes:
+        if scope not in allowed_scopes:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail={
-                    "msg": "Not enough permissions",
-                    "failedAt": requested_scope,
-                    "allowedScopes": allowed_scopes,
-                },
+                detail=f"Scope '{scope}' not assigned to user",
             )
 
 
@@ -81,6 +77,6 @@ async def get_current_user_with_scopes(
         )
 
     if security_scopes.scopes:
-        check_scope_permissions(security_scopes.scopes, getattr(user, "scopes", []))
+        check_scope_permissions(security_scopes.scopes, user.scopes)
 
     return user

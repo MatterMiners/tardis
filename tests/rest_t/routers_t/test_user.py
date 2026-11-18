@@ -80,6 +80,32 @@ class TestUser(TestCaseRouters):
         response = asyncio.run(self.client.post("/user/refresh"))
         self.assertEqual(response.status_code, 200)
 
+    def test_refresh_revoked_scope(self):
+        # Login with full scopes (refresh token gets all 3 scopes)
+        self.login()
+
+        # Revoke "user:get" from the user directly in the DB
+        async def _revoke_scope():
+            from tardis.rest.app.database import get_user_session_factory
+            from tardis.rest.app.models import User
+            from sqlalchemy import select
+
+            session_factory = get_user_session_factory()
+            async with session_factory() as session:
+                result = await session.execute(
+                    select(User).where(User.user_name == "test")
+                )
+                user = result.scalar_one_or_none()
+                user.scopes = ["resources:get", "resources:patch"]
+                await session.commit()
+
+        asyncio.run(_revoke_scope())
+
+        # Refresh should fail — refresh token still has "user:get"
+        # but the user's DB scopes no longer include it
+        response = asyncio.run(self.client.post("/user/refresh"))
+        self.assertEqual(response.status_code, 403)
+
     def test_user_me(self):
         # Not logged in yet
         response = asyncio.run(self.client.get("/user/me"))
