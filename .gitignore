@@ -124,3 +124,6 @@ cloudinit/
 
 # Igonre vscode
 .vscode*
+
+# Ignore Claude Code settings
+.claude/
