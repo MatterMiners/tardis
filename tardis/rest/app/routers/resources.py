@@ -45,5 +45,9 @@ async def drain_drone(
         security.get_current_user_with_scopes, scopes=[ResourceScopes.patch]
     ),
 ):
+    if not await crud.get_resource_state(sql_registry, drone_uuid):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Drone not found"
+        )
     await crud.set_state_to_draining(sql_registry, drone_uuid)
     return {"msg": "Drone set to DrainState"}
