@@ -1,10 +1,9 @@
 from tardis.interfaces.siteadapter import SiteAdapter
 from tardis.utilities.attributedict import AttributeDict
 
-from cobald.utility.primitives import infinity as inf
 from unittest import TestCase
 from unittest.mock import patch
-from pydantic.error_wrappers import ValidationError
+from pydantic import ValidationError
 
 import asyncio
 import logging
@@ -221,14 +220,16 @@ class TestSiteAdapter(TestCase):
         # noinspection PyUnresolvedReferences
         SiteAdapter.site_configuration.fget.cache_clear()
 
-        del self.config.Sites[0]["quota"]
+        # negative quotas are allowed and interpreted as infinity by the
+        # pool factory
+        self.config.Sites[0]["quota"] = -1
 
         self.assertEqual(
             self.site_adapter.site_configuration,
             AttributeDict(
                 name="TestSite",
                 adapter="TestSite",
-                quota=inf,
+                quota=-1,
                 drone_minimum_lifetime=None,
                 drone_heartbeat_interval=60,
             ),
@@ -237,23 +238,26 @@ class TestSiteAdapter(TestCase):
         # noinspection PyUnresolvedReferences
         SiteAdapter.site_configuration.fget.cache_clear()
 
-        self.config.Sites[0]["extra"] = "Should fail!"
+        del self.config.Sites[0]["quota"]
 
         with self.assertRaises(ValidationError):
-            self.assertEqual(
-                self.site_adapter.site_configuration,
-                AttributeDict(
-                    name="TestSite",
-                    adapter="TestSite",
-                    quota=inf,
-                    drone_minimum_lifetime=None,
-                    drone_heartbeat_interval=60,
-                ),
-            )
+            # noinspection PyStatementEffect
+            self.site_adapter.site_configuration
 
         # noinspection PyUnresolvedReferences
         SiteAdapter.site_configuration.fget.cache_clear()
 
+        self.config.Sites[0]["quota"] = 1
+        self.config.Sites[0]["extra"] = "Should fail!"
+
+        with self.assertRaises(ValidationError):
+            # noinspection PyStatementEffect
+            self.site_adapter.site_configuration
+
+        # noinspection PyUnresolvedReferences
+        SiteAdapter.site_configuration.fget.cache_clear()
+
+        del self.config.Sites[0]["extra"]
         self.config.Sites[0]["quota"] = 0
 
         with self.assertRaises(ValidationError):
