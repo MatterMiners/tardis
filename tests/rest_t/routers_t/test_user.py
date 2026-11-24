@@ -52,29 +52,32 @@ class TestUser(TestCaseRouters):
             {
                 "detail": [
                     {
+                        "type": "missing",
                         "loc": ["body"],
-                        "msg": "field required",
-                        "type": "value_error.missing",
+                        "msg": "Field required",
+                        "input": None,
                     }
                 ]
             },
         )
 
-        response = asyncio.run(self.client.post("/user/login", data="{}"))
+        response = asyncio.run(self.client.post("/user/login", json={}))
         self.assertEqual(response.status_code, 422)
         self.assertEqual(
             response.json(),
             {
                 "detail": [
                     {
+                        "type": "missing",
                         "loc": ["body", "user_name"],
-                        "msg": "field required",
-                        "type": "value_error.missing",
+                        "msg": "Field required",
+                        "input": {},
                     },
                     {
+                        "type": "missing",
                         "loc": ["body", "password"],
-                        "msg": "field required",
-                        "type": "value_error.missing",
+                        "msg": "Field required",
+                        "input": {},
                     },
                 ]
             },
