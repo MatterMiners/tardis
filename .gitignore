@@ -124,3 +124,9 @@ cloudinit/
 
 # Igonre vscode
 .vscode*
+
+# Ignore Claude Code settings
+.claude/
+
+# Ignore local plans, logs and backlog
+docs/plans/

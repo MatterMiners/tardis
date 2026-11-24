@@ -14,13 +14,14 @@ with open(os.path.join(repo_base_dir, "README.md"), "r") as read_me:
 
 TESTS_REQUIRE = ["flake8", "httpx"]
 REST_REQUIRES = [
-    "fastapi-jwt-auth",
     "fastapi>=0.100.0",
-    "python-jose",
+    "sqlalchemy[asyncio]>=2.0",
+    "aiosqlite>=0.20.0",
     "uvicorn[standard]",
     "typer",
     "bcrypt",
     "python-multipart",
+    "python-jose>=3.4.0",
 ]
 
 
@@ -59,8 +60,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "generate_token = tardis.rest.token_generator.__main__:generate_token_cli",
-            "hash_credentials = tardis.rest.hash_credentials.__main__:hash_credentials_cli",  # noqa: B950
+            "tardis-rest-admin = tardis.rest.app.cli:app",
         ],
         "cobald.config.yaml_constructors": [
             "TardisPoolFactory = tardis.resources.poolfactory:create_composite_pool",

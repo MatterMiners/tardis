@@ -12,11 +12,9 @@ def is_list_str(resp):
 class TestTypes(TestCaseRouters):
     def setUp(self) -> None:
         super().setUp()
-        self.reset_scopes()
         self.login()
 
     def test_types(self):
-        self.clear_lru_cache()
         self.mock_types.get_available_states = AsyncMock(
             return_value=[{"state": "state"}, {"state": "state2"}]
         )
@@ -27,24 +25,19 @@ class TestTypes(TestCaseRouters):
             return_value=[{"machine_type": "type"}, {"machine_type": "type2"}]
         )
 
-        self.clear_lru_cache()
         response = asyncio.run(self.client.get("/types/states"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), ["state", "state2"])
 
-        self.clear_lru_cache()
         response = asyncio.run(self.client.get("/types/sites"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), ["site", "site2"])
 
-        self.clear_lru_cache()
         response = asyncio.run(self.client.get("/types/machine_types"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), ["type", "type2"])
 
         # Invalid scope
-        self.clear_lru_cache()
-        self.set_scopes(["resources:patch"])
-        self.login()
+        self.update_scopes(["resources:patch"])
         response = asyncio.run(self.client.get("/types/states"))
         self.assertEqual(response.status_code, 403)
