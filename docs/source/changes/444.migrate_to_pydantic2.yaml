@@ -1,10 +1,16 @@
 category: changed
 summary: "Migrate TARDIS to pydantic 2"
 description: |
-  TARDIS now requires pydantic 2 instead of pydantic 1. Validation error
-  responses (status 422) of the REST API use the pydantic 2 error format, e.g.
-  ``"type": "missing"`` instead of ``"value_error.missing"``, with an additional
-  ``input`` field. Integer fields of the site configuration now reject values
-  with a fractional part, such as ``1.5``, which pydantic 1 silently truncated.
+  TARDIS now requires pydantic 2 instead of pydantic 1, and the REST API
+  requires FastAPI 0.132.0 or newer. Validation error responses (status 422)
+  of the REST API use the pydantic 2 error format, e.g. ``"type": "missing"``
+  instead of ``"value_error.missing"``, with an additional ``input`` field.
+  Request bodies are only parsed as JSON if the request has the header
+  ``Content-Type: application/json``; otherwise the REST API answers with 422.
+  In the site configuration, ``quota`` is now required in
+  ``SiteConfigurationModel`` and must not be ``null`` (negative values still
+  mean unlimited), ``drone_heartbeat_interval`` must not be ``null``, and integer
+  fields reject values with a fractional part, such as ``1.5``, which pydantic 1
+  silently truncated.
 pull requests:
 - 444
