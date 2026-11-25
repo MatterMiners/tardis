@@ -22,7 +22,7 @@ class SiteConfigurationModel(BaseModel):
     adapter: str
     quota: int
     drone_minimum_lifetime: Optional[Annotated[int, Field(gt=0)]] = None
-    drone_heartbeat_interval: Optional[Annotated[int, Field(ge=0)]] = 60
+    drone_heartbeat_interval: Annotated[int, Field(ge=0)] = 60
 
     model_config = ConfigDict(extra="forbid")
 
