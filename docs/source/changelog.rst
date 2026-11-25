@@ -9,6 +9,11 @@ CHANGELOG
 [Unreleased] - 2026-11-25
 =========================
 
+Added
+-----
+
+* Add support for Python 3.14
+
 Changed
 -------
 
