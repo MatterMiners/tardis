@@ -57,6 +57,7 @@ setup(
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
     ],
     entry_points={
         "console_scripts": [
@@ -94,7 +95,7 @@ setup(
         "asyncstdlib",
         "async-timeout",
         "typing_extensions",
-        "python-auditor==0.10.1",
+        "python-auditor~=0.11.2",
         "tzlocal",
         "pyotp",
         *REST_REQUIRES,
