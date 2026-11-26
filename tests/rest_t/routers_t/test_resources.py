@@ -93,6 +93,33 @@ class TestResources(TestCaseRouters):
         response = asyncio.run(self.client.get("/resources/"))
         self.assertEqual(response.status_code, 403)
 
+    def test_get_drone_uuid(self):
+        self.mock_crud.get_drone_uuid = AsyncMock(
+            return_value=[{"drone_uuid": "test-0125bc9fd8"}]
+        )
+
+        response = asyncio.run(
+            self.client.get(
+                "/resources/14fa5640a7c146e482e8be41ec5dffea/drone_uuid",
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"drone_uuid": "test-0125bc9fd8"})
+
+        self.mock_crud.get_drone_uuid = AsyncMock(return_value=[])
+        response = asyncio.run(
+            self.client.get("/resources/nonexistent-uuid/drone_uuid")
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json(), {"detail": "Drone not found"})
+
+        # missing scope
+        self.update_scopes(["resources:patch"])
+        response = asyncio.run(
+            self.client.get("/resources/14fa5640a7c146e482e8be41ec5dffea/drone_uuid")
+        )
+        self.assertEqual(response.status_code, 403)
+
     def test_drain_drone(self):
         self.mock_crud.get_resource_state = AsyncMock(
             return_value=[{"drone_uuid": "test-0125bc9fd8", "state": "AvailableState"}]
