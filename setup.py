@@ -14,13 +14,14 @@ with open(os.path.join(repo_base_dir, "README.md"), "r") as read_me:
 
 TESTS_REQUIRE = ["flake8", "httpx"]
 REST_REQUIRES = [
-    "fastapi-jwt-auth",
-    "fastapi>=0.100.0",
-    "python-jose",
+    "fastapi>=0.132.0",
+    "sqlalchemy[asyncio]>=2.0",
+    "aiosqlite>=0.20.0",
     "uvicorn[standard]",
     "typer",
     "bcrypt",
     "python-multipart",
+    "python-jose>=3.4.0",
 ]
 
 
@@ -56,11 +57,11 @@ setup(
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
     ],
     entry_points={
         "console_scripts": [
-            "generate_token = tardis.rest.token_generator.__main__:generate_token_cli",
-            "hash_credentials = tardis.rest.hash_credentials.__main__:hash_credentials_cli",  # noqa: B950
+            "tardis-rest-admin = tardis.rest.app.cli:app",
         ],
         "cobald.config.yaml_constructors": [
             "TardisPoolFactory = tardis.resources.poolfactory:create_composite_pool",
@@ -90,11 +91,11 @@ setup(
         "elasticsearch>=7.17,<8.0.0",
         "aioprometheus>=21.9.0",
         "kubernetes_asyncio",
-        "pydantic<2.0.0",
+        "pydantic>=2.0.0,<3.0.0",
         "asyncstdlib",
         "async-timeout",
         "typing_extensions",
-        "python-auditor==0.10.1",
+        "python-auditor~=0.11.2",
         "tzlocal",
         "pyotp",
         *REST_REQUIRES,

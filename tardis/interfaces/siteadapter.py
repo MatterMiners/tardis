@@ -3,11 +3,10 @@ from ..utilities.attributedict import AttributeDict
 from ..utilities.utils import machine_meta_data_translation
 
 from abc import ABCMeta, abstractmethod
-from cobald.utility.primitives import infinity as inf
 from enum import Enum
 from functools import lru_cache
-from pydantic import BaseModel, conint, validator
-from typing import Optional
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from typing import Annotated, Optional
 
 import logging
 
@@ -21,16 +20,17 @@ class SiteConfigurationModel(BaseModel):
 
     name: str
     adapter: str
-    quota: Optional[int] = inf
-    drone_minimum_lifetime: Optional[conint(gt=0)] = None
-    drone_heartbeat_interval: Optional[conint(ge=0)] = 60
+    quota: int
+    drone_minimum_lifetime: Optional[Annotated[int, Field(gt=0)]] = None
+    drone_heartbeat_interval: Annotated[int, Field(ge=0)] = 60
 
-    class Config:
-        extra = "forbid"
+    model_config = ConfigDict(extra="forbid")
 
-    @validator("quota")
-    def quota_validator(cls, quota: Optional[int]):  # noqa B902
-        assert quota != 0, "Zero quota is not a reasonable value"
+    @field_validator("quota")
+    @classmethod
+    def quota_validator(cls, quota: int) -> int:
+        if quota == 0:
+            raise ValueError("Zero quota is not a reasonable value")
         return quota
 
 
@@ -104,7 +104,7 @@ class SiteAdapter(metaclass=ABCMeta):
         return self.site_configuration.drone_heartbeat_interval
 
     @property
-    def drone_minimum_lifetime(self) -> [int, None]:
+    def drone_minimum_lifetime(self) -> int | None:
         """
         Property that returns the configuration parameter drone_minimum_lifetime.
         It describes the minimum lifetime before a drone is automatically going
@@ -234,7 +234,7 @@ class SiteAdapter(metaclass=ABCMeta):
         for site_configuration in Configuration().Sites:
             if site_configuration.name == self.site_name:
                 return AttributeDict(
-                    SiteConfigurationModel(**site_configuration).dict()
+                    SiteConfigurationModel(**site_configuration).model_dump()
                 )
 
     @property

@@ -3,8 +3,10 @@ from tardis.exceptions.tardisexceptions import TardisDroneCrashed
 from tardis.exceptions.tardisexceptions import TardisTimeout
 from tardis.exceptions.tardisexceptions import TardisQuotaExceeded
 from tardis.exceptions.tardisexceptions import TardisResourceStatusUpdateFailed
+from tardis.exceptions.tardisexceptions import TardisInvalidStateTransition
 from tardis.interfaces.batchsystemadapter import MachineStatus
 from tardis.interfaces.siteadapter import ResourceStatus
+from tardis.resources.dronestates import check_minimum_lifetime
 from tardis.resources.dronestates import RequestState
 from tardis.resources.dronestates import BootingState
 from tardis.resources.dronestates import IntegrateState
@@ -285,7 +287,7 @@ class TestDroneStates(TestCase):
     def test_shutting_down_state(self):
         matrix = [
             (ResourceStatus.Booting, None, CleanupState),
-            (ResourceStatus.Running, None, ShuttingDownState),
+            (ResourceStatus.Running, None, CleanupState),
             (ResourceStatus.Stopped, None, CleanupState),
             (ResourceStatus.Deleted, None, DownState),
             (ResourceStatus.Error, None, CleanupState),
@@ -296,7 +298,7 @@ class TestDroneStates(TestCase):
     def test_cleanup_state(self):
         matrix = [
             (ResourceStatus.Booting, None, CleanupState),
-            (ResourceStatus.Running, None, DrainState),
+            (ResourceStatus.Running, None, CleanupState),
             (ResourceStatus.Stopped, None, CleanupState),
             (ResourceStatus.Deleted, None, DownState),
             (ResourceStatus.Error, None, CleanupState),
@@ -338,7 +340,59 @@ class TestDroneStates(TestCase):
 
         self.drone.site_agent.terminate_resource.side_effect = None
 
+    def test_running_job_is_terminated_in_cleanup_state(self):
+        self.drone.state.return_value = CleanupState()
+        self.drone.site_agent.resource_status = AsyncMock(
+            return_value=AttributeDict(resource_status=ResourceStatus.Running)
+        )
+
+        with self.assertLogs(None, level="DEBUG"):
+            asyncio.run(self.drone.state.return_value.run(self.drone))
+
+        self.assertIsInstance(self.drone.state, CleanupState)
+        self.drone.site_agent.terminate_resource.assert_called_once()
+
     def test_down_state(self):
         self.drone.state.return_value = DownState()
         asyncio.run(self.drone.state.return_value.run(self.drone))
         self.assertEqual(self.drone.demand, 0.0)
+
+    def test_transition_logic_raises_exception_on_unknown_transition(self):
+        test_cases = [
+            (BootingState, (0.5, None)),
+            (IntegratingState, (None, None)),
+            (AvailableState, (False, 1.0, False, None, None)),
+            (DrainingState, (None, None)),
+            (ShutDownState, (None,)),
+            (ShuttingDownState, (None,)),
+            (CleanupState, (None,)),
+        ]
+
+        for state_class, pipeline_results in test_cases:
+            with self.assertRaises(TardisInvalidStateTransition) as ctx:
+                asyncio.run(state_class.transition_logic(*pipeline_results))
+            self.assertIn(
+                f"Unknown state transition in {state_class.__name__}",
+                str(ctx.exception),
+            )
+
+    def test_check_minimum_lifetime(self):
+        self.drone.minimum_lifetime = None
+        self.drone.resource_attributes.updated = datetime.now()
+        result = asyncio.run(check_minimum_lifetime(self.drone))
+        self.assertFalse(result)
+
+        self.drone.minimum_lifetime = 0
+        self.drone.resource_attributes.updated = datetime.now()
+        result = asyncio.run(check_minimum_lifetime(self.drone))
+        self.assertFalse(result)
+
+        self.drone.minimum_lifetime = 3600
+        self.drone.resource_attributes.updated = datetime.now()
+        result = asyncio.run(check_minimum_lifetime(self.drone))
+        self.assertFalse(result)
+
+        self.drone.minimum_lifetime = 3600
+        self.drone.resource_attributes.updated = datetime.now() - timedelta(hours=2)
+        result = asyncio.run(check_minimum_lifetime(self.drone))
+        self.assertTrue(result)
