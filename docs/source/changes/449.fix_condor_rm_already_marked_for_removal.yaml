@@ -1,0 +1,9 @@
+category: fixed
+summary: "Fix crash of TARDIS when condor_rm reports a job as already marked for removal"
+description: |
+  If a job was already marked for removal, `condor_rm` exits with code 1 and reports
+  `Job X.Y already marked for removal`. This error was not handled by the HTCondor site adapter and stopped
+  the whole TARDIS runtime. It is now handled like a job that was not found, so the drone retries the
+  termination until the job has left the queue.
+pull requests:
+- 449

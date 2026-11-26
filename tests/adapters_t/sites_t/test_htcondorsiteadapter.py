@@ -48,6 +48,7 @@ CONDOR_Q_OUTPUT_DOES_NOT_EXISTS = "1\t1351042\t0"
 
 CONDOR_RM_OUTPUT = "Job 1351043.0 marked for removal"
 CONDOR_RM_FAILED_OUTPUT = "Job 1351043.0 not found"
+CONDOR_RM_ALREADY_MARKED_OUTPUT = "Job 1351043.0 already marked for removal"
 CONDOR_RM_FAILED_MESSAGE = "Run command condor_rm 1351043.0 via ShellExecutor failed"
 
 CONDOR_SUSPEND_OUTPUT = """Job 1351043.0 suspended"""
@@ -536,6 +537,25 @@ class TestHTCondorSiteAdapter(TestCase):
         ]
     )
     def test_terminate_resource_failed_redo(self):
+        with self.assertRaises(TardisResourceStatusUpdateFailed):
+            asyncio.run(
+                self.adapter.terminate_resource(
+                    AttributeDict(remote_resource_uuid="1351043.0")
+                ),
+            )
+
+    @mock_executor_run_command(
+        [
+            CommandExecutionFailure(
+                message=CONDOR_RM_FAILED_MESSAGE,
+                exit_code=1,
+                stderr=CONDOR_RM_ALREADY_MARKED_OUTPUT,
+                stdout="",
+                stdin="",
+            ),  # condor_rm call in terminate_resource
+        ]
+    )
+    def test_terminate_resource_already_marked_for_removal(self):
         with self.assertRaises(TardisResourceStatusUpdateFailed):
             asyncio.run(
                 self.adapter.terminate_resource(

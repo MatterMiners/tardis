@@ -175,8 +175,12 @@ async def _condor_tool(
         response = await executor.run_command(command)
     except CommandExecutionFailure as cef:
         # the tool fails if none of the jobs are found – because they all just shut down
-        # report graceful failure for all
-        handle_error_msgs = ("not found", "not running to be")
+        # or are already marked for removal – report graceful failure for all
+        handle_error_msgs = (
+            "not found",
+            "not running to be",
+            "already marked for removal",
+        )
         if cef.exit_code == 1 and any(msg in cef.stderr for msg in handle_error_msgs):
             return [False] * len(resource_attributes)
         raise
