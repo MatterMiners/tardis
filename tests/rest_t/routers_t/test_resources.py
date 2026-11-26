@@ -94,7 +94,6 @@ class TestResources(TestCaseRouters):
         self.assertEqual(response.status_code, 403)
 
     def test_get_drone_uuid(self):
-        self.clear_lru_cache()
         self.mock_crud.get_drone_uuid = AsyncMock(
             return_value=[{"drone_uuid": "test-0125bc9fd8"}]
         )
@@ -115,8 +114,7 @@ class TestResources(TestCaseRouters):
         self.assertEqual(response.json(), {"detail": "Drone not found"})
 
         # missing scope
-        self.set_scopes(["resources:patch"])
-        self.login()
+        self.update_scopes(["resources:patch"])
         response = asyncio.run(
             self.client.get("/resources/14fa5640a7c146e482e8be41ec5dffea/drone_uuid")
         )
