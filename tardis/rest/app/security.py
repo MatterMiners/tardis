@@ -1,141 +1,102 @@
-import secrets
-from ...configuration.configuration import Configuration
-from ...exceptions.tardisexceptions import TardisError
+from typing import Annotated
 
-from bcrypt import checkpw, gensalt, hashpw
-from fastapi import HTTPException, status, Depends
+from fastapi import Depends, HTTPException, status
+from fastapi.security import (
+    APIKeyCookie,
+    HTTPAuthorizationCredentials,
+    HTTPBearer,
+    SecurityScopes,
+)
+from jose import JWTError
 
-from fastapi.security import SecurityScopes, HTTPBasic, HTTPBasicCredentials
-
-from pydantic import BaseModel
-from fastapi_jwt_auth import AuthJWT
-
-from functools import lru_cache
-from typing import List, Optional, Union
-
-
-class Settings(BaseModel):
-    authjwt_secret_key: str = secrets.token_hex(128)
-    authjwt_token_location: set = {"cookies"}
-    authjwt_cookie_samesite: str = "strict"
-    # TODO: change this to true in production so only https traffic is allowed
-    # Service meant to be used with https proxy
-    authjwt_cookie_secure: bool = False
-    # As 'same_site' is strict this is probably enough.
-    authjwt_cookie_csrf_protect: bool = False
+from tardis.rest.app.database import get_user_session_factory
+from tardis.rest.app.models import User
+from tardis.rest.app.user_manager import (
+    ACCESS_TOKEN_TYPE,
+    CustomUserManager,
+    decode_token,
+)
 
 
-@AuthJWT.load_config
-def get_config():
-    # TODO: Solve - AttributeError: Configuration().Services
-    return Settings()
-
-
-class BaseUser(BaseModel):
-    user_name: str
-    scopes: Optional[List[str]] = None
-
-
-# TODO: Document the scopes manually
-# "resources:get": "Allows to read resource database",
-# "resources:put": "Allows to update resource database.",
-
-
-class LoginUser(BaseUser):
-    password: str
-
-
-class DatabaseUser(BaseUser):
-    hashed_password: str
-
-
-def check_scope_permissions(requested_scopes: List[str], allowed_scopes: List[str]):
-    # All requested scopes must be contained in allowed_scopes
+def check_scope_permissions(requested_scopes: list[str], allowed_scopes: list[str]):
     for scope in requested_scopes:
         if scope not in allowed_scopes:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail={
-                    "msg": "Not enough permissions",
-                    "failedAt": scope,
-                    "allowedScopes": allowed_scopes,
-                },
-            ) from None
+                detail=f"Scope '{scope}' not assigned to user",
+            )
 
 
-def check_authorization(
-    security_scopes: SecurityScopes, Authorize: AuthJWT = Depends()
-) -> AuthJWT:
-    # No authorization without authentication
-    Authorize.jwt_required()
+# Both schemes are optional, since an access token can be passed either way.
+# Declaring them makes them visible in the OpenAPI schema, which enables the
+# "Authorize" button of the interactive documentation at /docs.
+bearer_scheme = HTTPBearer(
+    bearerFormat="JWT",
+    description="Access token obtained via POST /user/token",
+    auto_error=False,
+)
+cookie_scheme = APIKeyCookie(
+    name="tardis_access_token",
+    description="Access token cookie set by POST /user/login",
+    auto_error=False,
+)
 
-    token_scopes = get_token_scopes(Authorize)
-    check_scope_permissions(security_scopes.scopes, token_scopes)
 
-    return Authorize
+async def get_user_from_request(
+    bearer: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
+    cookie_token: Annotated[str | None, Depends(cookie_scheme)],
+) -> User | None:
+    # HTTPBearer handles the scheme case-insensitively (RFC 9110, section 11.1)
+    token = bearer.credentials if bearer else cookie_token
+
+    if not token:
+        return None
+
+    try:
+        payload = decode_token(token, ACCESS_TOKEN_TYPE)
+        user_id = int(payload["sub"])
+        user_name = payload["username"]
+    except (JWTError, ValueError, TypeError, KeyError):
+        return None
+    scopes = payload.get("scopes", [])
+    async with get_user_session_factory()() as db:
+        user = await CustomUserManager(db).get_by_id(user_id)
+        if user and user.user_name != user_name:
+            # The token was issued for another user with the same id
+            return None
+        if user:
+            # Detach the user so the token scopes are never written back
+            db.expunge(user)
+            # Scopes revoked since the token was issued are no longer granted
+            user.scopes = [scope for scope in scopes if scope in user.scopes]
+        return user
 
 
-basic_security = HTTPBasic(auto_error=False)
+async def get_current_active_user(
+    user: Annotated[User | None, Depends(get_user_from_request)],
+) -> User:
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
+    return user
 
 
-def check_basic_or_jwt_authorization(
+async def get_current_user_with_scopes(
     security_scopes: SecurityScopes,
-    Authorize: AuthJWT = Depends(),
-    credentials: Optional[HTTPBasicCredentials] = Depends(basic_security),
-) -> Union[DatabaseUser, AuthJWT]:
-    if credentials is not None:
-        user = check_authentication(credentials.username, credentials.password)
+    user: Annotated[User | None, Depends(get_user_from_request)],
+) -> User:
+    """
+    Retrieve current authenticated user and enforce scope requirements.
+    """
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
+
+    if security_scopes.scopes:
         check_scope_permissions(security_scopes.scopes, user.scopes)
-        return user
 
-    # No Basic Auth header supplied -> fall back to the JWT/cookie flow
-    Authorize.jwt_required()
-    token_scopes = get_token_scopes(Authorize)
-    check_scope_permissions(security_scopes.scopes, token_scopes)
-    return Authorize
-
-
-def check_authentication(user_name: str, password: str) -> DatabaseUser:
-    user = get_user(user_name)
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-        )
-
-    if checkpw(password.encode(), user.hashed_password.encode()):
-        return user
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-        )
-
-
-def get_token_scopes(Authorize: AuthJWT) -> List[str]:
-    try:
-        token_scopes: List[str] = Authorize.get_raw_jwt()["scopes"]
-    except KeyError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid token/no scopes in token",
-        ) from None
-    return token_scopes
-
-
-@lru_cache(maxsize=16)
-def get_user(user_name: str) -> Optional[DatabaseUser]:
-    try:
-        rest_service = Configuration().Services.restapi
-    except AttributeError:
-        raise TardisError(
-            "TARDIS RestService not configured while accessing user credentials"
-        ) from None
-    else:
-        return rest_service.get_user(user_name)
-
-
-def hash_password(password: str) -> bytes:
-    salt = gensalt()
-    return hashpw(password.encode(), salt)
+    return user

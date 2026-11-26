@@ -1,0 +1,8 @@
+category: added
+summary: "Add support for Python 3.14"
+description: |
+  TARDIS now supports and is tested on Python 3.14. The auditor plugin
+  requires python-auditor 0.11.2 or a newer 0.11.x release, the first release
+  line that provides wheels for Python 3.14.
+pull requests:
+- 447

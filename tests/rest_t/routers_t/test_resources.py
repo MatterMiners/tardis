@@ -10,11 +10,9 @@ class TestResources(TestCaseRouters):
     # in router tests the corresponding super().function() needs to be called as well.
     def setUp(self):
         super().setUp()
-        self.reset_scopes()
         self.login()
 
     def test_get_resource_state(self):
-        self.clear_lru_cache()
         self.mock_crud.get_resource_state = AsyncMock(
             return_value=[{"drone_uuid": "test-0123456789", "state": "AvailableState"}]
         )
@@ -42,10 +40,11 @@ class TestResources(TestCaseRouters):
             {
                 "detail": [
                     {
-                        "ctx": {"pattern": "^\\S+-[A-Fa-f0-9]{10}$"},
+                        "type": "string_pattern_mismatch",
                         "loc": ["path", "drone_uuid"],
-                        "msg": 'string does not match regex "^\\S+-[A-Fa-f0-9]{10}$"',
-                        "type": "value_error.str.regex",
+                        "msg": "String should match pattern '^\\S+-[A-Fa-f0-9]{10}$'",
+                        "input": "test-invalid",
+                        "ctx": {"pattern": "^\\S+-[A-Fa-f0-9]{10}$"},
                     }
                 ]
             },
@@ -56,13 +55,11 @@ class TestResources(TestCaseRouters):
         self.assertEqual(response.json(), {"detail": "Not Found"})
 
         # missing scope
-        self.set_scopes(["resources:patch"])
-        self.login()
+        self.update_scopes(["resources:patch"])
         response = asyncio.run(self.client.get("/resources/test-0123456789/state"))
         self.assertEqual(response.status_code, 403)
 
     def test_get_resources(self):
-        self.clear_lru_cache()
         full_expected_resources = [
             {
                 "remote_resource_uuid": "14fa5640a7c146e482e8be41ec5dffea",
@@ -93,13 +90,11 @@ class TestResources(TestCaseRouters):
         )
 
         # missing scope
-        self.set_scopes(["resources:patch"])
-        self.login()
+        self.update_scopes(["resources:patch"])
         response = asyncio.run(self.client.get("/resources/"))
         self.assertEqual(response.status_code, 403)
 
     def test_get_drone_uuid(self):
-        self.clear_lru_cache()
         self.mock_crud.get_drone_uuid = AsyncMock(
             return_value=[{"drone_uuid": "test-0125bc9fd8"}]
         )
@@ -119,53 +114,14 @@ class TestResources(TestCaseRouters):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {"detail": "Drone not found"})
 
-        # missing scope (JWT/cookie auth)
-        self.set_scopes(["resources:patch"])
-        self.login()
+        # missing scope
+        self.update_scopes(["resources:patch"])
         response = asyncio.run(
             self.client.get("/resources/14fa5640a7c146e482e8be41ec5dffea/drone_uuid")
         )
         self.assertEqual(response.status_code, 403)
 
-    def test_get_drone_uuid_basic_auth(self):
-        self.clear_lru_cache()
-        self.mock_crud.get_drone_uuid = AsyncMock(
-            return_value=[{"drone_uuid": "test-0125bc9fd8"}]
-        )
-
-        # valid Basic Auth credentials, no login/cookie involved
-        response = asyncio.run(
-            self.client.get(
-                "/resources/14fa5640a7c146e482e8be41ec5dffea/drone_uuid",
-                auth=(self.test_user["user_name"], self.test_user["password"]),
-            )
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"drone_uuid": "test-0125bc9fd8"})
-
-        # wrong password
-        self.clear_lru_cache()
-        response = asyncio.run(
-            self.client.get(
-                "/resources/14fa5640a7c146e482e8be41ec5dffea/drone_uuid",
-                auth=(self.test_user["user_name"], "wrong-password"),
-            )
-        )
-        self.assertEqual(response.status_code, 401)
-
-        # missing scope
-        self.clear_lru_cache()
-        self.set_scopes(["resources:patch"])
-        response = asyncio.run(
-            self.client.get(
-                "/resources/14fa5640a7c146e482e8be41ec5dffea/drone_uuid",
-                auth=(self.test_user["user_name"], self.test_user["password"]),
-            )
-        )
-        self.assertEqual(response.status_code, 403)
-
     def test_get_shutdown_time(self):
-        self.clear_lru_cache()
         self.mock_crud.get_shutdown_time = AsyncMock(
             return_value=[{"shutdown_time": datetime(2026, 10, 10, 18, 0, 0)}]
         )
@@ -197,9 +153,8 @@ class TestResources(TestCaseRouters):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {"detail": "Drone not found"})
 
-        # missing scope (JWT/cookie auth)
-        self.set_scopes(["resources:patch"])
-        self.login()
+        # missing scope
+        self.update_scopes(["resources:patch"])
         response = asyncio.run(
             self.client.get(
                 "/resources/14fa5640a7c146e482e8be41ec5dffea/shutdown_time"
@@ -207,34 +162,10 @@ class TestResources(TestCaseRouters):
         )
         self.assertEqual(response.status_code, 403)
 
-    def test_get_shutdown_time_basic_auth(self):
-        self.clear_lru_cache()
-        self.mock_crud.get_shutdown_time = AsyncMock(
-            return_value=[{"shutdown_time": datetime(2026, 10, 10, 18, 0, 0)}]
-        )
-
-        # valid Basic Auth credentials, no login/cookie involved
-        response = asyncio.run(
-            self.client.get(
-                "/resources/14fa5640a7c146e482e8be41ec5dffea/shutdown_time",
-                auth=(self.test_user["user_name"], self.test_user["password"]),
-            )
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"shutdown_time": "2026-10-10T18:00:00"})
-
-        # wrong password
-        self.clear_lru_cache()
-        response = asyncio.run(
-            self.client.get(
-                "/resources/14fa5640a7c146e482e8be41ec5dffea/shutdown_time",
-                auth=(self.test_user["user_name"], "wrong-password"),
-            )
-        )
-        self.assertEqual(response.status_code, 401)
-
     def test_drain_drone(self):
-        self.clear_lru_cache()
+        self.mock_crud.get_resource_state = AsyncMock(
+            return_value=[{"drone_uuid": "test-0125bc9fd8", "state": "AvailableState"}]
+        )
         self.mock_crud.set_state_to_draining = AsyncMock()
 
         response = asyncio.run(self.client.patch("/resources/test-0125bc9fd8/drain"))
@@ -247,13 +178,20 @@ class TestResources(TestCaseRouters):
         )
 
         # missing scope
-        self.set_scopes(["resources:get"])
-        self.login()
+        self.update_scopes(["resources:get"])
         response = asyncio.run(self.client.patch("/resources/test-0125bc9fd8/drain"))
         self.assertEqual(response.status_code, 403)
 
+    def test_drain_unknown_drone(self):
+        self.mock_crud.get_resource_state = AsyncMock(return_value=[])
+        self.mock_crud.set_state_to_draining = AsyncMock()
+
+        response = asyncio.run(self.client.patch("/resources/test-1234567890/drain"))
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json(), {"detail": "Drone not found"})
+        self.mock_crud.set_state_to_draining.assert_not_called()
+
     def test_assign_shutdown_time(self):
-        self.clear_lru_cache()
         self.mock_crud.assign_shutdown_time = AsyncMock(return_value="test-0125bc9fd8")
 
         response = asyncio.run(
@@ -294,8 +232,7 @@ class TestResources(TestCaseRouters):
         )
 
         # missing scope
-        self.set_scopes(["resources:get"])
-        self.login()
+        self.update_scopes(["resources:get"])
         response = asyncio.run(
             self.client.patch(
                 "/resources/shutdown_time",

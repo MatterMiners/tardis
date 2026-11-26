@@ -1,10 +1,9 @@
 from tardis.interfaces.siteadapter import SiteAdapter
 from tardis.utilities.attributedict import AttributeDict
 
-from cobald.utility.primitives import infinity as inf
 from unittest import TestCase
 from unittest.mock import patch
-from pydantic.error_wrappers import ValidationError
+from pydantic import ValidationError
 
 import asyncio
 import logging
@@ -90,10 +89,17 @@ class TestSiteAdapter(TestCase):
         # noinspection PyUnresolvedReferences
         SiteAdapter.site_configuration.fget.cache_clear()
 
-        self.config.Sites[0]["drone_heartbeat_interval"] = -1
-        with self.assertRaises(ValidationError):
-            # noinspection PyStatementEffect
-            self.site_adapter.drone_heartbeat_interval
+        self.config.Sites[0]["drone_heartbeat_interval"] = 0
+        self.assertEqual(self.site_adapter.drone_heartbeat_interval, 0)
+
+        for invalid_value in (-1, None, 1.5):
+            # noinspection PyUnresolvedReferences
+            SiteAdapter.site_configuration.fget.cache_clear()
+
+            self.config.Sites[0]["drone_heartbeat_interval"] = invalid_value
+            with self.assertRaises(ValidationError):
+                # noinspection PyStatementEffect
+                self.site_adapter.drone_heartbeat_interval
 
     def test_drone_minimum_lifetime(self):
         self.assertEqual(self.site_adapter.drone_minimum_lifetime, None)
@@ -108,10 +114,14 @@ class TestSiteAdapter(TestCase):
         # noinspection PyUnresolvedReferences
         SiteAdapter.site_configuration.fget.cache_clear()
 
-        self.config.Sites[0]["drone_minimum_lifetime"] = -1
-        with self.assertRaises(ValidationError):
-            # noinspection PyStatementEffect
-            self.site_adapter.drone_minimum_lifetime
+        for invalid_value in (-1, 0, 1.5):
+            # noinspection PyUnresolvedReferences
+            SiteAdapter.site_configuration.fget.cache_clear()
+
+            self.config.Sites[0]["drone_minimum_lifetime"] = invalid_value
+            with self.assertRaises(ValidationError):
+                # noinspection PyStatementEffect
+                self.site_adapter.drone_minimum_lifetime
 
     def test_drone_uuid(self):
         self.assertEqual(
@@ -221,14 +231,16 @@ class TestSiteAdapter(TestCase):
         # noinspection PyUnresolvedReferences
         SiteAdapter.site_configuration.fget.cache_clear()
 
-        del self.config.Sites[0]["quota"]
+        # negative quotas are allowed and interpreted as infinity by the
+        # pool factory
+        self.config.Sites[0]["quota"] = -1
 
         self.assertEqual(
             self.site_adapter.site_configuration,
             AttributeDict(
                 name="TestSite",
                 adapter="TestSite",
-                quota=inf,
+                quota=-1,
                 drone_minimum_lifetime=None,
                 drone_heartbeat_interval=60,
             ),
@@ -237,28 +249,35 @@ class TestSiteAdapter(TestCase):
         # noinspection PyUnresolvedReferences
         SiteAdapter.site_configuration.fget.cache_clear()
 
-        self.config.Sites[0]["extra"] = "Should fail!"
-
-        with self.assertRaises(ValidationError):
-            self.assertEqual(
-                self.site_adapter.site_configuration,
-                AttributeDict(
-                    name="TestSite",
-                    adapter="TestSite",
-                    quota=inf,
-                    drone_minimum_lifetime=None,
-                    drone_heartbeat_interval=60,
-                ),
-            )
-
-        # noinspection PyUnresolvedReferences
-        SiteAdapter.site_configuration.fget.cache_clear()
-
-        self.config.Sites[0]["quota"] = 0
+        del self.config.Sites[0]["quota"]
 
         with self.assertRaises(ValidationError):
             # noinspection PyStatementEffect
             self.site_adapter.site_configuration
+
+        # noinspection PyUnresolvedReferences
+        SiteAdapter.site_configuration.fget.cache_clear()
+
+        self.config.Sites[0]["quota"] = 1
+        self.config.Sites[0]["extra"] = "Should fail!"
+
+        with self.assertRaises(ValidationError):
+            # noinspection PyStatementEffect
+            self.site_adapter.site_configuration
+
+        # noinspection PyUnresolvedReferences
+        SiteAdapter.site_configuration.fget.cache_clear()
+
+        del self.config.Sites[0]["extra"]
+
+        for invalid_quota in (0, None, 1.5):
+            # noinspection PyUnresolvedReferences
+            SiteAdapter.site_configuration.fget.cache_clear()
+
+            self.config.Sites[0]["quota"] = invalid_quota
+            with self.assertRaises(ValidationError):
+                # noinspection PyStatementEffect
+                self.site_adapter.site_configuration
 
     def test_site_name(self):
         self.assertEqual(self.site_adapter.site_name, "TestSite")
