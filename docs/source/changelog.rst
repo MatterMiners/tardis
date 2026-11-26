@@ -1,4 +1,4 @@
-.. Created by changelog.py at 2026-11-18, command
+.. Created by changelog.py at 2026-11-25, command
    '/Users/giffler/.cache/pre-commit/repoojtbdlhs/py_env-python3.15/bin/changelog docs/source/changes compile --categories Added Changed Fixed Security Deprecated --output=docs/source/changelog.rst'
    based on the format of 'https://keepachangelog.com/'
 
@@ -6,12 +6,13 @@
 CHANGELOG
 #########
 
-[Unreleased] - 2026-11-18
+[Unreleased] - 2026-11-25
 =========================
 
 Changed
 -------
 
+* Migrate TARDIS to pydantic 2
 * REST API users are stored in a database and managed with the new ``tardis-rest-admin`` CLI
 
 Fixed

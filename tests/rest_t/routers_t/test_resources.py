@@ -39,10 +39,11 @@ class TestResources(TestCaseRouters):
             {
                 "detail": [
                     {
-                        "ctx": {"pattern": "^\\S+-[A-Fa-f0-9]{10}$"},
+                        "type": "string_pattern_mismatch",
                         "loc": ["path", "drone_uuid"],
-                        "msg": 'string does not match regex "^\\S+-[A-Fa-f0-9]{10}$"',
-                        "type": "value_error.str.regex",
+                        "msg": "String should match pattern '^\\S+-[A-Fa-f0-9]{10}$'",
+                        "input": "test-invalid",
+                        "ctx": {"pattern": "^\\S+-[A-Fa-f0-9]{10}$"},
                     }
                 ]
             },

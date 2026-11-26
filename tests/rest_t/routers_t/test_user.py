@@ -2,6 +2,7 @@ from tests.rest_t.routers_t.base_test_case_routers import TestCaseRouters
 
 from datetime import datetime, timedelta, timezone
 import asyncio
+import json
 
 from jose import jwt
 
@@ -52,30 +53,53 @@ class TestUser(TestCaseRouters):
             {
                 "detail": [
                     {
+                        "type": "missing",
                         "loc": ["body"],
-                        "msg": "field required",
-                        "type": "value_error.missing",
+                        "msg": "Field required",
+                        "input": None,
                     }
                 ]
             },
         )
 
-        response = asyncio.run(self.client.post("/user/login", data="{}"))
+        response = asyncio.run(self.client.post("/user/login", json={}))
         self.assertEqual(response.status_code, 422)
         self.assertEqual(
             response.json(),
             {
                 "detail": [
                     {
+                        "type": "missing",
                         "loc": ["body", "user_name"],
-                        "msg": "field required",
-                        "type": "value_error.missing",
+                        "msg": "Field required",
+                        "input": {},
                     },
                     {
+                        "type": "missing",
                         "loc": ["body", "password"],
-                        "msg": "field required",
-                        "type": "value_error.missing",
+                        "msg": "Field required",
+                        "input": {},
                     },
+                ]
+            },
+        )
+
+        # a JSON body without a Content-Type header is not parsed as JSON
+        response = asyncio.run(
+            self.client.post("/user/login", content=json.dumps(self.test_user))
+        )
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(
+            response.json(),
+            {
+                "detail": [
+                    {
+                        "type": "model_attributes_type",
+                        "loc": ["body"],
+                        "msg": "Input should be a valid dictionary or object to "
+                        "extract fields from",
+                        "input": json.dumps(self.test_user),
+                    }
                 ]
             },
         )

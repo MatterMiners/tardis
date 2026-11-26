@@ -14,7 +14,7 @@ with open(os.path.join(repo_base_dir, "README.md"), "r") as read_me:
 
 TESTS_REQUIRE = ["flake8", "httpx"]
 REST_REQUIRES = [
-    "fastapi>=0.100.0",
+    "fastapi>=0.132.0",
     "sqlalchemy[asyncio]>=2.0",
     "aiosqlite>=0.20.0",
     "uvicorn[standard]",
@@ -90,7 +90,7 @@ setup(
         "elasticsearch>=7.17,<8.0.0",
         "aioprometheus>=21.9.0",
         "kubernetes_asyncio",
-        "pydantic<2.0.0",
+        "pydantic>=2.0.0,<3.0.0",
         "asyncstdlib",
         "async-timeout",
         "typing_extensions",
