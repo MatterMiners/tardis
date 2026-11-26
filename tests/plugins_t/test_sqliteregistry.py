@@ -18,6 +18,7 @@ import asyncio
 import datetime
 import os
 import sqlite3
+import tempfile
 
 
 class TestSqliteRegistry(TestCase):
@@ -84,12 +85,11 @@ class TestSqliteRegistry(TestCase):
         cls.mock_config_patcher.stop()
 
     def setUp(self):
-        self.test_path = os.path.dirname(os.path.realpath(__file__))
-        self.test_db = os.path.join(self.test_path, "test.db")
-        try:
-            os.remove(self.test_db)
-        except FileNotFoundError:
-            pass
+        # Use a private directory per test, so that parallel test runs
+        # (e.g. tox -p) do not share the same database file.
+        self.test_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.test_dir.cleanup)
+        self.test_db = os.path.join(self.test_dir.name, "test.db")
 
         config = self.mock_config.return_value
         config.Plugins.SqliteRegistry.db_file = self.test_db
