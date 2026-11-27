@@ -327,6 +327,7 @@ class HTCondorAdapter(BatchSystemAdapter):
         """
         status_mapping = {
             ("Unclaimed", "Idle"): MachineStatus.Available,
+            ("Unclaimed", "Benchmarking"): MachineStatus.Available,
             ("Drained", "Retiring"): MachineStatus.Draining,
             ("Drained", "Idle"): MachineStatus.Drained,
             ("Owner", "Idle"): MachineStatus.NotAvailable,

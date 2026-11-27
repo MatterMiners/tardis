@@ -1,6 +1,7 @@
 from tardis.rest.app import crud
 from tardis.plugins.sqliteregistry import SqliteRegistry
 
+from datetime import datetime
 from unittest import TestCase
 from unittest.mock import MagicMock
 
@@ -110,3 +111,135 @@ class TestCRUD(TestCase):
     JOIN MachineTypes MT ON R.machine_type_id = MT.machine_type_id""",
             {},
         )
+
+    def test_get_drone_uuid(self):
+        async def mocked_async_execute(sql_query: str, bind_parameters: dict):
+            return_values = {
+                "14fa5640a7c146e482e8be41ec5dffea": [{"drone_uuid": "test-0125bc9fd8"}],
+                "nonexistent-uuid": [],
+            }
+            return return_values[bind_parameters["remote_resource_uuid"]]
+
+        self.sql_registry_mock.async_execute.side_effect = mocked_async_execute
+
+        self.assertEqual(
+            [],
+            asyncio.run(
+                crud.get_drone_uuid(
+                    sql_registry=self.sql_registry_mock,
+                    remote_resource_uuid="nonexistent-uuid",
+                )
+            ),
+        )
+
+        self.sql_registry_mock.async_execute.assert_called_with(
+            """
+    SELECT R.drone_uuid
+    FROM Resources R
+    WHERE R.remote_resource_uuid = :remote_resource_uuid""",
+            {"remote_resource_uuid": "nonexistent-uuid"},
+        )
+
+        self.sql_registry_mock.reset_mock()
+
+        self.assertEqual(
+            [{"drone_uuid": "test-0125bc9fd8"}],
+            asyncio.run(
+                crud.get_drone_uuid(
+                    sql_registry=self.sql_registry_mock,
+                    remote_resource_uuid="14fa5640a7c146e482e8be41ec5dffea",
+                )
+            ),
+        )
+
+        self.sql_registry_mock.async_execute.assert_called_with(
+            """
+    SELECT R.drone_uuid
+    FROM Resources R
+    WHERE R.remote_resource_uuid = :remote_resource_uuid""",
+            {"remote_resource_uuid": "14fa5640a7c146e482e8be41ec5dffea"},
+        )
+
+    def test_get_shutdown_time(self):
+        shutdown_time = datetime(2026, 10, 10, 18, 0, 0)
+
+        async def mocked_async_execute(sql_query: str, bind_parameters: dict):
+            return_values = {
+                "14fa5640a7c146e482e8be41ec5dffea": [{"shutdown_time": shutdown_time}],
+                "nonexistent-uuid": [],
+            }
+            return return_values[bind_parameters["remote_resource_uuid"]]
+
+        self.sql_registry_mock.async_execute.side_effect = mocked_async_execute
+
+        self.assertEqual(
+            [],
+            asyncio.run(
+                crud.get_shutdown_time(
+                    sql_registry=self.sql_registry_mock,
+                    remote_resource_uuid="nonexistent-uuid",
+                )
+            ),
+        )
+
+        self.sql_registry_mock.async_execute.assert_called_with(
+            """
+    SELECT R.shutdown_time
+    FROM Resources R
+    WHERE R.remote_resource_uuid = :remote_resource_uuid""",
+            {"remote_resource_uuid": "nonexistent-uuid"},
+        )
+
+        self.sql_registry_mock.reset_mock()
+
+        self.assertEqual(
+            [{"shutdown_time": shutdown_time}],
+            asyncio.run(
+                crud.get_shutdown_time(
+                    sql_registry=self.sql_registry_mock,
+                    remote_resource_uuid="14fa5640a7c146e482e8be41ec5dffea",
+                )
+            ),
+        )
+
+        self.sql_registry_mock.async_execute.assert_called_with(
+            """
+    SELECT R.shutdown_time
+    FROM Resources R
+    WHERE R.remote_resource_uuid = :remote_resource_uuid""",
+            {"remote_resource_uuid": "14fa5640a7c146e482e8be41ec5dffea"},
+        )
+
+    def test_assign_shutdown_time(self):
+        shutdown_time = datetime(2026, 10, 10, 18, 0, 0)
+        self.sql_registry_mock.async_execute.side_effect = [
+            [{"drone_uuid": "test-0125bc9fd8"}],
+            [],
+        ]
+        self.assertEqual(
+            asyncio.run(
+                crud.assign_shutdown_time(
+                    sql_registry=self.sql_registry_mock, shutdown_time=shutdown_time
+                )
+            ),
+            "test-0125bc9fd8",
+        )
+        self.sql_registry_mock.async_execute.assert_called_with(
+            """
+    UPDATE Resources
+    SET shutdown_time = :shutdown_time
+    WHERE drone_uuid = :drone_uuid AND shutdown_time IS NULL""",
+            {"drone_uuid": "test-0125bc9fd8", "shutdown_time": shutdown_time},
+        )
+
+        # no drone waiting
+        self.sql_registry_mock.async_execute.reset_mock()
+        self.sql_registry_mock.async_execute.side_effect = [[]]
+        self.assertIsNone(
+            asyncio.run(
+                crud.assign_shutdown_time(
+                    sql_registry=self.sql_registry_mock, shutdown_time=shutdown_time
+                )
+            )
+        )
+        self.sql_registry_mock.async_execute.assert_called_once()

@@ -29,6 +29,7 @@ CONDOR_STATUS_RETURN = "\n".join(
         f"test_drain\tslot1@test\tDrained\tRetiring\tundefined\t{CPU_RATIO}\t{MEMORY_RATIO}",  # noqa: B950
         f"test_drained\tslot1@test\tDrained\tIdle\tundefined\t{CPU_RATIO}\t{MEMORY_RATIO}",  # noqa: B950
         f"test_owner\tslot1@test\tOwner\tIdle\tundefined\t{CPU_RATIO}\t{MEMORY_RATIO}",  # noqa: B950
+        f"test_benchmarking\tslot1@test\tUnclaimed\tBenchmarking\tundefined\t{CPU_RATIO}\t{MEMORY_RATIO}",  # noqa: B950
         f"test_uuid_plus\tslot1@test_uuid@test\tUnclaimed\tIdle\ttest_uuid\t{CPU_RATIO}\t{MEMORY_RATIO}",  # noqa: B950
         f"test_undefined\tslot1@test\tUnclaimed\tIdle\tundefined\tundefined\t{MEMORY_RATIO}",  # noqa: B950
         f"test_error\tslot1@test\tUnclaimed\tIdle\tundefined\terror\t{MEMORY_RATIO}",  # noqa: B950
@@ -69,6 +70,15 @@ CONDOR_STATUS_RETURN_DICT = {
         "Name": "slot1@test",
         "State": "Owner",
         "Activity": "Idle",
+        "TardisDroneUuid": None,
+        "cpu_ratio": "0.9",
+        "memory_ratio": "0.8",
+    },
+    "test_benchmarking": {
+        "Machine": "test_benchmarking",
+        "Name": "slot1@test",
+        "State": "Unclaimed",
+        "Activity": "Benchmarking",
         "TardisDroneUuid": None,
         "cpu_ratio": "0.9",
         "memory_ratio": "0.8",
@@ -466,6 +476,16 @@ class TestHTCondorAdapter(TestCase):
                 self.htcondor_adapter.get_machine_status(drone_uuid="test_owner")
             ),
             MachineStatus.NotAvailable,
+        )
+        self.mock_executor.reset_mock()
+
+        self.assertEqual(
+            asyncio.run(
+                self.htcondor_adapter.get_machine_status(
+                    drone_uuid="test_benchmarking"
+                )
+            ),
+            MachineStatus.Available,
         )
         self.mock_executor.reset_mock()
 

@@ -51,8 +51,9 @@ REST Service
 
     The :py:class:`~tardis.rest.service.RestService` provides a REST API to access the information stored about managed
     ``Drones`` inside the :py:class:`~tardis.plugins.sqliteregistry.SqliteRegistry` plugin. The REST API supports
-    listing resources, getting resource states, and draining resources. All supported REST API calls and their
-    parameters are described in REST API documentation available on
+    listing resources, getting resource states, looking up the ``drone_uuid`` and the scheduled shutdown time of a
+    resource by its ``remote_resource_uuid``, draining resources and assigning a scheduled shutdown time to a waiting
+    resource. All supported REST API calls and their parameters are described in REST API documentation available on
     ``http://<hostname>:<port>/docs`` after starting the service. The REST service is using JSON Web Token (JWT) and
     OAuth2 scopes for authentication and authorization.
 
@@ -80,6 +81,16 @@ REST Service
         starts. A restart therefore invalidates all issued tokens: browser
         clients have to log in again, and scripts using a bearer token have to
         request a new one via ``POST /user/token``.
+
+    .. note::
+
+        The REST service provides read access to the
+        :py:class:`~tardis.plugins.sqliteregistry.SqliteRegistry` using the ``resources:get`` OAuth2 scope. Limited
+        write access is available using the ``resources:patch`` OAuth2 scope: draining a drone
+        (``PATCH /resources/{drone_uuid}/drain``) and assigning a scheduled shutdown time to the oldest drone still
+        waiting for one (``PATCH /resources/shutdown_time`` with a JSON body like
+        ``{"shutdown_time": "2026-10-10T18:00:00"}``). Timestamps with a timezone are converted to the local time of
+        the ``TARDIS`` host.
 
 
     .. warning::
@@ -159,15 +170,22 @@ REST API Endpoints
 
     .. table:: Resource endpoints
 
-        +--------+-------------------------------+------------------+-----------------+
-        | Method | Endpoint                      | Description      | Required Scope  |
-        +========+===============================+==================+=================+
-        | GET    | /resources/                   | List resources   | resources:get   |
-        +--------+-------------------------------+------------------+-----------------+
-        | GET    | /resources/{uuid}/state       | Get state        | resources:get   |
-        +--------+-------------------------------+------------------+-----------------+
-        | PATCH  | /resources/{uuid}/drain       | Drain resource   | resources:patch |
-        +--------+-------------------------------+------------------+-----------------+
+        +--------+-------------------------------------------------+-----------------------------+-----------------+
+        | Method | Endpoint                                        | Description                 | Required Scope  |
+        +========+=================================================+=============================+=================+
+        | GET    | /resources/                                     | List resources              | resources:get   |
+        +--------+-------------------------------------------------+-----------------------------+-----------------+
+        | GET    | /resources/{uuid}/state                         | Get state                   | resources:get   |
+        +--------+-------------------------------------------------+-----------------------------+-----------------+
+        | GET    | /resources/{remote_resource_uuid}/drone_uuid    | Get drone_uuid              | resources:get   |
+        +--------+-------------------------------------------------+-----------------------------+-----------------+
+        | GET    | /resources/{remote_resource_uuid}/shutdown_time | Get shutdown_time           | resources:get   |
+        +--------+-------------------------------------------------+-----------------------------+-----------------+
+        | PATCH  | /resources/{uuid}/drain                         | Drain resource              | resources:patch |
+        +--------+-------------------------------------------------+-----------------------------+-----------------+
+        | PATCH  | /resources/shutdown_time                        | Assign shutdown_time to the | resources:patch |
+        |        |                                                 | oldest waiting drone        |                 |
+        +--------+-------------------------------------------------+-----------------------------+-----------------+
 
     .. table:: Types endpoints
 

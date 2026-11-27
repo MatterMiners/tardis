@@ -1,3 +1,4 @@
+from datetime import datetime
 from unittest.mock import ANY, AsyncMock
 from tests.rest_t.routers_t.base_test_case_routers import TestCaseRouters
 
@@ -93,6 +94,74 @@ class TestResources(TestCaseRouters):
         response = asyncio.run(self.client.get("/resources/"))
         self.assertEqual(response.status_code, 403)
 
+    def test_get_drone_uuid(self):
+        self.mock_crud.get_drone_uuid = AsyncMock(
+            return_value=[{"drone_uuid": "test-0125bc9fd8"}]
+        )
+
+        response = asyncio.run(
+            self.client.get(
+                "/resources/14fa5640a7c146e482e8be41ec5dffea/drone_uuid",
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"drone_uuid": "test-0125bc9fd8"})
+
+        self.mock_crud.get_drone_uuid = AsyncMock(return_value=[])
+        response = asyncio.run(
+            self.client.get("/resources/nonexistent-uuid/drone_uuid")
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json(), {"detail": "Drone not found"})
+
+        # missing scope
+        self.update_scopes(["resources:patch"])
+        response = asyncio.run(
+            self.client.get("/resources/14fa5640a7c146e482e8be41ec5dffea/drone_uuid")
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_get_shutdown_time(self):
+        self.mock_crud.get_shutdown_time = AsyncMock(
+            return_value=[{"shutdown_time": datetime(2026, 10, 10, 18, 0, 0)}]
+        )
+
+        response = asyncio.run(
+            self.client.get(
+                "/resources/14fa5640a7c146e482e8be41ec5dffea/shutdown_time",
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"shutdown_time": "2026-10-10T18:00:00"})
+
+        # drone without shutdown_time assigned
+        self.mock_crud.get_shutdown_time = AsyncMock(
+            return_value=[{"shutdown_time": None}]
+        )
+        response = asyncio.run(
+            self.client.get(
+                "/resources/14fa5640a7c146e482e8be41ec5dffea/shutdown_time",
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"shutdown_time": None})
+
+        self.mock_crud.get_shutdown_time = AsyncMock(return_value=[])
+        response = asyncio.run(
+            self.client.get("/resources/nonexistent-uuid/shutdown_time")
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json(), {"detail": "Drone not found"})
+
+        # missing scope
+        self.update_scopes(["resources:patch"])
+        response = asyncio.run(
+            self.client.get(
+                "/resources/14fa5640a7c146e482e8be41ec5dffea/shutdown_time"
+            )
+        )
+        self.assertEqual(response.status_code, 403)
+
     def test_drain_drone(self):
         self.mock_crud.get_resource_state = AsyncMock(
             return_value=[{"drone_uuid": "test-0125bc9fd8", "state": "AvailableState"}]
@@ -121,3 +190,53 @@ class TestResources(TestCaseRouters):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {"detail": "Drone not found"})
         self.mock_crud.set_state_to_draining.assert_not_called()
+
+    def test_assign_shutdown_time(self):
+        self.mock_crud.assign_shutdown_time = AsyncMock(return_value="test-0125bc9fd8")
+
+        response = asyncio.run(
+            self.client.patch(
+                "/resources/shutdown_time",
+                json={"shutdown_time": "2026-10-10T18:00:00"},
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {"msg": "shutdown_time of test-0125bc9fd8 set to 2026-10-10 18:00:00"},
+        )
+        self.mock_crud.assign_shutdown_time.assert_called_once_with(
+            ANY, datetime(2026, 10, 10, 18, 0, 0)
+        )
+
+        # invalid timestamp
+        response = asyncio.run(
+            self.client.patch(
+                "/resources/shutdown_time",
+                json={"shutdown_time": "tomorrow"},
+            )
+        )
+        self.assertEqual(response.status_code, 422)
+
+        # no drone waiting
+        self.mock_crud.assign_shutdown_time.return_value = None
+        response = asyncio.run(
+            self.client.patch(
+                "/resources/shutdown_time",
+                json={"shutdown_time": "2026-10-10T18:00:00"},
+            )
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(
+            response.json(), {"detail": "No drone waiting for a shutdown_time"}
+        )
+
+        # missing scope
+        self.update_scopes(["resources:get"])
+        response = asyncio.run(
+            self.client.patch(
+                "/resources/shutdown_time",
+                json={"shutdown_time": "2026-10-10T18:00:00"},
+            )
+        )
+        self.assertEqual(response.status_code, 403)
